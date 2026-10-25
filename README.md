@@ -32,14 +32,34 @@ import "cs/css/button";
 
 ```ts
 import { presetCS } from "cs/uno";
-import { defineConfig, presetWind4 } from "unocss";
+import { defineConfig } from "unocss";
 
 export default defineConfig({
-    presets: [presetWind4(), presetCS()],
+    presets: [presetCS()],
 });
 ```
 
-3. Svelte Components
+`presetCS()` already includes `presetWind4`, the Svelte extractor, `transformerDirectives` and `transformerVariantGroup`. Do not add them again.
+
+3. ESLint
+   One import bundles all rules (base rules, Svelte, UnoCSS, unicorn, custom rules, Prettier):
+
+```ts
+// eslint.config.ts
+import cs from "cs/eslint";
+
+export default cs;
+```
+
+Extend or override by spreading it:
+
+```ts
+export default [...cs, { rules: { "no-console": "off" } }];
+```
+
+All plugins ship with `cs`; the project itself only needs `eslint` (`bun add -d eslint`). Individual rule sets (e.g. `svelteConfig`, `unicornConfig`) are also exported from `cs/eslint`. Keep `typescript` on `~6`, since typescript-eslint does not support TypeScript 7 yet.
+
+4. Svelte Components
 
 ```svelte
 <script lang="ts">
@@ -50,7 +70,10 @@ export default defineConfig({
 ## Project Structure
 
 - src/css/ — Tokens, reset, and standalone CSS components (src/css/components/*.css).
-- src/uno/ — UnoCSS preset mirroring the CSS tokens.
+- src/uno/ — UnoCSS preset (theme, variants, rules, shortcuts) mirroring the CSS tokens.
+- src/eslint/ — Shared ESLint flat config, exported as `cs/eslint`.
+- src/vite/ — Vite plugins (`csTheme`), exported as `cs/vite`.
+- template/ — Starter for new projects; copy it and adjust `index.html` (title, app name).
 - src/svelte/ — Svelte 5 components (src/svelte/components/).
 - playground/ — Local Vite test app (ignored when installed in other projects).
 
@@ -62,7 +85,7 @@ export default defineConfig({
 bun dev
 ```
 
-2. Add or edit files inside src/ and test them inside playground/App.svelte.
+2. Add or edit files inside src/ and test them inside playground/App.svelte. Run `bun lint` and `bun typecheck` before pushing.
 
 3. Push changes to GitHub:
 

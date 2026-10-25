@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "vite",
-        "typecheck": "bun check",
+        "typecheck": "tsc --noEmit",
         "format": "bunx prettier --write .",
         "lint": "eslint ."
     },
@@ -56,5 +56,9 @@
         "eslint": {
             "optional": true
         }
+    },
+    "engines": {
+        "npm": "DO_NOT_USE_NPM_USE_BUN",
+        "pnpm": "DO_NOT_USE_PNPM_USE_BUN"
     }
 }
