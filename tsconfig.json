@@ -25,8 +25,8 @@
         // Some stricter flags (disabled by default)
         "noUnusedLocals": false,
         "noUnusedParameters": false,
-        "noPropertyAccessFromIndexSignature": false,
+        "noPropertyAccessFromIndexSignature": false
     },
 
-    "exclude": ["node_modules", "template"],
+    "exclude": ["node_modules", "template"]
 }

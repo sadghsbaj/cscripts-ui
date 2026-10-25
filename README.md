@@ -23,7 +23,6 @@ bun update cs
 ```ts
 // Load everything (reset, tokens, all components)
 import "cs/css";
-
 // Or load single components
 import "cs/css/button";
 ```
@@ -32,11 +31,11 @@ import "cs/css/button";
    Maps CSS variables from src/css to UnoCSS utilities:
 
 ```ts
-import { defineConfig, presetWind4 } from "unocss";
 import { presetCS } from "cs/uno";
+import { defineConfig, presetWind4 } from "unocss";
 
 export default defineConfig({
-  presets: [presetWind4(), presetCS()],
+    presets: [presetWind4(), presetCS()],
 });
 ```
 
@@ -44,7 +43,7 @@ export default defineConfig({
 
 ```svelte
 <script lang="ts">
-  import { Dialog } from 'cs/svelte';
+    import { Dialog } from "cs/svelte";
 </script>
 ```
 
