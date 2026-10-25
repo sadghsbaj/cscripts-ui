@@ -1,6 +1,6 @@
 /* ==========================================================================
-    VIEW TRANSITIONS API (BLUR EFFECTS)
-    ========================================================================== */
+   VIEW TRANSITIONS API & THEME SWITCHING
+   ========================================================================== */
 
 @keyframes VT-out {
     from {
@@ -20,15 +20,27 @@
     }
 }
 
-::view-transition-old(root) {
-    animation: VT-out 320ms var(--cs-ease-quad-out) forwards;
+@media (prefers-reduced-motion: no-preference) {
+    html:not([data-reduce-motion]) {
+        &::view-transition-old(root) {
+            animation: VT-out 320ms var(--cs-ease-quad-out) forwards;
+        }
+
+        &::view-transition-new(root) {
+            animation: VT-in 320ms var(--cs-ease-quad-out) forwards;
+        }
+
+        &::view-transition-old(root),
+        &::view-transition-new(root) {
+            mix-blend-mode: normal;
+        }
+    }
 }
 
-::view-transition-new(root) {
-    animation: VT-in 320ms var(--cs-ease-quad-out) forwards;
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-    mix-blend-mode: normal;
+[data-theme-switching]:not([data-force-animate]),
+[data-theme-switching] *:not([data-force-animate], [data-force-animate] *),
+[data-theme-switching] *:not([data-force-animate], [data-force-animate] *)::before,
+[data-theme-switching] *:not([data-force-animate], [data-force-animate] *)::after {
+    transition: none !important;
+    animation: none !important;
 }

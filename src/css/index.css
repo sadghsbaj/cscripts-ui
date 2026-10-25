@@ -14,10 +14,6 @@
     color-scheme: light dark;
     interpolate-size: allow-keywords;
     -webkit-text-size-adjust: 100%;
-    overflow: hidden;
-}
-
-:where(body) {
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
     height: 100dvh;
@@ -31,6 +27,13 @@
     caret-color: light-dark(var(--cs-color-accent-600), var(--cs-color-accent-500));
 }
 
+:where(body) {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
 #app {
+    isolation: isolate;
     height: 100%;
 }
