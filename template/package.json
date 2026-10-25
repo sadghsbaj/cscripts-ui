@@ -25,7 +25,10 @@
         "svelte-check": "latest",
         "typescript": "latest",
         "unocss": "latest",
-        "vite": "latest"
+        "vite": "latest",
+        "lightningcss": "latest",
+        "terser": "latest",
+        "vite-plugin-html": "latest"
     },
     "dependencies": {
         "cs": "github:sadghsbaj/cscripts-ui"
