@@ -1,15 +1,17 @@
-/* --- SCROLLBAR --- */
+/* ==========================================================================
+   SCROLLBAR
+   ========================================================================== */
 
 :root {
+    --cs-scrollbar-size: 8px;
     --cs-scrollbar-track: transparent;
     --cs-scrollbar-thumb: light-dark(
-        color-mix(in srgb, var(--cs-color-base-900) 20%, transparent),
-        color-mix(in srgb, var(--cs-color-base-100) 22%, transparent)
+        color-mix(in oklch, var(--cs-color-base-900) 20%, transparent),
+        color-mix(in oklch, var(--cs-color-base-100) 22%, transparent)
     );
-
     --cs-scrollbar-thumb-hover: light-dark(
-        color-mix(in srgb, var(--cs-color-base-900) 35%, transparent),
-        color-mix(in srgb, var(--cs-color-base-100) 38%, transparent)
+        color-mix(in oklch, var(--cs-color-base-900) 35%, transparent),
+        color-mix(in oklch, var(--cs-color-base-100) 38%, transparent)
     );
 }
 
@@ -17,14 +19,14 @@
 @supports (-moz-appearance: none) {
     * {
         scrollbar-width: thin;
-        scrollbar-color: var(--cs-scrollbar-thumb) transparent;
+        scrollbar-color: var(--cs-scrollbar-thumb) var(--cs-scrollbar-track);
     }
 }
 
-/* Chrome/Safari/Edge */
+/* Chrome / Safari / Edge */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: var(--cs-scrollbar-size);
+    height: var(--cs-scrollbar-size);
 }
 
 ::-webkit-scrollbar-button {
@@ -48,18 +50,52 @@
     background-color: var(--cs-scrollbar-thumb-hover);
 }
 
-/* ==================================================== */
-/* No-Scrollbar Utility */
-.no-scrollbar {
+/* ==========================================================================
+   Scrollbar Size & Hide Utilities (Pure CSS + UnoCSS compatible)
+   ========================================================================== */
+
+.scrollbar-sm {
+    --cs-scrollbar-size: 8px;
+}
+
+.scrollbar-md {
+    --cs-scrollbar-size: 10px;
+}
+
+.scrollbar-lg {
+    --cs-scrollbar-size: 12px;
+}
+
+.scrollbar-sm::-webkit-scrollbar,
+.scrollbar-md::-webkit-scrollbar,
+.scrollbar-lg::-webkit-scrollbar {
+    width: var(--cs-scrollbar-size);
+    height: var(--cs-scrollbar-size);
+}
+
+@supports (-moz-appearance: none) {
+    .scrollbar-sm {
+        scrollbar-width: thin;
+    }
+    .scrollbar-md,
+    .scrollbar-lg {
+        scrollbar-width: auto;
+    }
+}
+
+.no-scrollbar,
+.scrollbar-none {
     -ms-overflow-style: none;
 }
 
 @supports (-moz-appearance: none) {
-    .no-scrollbar {
+    .no-scrollbar,
+    .scrollbar-none {
         scrollbar-width: none;
     }
 }
 
-.no-scrollbar::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
     display: none;
 }
