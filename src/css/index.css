@@ -1,3 +1,4 @@
+@import "./reset.css";
 @import "./lightningcss.css";
 @import "./colors.css";
 @import "./selection.css";
@@ -7,33 +8,3 @@
 @import "./typography.css";
 @import "./shapes.css";
 @import "./disabled.css";
-
-/* ==================================================== */
-/* Document & Root Layout */
-:where(html) {
-    color-scheme: light dark;
-    interpolate-size: allow-keywords;
-    -webkit-text-size-adjust: 100%;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-tap-highlight-color: transparent;
-    height: 100dvh;
-    overflow: hidden;
-    color: var(--cs-color-text-main);
-    font-family: var(--cs-font-sans);
-    font-size: 100%;
-    -webkit-font-smoothing: antialiased;
-    line-height: var(--cs-leading-normal);
-    background-color: var(--cs-color-elevation-0);
-    caret-color: light-dark(var(--cs-color-accent-600), var(--cs-color-accent-500));
-}
-
-:where(body) {
-    margin: 0;
-    height: 100%;
-    overflow: hidden;
-}
-
-#app {
-    isolation: isolate;
-    height: 100%;
-}

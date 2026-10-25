@@ -2,7 +2,7 @@ import path from "node:path";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { csTheme } from "cs/vite";
 import UnoCSS from "unocss/vite";
-import { defineConfig, type PluginOption } from "vite";
+import { defineConfig } from "vite";
 import { createHtmlPlugin } from "vite-plugin-html";
 
 export default defineConfig({

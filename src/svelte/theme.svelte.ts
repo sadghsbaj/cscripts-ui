@@ -215,7 +215,7 @@ export class ThemeManager {
 
         const prefersReducedMotion =
             (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) ||
-            document.documentElement.hasAttribute("data-reduce-motion");
+            Object.hasOwn(document.documentElement.dataset, "reduceMotion");
         const useTransition = !this.#isInitial && "startViewTransition" in document && !prefersReducedMotion;
 
         if (useTransition) {

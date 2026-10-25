@@ -11,7 +11,7 @@ const SCROLLBAR_SIZE_MAP = {
     lg: { size: "12px", firefoxWidth: "auto" },
 } as const;
 
-function semanticColor(name: string) {
+function semanticColor(name: string): Record<string, string> {
     const scale: Record<string, string> = {
         soft: `var(--cs-color-${name}-soft)`,
         "soft-hover": `var(--cs-color-${name}-soft-hover)`,
@@ -26,7 +26,7 @@ function semanticColor(name: string) {
     return scale;
 }
 
-function easeCurves() {
+function easeCurves(): Record<string, string> {
     const curves: Record<string, string> = {};
 
     for (const family of EASE_FAMILIES) {
@@ -102,6 +102,48 @@ export function presetCS(): Preset {
                 info: semanticColor("info"),
             },
             ease: easeCurves(),
+        },
+        shortcuts: {
+            // --- Layout & Indicators ---
+            "flex-center": "flex justify-center items-center",
+            "absolute-center": "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+            "dot-sm": "inline-block align-middle size-3px rounded-full bg-current opacity-40 shrink-0 select-none",
+            "dot-md": "inline-block align-middle size-4px rounded-full bg-current opacity-40 shrink-0 select-none",
+            "dot-lg": "inline-block align-middle size-5px rounded-full bg-current opacity-40 shrink-0 select-none",
+
+            // --- Titles ---
+            "title-xs": "text-xs font-600 leading-snug tracking-tight text-strong",
+            "title-sm": "text-sm font-600 leading-snug tracking-tight text-strong",
+            "title-md": "text-base font-600 leading-snug tracking-tight text-strong",
+            "title-lg": "text-lg font-700 leading-tight tracking-tight text-strong",
+            "title-xl": "text-xl font-700 leading-tight tracking-tight text-strong",
+            "title-2xl": "text-2xl font-700 leading-tight tracking-tight text-strong",
+            "title-3xl": "text-3xl font-700 leading-none tracking-tight text-strong",
+
+            // --- Subtitles ---
+            "subtitle-xs": "text-11px font-400 leading-normal text-weak",
+            "subtitle-sm": "text-xs font-400 leading-normal text-weak",
+            "subtitle-md": "text-sm font-400 leading-normal text-weak",
+            "subtitle-lg": "text-base font-400 leading-relaxed text-weak",
+            "subtitle-xl": "text-lg font-400 leading-relaxed text-weak",
+
+            // --- Labels (Form Controls, Interactive Elements) ---
+            "label-xs": "text-[11px] font-500 leading-none select-none text-strong",
+            "label-sm": "text-xs font-500 leading-none select-none text-strong",
+            "label-md": "text-sm font-500 leading-none select-none text-strong",
+            "label-lg": "text-base font-500 leading-none select-none text-strong",
+
+            // --- Descriptions / Hints ---
+            "description-xs": "text-11px font-400 leading-normal text-weak",
+            "description-sm": "text-xs font-400 leading-normal text-weak",
+            "description-md": "text-sm font-400 leading-relaxed text-weak",
+            "description-lg": "text-base font-400 leading-relaxed text-weak",
+
+            // --- Body Copy ---
+            "body-xs": "text-xs font-400 leading-normal text-main",
+            "body-sm": "text-sm font-400 leading-relaxed text-main",
+            "body-md": "text-base font-400 leading-relaxed text-main",
+            "body-lg": "text-lg font-400 leading-relaxed text-main",
         },
         rules: [
             [/^text-(strong|main|weak|weaker)$/, ([, level]) => ({ color: `var(--cs-color-text-${level})` })],
