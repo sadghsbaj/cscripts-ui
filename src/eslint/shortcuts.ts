@@ -5,21 +5,18 @@
 
 import type { Linter, Rule } from "eslint";
 
+import { layoutShortcuts } from "../uno/shortcuts/layout.ts";
+
 interface ShortcutRule {
     name: string;
     classes: string[];
 }
 
-const SHORTCUT_RULES: ShortcutRule[] = [
-    {
-        name: "flex-center",
-        classes: ["flex", "justify-center", "items-center"],
-    },
-    {
-        name: "absolute-center",
-        classes: ["absolute", "top-1/2", "left-1/2", "-translate-x-1/2", "-translate-y-1/2"],
-    },
-];
+// Single source of truth: the layout shortcuts defined for the UnoCSS preset.
+const SHORTCUT_RULES: ShortcutRule[] = Object.entries(layoutShortcuts).map(([name, classes]) => ({
+    name,
+    classes: classes.split(/\s+/),
+}));
 
 function applyFix(node: Rule.Node, newContent: string, context: Rule.RuleContext): (fixer: Rule.RuleFixer) => Rule.Fix {
     const rawText = context.sourceCode.getText(node);
@@ -82,12 +79,7 @@ export const enforceShortcutsRule: Rule.RuleModule = {
     },
     create(context: Rule.RuleContext): Rule.RuleListener {
         const filename = context.filename ?? "";
-        if (
-            filename.endsWith("uno/shortcuts.ts") ||
-            filename.endsWith(String.raw`uno\shortcuts.ts`) ||
-            filename.endsWith("uno/index.ts") ||
-            filename.endsWith(String.raw`uno\index.ts`)
-        ) {
+        if (filename.replaceAll("\\", "/").includes("uno/shortcuts/")) {
             return {};
         }
 
