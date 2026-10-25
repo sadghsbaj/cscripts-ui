@@ -9,76 +9,76 @@
     --cs-color-text-weaker: light-dark(var(--cs-color-base-400), var(--cs-color-base-600));
 
     /* Base Soft & Solid (Neutral Tints & Surfaces) */
-    --cs-color-base-soft-1: light-dark(
-        color-mix(in srgb, var(--cs-color-base-900) 6%, transparent),
-        color-mix(in srgb, var(--cs-color-base-100) 9%, transparent)
+    --cs-color-base-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-base-900) 6%, transparent),
+        color-mix(in oklch, var(--cs-color-base-100) 9%, transparent)
     );
-    --cs-color-base-soft-2: light-dark(
-        color-mix(in srgb, var(--cs-color-base-900) 12%, transparent),
-        color-mix(in srgb, var(--cs-color-base-100) 15%, transparent)
+    --cs-color-base-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-base-900) 12%, transparent),
+        color-mix(in oklch, var(--cs-color-base-100) 15%, transparent)
     );
-    --cs-color-base-solid-1: light-dark(var(--cs-color-base-800), var(--cs-color-base-200));
-    --cs-color-base-solid-2: light-dark(var(--cs-color-base-700), var(--cs-color-base-100));
+    --cs-color-base-solid: light-dark(var(--cs-color-base-800), var(--cs-color-base-200));
+    --cs-color-base-solid-hover: light-dark(var(--cs-color-base-700), var(--cs-color-base-100));
 
     /* Accent Soft & Solid */
-    --cs-color-accent-soft-1: light-dark(
-        color-mix(in srgb, var(--cs-color-accent-500) 10%, transparent),
-        color-mix(in srgb, var(--cs-color-accent-500) 16%, transparent)
+    --cs-color-accent-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-accent-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-accent-500) 16%, transparent)
     );
-    --cs-color-accent-soft-2: light-dark(
-        color-mix(in srgb, var(--cs-color-accent-500) 16%, transparent),
-        color-mix(in srgb, var(--cs-color-accent-500) 24%, transparent)
+    --cs-color-accent-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-accent-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-accent-500) 24%, transparent)
     );
-    --cs-color-accent-solid-1: var(--cs-color-accent-500);
-    --cs-color-accent-solid-2: var(--cs-color-accent-400);
+    --cs-color-accent-solid: var(--cs-color-accent-500);
+    --cs-color-accent-solid-hover: color-mix(in oklch, var(--cs-color-accent-500) 90%, white);
 
     /* Success Soft & Solid */
-    --cs-color-success-soft-1: light-dark(
-        color-mix(in srgb, var(--cs-color-success-500) 10%, transparent),
-        color-mix(in srgb, var(--cs-color-success-500) 16%, transparent)
+    --cs-color-success-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-success-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-success-500) 16%, transparent)
     );
-    --cs-color-success-soft-2: light-dark(
-        color-mix(in srgb, var(--cs-color-success-500) 16%, transparent),
-        color-mix(in srgb, var(--cs-color-success-500) 24%, transparent)
+    --cs-color-success-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-success-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-success-500) 24%, transparent)
     );
-    --cs-color-success-solid-1: var(--cs-color-success-500);
-    --cs-color-success-solid-2: var(--cs-color-success-400);
+    --cs-color-success-solid: var(--cs-color-success-500);
+    --cs-color-success-solid-hover: color-mix(in oklch, var(--cs-color-success-500) 90%, white);
 
     /* Warning Soft & Solid */
-    --cs-color-warning-soft-1: light-dark(
-        color-mix(in srgb, var(--cs-color-warning-500) 10%, transparent),
-        color-mix(in srgb, var(--cs-color-warning-500) 16%, transparent)
+    --cs-color-warning-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-warning-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-warning-500) 16%, transparent)
     );
-    --cs-color-warning-soft-2: light-dark(
-        color-mix(in srgb, var(--cs-color-warning-500) 16%, transparent),
-        color-mix(in srgb, var(--cs-color-warning-500) 24%, transparent)
+    --cs-color-warning-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-warning-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-warning-500) 24%, transparent)
     );
-    --cs-color-warning-solid-1: var(--cs-color-warning-500);
-    --cs-color-warning-solid-2: var(--cs-color-warning-400);
+    --cs-color-warning-solid: var(--cs-color-warning-500);
+    --cs-color-warning-solid-hover: color-mix(in oklch, var(--cs-color-warning-500) 90%, white);
 
     /* Danger Soft & Solid */
-    --cs-color-danger-soft-1: light-dark(
-        color-mix(in srgb, var(--cs-color-danger-500) 10%, transparent),
-        color-mix(in srgb, var(--cs-color-danger-500) 16%, transparent)
+    --cs-color-danger-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-danger-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-danger-500) 16%, transparent)
     );
-    --cs-color-danger-soft-2: light-dark(
-        color-mix(in srgb, var(--cs-color-danger-500) 16%, transparent),
-        color-mix(in srgb, var(--cs-color-danger-500) 24%, transparent)
+    --cs-color-danger-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-danger-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-danger-500) 24%, transparent)
     );
-    --cs-color-danger-solid-1: var(--cs-color-danger-500);
-    --cs-color-danger-solid-2: var(--cs-color-danger-400);
+    --cs-color-danger-solid: var(--cs-color-danger-500);
+    --cs-color-danger-solid-hover: color-mix(in oklch, var(--cs-color-danger-500) 90%, white);
 
     /* Info Soft & Solid */
-    --cs-color-info-soft-1: light-dark(
-        color-mix(in srgb, var(--cs-color-info-500) 10%, transparent),
-        color-mix(in srgb, var(--cs-color-info-500) 16%, transparent)
+    --cs-color-info-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-info-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-info-500) 16%, transparent)
     );
-    --cs-color-info-soft-2: light-dark(
-        color-mix(in srgb, var(--cs-color-info-500) 16%, transparent),
-        color-mix(in srgb, var(--cs-color-info-500) 24%, transparent)
+    --cs-color-info-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-info-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-info-500) 24%, transparent)
     );
-    --cs-color-info-solid-1: var(--cs-color-info-500);
-    --cs-color-info-solid-2: var(--cs-color-info-400);
+    --cs-color-info-solid: var(--cs-color-info-500);
+    --cs-color-info-solid-hover: color-mix(in oklch, var(--cs-color-info-500) 90%, white);
 
     --cs-color-accent-50: var(--cs-color-blue-50);
     --cs-color-accent-100: var(--cs-color-blue-100);

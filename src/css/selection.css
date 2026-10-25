@@ -1,0 +1,34 @@
+:root {
+    --cs-color-selection-bg: light-dark(
+        oklch(from var(--cs-color-accent-500) l c h / 0.12),
+        oklch(from var(--cs-color-accent-500) l c h / 0.12)
+    );
+    --cs-color-selection-text: light-dark(var(--cs-color-accent-600), var(--cs-color-accent-500));
+}
+
+::selection {
+    color: var(--cs-color-selection-text);
+    text-shadow: none;
+    background-color: var(--cs-color-selection-bg);
+}
+
+pre ::selection,
+code ::selection {
+    color: inherit;
+    text-shadow: none;
+    background-color: var(--cs-color-selection-bg);
+}
+
+img::selection,
+video::selection {
+    background-color: transparent;
+    filter: brightness(0.8) contrast(1.2);
+}
+
+/* Accent-background override:
+   white selection for contrast on colored surfaces */
+[data-selection-on-accent] ::selection,
+[data-selection-on-accent]::selection {
+    color: var(--cs-color-accent-500);
+    background-color: white;
+}

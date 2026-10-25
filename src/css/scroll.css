@@ -1,0 +1,65 @@
+/* --- SCROLLBAR --- */
+
+:root {
+    --cs-scrollbar-track: transparent;
+    --cs-scrollbar-thumb: light-dark(
+        color-mix(in srgb, var(--cs-color-base-900) 20%, transparent),
+        color-mix(in srgb, var(--cs-color-base-100) 22%, transparent)
+    );
+
+    --cs-scrollbar-thumb-hover: light-dark(
+        color-mix(in srgb, var(--cs-color-base-900) 35%, transparent),
+        color-mix(in srgb, var(--cs-color-base-100) 38%, transparent)
+    );
+}
+
+/* Firefox */
+@supports (-moz-appearance: none) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--cs-scrollbar-thumb) transparent;
+    }
+}
+
+/* Chrome/Safari/Edge */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-button {
+    display: none;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--cs-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+    min-width: 50px;
+    min-height: 50px;
+    background-color: var(--cs-scrollbar-thumb);
+    background-clip: padding-box;
+    border: 2px solid var(--cs-scrollbar-track);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--cs-scrollbar-thumb-hover);
+}
+
+/* ==================================================== */
+/* No-Scrollbar Utility */
+.no-scrollbar {
+    -ms-overflow-style: none;
+}
+
+@supports (-moz-appearance: none) {
+    .no-scrollbar {
+        scrollbar-width: none;
+    }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}

@@ -1,29 +1,33 @@
 {
-  "name": "template",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
-  },
-  "devDependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "latest",
-    "@sveltejs/vite-plugin-svelte": "latest",
-    "@tsconfig/svelte": "latest",
-    "@types/node": "latest",
-    "prettier": "latest",
-    "prettier-plugin-css-order": "latest",
-    "prettier-plugin-svelte": "latest",
-    "svelte": "latest",
-    "svelte-check": "latest",
-    "typescript": "latest",
-    "unocss": "latest",
-    "vite": "latest"
-  },
-  "dependencies": {
-    "cs": "github:sadghsbaj/cscripts-ui"
-  }
+    "name": "template",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
+    },
+    "engines": {
+        "npm": "DO_NOT_USE_NPM_USE_BUN",
+        "pnpm": "DO_NOT_USE_PNPM_USE_BUN"
+    },
+    "devDependencies": {
+        "@ianvs/prettier-plugin-sort-imports": "latest",
+        "@sveltejs/vite-plugin-svelte": "latest",
+        "@tsconfig/svelte": "latest",
+        "@types/node": "latest",
+        "prettier": "latest",
+        "prettier-plugin-css-order": "latest",
+        "prettier-plugin-svelte": "latest",
+        "svelte": "latest",
+        "svelte-check": "latest",
+        "typescript": "latest",
+        "unocss": "latest",
+        "vite": "latest"
+    },
+    "dependencies": {
+        "cs": "github:sadghsbaj/cscripts-ui"
+    }
 }

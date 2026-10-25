@@ -1,0 +1,41 @@
+:root {
+    --cs-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --cs-font-mono:
+        ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+    --cs-text-xs: 0.75rem;
+    --cs-text-sm: 0.875rem;
+    --cs-text-base: 1rem;
+    --cs-text-lg: 1.125rem;
+    --cs-text-xl: 1.25rem;
+    --cs-text-2xl: 1.5rem;
+    --cs-text-3xl: 1.875rem;
+    --cs-text-4xl: 2.25rem;
+    --cs-text-5xl: 3rem;
+    --cs-text-6xl: 3.75rem;
+    --cs-text-7xl: 4.5rem;
+    --cs-text-8xl: 6rem;
+    --cs-text-9xl: 8rem;
+
+    --cs-leading-3: 0.75rem;
+    --cs-leading-4: 1rem;
+    --cs-leading-5: 1.25rem;
+    --cs-leading-6: 1.5rem;
+    --cs-leading-7: 1.75rem;
+    --cs-leading-8: 2rem;
+    --cs-leading-9: 2.25rem;
+    --cs-leading-10: 2.5rem;
+    --cs-leading-none: 1;
+    --cs-leading-tight: 1.25;
+    --cs-leading-snug: 1.375;
+    --cs-leading-normal: 1.5;
+    --cs-leading-relaxed: 1.625;
+    --cs-leading-loose: 2;
+
+    --cs-tracking-tighter: -0.05em;
+    --cs-tracking-tight: -0.025em;
+    --cs-tracking-normal: 0em;
+    --cs-tracking-wide: 0.025em;
+    --cs-tracking-wider: 0.05em;
+    --cs-tracking-widest: 0.1em;
+}
