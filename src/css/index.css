@@ -1,10 +1,2 @@
-@import "./reset.css";
-@import "./lightningcss.css";
-@import "./colors.css";
-@import "./selection.css";
-@import "./easings.css";
-@import "./motion.css";
-@import "./scroll.css";
-@import "./typography.css";
-@import "./shapes.css";
-@import "./disabled.css";
+@import "./foundation/index.css";
+@import "./components/index.css";
