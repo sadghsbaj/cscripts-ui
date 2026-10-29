@@ -9,4 +9,5 @@
 @import "./scroll.css" layer(base);
 @import "./selection.css" layer(base);
 @import "./disabled.css" layer(base);
+@import "./focus.css" layer(base);
 @import "./lightningcss.css" layer(base);

@@ -230,6 +230,11 @@ textarea,
     opacity: 1; /* 4 */
 }
 
+button,
+[role="button"] {
+    cursor: pointer;
+}
+
 /*
   Restore default font weight.
 */
