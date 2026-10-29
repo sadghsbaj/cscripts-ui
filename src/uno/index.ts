@@ -9,7 +9,13 @@ import { variants } from "./variants/index.ts";
 export function presetCS(): Preset {
     return {
         name: "preset-cs",
-        presets: [presetWind4()],
+        presets: [
+            presetWind4({
+                preflights: {
+                    reset: false,
+                },
+            }),
+        ],
         extractors: [extractorSvelte()],
         transformers: [transformerDirectives(), transformerVariantGroup()],
         variants,

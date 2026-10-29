@@ -1,10 +1,12 @@
-@import "./reset.css";
-@import "./lightningcss.css";
-@import "./colors.css";
-@import "./selection.css";
-@import "./easings.css";
-@import "./motion.css";
-@import "./scroll.css";
-@import "./typography.css";
-@import "./shapes.css";
-@import "./disabled.css";
+@layer reset, base;
+
+@import "./reset.css" layer(reset);
+@import "./colors.css" layer(base);
+@import "./easings.css" layer(base);
+@import "./shapes.css" layer(base);
+@import "./typography.css" layer(base);
+@import "./motion.css" layer(base);
+@import "./scroll.css" layer(base);
+@import "./selection.css" layer(base);
+@import "./disabled.css" layer(base);
+@import "./lightningcss.css" layer(base);

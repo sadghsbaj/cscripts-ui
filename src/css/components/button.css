@@ -1,3 +1,4 @@
-:root {
-    /* to be started */
+@scope (.cs-button) {
+    :scope {
+    }
 }
