@@ -1,1 +1,27 @@
-/* folgt */
+/*
+ * Global Focus Ring Architecture
+ * ------------------------------
+ * 1. Why `outline` over `box-shadow`:
+ *    - Zero property collisions: Components can freely use `box-shadow` for elevation or hover
+ *      states without accidentally overriding the focus indicator.
+ *    - True separation: `outline-offset` creates a native transparent gap between the element
+ *      and the ring, ensuring high contrast even when the element itself uses the accent color
+ *      (e.g., primary buttons).
+ *    - Accessibility: Unlike `box-shadow`, native `outline` is preserved by browsers in
+ *      forced-colors / Windows High Contrast modes.
+ *
+ * 2. Why instant rendering (no `transition` or `animation`):
+ *    - Architecture: Avoids CSS `transition` property collisions in child components without
+ *      requiring brittle keyframes hacks.
+ *    - Power-User UX: Keyboard navigators tabbing rapidly through interfaces experience
+ *      animated focus rings as visual lag. Instantaneous focus feedback provides maximum
+ *      responsiveness and clarity.
+ */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+:focus-visible {
+    outline: 2px solid var(--cs-color-accent-500);
+    outline-offset: 2px;
+}
