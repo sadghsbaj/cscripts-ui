@@ -1,4 +1,234 @@
-@scope (.cs-button) {
-    :scope {
+/* =========================================================
+ * DESIGN SYSTEM BUTTON COMPONENT
+ * ---------------------------------------------------------
+ * Pure CSS implementation designed to avoid redundant JS wrapper
+ * components in Svelte. Relies exclusively on data attributes
+ * (`[data-variant]`, `[data-color]`, `[data-size]`) for state
+ * configuration.
+ *
+ * Architectural Notes:
+ * - Defaults: Deliberately requires explicit variant/color/size
+ *   attributes to prevent unintended fallback styles.
+ * - Resets & Globals: Cursor styles (pointer), focus rings, text-decoration: none and
+ *   disabled states (`pointer-events: none`) are handled globally
+ *   across the design system.
+ * ========================================================= */
+.cs-button {
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    text-box: trim-both cap alphabetic;
+    isolation: isolate;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--_fg);
+    font-weight: 600;
+    white-space: nowrap;
+    border-radius: var(--cs-radius-full);
+    corner-shape: var(--cs-squircle-smooth);
+    user-select: none;
+    transition:
+        color 200ms var(--cs-ease-quad-out),
+        scale 200ms var(--cs-ease-expo-out);
+
+    /* =========================================================
+    * ELASTIC SURFACE (::before)
+    * ---------------------------------------------------------
+    * Decouples the visual background from text/icons so we can
+    * apply non-uniform squash-and-stretch scaling (`scale: X Y`)
+    * with `linear()` spring physics without distorting glyphs.
+    * with `linear()` spring physics without distorting glyphs.
+    * Inherits radius and corner-shape from host (keeping the
+    * host's `:focus-visible` outline perfectly matched).
+    * ========================================================= */
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background-color: var(--_bg);
+        border-radius: inherit;
+        corner-shape: inherit;
+        transition:
+            background-color 200ms var(--cs-ease-quad-out),
+            scale 600ms var(--cs-spring-release); /* CSS linear() transition */
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            color: var(--_fg-hover, var(--_fg));
+            &::before {
+                background-color: var(--_bg-hover);
+            }
+        }
+    }
+
+    /* =========================================================
+    * ACTIVE STATES (Pointer vs. Keyboard)
+    * ---------------------------------------------------------
+    * 1. Shared active color feedback (touch + desktop + keyboard).
+    * 2. Pointer (`:not(:focus-visible)`): Squash-and-stretch on
+    *    `::before` with a damped 140ms press-in and 600ms spring
+    *    release.
+    * 3. Keyboard (`:focus-visible`): Uniform `0.97` host scale so
+    *    the focus ring and surface shrink together without clashing.
+    * ========================================================= */
+    &:active {
+        color: var(--_fg-hover, var(--_fg));
+
+        &::before {
+            background-color: var(--_bg-hover);
+            transition:
+                background-color 140ms var(--cs-ease-quad-out),
+                scale 140ms var(--cs-ease-quad-out);
+        }
+    }
+
+    &:active:not(:focus-visible)::before {
+        scale: var(--_active-squash, 1.035 0.94);
+    }
+
+    &:active:focus-visible {
+        scale: 0.97;
+    }
+
+    /* =========================================================
+    * TEXT LABEL & OPTICAL TRIMMING
+    * ---------------------------------------------------------
+    * Targets bare `<span>` elements for zero-boilerplate usage
+    * alongside explicit `.cs-button-label` opt-ins (preventing
+    * collisions with badged or classed spans). Applies optical
+    * cap-height trimming and flex-safe ellipsis truncation.
+    * ========================================================= */
+    > span:not([class]),
+    > .cs-button-label {
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+        text-box: trim-both cap alphabetic;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* =========================================================
+    * DIRECT SVG ICONS (e.g., Lucide)
+    * ---------------------------------------------------------
+    * Automatically sizes direct child SVGs to `font-size + 2px`
+    * (`1em + 2px`) and overrides SVG presentation attributes
+    * (`width`, `height`, `stroke-width`) to match the `600`
+    * button font weight without requiring wrapper classes.
+    * ========================================================= */
+    > svg {
+        flex-shrink: 0;
+        width: calc(1em + 2px);
+        height: calc(1em + 2px);
+        stroke-width: 2.5;
+        pointer-events: none;
+    }
+
+    /* =========================================================
+    * SIZES
+    * ========================================================= */
+    &[data-size="sm"] {
+        gap: 4px;
+        height: 32px;
+        padding-inline: 8px;
+        font-size: var(--cs-text-xs);
+    }
+
+    &[data-size="md"] {
+        gap: 6px;
+        height: 36px;
+        padding-inline: 12px;
+        font-size: var(--cs-text-sm);
+    }
+
+    &[data-size="lg"] {
+        gap: 6px;
+        height: 40px;
+        padding-inline: 16px;
+        font-size: var(--cs-text-base);
+    }
+
+    /* =========================================================
+    * ICON-ONLY BUTTONS
+    * ---------------------------------------------------------
+    * Placed after SIZES so `padding-inline: 0` cleanly overrides
+    * size-specific inline padding at equal specificity `(0, 2, 0)`.
+    * Automatically triggers when an SVG is the sole child, or via
+    * explicit `data-icon-only` opt-in (e.g., when paired with
+    * absolute notification badges or screen-reader labels).
+    * ========================================================= */
+    &:has(> svg:only-child),
+    &[data-icon-only] {
+        --_active-squash: 1.06 0.94;
+        aspect-ratio: 1;
+        padding-inline: 0;
+        corner-shape: var(--cs-squircle-soft);
+    }
+
+    /* =========================================================
+    * COLORS
+    * ---------------------------------------------------------
+    * Only `base` defines `--_soft-fg-hover` (shifting from muted
+    * `text-main` to high-contrast `text-strong` on interaction).
+    * Chromatic intents (`accent`, `danger`) intentionally omit it so
+    * their foreground stays locked at peak saturation without washing
+    * out into pastel tints in dark mode.
+    * ========================================================= */
+    &[data-color="accent"] {
+        --_solid-bg: var(--cs-color-accent-solid);
+        --_solid-bg-hover: var(--cs-color-accent-solid-hover);
+        --_solid-fg: var(--cs-color-accent-solid-fg);
+
+        --_soft-bg: var(--cs-color-accent-soft);
+        --_soft-bg-hover: var(--cs-color-accent-soft-hover);
+        --_soft-fg: var(--cs-color-accent-soft-fg);
+    }
+
+    &[data-color="base"] {
+        --_solid-bg: var(--cs-color-base-solid);
+        --_solid-bg-hover: var(--cs-color-base-solid-hover);
+        --_solid-fg: var(--cs-color-base-solid-fg);
+
+        --_soft-bg: var(--cs-color-base-soft);
+        --_soft-bg-hover: var(--cs-color-base-soft-hover);
+        --_soft-fg: var(--cs-color-base-soft-fg);
+        --_soft-fg-hover: var(--cs-color-base-soft-fg-hover);
+    }
+
+    &[data-color="danger"] {
+        --_solid-bg: var(--cs-color-danger-solid);
+        --_solid-bg-hover: var(--cs-color-danger-solid-hover);
+        --_solid-fg: var(--cs-color-danger-solid-fg);
+
+        --_soft-bg: var(--cs-color-danger-soft);
+        --_soft-bg-hover: var(--cs-color-danger-soft-hover);
+        --_soft-fg: var(--cs-color-danger-soft-fg);
+    }
+
+    /* =========================================================
+    * VARIANTS
+    * ========================================================= */
+    &[data-variant="solid"] {
+        --_bg: var(--_solid-bg);
+        --_bg-hover: var(--_solid-bg-hover);
+        --_fg: var(--_solid-fg);
+    }
+
+    &[data-variant="soft"] {
+        --_bg: var(--_soft-bg);
+        --_bg-hover: var(--_soft-bg-hover);
+        --_fg: var(--_soft-fg);
+        --_fg-hover: var(--_soft-fg-hover);
+    }
+
+    &[data-variant="ghost"] {
+        --_bg: transparent;
+        --_bg-hover: var(--_soft-bg);
+        --_fg: var(--_soft-fg);
+        --_fg-hover: var(--_soft-fg-hover);
     }
 }

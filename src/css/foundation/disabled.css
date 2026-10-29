@@ -1,22 +1,22 @@
-/* --- DISABLED STATE STYLES --- */
-
-/* `:is()` is intentionally used over `:where()` to grant these default disabled styles a specificity
-   of (0, 1, 0) matching class and attribute selectors.
-
-   If `:where()` (0, 0, 0) were used, framework preflights (e.g., `button { opacity: 1 }` at (0, 0, 1))
-   and common utilities (such as `.cursor-pointer` at (0, 1, 0)) would override these defaults, causing
-   disabled controls to retain full opacity or display an interactive pointer cursor.
-
-   Using `:is()` ensures consistent base disabled aesthetics across native `:disabled` attributes
-   and `[aria-disabled="true"]`, while still remaining fully overridable by explicit
-   UnoCSS utility classes (e.g., `disabled:opacity-30`) through standard source-order precedence. */
-:is(:disabled, [aria-disabled="true"]) {
+/*
+ * Global Disabled State Architecture
+ * ----------------------------------
+ * 1. Selector Coverage:
+ *    - `:disabled`: Native form elements (<button>, <input>, <select>, <textarea>, <fieldset>).
+ *    - `[ aria-disabled="true" ]` & `[ data-disabled ]`: Non-native interactive elements
+ *      (e.g., <a class="cs-button"> or custom Svelte components).
+ *
+ * 2. Why `pointer-events: none`:
+ *    - Completely suppresses `:hover` and `:active` states at the browser level.
+ *    - Eliminates the need to litter component styles with `:not(:disabled)` guards.
+ *    - Prevents accidental click/tap events on non-native elements like links.
+ *    - Note: Because `pointer-events: none` prevents cursor rendering, `cursor: not-allowed`
+ *      would have no effect here and is intentionally omitted in favor of clean state suppression.
+ */
+:disabled,
+[aria-disabled="true"],
+[data-disabled] {
     opacity: 0.5;
-}
-
-:is(:disabled, [aria-disabled="true"]),
-:is(:disabled *, [aria-disabled="true"] *) {
-    animation: none;
-    cursor: not-allowed;
+    pointer-events: none;
     user-select: none;
 }

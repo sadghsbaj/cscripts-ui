@@ -44,3 +44,21 @@
     transition: none !important;
     animation: none !important;
 }
+
+/*
+ * Global Motion & Accessibility Architecture
+ * ------------------------------------------
+ * Respects user OS preferences for reduced motion. Instead of wrapping every
+ * component transition in media queries, spatial animations and transitions
+ * are globally neutralized when `prefers-reduced-motion: reduce` is active.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+}
