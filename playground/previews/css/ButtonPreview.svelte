@@ -1,253 +1,35 @@
 <script lang="ts">
     import { Plus } from "@lucide/svelte";
+
+    const variants = ["solid", "soft", "ghost"] as const;
+    const colors = ["accent", "base", "danger"] as const;
+    const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 </script>
 
-<div class="p-8 flex gap-3">
+{#snippet buttonGroup(variantList: readonly string[], color?: string)}
     <div class="flex flex-col gap-2 items-start">
-        <button class="cs-button" data-variant="solid" data-color="accent" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="accent" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="accent" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="accent" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="accent" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="accent" data-size="md">
-            <Plus />
-        </button>
+        {#each variantList as variant (variant)}
+            {#each sizes as size (size)}
+                <button class="cs-button" data-variant={variant} data-color={color} data-size={size}>
+                    <span>Click me!</span>
+                    <Plus />
+                </button>
+            {/each}
 
-        <button class="cs-button" data-variant="soft" data-color="accent" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="accent" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="accent" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="accent" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="accent" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="accent" data-size="md">
-            <Plus />
-        </button>
-
-        <button class="cs-button" data-variant="ghost" data-color="accent" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="accent" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="accent" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="accent" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="accent" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="accent" data-size="md">
-            <Plus />
-        </button>
+            <!-- Icon-only Button -->
+            <button class="cs-button" data-variant={variant} data-color={color} data-size="md">
+                <Plus />
+            </button>
+        {/each}
     </div>
+{/snippet}
 
-    <div class="flex flex-col gap-2 items-start">
-        <button class="cs-button" data-variant="solid" data-color="base" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="base" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="base" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="base" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="base" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="base" data-size="md">
-            <Plus />
-        </button>
+<div class="p-8 flex flex-col gap-10">
+    <div class="flex gap-3">
+        {#each colors as color (color)}
+            {@render buttonGroup(variants, color)}
+        {/each}
 
-        <button class="cs-button" data-variant="soft" data-color="base" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="base" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="base" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="base" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="base" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="base" data-size="md">
-            <Plus />
-        </button>
-
-        <button class="cs-button" data-variant="ghost" data-color="base" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="base" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="base" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="base" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="base" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="base" data-size="md">
-            <Plus />
-        </button>
-    </div>
-
-    <div class="flex flex-col gap-2 items-start">
-        <button class="cs-button" data-variant="solid" data-color="danger" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="danger" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="danger" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="danger" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="danger" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="solid" data-color="danger" data-size="md">
-            <Plus />
-        </button>
-
-        <button class="cs-button" data-variant="soft" data-color="danger" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="danger" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="danger" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="danger" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="danger" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="soft" data-color="danger" data-size="md">
-            <Plus />
-        </button>
-
-        <button class="cs-button" data-variant="ghost" data-color="danger" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="danger" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="danger" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="danger" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="danger" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="ghost" data-color="danger" data-size="md">
-            <Plus />
-        </button>
-    </div>
-
-    <div class="flex flex-col gap-2 items-start">
-        <button class="cs-button" data-variant="elevated" data-size="xs">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="elevated" data-size="sm">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="elevated" data-size="md">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="elevated" data-size="lg">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="elevated" data-size="xl">
-            <span>Click me!</span>
-            <Plus />
-        </button>
-        <button class="cs-button" data-variant="elevated" data-size="md">
-            <Plus />
-        </button>
+        {@render buttonGroup(["elevated"])}
     </div>
 </div>
