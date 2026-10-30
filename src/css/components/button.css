@@ -52,6 +52,7 @@
         corner-shape: inherit;
         transition:
             background-color 200ms var(--cs-ease-quad-out),
+            box-shadow 200ms var(--cs-ease-quad-out),
             scale 600ms var(--cs-spring-release); /* CSS linear() transition */
     }
 
@@ -132,17 +133,24 @@
     /* =========================================================
     * SIZES
     * ========================================================= */
+    &[data-size="xs"] {
+        gap: 4px;
+        height: 28px;
+        padding-inline: 8px;
+        font-size: var(--cs-text-xs);
+    }
+
     &[data-size="sm"] {
         gap: 4px;
         height: 32px;
-        padding-inline: 8px;
+        padding-inline: 12px;
         font-size: var(--cs-text-xs);
     }
 
     &[data-size="md"] {
         gap: 6px;
         height: 36px;
-        padding-inline: 12px;
+        padding-inline: 14px;
         font-size: var(--cs-text-sm);
     }
 
@@ -150,6 +158,13 @@
         gap: 6px;
         height: 40px;
         padding-inline: 16px;
+        font-size: var(--cs-text-sm);
+    }
+
+    &[data-size="xl"] {
+        gap: 6px;
+        height: 44px;
+        padding-inline: 20px;
         font-size: var(--cs-text-base);
     }
 
@@ -238,4 +253,31 @@
         --_fg: var(--_soft-fg);
         --_fg-hover: var(--_soft-fg-hover);
     }
+
+    /* =========================================================
+    * ELEVATED VARIANT
+    * ---------------------------------------------------------
+    * Neutral floating surface intended for overlays and controls placed above content.
+    * Unlike solid, soft and ghost, elevated does not participate
+    * in the semantic color matrix and therefore requires no
+    * `data-color` attribute.
+    * ========================================================= */
+    &[data-variant="elevated"] {
+        --_bg: var(--cs-color-elevation-1);
+        --_bg-hover: light-dark(var(--_bg), var(--cs-color-elevation-2));
+
+        &::before {
+            box-shadow: var(--cs-shadow-sm);
+        }
+
+        &:hover::before {
+            box-shadow: var(--cs-shadow-md);
+        }
+
+        &:active::before {
+            box-shadow: var(--cs-shadow-sm);
+        }
+    }
+
+    /* CONTINUE HERE */
 }
