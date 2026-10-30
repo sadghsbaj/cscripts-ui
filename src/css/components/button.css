@@ -7,11 +7,11 @@
 * configuration.
 *
 * Architectural Notes:
-* Defaults: Deliberately requires explicit variant/color/size
-* attributes to prevent unintended fallback styles.
-* Resets & Globals: Cursor styles (pointer), focus rings, text-decoration: none and
-* disabled states (`pointer-events: none`) are handled globally
-* across the design system.
+* - Defaults: Deliberately requires explicit variant/color/size
+*   attributes to prevent unintended fallback styles.
+* - Resets & Globals: Cursor styles (pointer), focus rings, text-decoration: none and
+*   disabled states (`pointer-events: none`) are handled globally
+*   across the design system.
 * ========================================================= */
 .cs-button {
     isolation: isolate;
