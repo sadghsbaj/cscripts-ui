@@ -7,11 +7,11 @@
 * configuration.
 *
 * Architectural Notes:
-* - Defaults: Deliberately requires explicit variant/color/size
-*   attributes to prevent unintended fallback styles.
-* - Resets & Globals: Cursor styles (pointer), focus rings, text-decoration: none and
-*   disabled states (`pointer-events: none`) are handled globally
-*   across the design system.
+* Defaults: Deliberately requires explicit variant/color/size
+* attributes to prevent unintended fallback styles.
+* Resets & Globals: Cursor styles (pointer), focus rings, text-decoration: none and
+* disabled states (`pointer-events: none`) are handled globally
+* across the design system.
 * ========================================================= */
 .cs-button {
     isolation: isolate;
@@ -37,7 +37,6 @@
     * ---------------------------------------------------------
     * Decouples the visual background from text/icons so we can
     * apply non-uniform squash-and-stretch scaling (`scale: X Y`)
-    * with `linear()` spring physics without distorting glyphs.
     * with `linear()` spring physics without distorting glyphs.
     * Inherits radius and corner-shape from host (keeping the
     * host's `:focus-visible` outline perfectly matched).
@@ -261,6 +260,13 @@
     * Unlike solid, soft and ghost, elevated does not participate
     * in the semantic color matrix and therefore requires no
     * `data-color` attribute.
+    *
+    * Hover Physics (Light vs. Dark):
+    * - Light Mode: Canvas is already light/white; elevation-1 is peak
+    *   white. Darkening the surface on hover would reduce contrast
+    *   and flatten hierarchy, so hover relies entirely on shadow lift.
+    * - Dark Mode: Shadows are barely perceptible on dark canvases;
+    *   hover steps up surface luminance from elevation-1 to elevation-2.
     * ========================================================= */
     &[data-variant="elevated"] {
         --_bg: var(--cs-color-elevation-1);
@@ -271,14 +277,14 @@
             box-shadow: var(--cs-shadow-sm);
         }
 
-        &:hover::before {
-            box-shadow: var(--cs-shadow-md);
+        @media (hover: hover) {
+            &:hover::before {
+                box-shadow: var(--cs-shadow-md);
+            }
         }
 
         &:active::before {
             box-shadow: var(--cs-shadow-sm);
         }
     }
-
-    /* CONTINUE HERE */
 }
