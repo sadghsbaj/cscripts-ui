@@ -1,22 +1,19 @@
 /* =========================================================
- * DESIGN SYSTEM BUTTON COMPONENT
- * ---------------------------------------------------------
- * Pure CSS implementation designed to avoid redundant JS wrapper
- * components in Svelte. Relies exclusively on data attributes
- * (`[data-variant]`, `[data-color]`, `[data-size]`) for state
- * configuration.
- *
- * Architectural Notes:
- * - Defaults: Deliberately requires explicit variant/color/size
- *   attributes to prevent unintended fallback styles.
- * - Resets & Globals: Cursor styles (pointer), focus rings, text-decoration: none and
- *   disabled states (`pointer-events: none`) are handled globally
- *   across the design system.
- * ========================================================= */
+* DESIGN SYSTEM BUTTON COMPONENT
+* ---------------------------------------------------------
+* Pure CSS implementation designed to avoid redundant JS wrapper
+* components in Svelte. Relies exclusively on data attributes
+* (`[data-variant]`, `[data-color]`, `[data-size]`) for state
+* configuration.
+*
+* Architectural Notes:
+* - Defaults: Deliberately requires explicit variant/color/size
+*   attributes to prevent unintended fallback styles.
+* - Resets & Globals: Cursor styles (pointer), focus rings, text-decoration: none and
+*   disabled states (`pointer-events: none`) are handled globally
+*   across the design system.
+* ========================================================= */
 .cs-button {
-    text-box-trim: trim-both;
-    text-box-edge: cap alphabetic;
-    text-box: trim-both cap alphabetic;
     isolation: isolate;
     position: relative;
     display: inline-flex;
@@ -25,6 +22,9 @@
     color: var(--_fg);
     font-weight: 600;
     white-space: nowrap;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+    text-box: trim-both cap alphabetic;
     border-radius: var(--cs-radius-full);
     corner-shape: var(--cs-squircle-smooth);
     user-select: none;
@@ -103,13 +103,14 @@
     * ========================================================= */
     > span:not([class]),
     > .cs-button-label {
+        min-width: 0;
+        overflow-x: clip;
+        overflow-y: visible;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         text-box-trim: trim-both;
         text-box-edge: cap alphabetic;
         text-box: trim-both cap alphabetic;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
     /* =========================================================
