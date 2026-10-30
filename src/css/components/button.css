@@ -265,6 +265,7 @@
     &[data-variant="elevated"] {
         --_bg: var(--cs-color-elevation-1);
         --_bg-hover: light-dark(var(--_bg), var(--cs-color-elevation-2));
+        --_fg: var(--cs-color-text-strong);
 
         &::before {
             box-shadow: var(--cs-shadow-sm);
