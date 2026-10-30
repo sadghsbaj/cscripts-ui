@@ -184,7 +184,7 @@
         padding-inline: 0;
         corner-shape: var(--cs-squircle-soft);
 
-        /* 50% scale ensures integer pixel alignment (16/18/20px) and optical balance without text. */
+        /* 50% scale ensures integer pixel alignment and optical balance without text. */
         > svg {
             width: 50%;
             height: 50%;
