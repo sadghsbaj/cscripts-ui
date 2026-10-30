@@ -17,6 +17,6 @@
 [aria-disabled="true"],
 [data-disabled] {
     opacity: 0.5;
-    pointer-events: none;
     user-select: none;
+    pointer-events: none;
 }
