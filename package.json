@@ -9,6 +9,7 @@
         "lint": "eslint ."
     },
     "exports": {
+        "./agents/*": "./src/agents/*",
         "./vite": "./src/vite/index.ts",
         "./css": "./src/css/index.css",
         "./css/*": "./src/css/components/*.css",

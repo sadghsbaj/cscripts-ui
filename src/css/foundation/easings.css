@@ -24,6 +24,9 @@
     --cs-ease-back-out: cubic-bezier(0.34, 1.56, 0.64, 1);
     --cs-ease-back-in-out: cubic-bezier(0.68, -0.6, 0.32, 1.6);
 
+    /* 1. Bouncy Spring (~28% overshoot):
+       Ideal for tactile press-releases (small scale deltas like 0.96 -> 1),
+       switches, and playful micro-interactions. */
     --cs-spring-release: linear(
         0,
         0.012,
@@ -41,6 +44,24 @@
         0.996 64.2%,
         1.014 71.7%,
         1.002 85.5%,
+        1
+    );
+
+    /* 2. Snappy UI Spring (~4% subtle overshoot):
+       Ideal for Segmented Control active pills, inline morphing,
+       popovers, and spatial element movement. */
+    --cs-spring-snappy: linear(
+        0,
+        0.009,
+        0.035 2.1%,
+        0.141 4.4%,
+        0.723 12.9%,
+        0.938 16.7%,
+        1.017 20.4%,
+        1.041 24.3%,
+        1.037 28.3%,
+        1.012 36.8%,
+        0.999 46.2%,
         1
     );
 }
