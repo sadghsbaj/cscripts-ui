@@ -67,7 +67,8 @@ AI models frequently make UIs too cramped and tiny. Prefer fewer elements render
 
 ### Optical Text Trimming & Lucide Icons
 
-- **Always apply `text-trim` or `text-trim-truncate`** on text elements (especially next to icons or inside buttons/chips/headers) for pixel-perfect optical vertical centering, unless multi-line wrapping requires standard line boxes. (`text-trim-truncate` safely uses `overflow-x: clip` so vertical glyphs are never clipped).
+- **Targeted Use of `text-trim` & `text-trim-truncate` (DO NOT OVERUSE):** Use `text-trim` (or `text-trim-truncate` for single-line ellipsis without vertical clipping) **ONLY** on isolated single-line UI control labels paired directly with an adjacent icon (e.g., inside buttons, segmented control options, badges, or compact nav items) where vertical icon-to-text optical alignment is critical.
+    - **Strictly Banned On:** NEVER apply `text-trim` to headings (`title-*`), subtitles (`subtitle-*`), descriptions (`description-*`), body copy (`body-*`), stacked text blocks, or standalone text without an adjacent icon, as stripping line-box metrics destroys natural vertical rhythm and collapses layout spacing.
 - **Icon-to-Text Sizing:** Size Lucide icons **`1px–2px` larger** than the adjacent `font-size` (e.g., `14px` `text-sm` -> `16px` icon; `16px` `text-base` -> `18px` icon).
 - **Icon Stroke Width Matching:** Match the icon's `stroke-width` to the adjacent text's `font-weight`:
     - `font-400` (Regular) -> `strokeWidth={2}`
