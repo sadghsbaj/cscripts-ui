@@ -20,6 +20,7 @@
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
+    width: fit-content;
     color: var(--_fg);
     font-weight: 600;
     white-space: nowrap;
@@ -80,23 +81,20 @@
         color: var(--_fg-hover, var(--_fg));
 
         &::before {
+            --_shadow: none;
             background-color: var(--_bg-hover);
             transition:
                 background-color 140ms var(--cs-ease-quad-out),
                 scale 140ms var(--cs-ease-quad-out);
         }
-    }
 
-    &:active:not(:focus-visible)::before {
-        scale: var(--_active-squash, 1.035 0.94);
-    }
+        &:not(:focus-visible)::before {
+            scale: var(--_active-squash, 1.035 0.94);
+        }
 
-    &:active:focus-visible {
-        scale: 0.97;
-    }
-
-    &:active::before {
-        --_shadow: none;
+        &:focus-visible {
+            scale: 0.97;
+        }
     }
 
     /* =========================================================
@@ -282,6 +280,7 @@
         --_fg: var(--cs-color-text-strong);
 
         &::before {
+            border: 1px solid var(--cs-color-elevation-1-border);
             box-shadow: var(--cs-shadow-sm);
         }
 
