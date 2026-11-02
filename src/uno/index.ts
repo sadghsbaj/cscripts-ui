@@ -14,6 +14,10 @@ export function presetCS(): Preset {
                 preflights: {
                     reset: false,
                 },
+                dark: {
+                    dark: '[data-theme="dark"]',
+                    light: '[data-theme="light"]',
+                },
             }),
         ],
         extractors: [extractorSvelte()],

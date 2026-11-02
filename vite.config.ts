@@ -1,4 +1,5 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { csTheme } from "cs/vite";
 import UnoCSS from "unocss/vite";
 import { defineConfig } from "vite";
 
@@ -8,5 +9,5 @@ export default defineConfig({
         // Erlaubt alle Hosts, ideal für wechselnde Tunnel-Domains wie bei Cloudflare
         allowedHosts: true,
     },
-    plugins: [UnoCSS(), svelte()],
+    plugins: [csTheme({ mode: "system" }), UnoCSS(), svelte()],
 });
