@@ -30,7 +30,7 @@
 )}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-sm dark:(border border-1 border-elevation-1)'
+            ? 'bg-elevation-1 shadow-sm dark:(border border-elevation-1)'
             : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">
@@ -47,13 +47,15 @@
                 <div class="flex gap-3 justify-between">
                     {#if !isElevated}
                         <button class="cs-button" data-size={size} data-variant={variant} data-color={color}
-                            >Click me!</button
+                            ><span>Click me!</span></button
                         >
                         <button class="cs-button" data-size={size} data-variant={variant} data-color={color}
                             ><Plus /></button
                         >
                     {:else}
-                        <button class="cs-button" data-size={size} data-variant="elevated">Click me!</button>
+                        <button class="cs-button" data-size={size} data-variant="elevated">
+                            <span>Click me!</span>
+                        </button>
                         <button class="cs-button" data-size={size} data-variant="elevated"><Plus /></button>
                     {/if}
                 </div>

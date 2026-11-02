@@ -27,7 +27,7 @@
 <div class="flex flex-col gap-5">
     {#if showHitArea}
         <button
-            class="cs-button"
+            class="cs-button w-fit"
             data-size="md"
             data-variant="soft"
             data-color="accent"
@@ -35,7 +35,7 @@
         >
     {:else}
         <button
-            class="cs-button"
+            class="cs-button w-fit"
             data-size="md"
             data-variant="soft"
             data-color="base"
@@ -46,7 +46,7 @@
     <div class="flex justify-center">
         <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl px-2 lg:px-8">
             {#each previewButtons as button (button)}
-                <button class="cs-button" data-size={button.size} data-variant="soft" data-color="base" data-icon-only
+                <button class="cs-button" data-size={button.size} data-variant="soft" data-color="base"
                     ><Plus />
                     <span
                         class="cs-hit-area border border-dashed"
@@ -58,7 +58,7 @@
                 </button>
             {/each}
 
-            <button class="cs-button" data-size="md" data-variant="soft" data-color="base" data-icon-only
+            <button class="cs-button" data-size="md" data-variant="soft" data-color="base"
                 ><Plus />
                 <span
                     class="cs-hit-area border border-dashed size-64px"

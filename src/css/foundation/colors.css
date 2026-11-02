@@ -143,17 +143,17 @@
     --cs-color-warning-900: color-mix(in oklch, var(--cs-color-orange-900) 50%, var(--cs-color-amber-900));
     --cs-color-warning-950: color-mix(in oklch, var(--cs-color-orange-950) 50%, var(--cs-color-amber-950));
 
-    --cs-color-danger-50: color-mix(in oklch, var(--cs-color-red-50) 50%, var(--cs-color-rose-50));
-    --cs-color-danger-100: color-mix(in oklch, var(--cs-color-red-100) 50%, var(--cs-color-rose-100));
-    --cs-color-danger-200: color-mix(in oklch, var(--cs-color-red-200) 50%, var(--cs-color-rose-200));
-    --cs-color-danger-300: color-mix(in oklch, var(--cs-color-red-300) 50%, var(--cs-color-rose-300));
-    --cs-color-danger-400: color-mix(in oklch, var(--cs-color-red-400) 50%, var(--cs-color-rose-400));
-    --cs-color-danger-500: color-mix(in oklch, var(--cs-color-red-500) 50%, var(--cs-color-rose-500));
-    --cs-color-danger-600: color-mix(in oklch, var(--cs-color-red-600) 50%, var(--cs-color-rose-600));
-    --cs-color-danger-700: color-mix(in oklch, var(--cs-color-red-700) 50%, var(--cs-color-rose-700));
-    --cs-color-danger-800: color-mix(in oklch, var(--cs-color-red-800) 50%, var(--cs-color-rose-800));
-    --cs-color-danger-900: color-mix(in oklch, var(--cs-color-red-900) 50%, var(--cs-color-rose-900));
-    --cs-color-danger-950: color-mix(in oklch, var(--cs-color-red-950) 50%, var(--cs-color-rose-950));
+    --cs-color-danger-50: color-mix(in oklch, var(--cs-color-red-50) 70%, var(--cs-color-rose-50));
+    --cs-color-danger-100: color-mix(in oklch, var(--cs-color-red-100) 70%, var(--cs-color-rose-100));
+    --cs-color-danger-200: color-mix(in oklch, var(--cs-color-red-200) 70%, var(--cs-color-rose-200));
+    --cs-color-danger-300: color-mix(in oklch, var(--cs-color-red-300) 70%, var(--cs-color-rose-300));
+    --cs-color-danger-400: color-mix(in oklch, var(--cs-color-red-400) 70%, var(--cs-color-rose-400));
+    --cs-color-danger-500: color-mix(in oklch, var(--cs-color-red-500) 70%, var(--cs-color-rose-500));
+    --cs-color-danger-600: color-mix(in oklch, var(--cs-color-red-600) 70%, var(--cs-color-rose-600));
+    --cs-color-danger-700: color-mix(in oklch, var(--cs-color-red-700) 70%, var(--cs-color-rose-700));
+    --cs-color-danger-800: color-mix(in oklch, var(--cs-color-red-800) 70%, var(--cs-color-rose-800));
+    --cs-color-danger-900: color-mix(in oklch, var(--cs-color-red-900) 70%, var(--cs-color-rose-900));
+    --cs-color-danger-950: color-mix(in oklch, var(--cs-color-red-950) 70%, var(--cs-color-rose-950));
 
     --cs-color-info-50: var(--cs-color-sky-50);
     --cs-color-info-100: var(--cs-color-sky-100);

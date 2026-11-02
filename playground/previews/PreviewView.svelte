@@ -18,7 +18,7 @@
 
     const modules = import.meta.glob<SvelteModule>("./css/*.svelte", { eager: true });
 
-    const previews: PreviewItem[] = Object.entries(modules).map(([path, module]) => {
+    const previews: PreviewItem[] = Object.values(modules).map((module) => {
         return {
             id: module.id,
             label: module.label,
@@ -36,7 +36,7 @@
         try {
             localStorage.setItem(SAVED_PREVIEW_KEY, preview.id);
         } catch (error) {
-            error;
+            console.warn(error);
         }
     }
 

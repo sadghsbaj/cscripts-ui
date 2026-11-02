@@ -42,16 +42,20 @@
  *   paint, or size recalculations leaking into the document.
  * ========================================================= */
 .cs-hit-area {
+    --_size: 44px;
+
     -webkit-tap-highlight-color: transparent;
     position: absolute;
     inset: 50% auto auto 50%;
+    width: var(--_size);
     min-width: 100%;
+    height: var(--_size);
     min-height: 100%;
     translate: -50% -50%;
     user-select: none;
     contain: strict;
     cursor: inherit;
-    pointer-events: auto;
+    pointer-events: inherit;
 
     /* =========================================================
      * TARGET SIZES (WCAG & Platform Guidelines)
@@ -61,17 +65,14 @@
      * - lg (48px): W3C WCAG 2.5.5 AAA & Android Material target
      * ========================================================= */
     &[data-size="sm"] {
-        width: 40px;
-        height: 40px;
+        --_size: 40px;
     }
 
     &[data-size="md"] {
-        width: 44px;
-        height: 44px;
+        --_size: 44px;
     }
 
     &[data-size="lg"] {
-        width: 48px;
-        height: 48px;
+        --_size: 48px;
     }
 }
