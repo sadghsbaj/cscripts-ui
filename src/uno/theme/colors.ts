@@ -5,9 +5,15 @@ export function semanticColor(name: string): Record<string, string> {
     const scale: Record<string, string> = {
         soft: `var(--cs-color-${name}-soft)`,
         "soft-hover": `var(--cs-color-${name}-soft-hover)`,
+        "soft-fg": `var(--cs-color-${name}-soft-fg)`,
         solid: `var(--cs-color-${name}-solid)`,
         "solid-hover": `var(--cs-color-${name}-solid-hover)`,
+        "solid-fg": `var(--cs-color-${name}-solid-fg)`,
     };
+
+    if (name === "base") {
+        scale["soft-fg-hover"] = "var(--cs-color-base-soft-fg-hover)";
+    }
 
     for (const shade of SHADES) {
         scale[shade] = `var(--cs-color-${name}-${shade})`;

@@ -44,7 +44,7 @@ All semantic UnoCSS color tokens map to `--cs-color-*` variables (`../uno/theme/
     - `text-strong`, `text-main` (default inherited), `text-weak`, `text-weaker`
     - **Rule:** NEVER use raw gray/zinc classes (`text-zinc-500`, `text-base-600`) for typography.
 - **Semantic Palettes (`base`, `accent`, `success`, `warning`, `danger`, `info`):**
-    - Pre-mixed soft/solid tokens (auto `light-dark()`): `<palette>-soft`, `<palette>-soft-hover`, `<palette>-solid`, `<palette>-solid-hover` (e.g., `bg-accent-soft hover:bg-accent-soft-hover`, `bg-base-soft`, `bg-danger-solid`). Note: For matching `-fg` foreground variables, check `../css/foundation/colors.css`.
+    - Pre-mixed soft/solid tokens (auto `light-dark()`): `<palette>-soft`, `<palette>-soft-hover`, `<palette>-soft-fg`, `<palette>-solid`, `<palette>-solid-hover`, `<palette>-solid-fg` (plus `base-soft-fg-hover`). E.g., `bg-accent-soft text-accent-soft-fg`, `bg-danger-solid text-danger-solid-fg`.
     - Raw shades: `50`–`950` (e.g., `border-base-200`, `text-accent-500`).
 
 ## 5. Custom Rules (Scrollbars, Squircles, Text-Trim)
