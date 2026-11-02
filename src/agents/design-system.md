@@ -11,7 +11,7 @@ Aim for an ultra-clean, Apple-inspired monochrome aesthetic with intentional spa
 
 ### Strict Anti-Patterns (BANNED)
 
-- **No Borders or Hairlines:** NEVER use `border`, `divide-*`, or `<hr>` lines to separate UI elements. Visual separation is achieved strictly through surface elevation, background contrast, and whitespace.
+- **Restraint with Borders & Hairlines:** In Light Mode, keep the UI strictly borderless—visual separation is achieved purely through surface elevation (`shadow-sm`), background contrast, and whitespace. In Dark Mode, where drop shadows are physically invisible against dark backgrounds, primary floating cards/islands (`elevation-1`) should use `border border-elevation-1` for edge definition. Do NOT overuse borders or put borders on everything on cramp: nested elements (`elevation-2`), inner wells, or segmented controls should still rely purely on surface background contrast (`bg-elevation-2`) without borders. NEVER use `divide-*` or `<hr>` dividing lines.
 - **No Hyphens or Text Dashes as Separators:** Never use `-`, `—`, or unicode dots in UI labels/metadata. Use layout gaps or `<span class="dot-md"></span>`.
 - **No Fake "AI App Headers":** Do NOT invent a top navbar with a random Lucide icon and a made-up app title unless explicitly requested. Start directly with functional workspace islands.
 - **No Cliché "AI Feature Cards":** NEVER build cards with a tinted square/circle icon in the top-left corner followed by a title and description underneath.
@@ -26,8 +26,8 @@ Instead of monolithic full-screen panels divided by borders, structure layouts a
 ### Surface Stacking (`0 -> 1 -> 2`)
 
 - **Canvas (`bg-elevation-0`):** The app background.
-- **Primary Islands (`bg-elevation-1` + `shadow-sm`):** Group distinct functional areas into separate floating cards/islands (e.g., a top-left action cluster island, a centered search island, and content cards below) rather than one giant toolbar. Use `shadow-sm` for clean separation on `elevation-0`.
-- **Nested Elements (`bg-elevation-2`, Flat):** Elements inside an `elevation-1` island (inputs, inner wells, secondary blocks, segmented control tracks) use `bg-elevation-2` **without shadows or borders**—relying purely on background contrast.
+- **Primary Islands (`bg-elevation-1` + `shadow-sm` + `border border-elevation-1`):** Group distinct functional areas into separate floating cards/islands rather than one giant toolbar. Pair `bg-elevation-1` with `shadow-sm` and `border border-elevation-1`. Because `border-elevation-1` uses `light-dark(transparent, ...)`, cards stay 100% borderless in Light Mode while gaining a precise, subtle hairline in Dark Mode to compensate for invisible drop shadows.
+- **Nested Elements (`bg-elevation-2`, Flat):** Elements inside an `elevation-1` island (inputs, inner wells, secondary blocks, segmented control tracks) use `bg-elevation-2` **without shadows or borders**—relying purely on background contrast, even in Dark Mode. Avoid cluttering nested layouts with redundant borders; only use `border-elevation-2` when an inner container directly demands edge clarity.
 
 ---
 
