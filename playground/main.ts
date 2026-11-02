@@ -1,3 +1,5 @@
+import "cs/svelte";
+
 import { mount } from "svelte";
 
 import "virtual:uno.css";
