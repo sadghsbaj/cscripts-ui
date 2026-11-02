@@ -5,6 +5,14 @@
     --cs-color-elevation-0: light-dark(var(--cs-color-base-100), var(--cs-color-base-950));
     --cs-color-elevation-1: light-dark(white, var(--cs-color-base-900));
     --cs-color-elevation-2: light-dark(var(--cs-color-base-100), var(--cs-color-base-800));
+    --cs-color-elevation-1-border: light-dark(
+        transparent,
+        color-mix(in oklch, var(--cs-color-base-100) 5%, transparent)
+    );
+    --cs-color-elevation-2-border: light-dark(
+        transparent,
+        color-mix(in oklch, var(--cs-color-base-100) 8%, transparent)
+    );
 
     --cs-color-text-strong: light-dark(var(--cs-color-base-900), var(--cs-color-base-100));
     --cs-color-text-main: light-dark(var(--cs-color-base-700), var(--cs-color-base-300));
