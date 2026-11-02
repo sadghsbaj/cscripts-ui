@@ -1,3 +1,8 @@
+<script module>
+    export const id = "button";
+    export const label = "Button";
+</script>
+
 <script lang="ts">
     import { Plus } from "@lucide/svelte";
 
@@ -6,30 +11,53 @@
     const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 </script>
 
-{#snippet buttonGroup(variantList: readonly string[], color?: string)}
-    <div class="flex flex-col gap-2 items-start">
-        {#each variantList as variant (variant)}
-            {#each sizes as size (size)}
-                <button class="cs-button" data-variant={variant} data-color={color} data-size={size}>
-                    <span>Click me!</span>
-                    <Plus />
-                </button>
+<div class="flex justify-center">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
+        {#each variants as variant (variant)}
+            {#each colors as color (color)}
+                {@render previewCard(false, variant, color)}
             {/each}
-
-            <!-- Icon-only Button -->
-            <button class="cs-button" data-variant={variant} data-color={color} data-size="md">
-                <Plus />
-            </button>
-        {/each}
-    </div>
-{/snippet}
-
-<div class="p-8 flex flex-col gap-10">
-    <div class="flex gap-3">
-        {#each colors as color (color)}
-            {@render buttonGroup(variants, color)}
         {/each}
 
-        {@render buttonGroup(["elevated"])}
+        {@render previewCard(true, "", "")}
     </div>
 </div>
+
+{#snippet previewCard(
+    isElevated: boolean,
+    variant: (typeof variants)[number] | "",
+    color: (typeof colors)[number] | ""
+)}
+    <div
+        class="{!isElevated
+            ? 'bg-elevation-1 shadow-sm dark:(border border-1 border-elevation-1)'
+            : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+    >
+        <h2 class="title-2xl">
+            {#if !isElevated}
+                {variant[0]?.toUpperCase() + variant.slice(1)}
+                +
+                {color[0]?.toUpperCase() + color.slice(1)}
+            {:else}
+                Elevated
+            {/if}
+        </h2>
+        <div class="w-full h-full flex flex-col gap-2">
+            {#each sizes as size (size)}
+                <div class="flex gap-3 justify-between">
+                    {#if !isElevated}
+                        <button class="cs-button" data-size={size} data-variant={variant} data-color={color}
+                            >Click me!</button
+                        >
+                        <button class="cs-button" data-size={size} data-variant={variant} data-color={color}
+                            ><Plus /></button
+                        >
+                    {:else}
+                        <button class="cs-button" data-size={size} data-variant="elevated">Click me!</button>
+                        <button class="cs-button" data-size={size} data-variant="elevated"><Plus /></button>
+                    {/if}
+                </div>
+            {/each}
+        </div>
+    </div>
+{/snippet}
