@@ -1,4 +1,4 @@
-# `cs` CSS Architecture, Tokens & Components
+# `cs` CSS Architecture & Foundation Tokens
 
 All paths below are relative to `./node_modules/cs/src/agents/`.
 
@@ -6,7 +6,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 
 `../css/index.css` establishes a strict CSS `@layer` cascade so UnoCSS utilities can cleanly override foundation and component styles without specificity wars (`!important` is almost never needed):
 
-- **Top-level layers:** `foundation`, `components` (defined in `../css/index.css`).
+- **Top-level layers:** `foundation`, `components` (defined in `../css/index.css` and colocated Svelte component `<style>` blocks).
 - **Foundation sub-layers:** `reset` and `base` (defined in `../css/foundation/index.css`).
 
 ## 2. Automated Foundation Behaviors (DO NOT RE-IMPLEMENT)
@@ -64,10 +64,3 @@ All custom CSS variables provided by `cs` are strictly prefixed with `--cs-`. Wh
     - Squircles (`corner-shape`): `--cs-squircle`, `--cs-squircle-smooth`, `--cs-squircle-soft`
     - Typography: Inspect `../css/foundation/typography.css` for font, size, leading, and tracking tokens.
 - **Namespace Rule:** The `--cs-*` prefix is strictly reserved for `cs` library tokens. Consuming applications must NEVER define new custom properties starting with `--cs-` (use unprefixed `--my-var` or `--app-*` for app-specific variables, and only set `--cs-*` when intentionally overriding a library token like `--cs-scrollbar-size`).
-
-## 4. CSS Components (`../css/components/`)
-
-NEVER build standard UI primitives (buttons, inputs, etc.) from scratch with UnoCSS utilities before checking existing CSS components.
-
-1. **Discover available components:** Read `../css/components/index.css` to see all exported CSS component stylesheets.
-2. **Inspect implementation:** Read the specific `../css/components/<name>.css` file to check the base class, variant modifiers, and custom properties before using it.

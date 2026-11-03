@@ -2,13 +2,12 @@
 
 All paths below are relative to `./node_modules/cs/src/agents/`.
 
-## 1. Component Architecture Philosophy: CSS vs. Svelte Components
+## 1. Component Architecture Philosophy
 
-Do NOT wrap every simple UI element into a `.svelte` component:
-
-- **Simple / Stateless Primitives (Buttons, Badges, Static Cards):** Use native HTML elements styled with `cs/css` component classes (`../css/components/index.css`).
-- **Complex / Stateful UI (Modals, Dropdowns, Comboboxes, Complex Sidebars):** Build as full `.svelte` components only when encapsulating state, keyboard navigation, focus trapping, or complex logic.
-  - Before building a stateful component, check `../svelte/components/index.ts` to see what `cs/svelte/components` already provides.
+- **UI Components & Interactive Primitives (`../svelte/components/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte` components. Components use a clean compound architecture with colocated `@layer components` CSS and require explicit prop configuration (`variant`, `size`, `color`) without implicit fallback defaults:
+    1. **Discover available components:** Read `../svelte/components/index.ts` to see all exported components, sub-components, and prop types.
+    2. **Inspect implementation & conventions:** Read the specific `../svelte/components/<name>/` files and architectural guides in `../svelte/explanations/` before using or building components.
+- **Static Layout & Surface Containers:** Do NOT wrap simple static layout containers (islands, cards, flex/grid wrappers) into redundant `.svelte` components when native HTML elements styled with UnoCSS utilities and semantic surface tokens (`bg-elevation-1`, `squircle`, etc.) suffice.
 
 ## 2. Modern Svelte 5 Features (MANDATORY — DO NOT USE LEGACY PATTERNS)
 

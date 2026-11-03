@@ -21,10 +21,8 @@ bun update cs
 1. CSS (main.ts or app.css)
 
 ```ts
-// Load everything (reset, tokens, all components)
+// Load CSS foundation (reset, tokens, global behaviors)
 import "cs/css";
-// Or load single components
-import "cs/css/button";
 ```
 
 2. UnoCSS
@@ -63,18 +61,18 @@ All plugins ship with `cs`; the project itself only needs `eslint` (`bun add -d 
 
 ```svelte
 <script lang="ts">
-    import { Dialog } from "cs/svelte";
+    import { Button, ButtonLabel } from "cs/svelte";
 </script>
 ```
 
 ## Project Structure
 
-- src/css/ — Tokens, reset, and standalone CSS components (src/css/components/*.css).
+- src/css/ — CSS foundation (reset, design tokens, global behaviors).
 - src/uno/ — UnoCSS preset (theme, variants, rules, shortcuts) mirroring the CSS tokens.
 - src/eslint/ — Shared ESLint flat config, exported as `cs/eslint`.
 - src/vite/ — Vite plugins (`csTheme`), exported as `cs/vite`.
 - template/ — Starter for new projects; copy it and adjust `index.html` (title, app name).
-- src/svelte/ — Svelte 5 components (src/svelte/components/).
+- src/svelte/ — Svelte 5 components (`src/svelte/components/`), explanations, and theme state.
 - playground/ — Local Vite test app (ignored when installed in other projects).
 
 ## Local Development Workflow

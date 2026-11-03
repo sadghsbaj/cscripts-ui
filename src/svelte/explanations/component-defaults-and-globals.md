@@ -1,15 +1,15 @@
 # Component Defaults & Global Foundation Behaviors
 
-This architectural guide explains the baseline conventions and automated foundation behaviors shared across all `cs` CSS components.
+This architectural guide explains the baseline conventions and automated foundation behaviors shared across all `cs` Svelte components.
 
 ---
 
 ## 1. Explicit Configuration Philosophy (No Fallback Defaults)
 
-Components in `cs` deliberately **require explicit configuration** via data attributes (such as `[data-variant]`, `[data-size]`, and `[data-color]` where applicable):
+Components in `cs` deliberately **require explicit configuration** via required props mapped to data attributes (such as `variant` -> `[data-variant]`, `size` -> `[data-size]`, and `color` -> `[data-color]` where applicable):
 
-- **Preventing Accidental Defaults:** There are no implicit fallback sizes or variants in component CSS. Omitting a required attribute produces unstyled or incomplete components rather than guessing an unintended look.
-- **Lint Enforced:** Custom ESLint rules in `src/eslint/rules/` (`button`, `close-button`, `hit-area`) actively validate required attributes, value enums, and accessibility requirements in your IDE, providing type-level safety for pure CSS.
+- **Preventing Accidental Defaults:** There are no implicit fallback sizes or variants in component props or CSS. Omitting a required prop is caught immediately rather than guessing an unintended look.
+- **Type-Enforced:** Strict TypeScript prop definitions on each Svelte component validate required props, allowed value unions, and variant constraints (such as omitting `color` on `elevated` variants) directly in your IDE.
 
 ---
 

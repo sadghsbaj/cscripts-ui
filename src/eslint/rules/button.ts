@@ -1,47 +1,39 @@
 /**
- * Enforces explicit configuration attributes and accessible touch targets on `.cs-button` elements:
- * - `require-attributes`: Ensures required `data-size`, `data-variant`, `data-color`, and text label / icon-only semantics.
- * - `require-hit-area`: Suggests adding `.cs-hit-area` to icon-only buttons to guarantee adequate touch target area.
+ * Enforces compound component structure and accessible touch targets on `<Button>` components:
+ * - `require-structure`: Ensures `<ButtonLabel>` / `<ButtonIcon>` usage and accessible naming on `iconOnly` buttons.
+ * - `require-hit-area`: Suggests adding `<HitArea />` to `iconOnly` buttons to guarantee adequate touch target area.
  */
 
 import type { Linter, Rule } from "eslint";
 import type { AST } from "svelte-eslint-parser";
 import {
-    checkEnumAttribute,
-    findAttribute,
-    findIcons,
+    findRawIcons,
+    getElementName,
     getImportedIconNames,
-    getLiteralStringValue,
-    hasClass,
-    hasDescendantClass,
-    isAriaHidden,
+    hasAccessibleLabel,
+    hasDescendantElement,
+    isTruthyAttribute,
     shouldSkipFile,
 } from "./utils.ts";
 
-export const ALLOWED_BUTTON_SIZES = new Set(["xs", "sm", "md", "lg", "xl"]);
-export const ALLOWED_BUTTON_VARIANTS = new Set(["solid", "soft", "ghost", "elevated"]);
-export const ALLOWED_BUTTON_COLORS = new Set(["accent", "base", "danger"]);
-export const ALLOWED_BUTTON_TYPES = new Set(["button", "submit", "reset"]);
-
-export const buttonRule: Rule.RuleModule = {
+export const buttonStructureRule: Rule.RuleModule = {
     meta: {
         type: "problem",
-        fixable: "code",
         docs: {
-            description: "Enforce required data attributes, explicit type, and label/icon structure for .cs-button elements",
+            description:
+                "Enforce <ButtonLabel> / <ButtonIcon> compound structure and accessible naming on <Button> components",
         },
         messages: {
-            missingType: 'Buttons with class "cs-button" must specify an explicit type attribute ("button" | "submit" | "reset").',
-            invalidType: 'Invalid button type "{{value}}". Allowed types: button, submit, reset.',
-            missingSize: 'Buttons with class "cs-button" must specify a data-size ("xs" | "sm" | "md" | "lg" | "xl").',
-            invalidSize: 'Invalid data-size "{{value}}". Allowed sizes: xs, sm, md, lg, xl.',
-            missingVariant: 'Buttons with class "cs-button" must specify a data-variant ("solid" | "soft" | "ghost" | "elevated").',
-            invalidVariant: 'Invalid data-variant "{{value}}". Allowed variants: solid, soft, ghost, elevated.',
-            missingColor: 'Buttons with class "cs-button" must specify a data-color ("accent" | "base" | "danger") unless variant is "elevated".',
-            invalidColor: 'Invalid data-color "{{value}}". Allowed colors: accent, base, danger.',
-            missingLabelOrIconOnly: 'Buttons with class "cs-button" must either specify "data-icon-only" or contain a child with class "cs-button-label".',
-            missingIconOnlyAriaLabel: 'Icon-only buttons with "data-icon-only" must specify an accessible "aria-label" or "aria-labelledby".',
-            missingIconAriaHidden: 'Icons inside buttons must have aria-hidden="true" to avoid confusing screen readers.',
+            missingLabelOrIconOnly:
+                '<Button> must either specify "iconOnly" or contain a <ButtonLabel> child.',
+            missingIconOnlyAriaLabel:
+                'Icon-only <Button iconOnly> must specify an accessible "aria-label" or "aria-labelledby".',
+            missingIconInIconOnly:
+                'Icon-only <Button iconOnly> must contain a <ButtonIcon icon={...} /> child.',
+            unexpectedLabelInIconOnly:
+                'Icon-only <Button iconOnly> must not contain a <ButtonLabel> child.',
+            rawIconInButton:
+                "Use <ButtonIcon icon={{{name}}} /> instead of placing <{{name}}> directly inside <Button>.",
         },
         schema: [],
     },
@@ -54,110 +46,44 @@ export const buttonRule: Rule.RuleModule = {
         return {
             SvelteElement(rawNode: Rule.Node): void {
                 const node = rawNode as unknown as AST.SvelteElement;
-                if (!hasClass(node, "cs-button")) return;
+                if (getElementName(node) !== "Button") return;
 
-                // 1. Ensure explicit type on <button> tags to prevent accidental form submits
-                const tagName = "name" in node.name ? node.name.name : "";
-                if (tagName === "button") {
-                    const typeAttr = findAttribute(node, "type");
-                    if (!typeAttr) {
+                const isIconOnly = isTruthyAttribute(node, "iconOnly");
+                const hasLabel = hasDescendantElement(node.children, "ButtonLabel");
+                const hasButtonIcon = hasDescendantElement(node.children, "ButtonIcon");
+
+                if (isIconOnly) {
+                    if (!hasAccessibleLabel(node)) {
                         context.report({
                             node: node.startTag as unknown as Rule.Node,
-                            messageId: "missingType",
-                            fix(fixer) {
-                                return fixer.insertTextAfter(
-                                    node.name as unknown as Rule.Node,
-                                    ' type="button"'
-                                );
-                            },
+                            messageId: "missingIconOnlyAriaLabel",
                         });
-                    } else {
-                        const typeVal = getLiteralStringValue(typeAttr);
-                        if (typeVal !== undefined && !ALLOWED_BUTTON_TYPES.has(typeVal)) {
-                            context.report({
-                                node: typeAttr as unknown as Rule.Node,
-                                messageId: "invalidType",
-                                data: { value: typeVal },
-                            });
-                        }
                     }
-                }
-
-                // 2. Validate data-size
-                checkEnumAttribute(context, node, "data-size", ALLOWED_BUTTON_SIZES, {
-                    required: true,
-                    missingMessageId: "missingSize",
-                    invalidMessageId: "invalidSize",
-                });
-
-                // 3. Validate data-variant
-                const variantVal = checkEnumAttribute(
-                    context,
-                    node,
-                    "data-variant",
-                    ALLOWED_BUTTON_VARIANTS,
-                    {
-                        required: true,
-                        missingMessageId: "missingVariant",
-                        invalidMessageId: "invalidVariant",
+                    if (!hasButtonIcon) {
+                        context.report({
+                            node: node.startTag as unknown as Rule.Node,
+                            messageId: "missingIconInIconOnly",
+                        });
                     }
-                );
-
-                // 4. Validate data-color (exempt for elevated variants)
-                if (variantVal !== "elevated") {
-                    checkEnumAttribute(context, node, "data-color", ALLOWED_BUTTON_COLORS, {
-                        required: true,
-                        missingMessageId: "missingColor",
-                        invalidMessageId: "invalidColor",
-                    });
-                }
-
-                // 5. Ensure visual/accessible structure: text label or explicit icon-only indicator
-                const hasIconOnly = Boolean(findAttribute(node, "data-icon-only"));
-                if (!hasIconOnly && !hasDescendantClass(node.children, "cs-button-label")) {
+                    if (hasLabel) {
+                        context.report({
+                            node: node.startTag as unknown as Rule.Node,
+                            messageId: "unexpectedLabelInIconOnly",
+                        });
+                    }
+                } else if (!hasLabel) {
                     context.report({
                         node: node.startTag as unknown as Rule.Node,
                         messageId: "missingLabelOrIconOnly",
                     });
                 }
 
-                // 6. Icon-only buttons must specify an accessible name (aria-label or aria-labelledby)
-                if (hasIconOnly) {
-                    const ariaLabel = findAttribute(node, "aria-label");
-                    const ariaLabelledBy = findAttribute(node, "aria-labelledby");
-                    const hasValidLabel =
-                        (ariaLabel && (getLiteralStringValue(ariaLabel)?.trim() || ariaLabel.value.some((v) => v.type === "SvelteMustacheTag"))) ||
-                        (ariaLabelledBy && (getLiteralStringValue(ariaLabelledBy)?.trim() || ariaLabelledBy.value.some((v) => v.type === "SvelteMustacheTag")));
-
-                    if (!hasValidLabel) {
-                        context.report({
-                            node: node.startTag as unknown as Rule.Node,
-                            messageId: "missingIconOnlyAriaLabel",
-                        });
-                    }
-                }
-
-                // 7. Icons inside buttons (with label or icon-only) must have aria-hidden="true"
-                const iconElements = findIcons(node.children, iconNames);
-                for (const iconEl of iconElements) {
-                    if (isAriaHidden(iconEl)) continue;
-
-                    const ariaHiddenAttr = findAttribute(iconEl, "aria-hidden");
+                const rawIcons = findRawIcons(node.children, iconNames);
+                for (const rawIcon of rawIcons) {
                     context.report({
-                        node: iconEl.startTag as unknown as Rule.Node,
-                        messageId: "missingIconAriaHidden",
-                        fix(fixer) {
-                            if (ariaHiddenAttr) {
-                                return fixer.replaceText(
-                                    ariaHiddenAttr as unknown as Rule.Node,
-                                    'aria-hidden="true"'
-                                );
-                            }
-                            return fixer.insertTextAfter(
-                                iconEl.name as unknown as Rule.Node,
-                                ' aria-hidden="true"'
-                            );
-                        },
+                        node: rawIcon.startTag as unknown as Rule.Node,
+                        messageId: "rawIconInButton",
+                        data: { name: getElementName(rawIcon) },
                     });
                 }
             },
@@ -166,19 +92,18 @@ export const buttonRule: Rule.RuleModule = {
 };
 
 /**
- * Advisory rule warning when icon-only buttons omit a .cs-hit-area touch target expander.
- * Even 44px (xl) circular/squircle buttons lose effective touch area in clipped corners.
- * Configured as a warning so developers can selectively disable it via <!-- eslint-disable-next-line --> where appropriate.
+ * Advisory rule warning when icon-only `<Button iconOnly>` components omit a `<HitArea />` touch target expander.
+ * Configured as a warning so developers can selectively disable it via `<!-- eslint-disable-next-line -->` where appropriate.
  */
 export const buttonHitAreaRule: Rule.RuleModule = {
     meta: {
         type: "suggestion",
         docs: {
-            description: "Advise using .cs-hit-area on icon-only buttons to satisfy touch target guidelines",
+            description: "Advise using <HitArea /> inside <Button iconOnly> to satisfy touch target guidelines",
         },
         messages: {
             missingHitArea:
-                'Icon-only buttons should contain a <span class="cs-hit-area"> (data-size="md" or "lg") to guarantee a solid 44px+ touch target, especially on rounded/circular controls.',
+                'Icon-only <Button iconOnly> should contain a <HitArea size="md" /> (or "lg") child to guarantee a solid 44px+ touch target, especially on rounded/squircle controls.',
         },
         schema: [],
     },
@@ -189,12 +114,10 @@ export const buttonHitAreaRule: Rule.RuleModule = {
         return {
             SvelteElement(rawNode: Rule.Node): void {
                 const node = rawNode as unknown as AST.SvelteElement;
-                if (!hasClass(node, "cs-button")) return;
+                if (getElementName(node) !== "Button") return;
+                if (!isTruthyAttribute(node, "iconOnly")) return;
 
-                const hasIconOnly = Boolean(findAttribute(node, "data-icon-only"));
-                if (!hasIconOnly) return;
-
-                if (!hasDescendantClass(node.children, "cs-hit-area")) {
+                if (!hasDescendantElement(node.children, "HitArea")) {
                     context.report({
                         node: node.startTag as unknown as Rule.Node,
                         messageId: "missingHitArea",
@@ -210,13 +133,13 @@ export const buttonConfig: Linter.Config = {
     plugins: {
         button: {
             rules: {
-                "require-attributes": buttonRule,
+                "require-structure": buttonStructureRule,
                 "require-hit-area": buttonHitAreaRule,
             },
         },
     },
     rules: {
-        "button/require-attributes": "error",
+        "button/require-structure": "error",
         "button/require-hit-area": "warn",
     },
 };

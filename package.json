@@ -12,8 +12,6 @@
         "./agents/*": "./src/agents/*",
         "./vite": "./src/vite/index.ts",
         "./css": "./src/css/index.css",
-        "./css/*": "./src/css/components/*.css",
-        "./css/explanations/*": "./src/css/explanations/*",
         "./assets/*": "./src/assets/*",
         "./uno": "./src/uno/index.ts",
         "./svelte": {
@@ -24,6 +22,7 @@
             "svelte": "./src/svelte/components/index.ts",
             "default": "./src/svelte/components/index.ts"
         },
+        "./svelte/explanations/*": "./src/svelte/explanations/*",
         "./eslint": "./src/eslint/index.ts"
     },
     "devDependencies": {

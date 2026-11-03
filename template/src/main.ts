@@ -1,8 +1,9 @@
+// Must be imported first to establish the `@layer foundation, components` cascade order before component styles load.
+import "cs/css";
 import "cs/svelte";
 
 import { mount } from "svelte";
 
-import "cs/css";
 import "virtual:uno.css";
 
 import App from "./App.svelte";

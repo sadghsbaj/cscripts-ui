@@ -1,4 +1,3 @@
 @layer foundation, components;
 
 @import "./foundation/index.css" layer(foundation);
-@import "./components/index.css" layer(components);

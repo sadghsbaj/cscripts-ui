@@ -4,10 +4,12 @@
 </script>
 
 <script lang="ts">
-    import { X } from "@lucide/svelte";
-
-    type Variant = "soft" | "ghost" | "elevated";
-    const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
+    import {
+        CLOSE_BUTTON_SIZES,
+        CloseButton,
+        HitArea,
+        type CloseButtonVariant,
+    } from "cs/svelte";
 </script>
 
 <div class="flex justify-center">
@@ -18,7 +20,7 @@
     </div>
 </div>
 
-{#snippet previewCard(isElevated: boolean, variant: Variant | "")}
+{#snippet previewCard(isElevated: boolean, variant: CloseButtonVariant)}
     <div
         class="{!isElevated
             ? 'bg-elevation-1 shadow-sm dark:(border border-elevation-1)'
@@ -29,18 +31,11 @@
             Elevated
         </h2>
         <div class="w-full h-full flex flex-col gap-2">
-            {#each sizes as size (size)}
+            {#each CLOSE_BUTTON_SIZES as size (size)}
                 <div class="flex gap-3 justify-between">
-                    <button
-                        type="button"
-                        aria-label="Schließen"
-                        class="cs-close-button"
-                        data-size={size}
-                        data-variant={variant}
-                    >
-                        <X aria-hidden="true" />
-                        <span aria-hidden="true" class="cs-hit-area" data-size="md"></span>
-                    </button>
+                    <CloseButton {variant} {size}>
+                        <HitArea size="md" />
+                    </CloseButton>
                 </div>
             {/each}
         </div>

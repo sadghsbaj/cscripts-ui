@@ -1,6 +1,5 @@
 /**
- * Shared AST helpers and attribute validators for custom Svelte ESLint rules.
- * Centralizing AST traversal and enum validation ensures uniform error reporting across design system components.
+ * Shared AST helpers for custom Svelte component ESLint rules.
  */
 
 import type { Rule } from "eslint";
@@ -19,71 +18,10 @@ export function shouldSkipFile(context: Rule.RuleContext): boolean {
 }
 
 /**
- * Checks whether an element contains a specific CSS class, supporting both
- * static/interpolated `class="..."` attributes and Svelte `class:name` directives.
+ * Extracts the tag/component name of a SvelteElement node (e.g. "Button", "CloseButton", "svg").
  */
-export function hasClass(node: AST.SvelteElement, targetClass: string): boolean {
-    for (const attr of node.startTag.attributes) {
-        if (attr.type === "SvelteAttribute" && attr.key.name === "class") {
-            const classText = attr.value
-                .filter((v): v is AST.SvelteLiteral => v.type === "SvelteLiteral")
-                .map((v) => v.value)
-                .join(" ");
-
-            // Using whitespace split avoids partial matches with hyphens (e.g. cs-button vs cs-button-label)
-            if (classText.split(/\s+/).includes(targetClass)) {
-                return true;
-            }
-        }
-
-        if (
-            attr.type === "SvelteDirective" &&
-            attr.kind === "Class" &&
-            attr.key.name.name === targetClass
-        ) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * Recursively checks whether any descendant element contains a specific CSS class.
- * Traverses Svelte elements, arrays of children, and conditional blocks ({#if} / {:else}).
- */
-export function hasDescendantClass(
-    children: AST.SvelteElement["children"],
-    targetClass: string
-): boolean {
-    for (const child of children) {
-        if (child.type === "SvelteElement") {
-            if (hasClass(child, targetClass)) {
-                return true;
-            }
-            if (hasDescendantClass(child.children, targetClass)) {
-                return true;
-            }
-        } else if (
-            "children" in child &&
-            Array.isArray(child.children) &&
-            hasDescendantClass(child.children as AST.SvelteElement["children"], targetClass)
-        ) {
-            return true;
-        }
-
-        if (
-            "else" in child &&
-            child.else &&
-            "children" in child.else &&
-            Array.isArray(child.else.children) &&
-            hasDescendantClass(child.else.children as AST.SvelteElement["children"], targetClass)
-        ) {
-            return true;
-        }
-    }
-
-    return false;
+export function getElementName(node: AST.SvelteElement): string {
+    return "name" in node.name ? node.name.name : "";
 }
 
 /**
@@ -100,8 +38,94 @@ export function findAttribute(
 }
 
 /**
+ * Extracts the static literal string value of an attribute if available.
+ * Returns undefined for dynamic Mustache tags or complex expressions to avoid false positives.
+ */
+export function getLiteralStringValue(attr: AST.SvelteAttribute): string | undefined {
+    if (attr.boolean) return "";
+    const firstVal = attr.value[0];
+    if (firstVal && firstVal.type === "SvelteLiteral") {
+        return firstVal.value;
+    }
+    return undefined;
+}
+
+/**
+ * Checks whether a boolean prop on a Svelte component is statically truthy
+ * (e.g. `<Button iconOnly>` or `<Button iconOnly={true}>`).
+ */
+export function isTruthyAttribute(node: AST.SvelteElement, name: string): boolean {
+    const attr = findAttribute(node, name);
+    if (!attr) return false;
+    if (attr.boolean) return true;
+
+    return attr.value.some(
+        (v) =>
+            (v.type === "SvelteLiteral" && v.value === "true") ||
+            (v.type === "SvelteMustacheTag" &&
+                v.expression.type === "Literal" &&
+                v.expression.value === true)
+    );
+}
+
+/**
+ * Checks whether an element specifies a non-empty `aria-label` or `aria-labelledby` attribute.
+ */
+export function hasAccessibleLabel(node: AST.SvelteElement): boolean {
+    const ariaLabel = findAttribute(node, "aria-label");
+    const ariaLabelledBy = findAttribute(node, "aria-labelledby");
+
+    return Boolean(
+        (ariaLabel &&
+            (Boolean(getLiteralStringValue(ariaLabel)?.trim()) ||
+                ariaLabel.value.some((v) => v.type === "SvelteMustacheTag"))) ||
+            (ariaLabelledBy &&
+                (Boolean(getLiteralStringValue(ariaLabelledBy)?.trim()) ||
+                    ariaLabelledBy.value.some((v) => v.type === "SvelteMustacheTag")))
+    );
+}
+
+/**
+ * Recursively checks whether any descendant element matches a specific component/tag name.
+ * Traverses Svelte elements, arrays of children, and conditional blocks ({#if} / {:else}).
+ */
+export function hasDescendantElement(
+    children: AST.SvelteElement["children"],
+    targetName: string
+): boolean {
+    for (const child of children) {
+        if (child.type === "SvelteElement") {
+            if (getElementName(child) === targetName) {
+                return true;
+            }
+            if (hasDescendantElement(child.children, targetName)) {
+                return true;
+            }
+        } else if (
+            "children" in child &&
+            Array.isArray(child.children) &&
+            hasDescendantElement(child.children as AST.SvelteElement["children"], targetName)
+        ) {
+            return true;
+        }
+
+        if (
+            "else" in child &&
+            child.else &&
+            "children" in child.else &&
+            Array.isArray(child.else.children) &&
+            hasDescendantElement(child.else.children as AST.SvelteElement["children"], targetName)
+        ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
  * Scans <script> blocks in a Svelte file to collect names of imported icon components
- * (e.g. from 'lucide-svelte' or icon packages).
+ * (e.g. from '@lucide/svelte' or icon packages).
  */
 export function getImportedIconNames(context: Rule.RuleContext): Set<string> {
     const iconNames = new Set<string>();
@@ -109,7 +133,6 @@ export function getImportedIconNames(context: Rule.RuleContext): Set<string> {
     if (!ast || !("body" in ast) || !Array.isArray(ast.body)) return iconNames;
 
     for (const node of ast.body) {
-        // Direct root ImportDeclaration
         if (node.type === "ImportDeclaration" && typeof node.source?.value === "string") {
             const src = node.source.value.toLowerCase();
             if (src.includes("lucide") || src.includes("icon")) {
@@ -121,7 +144,6 @@ export function getImportedIconNames(context: Rule.RuleContext): Set<string> {
             }
         }
 
-        // Inside <script> (SvelteScriptElement)
         const customNode = node as unknown as { type: string; body?: unknown[] };
         if (
             customNode.type === "SvelteScriptElement" &&
@@ -155,9 +177,10 @@ export function getImportedIconNames(context: Rule.RuleContext): Set<string> {
 }
 
 /**
- * Finds all direct or nested icon elements (<svg>, Lucide components, *Icon) inside child nodes.
+ * Finds all raw icon elements (<svg> or imported Lucide components) inside child nodes,
+ * ignoring `<ButtonIcon>` components.
  */
-export function findIcons(
+export function findRawIcons(
     children: AST.SvelteElement["children"],
     iconNames: Set<string>
 ): AST.SvelteElement[] {
@@ -166,7 +189,9 @@ export function findIcons(
     function search(nodes: AST.SvelteElement["children"]): void {
         for (const child of nodes) {
             if (child.type === "SvelteElement") {
-                const tagName = "name" in child.name ? child.name.name : "";
+                const tagName = getElementName(child);
+                if (tagName === "ButtonIcon") continue;
+
                 if (
                     tagName === "svg" ||
                     iconNames.has(tagName) ||
@@ -192,92 +217,4 @@ export function findIcons(
 
     search(children);
     return icons;
-}
-
-/**
- * Checks whether an element has aria-hidden="true" (boolean or literal/mustache true).
- */
-export function isAriaHidden(element: AST.SvelteElement): boolean {
-    const ariaHiddenAttr = findAttribute(element, "aria-hidden");
-    return Boolean(
-        ariaHiddenAttr &&
-            (ariaHiddenAttr.boolean ||
-                ariaHiddenAttr.value.some(
-                    (v) =>
-                        (v.type === "SvelteLiteral" && v.value === "true") ||
-                        (v.type === "SvelteMustacheTag" &&
-                            v.expression.type === "Literal" &&
-                            v.expression.value === true)
-                ))
-    );
-}
-
-/**
- * Extracts the static literal string value of an attribute if available.
- * Returns undefined for dynamic Mustache tags or complex expressions to avoid false positives.
- */
-export function getLiteralStringValue(attr: AST.SvelteAttribute): string | undefined {
-    if (attr.boolean) return "";
-    const firstVal = attr.value[0];
-    if (firstVal && firstVal.type === "SvelteLiteral") {
-        return firstVal.value;
-    }
-    return undefined;
-}
-
-export interface EnumCheckOptions {
-    required?: boolean;
-    componentName?: string;
-    missingMessageId?: string;
-    invalidMessageId?: string;
-}
-
-/**
- * Validates a component data attribute against an allowed set of enum values.
- * Returns the literal string value if present, allowing callers to perform conditional validations.
- */
-export function checkEnumAttribute(
-    context: Rule.RuleContext,
-    node: AST.SvelteElement,
-    attributeName: string,
-    allowedValues: Set<string>,
-    options?: EnumCheckOptions
-): string | undefined {
-    const attr = findAttribute(node, attributeName);
-
-    if (!attr) {
-        if (options?.required) {
-            if (options.missingMessageId) {
-                context.report({
-                    node: node.startTag as unknown as Rule.Node,
-                    messageId: options.missingMessageId,
-                });
-            } else {
-                const component = options.componentName ?? "Component";
-                context.report({
-                    node: node.startTag as unknown as Rule.Node,
-                    message: `${component} must specify '${attributeName}' (${[...allowedValues].join(" | ")}).`,
-                });
-            }
-        }
-        return undefined;
-    }
-
-    const val = getLiteralStringValue(attr);
-    if (val !== undefined && !allowedValues.has(val)) {
-        if (options?.invalidMessageId) {
-            context.report({
-                node: attr as unknown as Rule.Node,
-                messageId: options.invalidMessageId,
-                data: { value: val },
-            });
-        } else {
-            context.report({
-                node: attr as unknown as Rule.Node,
-                message: `Invalid ${attributeName} "${val}". Allowed: ${[...allowedValues].join(", ")}.`,
-            });
-        }
-    }
-
-    return val;
 }

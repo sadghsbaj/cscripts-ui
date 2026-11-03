@@ -9,8 +9,8 @@ Before writing code, read the relevant domain guide(s) below:
 
 1. **Design System, Visual Philosophy & UX (`./design-system.md`)**
    Read BEFORE designing any UI layout, choosing colors/radii, placing icons, or building user flows.
-2. **Styling & CSS Components (`./css.md`)**
-   Read BEFORE writing any CSS, buttons, focus states, scrollbars, or animations.
+2. **Styling & CSS Foundation (`./css.md`)**
+   Read BEFORE writing any CSS, focus states, scrollbars, or animations.
 3. **UnoCSS Utilities & Shortcuts (`./uno.md`)**
    Read BEFORE adding utility classes, layouts, colors, or typography classes.
 4. **Svelte 5 & State/Components (`./svelte.md`)**

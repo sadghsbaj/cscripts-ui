@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Component } from "svelte";
     import { PanelLeftClose } from "@lucide/svelte";
+    import { Button, ButtonIcon, ButtonLabel, HitArea } from "cs/svelte";
 
     interface SvelteModule {
         default: Component;
@@ -16,7 +17,7 @@
 
     const SAVED_PREVIEW_KEY = "cscripts-saved-preview";
 
-    const modules = import.meta.glob<SvelteModule>("./css/*.svelte", { eager: true });
+    const modules = import.meta.glob<SvelteModule>("./svelte/*.svelte", { eager: true });
 
     const previews: PreviewItem[] = Object.values(modules).map((module) => {
         return {
@@ -44,17 +45,17 @@
 </script>
 
 <div class="size-full flex gap-8 relative">
-    <button type="button"
-        class="cs-button absolute right-8 top-8"
-        data-size="md"
-        data-variant="elevated"
-        data-icon-only
+    <Button
+        size="md"
+        variant="elevated"
+        iconOnly
+        class="absolute right-8 top-8"
         aria-label="Sidebar umschalten"
         onclick={() => (sidebarIsOpen = !sidebarIsOpen)}
     >
-        <PanelLeftClose aria-hidden="true" />
-        <span class="cs-hit-area" data-size="md" aria-hidden="true"></span>
-    </button>
+        <ButtonIcon icon={PanelLeftClose} />
+        <HitArea size="md" />
+    </Button>
 
     <aside
         class="h-full sidebar {sidebarIsOpen ? '' : 'hidden'} w-280px flex flex-col gap-3 shrink-0 py-16 px-4 lg:px-8"
@@ -82,19 +83,23 @@
     {let isActive = $derived(preview.preview === activePreview)}
 
     {#if isActive}
-        <button type="button"
+        <Button
+            size="lg"
+            variant="soft"
+            color="accent"
+            class="w-full"
             onclick={() => changeActivePreview(preview)}
-            class="cs-button w-full"
-            data-size="lg"
-            data-variant="soft"
-            data-color="accent"><span class="cs-button-label">{preview.label}</span></button
         >
+            <ButtonLabel>{preview.label}</ButtonLabel>
+        </Button>
     {:else}
-        <button type="button"
+        <Button
+            size="lg"
+            variant="elevated"
+            class="w-full"
             onclick={() => changeActivePreview(preview)}
-            class="cs-button w-full"
-            data-size="lg"
-            data-variant="elevated"><span class="cs-button-label">{preview.label}</span></button
         >
+            <ButtonLabel>{preview.label}</ButtonLabel>
+        </Button>
     {/if}
 {/snippet}
