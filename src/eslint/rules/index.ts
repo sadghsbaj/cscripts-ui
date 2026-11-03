@@ -8,7 +8,6 @@ export {
     ALLOWED_BUTTON_COLORS,
     ALLOWED_BUTTON_SIZES,
     ALLOWED_BUTTON_VARIANTS,
-    COMPACT_BUTTON_SIZES,
     buttonConfig,
     buttonHitAreaRule,
     buttonRule,
