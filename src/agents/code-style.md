@@ -12,9 +12,14 @@ This project enforces rigorous TypeScript standards. Code must be fully typed fr
 
 ## 2. ESLint Architecture & Custom Rules
 
-The library uses a strict custom ESLint flat config bundle (`src/eslint/`) that enforces structural and architectural consistency:
+The library uses a strict custom ESLint flat config bundle (`src/eslint/`) that enforces structural and architectural consistency. Always run linting using `bunx --bun eslint .` to ensure execution within Bun's runtime:
 
-### A. Custom Enforced Rules
+### A. Custom Rules Directory (`src/eslint/rules/`)
+
+- **Domain Consistency & Explicitness:** Custom design system and component rules are organized modularly under `src/eslint/rules/`. They enforce explicit attributes, proper semantic structure, and accessibility guidelines (preventing ambiguity from implicit fallback defaults).
+- **Inspecting Rules on Error:** If `bunx --bun eslint .` flags custom errors or warnings whose context or expected attributes are unclear, agents should inspect the rule definitions directly in `src/eslint/rules/` to understand their exact AST validation requirements.
+
+### B. General Enforced Rules
 
 - **UnoCSS Shortcuts (`shortcuts/enforce-shortcuts`):** Never combine raw layout utility classes (`flex justify-center items-center`) when a shortcut exists (`flex-center`). ESLint will auto-fix or error out.
 - **No Unicode Dots (`unicode-dots/no-unicode-dots`):** Unicode separator dots (`·`, `•`, etc.) are forbidden in code and text. Always use an empty span with dot utilities (`<span class="dot-md"></span>`).
@@ -23,7 +28,7 @@ The library uses a strict custom ESLint flat config bundle (`src/eslint/`) that 
     - Direct `document.querySelector` / `document.getElementById` calls inside `.svelte` components are banned (use `bind:this` or element parameters).
     - Legacy `{@const}` tags are banned (use Svelte 5 `{const ...}` or `{let ...}`).
 
-### B. File Naming Conventions (`eslint-plugin-unicorn`)
+### C. File Naming Conventions (`eslint-plugin-unicorn`)
 
 - **Standard TS/JS files:** `kebab-case` (`my-utility-file.ts`)
 - **Svelte components (`.svelte`):** `PascalCase` (`MyButton.svelte`)

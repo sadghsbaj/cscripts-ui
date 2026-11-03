@@ -75,6 +75,16 @@ AI models frequently make UIs too cramped and tiny. Prefer fewer elements render
     - `font-500` (Medium) -> `strokeWidth={2.25}`
     - `font-600`+ (Semibold/Bold) -> `strokeWidth={2.5}`
 
+### Interactive Surfaces & The `< 1936px²` Hit Area Rule
+
+Touch ergonomics depend primarily on **total interactive surface area**, not individual dimension limits:
+
+- **The `< 1936px²` Baseline:** A standard 44px × 44px touch target provides an area of `1936px²`. Because rounded corners (`border-radius: full` or `squircle`) clip corners, actual surface area often drops even lower (~1200px²).
+- **Rule of Thumb:** Any interactive control with a **total surface area below `1936px²`** MUST include an invisible `<span class="cs-hit-area" data-size="md" aria-hidden="true">` (or `data-size="lg"`) touch expander (e.g., all compact icon-only buttons, close triggers, checkboxes).
+- **Total Area vs. Single Dimensions:** This rule evaluates **total surface area**, not single narrow sides. A control with one compact dimension (e.g., 36px height) that is elongated (e.g., a 36px × 120px text button = 4320px²) provides more than double the required landing area and does NOT require a hit area by default.
+- **Contextual Opt-In:** Developers can still contextually add a `.cs-hit-area` to larger elongated controls whenever a specific dense toolbar layout or mobile view benefits from it, but the `< 1936px²` threshold serves as the standard floor.
+- **Rare Exceptions Require User Alignment:** In rare layout edge cases (e.g., extremely tight, dense constraints where expanding target bounds might overlap adjacent interactive elements—usually indicating a layout flaw), omitting a hit area on an element `< 1936px²` is only permissible as an explicit exception. Agents MUST explicitly consult and align with the user before deciding to omit a hit area or bypass lint warnings on sub-`1936px²` controls.
+
 ---
 
 ## 6. UX Patterns: Inline-First & Progressive Disclosure
