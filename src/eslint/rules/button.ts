@@ -9,9 +9,12 @@ import type { AST } from "svelte-eslint-parser";
 import {
     checkEnumAttribute,
     findAttribute,
+    findIcons,
+    getImportedIconNames,
     getLiteralStringValue,
     hasClass,
     hasDescendantClass,
+    isAriaHidden,
     shouldSkipFile,
 } from "./utils.ts";
 
@@ -37,12 +40,16 @@ export const buttonRule: Rule.RuleModule = {
             missingColor: 'Buttons with class "cs-button" must specify a data-color ("accent" | "base" | "danger") unless variant is "elevated".',
             invalidColor: 'Invalid data-color "{{value}}". Allowed colors: accent, base, danger.',
             missingLabelOrIconOnly: 'Buttons with class "cs-button" must either specify "data-icon-only" or contain a child with class "cs-button-label".',
+            missingIconOnlyAriaLabel: 'Icon-only buttons with "data-icon-only" must specify an accessible "aria-label" or "aria-labelledby".',
+            missingIconAriaHidden: 'Icons inside buttons must have aria-hidden="true" to avoid confusing screen readers.',
         },
         schema: [],
     },
 
     create(context: Rule.RuleContext): Rule.RuleListener {
         if (shouldSkipFile(context)) return {};
+
+        const iconNames = getImportedIconNames(context);
 
         return {
             SvelteElement(rawNode: Rule.Node): void {
@@ -111,6 +118,46 @@ export const buttonRule: Rule.RuleModule = {
                     context.report({
                         node: node.startTag as unknown as Rule.Node,
                         messageId: "missingLabelOrIconOnly",
+                    });
+                }
+
+                // 6. Icon-only buttons must specify an accessible name (aria-label or aria-labelledby)
+                if (hasIconOnly) {
+                    const ariaLabel = findAttribute(node, "aria-label");
+                    const ariaLabelledBy = findAttribute(node, "aria-labelledby");
+                    const hasValidLabel =
+                        (ariaLabel && (getLiteralStringValue(ariaLabel)?.trim() || ariaLabel.value.some((v) => v.type === "SvelteMustacheTag"))) ||
+                        (ariaLabelledBy && (getLiteralStringValue(ariaLabelledBy)?.trim() || ariaLabelledBy.value.some((v) => v.type === "SvelteMustacheTag")));
+
+                    if (!hasValidLabel) {
+                        context.report({
+                            node: node.startTag as unknown as Rule.Node,
+                            messageId: "missingIconOnlyAriaLabel",
+                        });
+                    }
+                }
+
+                // 7. Icons inside buttons (with label or icon-only) must have aria-hidden="true"
+                const iconElements = findIcons(node.children, iconNames);
+                for (const iconEl of iconElements) {
+                    if (isAriaHidden(iconEl)) continue;
+
+                    const ariaHiddenAttr = findAttribute(iconEl, "aria-hidden");
+                    context.report({
+                        node: iconEl.startTag as unknown as Rule.Node,
+                        messageId: "missingIconAriaHidden",
+                        fix(fixer) {
+                            if (ariaHiddenAttr) {
+                                return fixer.replaceText(
+                                    ariaHiddenAttr as unknown as Rule.Node,
+                                    'aria-hidden="true"'
+                                );
+                            }
+                            return fixer.insertTextAfter(
+                                iconEl.name as unknown as Rule.Node,
+                                ' aria-hidden="true"'
+                            );
+                        },
                     });
                 }
             },

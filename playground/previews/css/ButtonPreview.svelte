@@ -60,16 +60,24 @@
                             data-variant={variant}
                             data-color={color}
                             data-icon-only
+                            aria-label="Hinzufügen"
                         >
-                            <Plus />
+                            <Plus aria-hidden="true" />
                             <span aria-hidden="true" class="cs-hit-area" data-size="md"></span>
                         </button>
                     {:else}
                         <button type="button" class="cs-button" data-size={size} data-variant="elevated">
                             <span class="cs-button-label">Click me!</span>
                         </button>
-                        <button type="button" class="cs-button" data-size={size} data-variant="elevated" data-icon-only>
-                            <Plus />
+                        <button
+                            type="button"
+                            class="cs-button"
+                            data-size={size}
+                            data-variant="elevated"
+                            data-icon-only
+                            aria-label="Hinzufügen"
+                        >
+                            <Plus aria-hidden="true" />
                             <span aria-hidden="true" class="cs-hit-area" data-size="md"></span>
                         </button>
                     {/if}

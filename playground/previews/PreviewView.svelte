@@ -49,9 +49,10 @@
         data-size="md"
         data-variant="elevated"
         data-icon-only
+        aria-label="Sidebar umschalten"
         onclick={() => (sidebarIsOpen = !sidebarIsOpen)}
     >
-        <PanelLeftClose />
+        <PanelLeftClose aria-hidden="true" />
         <span class="cs-hit-area" data-size="md" aria-hidden="true"></span>
     </button>
 

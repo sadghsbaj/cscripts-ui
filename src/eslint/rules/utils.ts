@@ -100,6 +100,119 @@ export function findAttribute(
 }
 
 /**
+ * Scans <script> blocks in a Svelte file to collect names of imported icon components
+ * (e.g. from 'lucide-svelte' or icon packages).
+ */
+export function getImportedIconNames(context: Rule.RuleContext): Set<string> {
+    const iconNames = new Set<string>();
+    const ast = context.sourceCode?.ast;
+    if (!ast || !("body" in ast) || !Array.isArray(ast.body)) return iconNames;
+
+    for (const node of ast.body) {
+        // Direct root ImportDeclaration
+        if (node.type === "ImportDeclaration" && typeof node.source?.value === "string") {
+            const src = node.source.value.toLowerCase();
+            if (src.includes("lucide") || src.includes("icon")) {
+                for (const spec of node.specifiers) {
+                    if (spec.local?.name) {
+                        iconNames.add(spec.local.name);
+                    }
+                }
+            }
+        }
+
+        // Inside <script> (SvelteScriptElement)
+        const customNode = node as unknown as { type: string; body?: unknown[] };
+        if (
+            customNode.type === "SvelteScriptElement" &&
+            Array.isArray(customNode.body)
+        ) {
+            for (const item of customNode.body) {
+                const statement = item as {
+                    type: string;
+                    source?: { value?: unknown };
+                    specifiers?: Array<{ local?: { name?: string } }>;
+                };
+                if (
+                    statement.type === "ImportDeclaration" &&
+                    typeof statement.source?.value === "string"
+                ) {
+                    const src = statement.source.value.toLowerCase();
+                    if (src.includes("lucide") || src.includes("icon")) {
+                        const specifiers = statement.specifiers ?? [];
+                        for (const spec of specifiers) {
+                            if (spec.local?.name) {
+                                iconNames.add(spec.local.name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return iconNames;
+}
+
+/**
+ * Finds all direct or nested icon elements (<svg>, Lucide components, *Icon) inside child nodes.
+ */
+export function findIcons(
+    children: AST.SvelteElement["children"],
+    iconNames: Set<string>
+): AST.SvelteElement[] {
+    const icons: AST.SvelteElement[] = [];
+
+    function search(nodes: AST.SvelteElement["children"]): void {
+        for (const child of nodes) {
+            if (child.type === "SvelteElement") {
+                const tagName = "name" in child.name ? child.name.name : "";
+                if (
+                    tagName === "svg" ||
+                    iconNames.has(tagName) ||
+                    tagName.endsWith("Icon") ||
+                    tagName.startsWith("Icon")
+                ) {
+                    icons.push(child);
+                } else {
+                    search(child.children);
+                }
+            } else if ("children" in child && Array.isArray(child.children)) {
+                search(child.children as AST.SvelteElement["children"]);
+            } else if (
+                "else" in child &&
+                child.else &&
+                "children" in child.else &&
+                Array.isArray(child.else.children)
+            ) {
+                search(child.else.children as AST.SvelteElement["children"]);
+            }
+        }
+    }
+
+    search(children);
+    return icons;
+}
+
+/**
+ * Checks whether an element has aria-hidden="true" (boolean or literal/mustache true).
+ */
+export function isAriaHidden(element: AST.SvelteElement): boolean {
+    const ariaHiddenAttr = findAttribute(element, "aria-hidden");
+    return Boolean(
+        ariaHiddenAttr &&
+            (ariaHiddenAttr.boolean ||
+                ariaHiddenAttr.value.some(
+                    (v) =>
+                        (v.type === "SvelteLiteral" && v.value === "true") ||
+                        (v.type === "SvelteMustacheTag" &&
+                            v.expression.type === "Literal" &&
+                            v.expression.value === true)
+                ))
+    );
+}
+
+/**
  * Extracts the static literal string value of an attribute if available.
  * Returns undefined for dynamic Mustache tags or complex expressions to avoid false positives.
  */
