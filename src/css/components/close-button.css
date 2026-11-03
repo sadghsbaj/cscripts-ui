@@ -1,18 +1,13 @@
 /* =========================================================
-* DESIGN SYSTEM CLOSE BUTTON COMPONENT
-* ---------------------------------------------------------
-* Pure CSS implementation designed to avoid redundant JS wrapper
-* components in Svelte. Relies exclusively on data attributes
-* (`[data-variant]`, `[data-size]`) for state
-* configuration.
-*
-* Architectural Notes:
-* - Defaults: Deliberately requires explicit variant/size
-*   attributes to prevent unintended fallback styles.
-* - Resets & Globals: Cursor styles (pointer), focus rings, text-decoration: none and
-*   disabled states (`pointer-events: none`) are handled globally
-*   across the design system.
-* ========================================================= */
+ * DESIGN SYSTEM CLOSE BUTTON COMPONENT
+ * ---------------------------------------------------------
+ * Pure CSS implementation designed to avoid redundant JS wrapper
+ * components in Svelte. Relies exclusively on data attributes
+ * (`[data-variant]`, `[data-size]`) for state configuration.
+ *
+ * Architectural Notes:
+ * - Defaults & Resets: See ../explanations/component-defaults-and-globals.md
+ * ========================================================= */
 .cs-close-button {
     /* Close buttons share a unified text-weak -> text-strong hierarchy across all variants
     * to remain visually subordinate to primary content, unlike action buttons. */
@@ -35,14 +30,11 @@
         scale 200ms var(--cs-ease-expo-out);
 
     /* =========================================================
-    * ELASTIC SURFACE (::before)
-    * ---------------------------------------------------------
-    * Decouples the visual background from the icon so we can
-    * apply non-uniform squash-and-stretch scaling (`scale: X Y`)
-    * with `linear()` spring physics without distorting glyphs.
-    * Inherits radius and corner-shape from host (keeping the
-    * host's `:focus-visible` outline perfectly matched).
-    * ========================================================= */
+     * ELASTIC SURFACE (::before)
+     * ---------------------------------------------------------
+     * Decouples visual surface from icon for squash-and-stretch.
+     * See ../explanations/elastic-surfaces.md
+     * ========================================================= */
     &::before {
         content: "";
         position: absolute;
@@ -70,15 +62,11 @@
     }
 
     /* =========================================================
-    * ACTIVE STATES (Pointer vs. Keyboard)
-    * ---------------------------------------------------------
-    * 1. Shared active color feedback (touch + desktop + keyboard).
-    * 2. Pointer (`:not(:focus-visible)`): Squash-and-stretch on
-    *    `::before` with a damped 140ms press-in and 600ms spring
-    *    release.
-    * 3. Keyboard (`:focus-visible`): Uniform `0.97` host scale so
-    *    the focus ring and surface shrink together without clashing.
-    * ========================================================= */
+     * ACTIVE STATES (Pointer vs. Keyboard)
+     * ---------------------------------------------------------
+     * Interaction modality split (spring squash vs uniform scale).
+     * See ../explanations/elastic-surfaces.md
+     * ========================================================= */
     &:active {
         color: var(--_fg-hover, var(--_fg));
 
@@ -152,14 +140,7 @@
         --_bg-hover: var(--cs-color-base-soft);
     }
 
-    /* ---------------------------------------------------------
-    * Hover Physics (Light vs. Dark):
-    * - Light Mode: Canvas is already light/white; elevation-1 is peak
-    *   white. Darkening the surface on hover would reduce contrast
-    *   and flatten hierarchy, so hover relies entirely on shadow lift.
-    * - Dark Mode: Shadows are barely perceptible on dark canvases;
-    *   hover steps up surface luminance from elevation-1 to elevation-2.
-    * ========================================================= */
+    /* Elevated hover physics (Light vs. Dark): See ../explanations/elevated-hover-physics.md */
     &[data-variant="elevated"] {
         --_bg: var(--cs-color-elevation-1);
         --_bg-hover: light-dark(var(--_bg), var(--cs-color-elevation-2));

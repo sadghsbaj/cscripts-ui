@@ -13,6 +13,7 @@
         "./vite": "./src/vite/index.ts",
         "./css": "./src/css/index.css",
         "./css/*": "./src/css/components/*.css",
+        "./css/explanations/*": "./src/css/explanations/*",
         "./assets/*": "./src/assets/*",
         "./uno": "./src/uno/index.ts",
         "./svelte": {

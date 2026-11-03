@@ -7,8 +7,7 @@
  * guidelines (40px–48px) without altering visual layout.
  *
  * Architectural Notes:
- * - Defaults: Deliberately requires explicit `data-size` to prevent
- *   unintended fallback styles.
+ * - Defaults: Requires explicit `data-size`. See ../explanations/component-defaults-and-globals.md
  * - Explicit DOM vs. Pseudo-elements: Implemented deliberately as a
  *   dedicated child `<span>` rather than claiming `::before` or
  *   `::after`. Although requiring `aria-hidden="true"` on the markup,
