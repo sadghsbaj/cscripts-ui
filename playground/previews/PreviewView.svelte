@@ -48,6 +48,7 @@
         class="cs-button absolute right-8 top-8"
         data-size="md"
         data-variant="elevated"
+        data-icon-only
         onclick={() => (sidebarIsOpen = !sidebarIsOpen)}><PanelLeftClose /></button
     >
 
@@ -82,14 +83,14 @@
             class="cs-button w-full"
             data-size="lg"
             data-variant="soft"
-            data-color="accent">{preview.label}</button
+            data-color="accent"><span class="cs-button-label">{preview.label}</span></button
         >
     {:else}
         <button
             onclick={() => changeActivePreview(preview)}
             class="cs-button w-full"
             data-size="lg"
-            data-variant="elevated">{preview.label}</button
+            data-variant="elevated"><span class="cs-button-label">{preview.label}</span></button
         >
     {/if}
 {/snippet}

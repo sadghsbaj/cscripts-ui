@@ -47,16 +47,22 @@
                 <div class="flex gap-3 justify-between">
                     {#if !isElevated}
                         <button class="cs-button" data-size={size} data-variant={variant} data-color={color}
-                            ><span>Click me!</span></button
+                            ><span class="cs-button-label">Click me!</span></button
                         >
-                        <button class="cs-button" data-size={size} data-variant={variant} data-color={color}
-                            ><Plus /></button
+                        <button
+                            class="cs-button"
+                            data-size={size}
+                            data-variant={variant}
+                            data-color={color}
+                            data-icon-only><Plus /></button
                         >
                     {:else}
                         <button class="cs-button" data-size={size} data-variant="elevated">
-                            <span>Click me!</span>
+                            <span class="cs-button-label">Click me!</span>
                         </button>
-                        <button class="cs-button" data-size={size} data-variant="elevated"><Plus /></button>
+                        <button class="cs-button" data-size={size} data-variant="elevated" data-icon-only
+                            ><Plus /></button
+                        >
                     {/if}
                 </div>
             {/each}

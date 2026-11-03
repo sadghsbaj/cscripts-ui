@@ -31,7 +31,7 @@
             data-size="md"
             data-variant="soft"
             data-color="accent"
-            onclick={() => (showHitArea = !showHitArea)}>Show Area</button
+            onclick={() => (showHitArea = !showHitArea)}><span class="cs-button-label">Show Area</span></button
         >
     {:else}
         <button
@@ -39,26 +39,26 @@
             data-size="md"
             data-variant="soft"
             data-color="base"
-            onclick={() => (showHitArea = !showHitArea)}>Show Area</button
+            onclick={() => (showHitArea = !showHitArea)}><span class="cs-button-label">Show Area</span></button
         >
     {/if}
 
     <div class="flex justify-center">
         <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl px-2 lg:px-8">
             {#each previewButtons as button (button)}
-                <button class="cs-button" data-size={button.size} data-variant="soft" data-color="base"
+                <button class="cs-button" data-size={button.size} data-variant="soft" data-color="base" data-icon-only
                     ><Plus />
                     <span
+                        aria-hidden="true"
                         class="cs-hit-area border border-dashed"
                         class:is-visible={showHitArea}
                         data-size={button.size}
-                        aria-hidden="true"
                         style="--hit-area-color: var(--cs-color-{button.color}-500);"
                     ></span>
                 </button>
             {/each}
 
-            <button class="cs-button" data-size="md" data-variant="soft" data-color="base"
+            <button class="cs-button" data-size="md" data-variant="soft" data-color="base" data-icon-only
                 ><Plus />
                 <span
                     class="cs-hit-area border border-dashed size-64px"
