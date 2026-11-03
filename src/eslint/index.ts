@@ -17,17 +17,17 @@ import ts from "typescript-eslint";
 
 import { baseRulesConfig } from "./base-rules.ts";
 import { ignoresConfig } from "./ignores.ts";
+import { customRulesConfigs } from "./rules/index.ts";
 import { shortcutsConfig } from "./shortcuts.ts";
 import { svelteConfig } from "./svelte.ts";
-import { unicodeDotsConfig } from "./unicode-dots.ts";
 import { unicornConfig } from "./unicorn.ts";
 import { unocssConfig } from "./unocss.ts";
 
 export { baseRulesConfig } from "./base-rules.ts";
 export { ignoresConfig } from "./ignores.ts";
+export * from "./rules/index.ts";
 export { shortcutsConfig } from "./shortcuts.ts";
 export { svelteConfig } from "./svelte.ts";
-export { unicodeDotsConfig } from "./unicode-dots.ts";
 export { unicornConfig } from "./unicorn.ts";
 export { unocssConfig } from "./unocss.ts";
 
@@ -39,7 +39,7 @@ export const csEslint = defineConfig([
 
     ...baseRulesConfig,
     shortcutsConfig,
-    unicodeDotsConfig,
+    ...customRulesConfigs,
     ...unicornConfig,
     ...unocssConfig,
 

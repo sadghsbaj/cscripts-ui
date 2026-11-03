@@ -1,5 +1,4 @@
 /**
- * @file unicode-dots.ts
  * Custom ESLint rule forbidding unicode separator dots in favor of UnoCSS dot utility classes.
  */
 

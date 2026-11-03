@@ -1,5 +1,4 @@
 /**
- * @file shortcuts.ts
  * Custom ESLint rule enforcing UnoCSS shortcuts over redundant atomic utility combinations.
  */
 
