@@ -99,12 +99,16 @@
     /* =========================================================
     * TEXT LABEL & OPTICAL TRIMMING
     * ---------------------------------------------------------
-    * Targets bare `<span>` elements for zero-boilerplate usage
-    * alongside explicit `.cs-button-label` opt-ins (preventing
-    * collisions with badged or classed spans). Applies optical
-    * cap-height trimming and flex-safe ellipsis truncation.
+    * Button labels must be explicitly marked with the
+    * `.cs-button-label` class.
+    *
+    * Explicit declaration avoids inferring semantic roles from the
+    * DOM structure and prevents collisions with badges, status
+    * indicators or other auxiliary span elements.
+    *
+    * Applies optical cap-height trimming and flex-safe ellipsis
+    * truncation.
     * ========================================================= */
-    > span:not([class]),
     > .cs-button-label {
         min-width: 0;
         overflow-x: clip;
@@ -171,13 +175,17 @@
     /* =========================================================
     * ICON-ONLY BUTTONS
     * ---------------------------------------------------------
-    * Placed after SIZES so `[data-icon-only]` `(0, 2, 0)` cleanly
-    * overrides size-specific inline padding at equal specificity.
-    * Automatically triggers when an SVG is the sole child `(0, 2, 1)`,
-    * or via explicit `data-icon-only` opt-in (e.g., when paired with
-    * absolute notification badges or screen-reader labels).
+    * Icon-only buttons must be explicitly declared using the
+    * `[data-icon-only]` attribute.
+    *
+    * Placed after SIZES so `.cs-button[data-icon-only]` `(0, 2, 0)`
+    * overrides size-specific inline padding at equal specificity
+    * through source order.
+    *
+    * Explicit declaration keeps the component behavior stable when
+    * auxiliary children such as notification badges, hit areas or
+    * screen-reader labels are added.
     * ========================================================= */
-    &:has(> svg:only-of-type):not(:has(> :not(svg, .cs-hit-area))),
     &[data-icon-only] {
         --_active-squash: var(--cs-squash-default);
         aspect-ratio: 1;
