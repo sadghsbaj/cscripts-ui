@@ -49,8 +49,11 @@
         data-size="md"
         data-variant="elevated"
         data-icon-only
-        onclick={() => (sidebarIsOpen = !sidebarIsOpen)}><PanelLeftClose /></button
+        onclick={() => (sidebarIsOpen = !sidebarIsOpen)}
     >
+        <PanelLeftClose />
+        <span class="cs-hit-area" data-size="md" aria-hidden="true"></span>
+    </button>
 
     <aside
         class="h-full sidebar {sidebarIsOpen ? '' : 'hidden'} w-280px flex flex-col gap-3 shrink-0 py-16 px-4 lg:px-8"

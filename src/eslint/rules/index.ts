@@ -8,7 +8,9 @@ export {
     ALLOWED_BUTTON_COLORS,
     ALLOWED_BUTTON_SIZES,
     ALLOWED_BUTTON_VARIANTS,
+    COMPACT_BUTTON_SIZES,
     buttonConfig,
+    buttonHitAreaRule,
     buttonRule,
 } from "./button.ts";
 export { ALLOWED_HIT_AREA_SIZES, hitAreaConfig, hitAreaRule } from "./hit-area.ts";

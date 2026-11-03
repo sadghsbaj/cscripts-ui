@@ -49,6 +49,44 @@ export function hasClass(node: AST.SvelteElement, targetClass: string): boolean 
 }
 
 /**
+ * Recursively checks whether any descendant element contains a specific CSS class.
+ * Traverses Svelte elements, arrays of children, and conditional blocks ({#if} / {:else}).
+ */
+export function hasDescendantClass(
+    children: AST.SvelteElement["children"],
+    targetClass: string
+): boolean {
+    for (const child of children) {
+        if (child.type === "SvelteElement") {
+            if (hasClass(child, targetClass)) {
+                return true;
+            }
+            if (hasDescendantClass(child.children, targetClass)) {
+                return true;
+            }
+        } else if (
+            "children" in child &&
+            Array.isArray(child.children) &&
+            hasDescendantClass(child.children as AST.SvelteElement["children"], targetClass)
+        ) {
+            return true;
+        }
+
+        if (
+            "else" in child &&
+            child.else &&
+            "children" in child.else &&
+            Array.isArray(child.else.children) &&
+            hasDescendantClass(child.else.children as AST.SvelteElement["children"], targetClass)
+        ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
  * Finds an attribute on a Svelte element's start tag by its attribute name.
  */
 export function findAttribute(
