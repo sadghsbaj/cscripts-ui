@@ -2,6 +2,10 @@
     "name": "cs",
     "type": "module",
     "private": true,
+    "sideEffects": [
+        "**/*.css",
+        "./src/svelte/theme.svelte.ts"
+    ],
     "scripts": {
         "dev": "bunx --bun vite",
         "typecheck": "tsc --noEmit",
