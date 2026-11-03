@@ -6,7 +6,7 @@ Architectural Notes:
 - Accessibility: Automatically enforces `aria-hidden="true"` so decorative button
   icons never pollute screen reader announcements.
 - Optical Sizing: Automatically sizes icons to `font-size + 2px` (`calc(1em + 2px)`)
-  for text buttons—or `50%` via `--_icon-size` on `iconOnly` buttons—and matches
+  for text buttons—or `50%` when placed inside `iconOnly` buttons—and matches
   `stroke-width: 2.5` to the `600` button font weight.
 -->
 <script lang="ts">
@@ -21,10 +21,16 @@ Architectural Notes:
     @layer components {
         :global(.cs-button-icon) {
             flex-shrink: 0;
-            width: var(--_icon-size, calc(1em + 2px));
-            height: var(--_icon-size, calc(1em + 2px));
+            width: calc(1em + 2px);
+            height: calc(1em + 2px);
             stroke-width: 2.5;
             pointer-events: none;
+
+            /* 50% scale ensures integer pixel alignment and optical balance without text. */
+            :global(.cs-button[data-icon-only]) > & {
+                width: 50%;
+                height: 50%;
+            }
         }
     }
 </style>

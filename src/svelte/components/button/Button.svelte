@@ -173,7 +173,6 @@ Architectural Notes:
             * ========================================================= */
             &[data-icon-only] {
                 --_active-squash: var(--cs-squash-default);
-                --_icon-size: 50%;
                 aspect-ratio: 1;
                 padding-inline: 0;
                 corner-shape: var(--cs-squircle-soft);
