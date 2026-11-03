@@ -86,6 +86,12 @@
         &:focus-visible {
             scale: 0.97;
         }
+
+        /* Recedes the cross glyph on press to enhance physical tactile depth */
+        > svg {
+            scale: 0.9;
+            transition: scale 140ms var(--cs-ease-quad-out);
+        }
     }
 
     /* =========================================================
@@ -100,6 +106,7 @@
         width: 65%;
         height: 65%;
         stroke-width: 2.5;
+        transition: scale 600ms var(--cs-spring-release);
         pointer-events: none;
     }
 
