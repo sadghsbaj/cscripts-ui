@@ -103,8 +103,8 @@
     * ========================================================= */
     > svg {
         flex-shrink: 0;
-        width: 65%;
-        height: 65%;
+        width: calc(100% / 3 * 2);
+        height: calc(100% / 3 * 2);
         stroke-width: 2.5;
         transition: scale 600ms var(--cs-spring-release);
         pointer-events: none;
@@ -135,6 +135,16 @@
 
     /* =========================================================
     * VARIANTS
+    * ---------------------------------------------------------
+    * Variant Hierarchy & Surface Pairing:
+    * - soft (Primary Workhorse): The default choice for almost all
+    *   UI surfaces, including floating islands (elevation-1 modals,
+    *   drawers, popovers) and compact elements (toasts, cards) to
+    *   provide a calm, grounded, tactile tint.
+    * - elevated (Canvas Pairing): Best for elevation-0 surfaces
+    *   (fullscreen media lightboxes, raw canvas) for crisp lift.
+    * - ghost (Niche Fallback): Strictly reserved for rare edge cases
+    *   where even a soft tinted surface plate would visually clash.
     * ========================================================= */
 
     &[data-variant="soft"] {

@@ -9,6 +9,7 @@ import type { AST } from "svelte-eslint-parser";
 import {
     checkEnumAttribute,
     findAttribute,
+    getLiteralStringValue,
     hasClass,
     hasDescendantClass,
     shouldSkipFile,
@@ -17,15 +18,18 @@ import {
 export const ALLOWED_BUTTON_SIZES = new Set(["xs", "sm", "md", "lg", "xl"]);
 export const ALLOWED_BUTTON_VARIANTS = new Set(["solid", "soft", "ghost", "elevated"]);
 export const ALLOWED_BUTTON_COLORS = new Set(["accent", "base", "danger"]);
+export const ALLOWED_BUTTON_TYPES = new Set(["button", "submit", "reset"]);
 
 export const buttonRule: Rule.RuleModule = {
     meta: {
         type: "problem",
-        // No autofix: the linter cannot infer intended sizes, colors, or whether a label was forgotten vs. an icon-only button intended.
+        fixable: "code",
         docs: {
-            description: "Enforce required data attributes and label/icon structure for .cs-button elements",
+            description: "Enforce required data attributes, explicit type, and label/icon structure for .cs-button elements",
         },
         messages: {
+            missingType: 'Buttons with class "cs-button" must specify an explicit type attribute ("button" | "submit" | "reset").',
+            invalidType: 'Invalid button type "{{value}}". Allowed types: button, submit, reset.',
             missingSize: 'Buttons with class "cs-button" must specify a data-size ("xs" | "sm" | "md" | "lg" | "xl").',
             invalidSize: 'Invalid data-size "{{value}}". Allowed sizes: xs, sm, md, lg, xl.',
             missingVariant: 'Buttons with class "cs-button" must specify a data-variant ("solid" | "soft" | "ghost" | "elevated").',
@@ -45,14 +49,41 @@ export const buttonRule: Rule.RuleModule = {
                 const node = rawNode as unknown as AST.SvelteElement;
                 if (!hasClass(node, "cs-button")) return;
 
-                // 1. Validate data-size
+                // 1. Ensure explicit type on <button> tags to prevent accidental form submits
+                const tagName = "name" in node.name ? node.name.name : "";
+                if (tagName === "button") {
+                    const typeAttr = findAttribute(node, "type");
+                    if (!typeAttr) {
+                        context.report({
+                            node: node.startTag as unknown as Rule.Node,
+                            messageId: "missingType",
+                            fix(fixer) {
+                                return fixer.insertTextAfter(
+                                    node.name as unknown as Rule.Node,
+                                    ' type="button"'
+                                );
+                            },
+                        });
+                    } else {
+                        const typeVal = getLiteralStringValue(typeAttr);
+                        if (typeVal !== undefined && !ALLOWED_BUTTON_TYPES.has(typeVal)) {
+                            context.report({
+                                node: typeAttr as unknown as Rule.Node,
+                                messageId: "invalidType",
+                                data: { value: typeVal },
+                            });
+                        }
+                    }
+                }
+
+                // 2. Validate data-size
                 checkEnumAttribute(context, node, "data-size", ALLOWED_BUTTON_SIZES, {
                     required: true,
                     missingMessageId: "missingSize",
                     invalidMessageId: "invalidSize",
                 });
 
-                // 2. Validate data-variant
+                // 3. Validate data-variant
                 const variantVal = checkEnumAttribute(
                     context,
                     node,
@@ -65,7 +96,7 @@ export const buttonRule: Rule.RuleModule = {
                     }
                 );
 
-                // 3. Validate data-color (exempt for elevated variants)
+                // 4. Validate data-color (exempt for elevated variants)
                 if (variantVal !== "elevated") {
                     checkEnumAttribute(context, node, "data-color", ALLOWED_BUTTON_COLORS, {
                         required: true,
@@ -74,7 +105,7 @@ export const buttonRule: Rule.RuleModule = {
                     });
                 }
 
-                // 4. Ensure visual/accessible structure: text label or explicit icon-only indicator
+                // 5. Ensure visual/accessible structure: text label or explicit icon-only indicator
                 const hasIconOnly = Boolean(findAttribute(node, "data-icon-only"));
                 if (!hasIconOnly && !hasDescendantClass(node.children, "cs-button-label")) {
                     context.report({

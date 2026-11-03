@@ -17,6 +17,7 @@ The library uses a strict custom ESLint flat config bundle (`src/eslint/`) that 
 ### A. Custom Rules Directory (`src/eslint/rules/`)
 
 - **Domain Consistency & Explicitness:** Custom design system and component rules are organized modularly under `src/eslint/rules/`. They enforce explicit attributes, proper semantic structure, and accessibility guidelines (preventing ambiguity from implicit fallback defaults).
+- **Explicit `type` on Buttons:** Native `<button>` elements with `.cs-button` or `.cs-close-button` must declare an explicit `type` attribute (`"button" | "submit" | "reset"` for `.cs-button`, strictly `"button"` for `.cs-close-button`) to prevent unintended HTML5 form submissions. Both rules automatically autofix missing types to `type="button"`.
 - **Inspecting Rules on Error:** If `bunx --bun eslint .` flags custom errors or warnings whose context or expected attributes are unclear, agents should inspect the rule definitions directly in `src/eslint/rules/` to understand their exact AST validation requirements.
 
 ### B. General Enforced Rules

@@ -9,6 +9,7 @@ import type { AST } from "svelte-eslint-parser";
 import {
     checkEnumAttribute,
     findAttribute,
+    getLiteralStringValue,
     hasClass,
     hasDescendantClass,
     shouldSkipFile,
@@ -59,6 +60,8 @@ export const closeButtonRule: Rule.RuleModule = {
             description: "Enforce required data attributes, accessible name, and hidden icon for .cs-close-button elements",
         },
         messages: {
+            missingType: 'Buttons with class "cs-close-button" must specify type="button" to prevent unintended form submissions.',
+            invalidType: 'Close buttons must specify type="button" to prevent unintended form submissions (found "{{value}}").',
             missingSize: 'Buttons with class "cs-close-button" must specify a data-size ("xs" | "sm" | "md" | "lg" | "xl").',
             invalidSize: 'Invalid data-size "{{value}}". Allowed sizes: xs, sm, md, lg, xl.',
             missingVariant: 'Buttons with class "cs-close-button" must specify a data-variant ("soft" | "ghost" | "elevated").',
@@ -78,21 +81,54 @@ export const closeButtonRule: Rule.RuleModule = {
                 const node = rawNode as unknown as AST.SvelteElement;
                 if (!hasClass(node, "cs-close-button")) return;
 
-                // 1. Validate data-size
+                // 1. Ensure type="button" on <button> tags to prevent accidental form submits
+                const tagName = "name" in node.name ? node.name.name : "";
+                if (tagName === "button") {
+                    const typeAttr = findAttribute(node, "type");
+                    if (!typeAttr) {
+                        context.report({
+                            node: node.startTag as unknown as Rule.Node,
+                            messageId: "missingType",
+                            fix(fixer) {
+                                return fixer.insertTextAfter(
+                                    node.name as unknown as Rule.Node,
+                                    ' type="button"'
+                                );
+                            },
+                        });
+                    } else {
+                        const typeVal = getLiteralStringValue(typeAttr);
+                        if (typeVal !== "button") {
+                            context.report({
+                                node: typeAttr as unknown as Rule.Node,
+                                messageId: "invalidType",
+                                data: { value: typeVal ?? "" },
+                                fix(fixer) {
+                                    return fixer.replaceText(
+                                        typeAttr as unknown as Rule.Node,
+                                        'type="button"'
+                                    );
+                                },
+                            });
+                        }
+                    }
+                }
+
+                // 2. Validate data-size
                 checkEnumAttribute(context, node, "data-size", ALLOWED_CLOSE_BUTTON_SIZES, {
                     required: true,
                     missingMessageId: "missingSize",
                     invalidMessageId: "invalidSize",
                 });
 
-                // 2. Validate data-variant
+                // 3. Validate data-variant
                 checkEnumAttribute(context, node, "data-variant", ALLOWED_CLOSE_BUTTON_VARIANTS, {
                     required: true,
                     missingMessageId: "missingVariant",
                     invalidMessageId: "invalidVariant",
                 });
 
-                // 3. Ensure accessible name via aria-label (autofixes default "Schließen" if omitted)
+                // 4. Ensure accessible name via aria-label (autofixes default "Schließen" if omitted)
                 const ariaLabelAttr = findAttribute(node, "aria-label");
                 if (!ariaLabelAttr) {
                     context.report({

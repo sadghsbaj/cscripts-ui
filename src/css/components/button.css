@@ -125,6 +125,12 @@
 
     /* =========================================================
     * SIZES
+    * ---------------------------------------------------------
+    * Size Hierarchy Guidance:
+    * - Workhorses: sm, md, lg are the primary sizes for daily UI.
+    * - Extremes: xs and xl exist for edge cases (e.g. ultra-dense
+    *   inline badges or standalone hero CTAs) and should not be
+    *   treated as general-purpose defaults.
     * ========================================================= */
     &[data-size="xs"] {
         gap: 4px;

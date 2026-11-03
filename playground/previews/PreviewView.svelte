@@ -44,7 +44,7 @@
 </script>
 
 <div class="size-full flex gap-8 relative">
-    <button
+    <button type="button"
         class="cs-button absolute right-8 top-8"
         data-size="md"
         data-variant="elevated"
@@ -81,7 +81,7 @@
     {let isActive = $derived(preview.preview === activePreview)}
 
     {#if isActive}
-        <button
+        <button type="button"
             onclick={() => changeActivePreview(preview)}
             class="cs-button w-full"
             data-size="lg"
@@ -89,7 +89,7 @@
             data-color="accent"><span class="cs-button-label">{preview.label}</span></button
         >
     {:else}
-        <button
+        <button type="button"
             onclick={() => changeActivePreview(preview)}
             class="cs-button w-full"
             data-size="lg"

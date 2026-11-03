@@ -31,7 +31,13 @@
         <div class="w-full h-full flex flex-col gap-2">
             {#each sizes as size (size)}
                 <div class="flex gap-3 justify-between">
-                    <button aria-label="Schließen" class="cs-close-button" data-size={size} data-variant={variant}>
+                    <button
+                        type="button"
+                        aria-label="Schließen"
+                        class="cs-close-button"
+                        data-size={size}
+                        data-variant={variant}
+                    >
                         <X aria-hidden="true" />
                         <span aria-hidden="true" class="cs-hit-area" data-size="md"></span>
                     </button>
