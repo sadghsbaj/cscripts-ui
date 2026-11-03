@@ -3,33 +3,13 @@
  * Pure CSS components deliberately avoid fallback defaults, requiring explicit state and semantics.
  */
 
-import type { AST } from "svelte-eslint-parser";
 import type { Linter, Rule } from "eslint";
+import type { AST } from "svelte-eslint-parser";
+import { checkEnumAttribute, findAttribute, hasClass, shouldSkipFile } from "./utils.ts";
 
 export const ALLOWED_BUTTON_SIZES = new Set(["xs", "sm", "md", "lg", "xl"]);
 export const ALLOWED_BUTTON_VARIANTS = new Set(["solid", "soft", "ghost", "elevated"]);
 export const ALLOWED_BUTTON_COLORS = new Set(["accent", "base", "danger"]);
-
-function hasClass(node: AST.SvelteElement, targetClass: string): boolean {
-    for (const attr of node.startTag.attributes) {
-        if (attr.type === "SvelteAttribute" && attr.key.name === "class") {
-            const classText = attr.value
-                .filter((v): v is AST.SvelteLiteral => v.type === "SvelteLiteral")
-                .map((v) => v.value)
-                .join(" ");
-
-            if (classText.split(/\s+/).includes(targetClass)) {
-                return true;
-            }
-        }
-
-        if (attr.type === "SvelteDirective" && attr.kind === "Class" && attr.key.name.name === targetClass) {
-            return true;
-        }
-    }
-
-    return false;
-}
 
 function hasButtonLabel(children: AST.SvelteElement["children"]): boolean {
     for (const child of children) {
@@ -63,21 +43,6 @@ function hasButtonLabel(children: AST.SvelteElement["children"]): boolean {
     return false;
 }
 
-function findAttribute(node: AST.SvelteElement, name: string): AST.SvelteAttribute | undefined {
-    return node.startTag.attributes.find(
-        (attr): attr is AST.SvelteAttribute => attr.type === "SvelteAttribute" && attr.key.name === name
-    );
-}
-
-function getLiteralStringValue(attr: AST.SvelteAttribute): string | undefined {
-    if (attr.boolean) return "";
-    const firstVal = attr.value[0];
-    if (firstVal && firstVal.type === "SvelteLiteral") {
-        return firstVal.value;
-    }
-    return undefined;
-}
-
 export const buttonRule: Rule.RuleModule = {
     meta: {
         type: "problem",
@@ -88,24 +53,17 @@ export const buttonRule: Rule.RuleModule = {
         messages: {
             missingSize: 'Buttons with class "cs-button" must specify a data-size ("xs" | "sm" | "md" | "lg" | "xl").',
             invalidSize: 'Invalid data-size "{{value}}". Allowed sizes: xs, sm, md, lg, xl.',
-            missingVariant:
-                'Buttons with class "cs-button" must specify a data-variant ("solid" | "soft" | "ghost" | "elevated").',
+            missingVariant: 'Buttons with class "cs-button" must specify a data-variant ("solid" | "soft" | "ghost" | "elevated").',
             invalidVariant: 'Invalid data-variant "{{value}}". Allowed variants: solid, soft, ghost, elevated.',
-            missingColor:
-                'Buttons with class "cs-button" must specify a data-color ("accent" | "base" | "danger") unless variant is "elevated".',
+            missingColor: 'Buttons with class "cs-button" must specify a data-color ("accent" | "base" | "danger") unless variant is "elevated".',
             invalidColor: 'Invalid data-color "{{value}}". Allowed colors: accent, base, danger.',
-            missingLabelOrIconOnly:
-                'Buttons with class "cs-button" must either specify "data-icon-only" or contain a child with class "cs-button-label".',
+            missingLabelOrIconOnly: 'Buttons with class "cs-button" must either specify "data-icon-only" or contain a child with class "cs-button-label".',
         },
         schema: [],
     },
 
     create(context: Rule.RuleContext): Rule.RuleListener {
-        const filename = context.filename ?? "";
-
-        if (filename.includes("eslint/") || filename.endsWith(".test.ts") || filename.endsWith(".spec.ts")) {
-            return {};
-        }
+        if (shouldSkipFile(context)) return {};
 
         return {
             SvelteElement(rawNode: Rule.Node): void {
@@ -113,66 +71,32 @@ export const buttonRule: Rule.RuleModule = {
                 if (!hasClass(node, "cs-button")) return;
 
                 // 1. Validate data-size
-                const sizeAttr = findAttribute(node, "data-size");
-                if (!sizeAttr) {
-                    context.report({
-                        node: node.startTag as unknown as Rule.Node,
-                        messageId: "missingSize",
-                    });
-                } else {
-                    const sizeVal = getLiteralStringValue(sizeAttr);
-                    if (sizeVal !== undefined && !ALLOWED_BUTTON_SIZES.has(sizeVal)) {
-                        context.report({
-                            node: sizeAttr as unknown as Rule.Node,
-                            messageId: "invalidSize",
-                            data: { value: sizeVal },
-                        });
-                    }
-                }
+                checkEnumAttribute(context, node, "data-size", ALLOWED_BUTTON_SIZES, {
+                    required: true,
+                    missingMessageId: "missingSize",
+                    invalidMessageId: "invalidSize",
+                });
 
                 // 2. Validate data-variant
-                const variantAttr = findAttribute(node, "data-variant");
-                let isElevated = false;
-
-                if (!variantAttr) {
-                    context.report({
-                        node: node.startTag as unknown as Rule.Node,
-                        messageId: "missingVariant",
-                    });
-                } else {
-                    const variantVal = getLiteralStringValue(variantAttr);
-                    if (variantVal !== undefined) {
-                        if (!ALLOWED_BUTTON_VARIANTS.has(variantVal)) {
-                            context.report({
-                                node: variantAttr as unknown as Rule.Node,
-                                messageId: "invalidVariant",
-                                data: { value: variantVal },
-                            });
-                        }
-                        if (variantVal === "elevated") {
-                            isElevated = true;
-                        }
+                const variantVal = checkEnumAttribute(
+                    context,
+                    node,
+                    "data-variant",
+                    ALLOWED_BUTTON_VARIANTS,
+                    {
+                        required: true,
+                        missingMessageId: "missingVariant",
+                        invalidMessageId: "invalidVariant",
                     }
-                }
+                );
 
                 // 3. Validate data-color (exempt for elevated variants)
-                if (!isElevated) {
-                    const colorAttr = findAttribute(node, "data-color");
-                    if (!colorAttr) {
-                        context.report({
-                            node: node.startTag as unknown as Rule.Node,
-                            messageId: "missingColor",
-                        });
-                    } else {
-                        const colorVal = getLiteralStringValue(colorAttr);
-                        if (colorVal !== undefined && !ALLOWED_BUTTON_COLORS.has(colorVal)) {
-                            context.report({
-                                node: colorAttr as unknown as Rule.Node,
-                                messageId: "invalidColor",
-                                data: { value: colorVal },
-                            });
-                        }
-                    }
+                if (variantVal !== "elevated") {
+                    checkEnumAttribute(context, node, "data-color", ALLOWED_BUTTON_COLORS, {
+                        required: true,
+                        missingMessageId: "missingColor",
+                        invalidMessageId: "invalidColor",
+                    });
                 }
 
                 // 4. Ensure visual/accessible structure: text label or explicit icon-only indicator

@@ -13,6 +13,7 @@ export {
 } from "./button.ts";
 export { ALLOWED_HIT_AREA_SIZES, hitAreaConfig, hitAreaRule } from "./hit-area.ts";
 export { FORBIDDEN_DOTS_REGEX, unicodeDotsConfig, unicodeDotsRule } from "./unicode-dots.ts";
+export * from "./utils.ts";
 
 export const customRulesConfigs: Linter.Config[] = [
     unicodeDotsConfig,

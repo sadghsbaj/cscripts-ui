@@ -6,6 +6,7 @@
 
 import type { Linter, Rule } from "eslint";
 import type { AST } from "svelte-eslint-parser";
+import { checkEnumAttribute, findAttribute, hasClass, shouldSkipFile } from "./utils.ts";
 
 export const ALLOWED_HIT_AREA_SIZES = new Set(["sm", "md", "lg"]);
 
@@ -25,72 +26,20 @@ export const hitAreaRule: Rule.RuleModule = {
     },
 
     create(context: Rule.RuleContext): Rule.RuleListener {
-        const filename = context.filename ?? "";
-
-        if (
-            filename.includes("eslint/") ||
-            filename.endsWith(".test.ts") ||
-            filename.endsWith(".spec.ts")
-        ) {
-            return {};
-        }
+        if (shouldSkipFile(context)) return {};
 
         return {
             SvelteElement(rawNode: Rule.Node): void {
                 const node = rawNode as unknown as AST.SvelteElement;
-                const attributes = node.startTag.attributes;
+                if (!hasClass(node, "cs-hit-area")) return;
 
-                const hasHitAreaClass = attributes.some((attr) => {
-                    if (attr.type === "SvelteAttribute" && attr.key.name === "class") {
-                        const classText = attr.value
-                            .filter((v): v is AST.SvelteLiteral => v.type === "SvelteLiteral")
-                            .map((v) => v.value)
-                            .join(" ");
-
-                        return classText.split(/\s+/).includes("cs-hit-area");
-                    }
-
-                    return (
-                        attr.type === "SvelteDirective" &&
-                        attr.kind === "Class" &&
-                        attr.key.name.name === "cs-hit-area"
-                    );
+                checkEnumAttribute(context, node, "data-size", ALLOWED_HIT_AREA_SIZES, {
+                    required: true,
+                    missingMessageId: "missingSize",
+                    invalidMessageId: "invalidSize",
                 });
 
-                if (!hasHitAreaClass) return;
-
-                // 1. Validate data-size
-                const sizeAttr = attributes.find(
-                    (attr): attr is AST.SvelteAttribute =>
-                        attr.type === "SvelteAttribute" && attr.key.name === "data-size"
-                );
-
-                if (!sizeAttr) {
-                    context.report({
-                        node: node.startTag as unknown as Rule.Node,
-                        messageId: "missingSize",
-                    });
-                } else {
-                    const firstVal = sizeAttr.value[0];
-                    if (
-                        firstVal &&
-                        firstVal.type === "SvelteLiteral" &&
-                        !ALLOWED_HIT_AREA_SIZES.has(firstVal.value)
-                    ) {
-                        context.report({
-                            node: sizeAttr as unknown as Rule.Node,
-                            messageId: "invalidSize",
-                            data: { value: firstVal.value },
-                        });
-                    }
-                }
-
-                // 2. Validate aria-hidden
-                const ariaHiddenAttr = attributes.find(
-                    (attr): attr is AST.SvelteAttribute =>
-                        attr.type === "SvelteAttribute" && attr.key.name === "aria-hidden"
-                );
-
+                const ariaHiddenAttr = findAttribute(node, "aria-hidden");
                 const isAriaHiddenValid = Boolean(
                     ariaHiddenAttr &&
                         (ariaHiddenAttr.boolean ||
