@@ -1,6 +1,7 @@
 import type { Linter } from "eslint";
 
 import { buttonConfig } from "./button.ts";
+import { closeButtonConfig } from "./close-button.ts";
 import { hitAreaConfig } from "./hit-area.ts";
 import { unicodeDotsConfig } from "./unicode-dots.ts";
 
@@ -12,6 +13,13 @@ export {
     buttonHitAreaRule,
     buttonRule,
 } from "./button.ts";
+export {
+    ALLOWED_CLOSE_BUTTON_SIZES,
+    ALLOWED_CLOSE_BUTTON_VARIANTS,
+    closeButtonConfig,
+    closeButtonHitAreaRule,
+    closeButtonRule,
+} from "./close-button.ts";
 export { ALLOWED_HIT_AREA_SIZES, hitAreaConfig, hitAreaRule } from "./hit-area.ts";
 export { FORBIDDEN_DOTS_REGEX, unicodeDotsConfig, unicodeDotsRule } from "./unicode-dots.ts";
 export * from "./utils.ts";
@@ -20,4 +28,5 @@ export const customRulesConfigs: Linter.Config[] = [
     unicodeDotsConfig,
     hitAreaConfig,
     buttonConfig,
+    closeButtonConfig,
 ];
