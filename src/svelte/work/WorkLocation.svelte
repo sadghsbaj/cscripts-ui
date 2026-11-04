@@ -1,12 +1,12 @@
 <!--
 @component
 SVG map primitive (`<WorkLocation />`) for rendering company plant regions (`arnsberg`, `baruth`,
-`guetersloh`, `leutkirch`, `neumarkt`) with an optional or customizable location marker.
+`guetersloh`, `leutkirch`, `neumarkt`) with an optional location marker.
 -->
 <script lang="ts">
     import { WORK_LOCATIONS, type WorkLocationProps } from "./index.ts";
 
-    let { location, marker = false, class: className, children, ...rest }: WorkLocationProps = $props();
+    let { location, marker = false, class: className, ...rest }: WorkLocationProps = $props();
 
     let data = $derived(WORK_LOCATIONS[location]);
 </script>
@@ -21,13 +21,9 @@ SVG map primitive (`<WorkLocation />`) for rendering company plant regions (`arn
 >
     <path class="cs-work-location-map" pathLength="1" d={data.path} />
 
-    {#if typeof marker === "function"}
-        {@render marker(data.marker)}
-    {:else if marker}
+    {#if marker}
         <circle class="cs-work-location-marker" cx={data.marker.x} cy={data.marker.y} />
     {/if}
-
-    {@render children?.(data)}
 </svg>
 
 <style>
