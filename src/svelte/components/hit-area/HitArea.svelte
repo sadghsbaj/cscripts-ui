@@ -7,6 +7,8 @@ and accessibility guidelines (40px–48px) without altering visual layout.
 Architectural Notes:
 - Defaults: Requires explicit `size` prop (`data-size`).
   See `../../explanations/component-defaults-and-globals.md`
+- Anchor Containment: Automatically establishes a containing block on host via `:has()`.
+  See `../../explanations/anchor-context-auto-establishment.md`
 - Explicit DOM vs. Pseudo-elements: Rendered as a dedicated child `<span>` rather
   than claiming `::before` or `::after` on the parent. This guarantees zero slot
   collisions—leaving both pseudo-elements unconstrained for elastic surfaces,
@@ -25,12 +27,8 @@ Architectural Notes:
         /* =========================================================
          * ANCHOR CONTEXT AUTO-ESTABLISHMENT (:has)
          * ---------------------------------------------------------
-         * Automatically establishes a containing block for the absolutely
-         * positioned hit area on the host element. `contain: layout` is
-         * strictly preferred over `position: relative` because it never
-         * clashes if the host already relies on its own positioning
-         * context (e.g. `position: absolute` badges/anchors), while also
-         * isolating sub-tree reflows for maximum performance.
+         * Automatically establishes a containing block for host bounds.
+         * See ../../explanations/anchor-context-auto-establishment.md
          * ========================================================= */
         :global(:has(> .cs-hit-area)) {
             contain: layout;

@@ -4,12 +4,7 @@
 </script>
 
 <script lang="ts">
-    import {
-        CLOSE_BUTTON_SIZES,
-        CloseButton,
-        HitArea,
-        type CloseButtonVariant,
-    } from "cs/svelte";
+    import { CLOSE_BUTTON_SIZES, CloseButton, HitArea, type CloseButtonVariant } from "cs/svelte";
 </script>
 
 <div class="flex justify-center">
@@ -28,7 +23,6 @@
     >
         <h2 class="title-2xl">
             {variant[0]?.toUpperCase() + variant.slice(1)}
-            Elevated
         </h2>
         <div class="w-full h-full flex flex-col gap-2">
             {#each CLOSE_BUTTON_SIZES as size (size)}
