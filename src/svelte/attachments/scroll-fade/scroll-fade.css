@@ -1,0 +1,61 @@
+@layer attachments {
+    .cs-scroll-fade {
+        mask-repeat: no-repeat;
+        mask-size: 100% 100%;
+
+        /* =========================================================
+        * SIZES
+        * ========================================================= */
+        &[data-scroll-fade-size="sm"] {
+            --cs-scroll-fade-size: 24px;
+        }
+
+        &[data-scroll-fade-size="md"] {
+            --cs-scroll-fade-size: 40px;
+        }
+
+        &[data-scroll-fade-size="lg"] {
+            --cs-scroll-fade-size: 64px;
+        }
+
+        /* =========================================================
+        * DIRECTIONS
+        * ========================================================= */
+        &[data-scroll-fade-direction="vertical"] {
+            mask-image: linear-gradient(
+                to bottom in oklch,
+                transparent 0px,
+                black var(--cs-scroll-fade-top, 0px),
+                black calc(100% - var(--cs-scroll-fade-bottom, 0px)),
+                transparent 100%
+            );
+        }
+        &[data-scroll-fade-direction="horizontal"] {
+            mask-image: linear-gradient(
+                to right in oklch,
+                transparent 0px,
+                black var(--cs-scroll-fade-left, 0px),
+                black calc(100% - var(--cs-scroll-fade-right, 0px)),
+                transparent 100%
+            );
+        }
+        &[data-scroll-fade-direction="both"] {
+            mask-image:
+                linear-gradient(
+                    to bottom in oklch,
+                    transparent 0px,
+                    black var(--cs-scroll-fade-top, 0px),
+                    black calc(100% - var(--cs-scroll-fade-bottom, 0px)),
+                    transparent 100%
+                ),
+                linear-gradient(
+                    to right in oklch,
+                    transparent 0px,
+                    black var(--cs-scroll-fade-left, 0px),
+                    black calc(100% - var(--cs-scroll-fade-right, 0px)),
+                    transparent 100%
+                );
+            mask-composite: intersect;
+        }
+    }
+}
