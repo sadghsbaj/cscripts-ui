@@ -16,26 +16,26 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 Svelte 5.29+ replaces legacy `use:action` with **Attachments** (https://svelte.dev/docs/svelte/@attach). NEVER write `use:myAction`.
 
 - **How it works:** An attachment is a function receiving the DOM element and optionally returning a cleanup function. It automatically re-runs when reactive state read inside it changes.
-- **Library Attachments:** Check `../svelte/attachments/` (if present) before writing custom DOM attachments.
+- **Library Attachments:** Check `../svelte/attachments/` before writing custom DOM attachments.
 - **Syntax Example:**
-  ```svelte
-  <script lang="ts">
-      import type { Attachment } from "svelte/attachments";
+    ```svelte
+    <script lang="ts">
+        import type { Attachment } from "svelte/attachments";
 
-      let color = $state("red");
+        let color = $state("red");
 
-      function paint(c: string): Attachment<HTMLElement> {
-          return (node) => {
-              node.style.color = c;
-              return () => {
-                  node.style.color = "";
-              };
-          };
-      }
-  </script>
+        function paint(c: string): Attachment<HTMLElement> {
+            return (node) => {
+                node.style.color = c;
+                return () => {
+                    node.style.color = "";
+                };
+            };
+        }
+    </script>
 
-  <div {@attach paint(color)}>...</div>
-  ```
+    <div {@attach paint(color)}>...</div>
+    ```
 
 ### B. Type-Safe Context (`createContext`) instead of `setContext` / `getContext`
 
