@@ -32,6 +32,10 @@
             "svelte": "./src/svelte/attachments/index.ts",
             "default": "./src/svelte/attachments/index.ts"
         },
+        "./svelte/work": {
+            "svelte": "./src/svelte/work/index.ts",
+            "default": "./src/svelte/work/index.ts"
+        },
         "./svelte/explanations/*": "./src/svelte/explanations/*",
         "./eslint": "./src/eslint/index.ts"
     },

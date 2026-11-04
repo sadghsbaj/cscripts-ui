@@ -10,16 +10,7 @@ Architectural Notes:
 <script lang="ts">
     import type { ButtonProps } from "./index.ts";
 
-    let {
-        variant,
-        color,
-        size,
-        as = "button",
-        iconOnly,
-        class: className,
-        children,
-        ...rest
-    }: ButtonProps = $props();
+    let { variant, color, size, as = "button", iconOnly, class: className, children, ...rest }: ButtonProps = $props();
 </script>
 
 <svelte:element
