@@ -1,0 +1,90 @@
+@layer attachments {
+    .cs-fade-mask {
+        mask-repeat: no-repeat;
+        mask-size: 100% 100%;
+
+        /* =========================================================
+        * STRENGTHS
+        * ========================================================= */
+        &[data-fade-mask-strength="sm"] {
+            --cs-fade-mask-start: 60%;
+            --cs-fade-mask-end: 100%;
+            --cs-fade-mask-edge: 15%;
+        }
+
+        &[data-fade-mask-strength="md"] {
+            --cs-fade-mask-start: 30%;
+            --cs-fade-mask-end: 90%;
+            --cs-fade-mask-edge: 25%;
+        }
+
+        &[data-fade-mask-strength="lg"] {
+            --cs-fade-mask-start: 0%;
+            --cs-fade-mask-end: 75%;
+            --cs-fade-mask-edge: 35%;
+        }
+
+        /* =========================================================
+        * VARIANTS
+        * ========================================================= */
+        &[data-fade-mask-variant="radial"] {
+            mask-image: radial-gradient(
+                in oklch,
+                black var(--cs-fade-mask-start),
+                transparent var(--cs-fade-mask-end)
+            );
+        }
+
+        &[data-fade-mask-variant="top"] {
+            mask-image: linear-gradient(
+                to top in oklch,
+                black var(--cs-fade-mask-start),
+                transparent var(--cs-fade-mask-end)
+            );
+        }
+
+        &[data-fade-mask-variant="bottom"] {
+            mask-image: linear-gradient(
+                to bottom in oklch,
+                black var(--cs-fade-mask-start),
+                transparent var(--cs-fade-mask-end)
+            );
+        }
+
+        &[data-fade-mask-variant="left"] {
+            mask-image: linear-gradient(
+                to left in oklch,
+                black var(--cs-fade-mask-start),
+                transparent var(--cs-fade-mask-end)
+            );
+        }
+
+        &[data-fade-mask-variant="right"] {
+            mask-image: linear-gradient(
+                to right in oklch,
+                black var(--cs-fade-mask-start),
+                transparent var(--cs-fade-mask-end)
+            );
+        }
+
+        &[data-fade-mask-variant="block"] {
+            mask-image: linear-gradient(
+                to bottom in oklch,
+                transparent 0%,
+                black var(--cs-fade-mask-edge),
+                black calc(100% - var(--cs-fade-mask-edge)),
+                transparent 100%
+            );
+        }
+
+        &[data-fade-mask-variant="inline"] {
+            mask-image: linear-gradient(
+                to right in oklch,
+                transparent 0%,
+                black var(--cs-fade-mask-edge),
+                black calc(100% - var(--cs-fade-mask-edge)),
+                transparent 100%
+            );
+        }
+    }
+}

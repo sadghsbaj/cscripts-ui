@@ -4,6 +4,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
     plugins: [svelte()],
     test: {
+        css: true,
         environment: "happy-dom",
         include: ["src/**/*.test.ts"],
         restoreMocks: true,

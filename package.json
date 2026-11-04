@@ -9,8 +9,8 @@
     "scripts": {
         "dev": "bunx --bun vite",
         "typecheck": "tsc --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest",
+        "test": "bunx --bun vitest run",
+        "test:watch": "bunx --bun vitest",
         "format": "bunx prettier --write .",
         "lint": "eslint ."
     },
@@ -27,6 +27,10 @@
         "./svelte/components": {
             "svelte": "./src/svelte/components/index.ts",
             "default": "./src/svelte/components/index.ts"
+        },
+        "./svelte/attachments": {
+            "svelte": "./src/svelte/attachments/index.ts",
+            "default": "./src/svelte/attachments/index.ts"
         },
         "./svelte/explanations/*": "./src/svelte/explanations/*",
         "./eslint": "./src/eslint/index.ts"
