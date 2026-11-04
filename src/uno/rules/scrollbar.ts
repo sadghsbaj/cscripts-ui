@@ -19,11 +19,6 @@ export const scrollbarRules: Rule[] = [
                     [symbols.parent]: "@supports (-moz-appearance: none)",
                     "scrollbar-width": values.firefoxWidth,
                 },
-                {
-                    [symbols.selector]: (s: string) => `${s}::-webkit-scrollbar`,
-                    width: values.size,
-                    height: values.size,
-                },
             ];
         },
         { autocomplete: "scrollbar-(sm|md|lg)" },

@@ -31,7 +31,7 @@
             Vertical ({size})
         </h2>
         <div
-            class="w-full max-h-40 overflow-y-auto scrollbar-sm flex flex-col gap-2 pr-1"
+            class="w-full max-h-40 overflow-y-auto flex flex-col gap-2 pr-1"
             {@attach scrollFade({ size, direction: "vertical", edges: "both" })}
         >
             {#each items as item (item)}
@@ -51,7 +51,7 @@
     >
         <h2 class="title-2xl">Horizontal</h2>
         <div
-            class="w-full overflow-x-auto scrollbar-sm flex items-center gap-2 py-2"
+            class="w-full overflow-x-auto flex items-center gap-2 py-2"
             {@attach scrollFade({ size: "md", direction: "horizontal", edges: "both" })}
         >
             {#each items as item (item)}
@@ -71,10 +71,10 @@
     >
         <h2 class="title-2xl">Both</h2>
         <div
-            class="w-full max-h-40 overflow-auto scrollbar-sm"
+            class="w-full max-h-40 overflow-auto"
             {@attach scrollFade({ size: "md", direction: "both", edges: "both" })}
         >
-            <div class="grid grid-cols-4 gap-2 min-w-500px">
+            <div class="grid grid-cols-4 gap-2 min-w-500px min-h-300px">
                 {#each items as item (item)}
                     <div class="bg-elevation-2 rounded-xl px-4 py-4 text-sm">
                         {item}
@@ -94,7 +94,7 @@
         <h2 class="title-2xl">Custom</h2>
         <div
             style="--cs-scroll-fade-size: 96px"
-            class="w-full max-h-40 overflow-y-auto scrollbar-sm flex flex-col gap-2 pr-1"
+            class="w-full max-h-40 overflow-y-auto flex flex-col gap-2 pr-1"
             {@attach scrollFade({ size: "md", direction: "vertical", edges: "both" })}
         >
             {#each items as item (item)}
