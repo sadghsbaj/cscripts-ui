@@ -15,6 +15,7 @@ Aim for an ultra-clean, Apple-inspired monochrome aesthetic with intentional spa
 - **No Hyphens or Text Dashes as Separators:** Never use `-`, `—`, or unicode dots in UI labels/metadata. Use layout gaps or `<span class="dot-md"></span>`.
 - **No Fake "AI App Headers":** Do NOT invent a top navbar with a random Lucide icon and a made-up app title unless explicitly requested. Start directly with functional workspace islands.
 - **No Cliché "AI Feature Cards":** NEVER build cards with a tinted square/circle icon in the top-left corner followed by a title and description underneath.
+- **No Native Browser / OS Widget Styles (Zero `<select>`):** While semantic HTML elements (`<input>`, `<button>`, `<textarea>`) are encouraged when fully custom-styled to match the `cs` surface and typography system, NEVER leave any control with default browser styling or native OS popup menus. Specifically, native `<select><option>` dropdowns, native date/color pickers, and unstyled native checkboxes, radios, or range sliders are strictly forbidden—always build custom-styled `cs` popover menus, segmented controls, or `appearance-none` tactile controls instead.
 - **No Information Overload:** Do not cram every conceivable metric, filter, and action onto a single screen. Prioritize ruthlessly.
 
 ---
@@ -75,6 +76,13 @@ AI models frequently make UIs too cramped and tiny. Prefer fewer elements render
     - `font-500` (Medium) -> `strokeWidth={2.25}`
     - `font-600`+ (Semibold/Bold) -> `strokeWidth={2.5}`
 
+### Microcopy & Labeling Discipline
+
+- **Concise 1-Word Controls (`whitespace-nowrap`):** Buttons, tabs, and segmented-control options should ideally consist of **a single concise word** (or at most **2 short words** when a single word would be ambiguous—never a wide 300px button with 4–5 words, and never bureaucratic `X & Y` double labels like *"Recipients & Data"* or *"Open & Edit"*). Always enforce `whitespace-nowrap` on interactive control labels so they never wrap onto multiple lines.
+- **Visual Self-Evidence over Parenthetical Text `(xyz)`:** Never explain the UI through parenthetical hints, units, or examples in labels, subtitles, table headers, or input placeholders (e.g., use `Search…` instead of `Search (Name, Email, Company)…`). Make the interface self-explanatory through visual hierarchy, spatial grouping, and iconography rather than explanatory text.
+- **Zero Technical Jargon in UI Copy:** Never expose underlying implementation details (`IndexedDB`, `LocalStorage`, `JSON`, `Blob`, `Client-Side`, etc.) in user-facing titles, subtitles, or descriptions.
+- **No Redundant View Headers:** When an active tab or segmented control already indicates the current view, do not repeat that same title with an explanatory subtitle as a large heading right below it. Let the workspace content speak for itself.
+
 ### Interactive Surfaces & The `< 1936px²` Hit Area Rule
 
 Touch ergonomics depend primarily on **total interactive surface area**, not individual dimension limits:
@@ -92,8 +100,11 @@ Touch ergonomics depend primarily on **total interactive surface area**, not ind
 - **Inline UI over Modals (Anti-Modal Rule):** NEVER spawn a modal dialog for confirmations, renaming, quick edits, or simple creations.
     - _Delete confirmation:_ Morph the delete button inline into a "Confirm Delete?" state.
     - _Renaming / Editing:_ Swap or morph the label inline into an input field.
-    - _Exception:_ Only use modals/overlays when displaying heavy full-viewport media (e.g., a fullscreen PDF viewer or image lightbox).
-- **Whitespace & Progressive Disclosure:** Leave generous breathing room. Keep primary, high-frequency actions directly accessible (using clean patterns like **Segmented Controls** for view/mode switching), and tuck infrequent or secondary actions inside `...` overflow menus or dedicated subviews.
+    - _Exception (Media & Complex Fullscreen Workspaces):_ Only use fullscreen modals/overlays when displaying heavy full-viewport media (e.g., PDF viewers, image lightboxes) or when providing a dedicated, distraction-free **Fullscreen Focus View** for wide, complex multi-column data tables/spreadsheets triggered via an explicit expand button.
+- **Whole-Surface Clickability & Card Anatomy:** When a card or list item represents an entity that can be opened or selected, make the **entire card** the primary interactive surface rather than rendering a static box with a redundant *"Open"* or *"Select"* button inside it. Avoid stacking rows of action buttons at the bottom of cards unless a specific workflow genuinely requires immediate multi-action triggers; instead, tuck secondary or destructive actions behind hover-revealed compact icon triggers or a discrete `...` overflow menu.
+- **Ruthless Metadata Restraint & Hover Popovers:** Never dump every available data point onto a card or row at once in competing font sizes. Display only the **1–2 essential values** needed for immediate scanning, and tuck secondary details behind high-craft progressive disclosure—such as a subtle info icon or hover trigger that opens a clean custom popover on demand.
+- **Scannable Multi-Column Data & Tables:** Optimize tables for effortless visual scanning through strict column alignment, single-line headers (`whitespace-nowrap`), intentional typography hierarchy, and restrained color accents—without overwhelming the user with dense text or rows of permanent delete icons. Avoid harsh dividing lines (`border-b` / `divide-y`); instead, separate rows using floating row islands (`bg-elevation-1 shadow-sm` with vertical gaps) or borderless surfaces with subtle hover states. When a table has more columns than fit comfortably in its container, never cram or clip columns: allow clean horizontal scrolling (`overflow-x: auto`) and offer an elevated expand icon button (e.g., top-right on hover) to open the table in a smooth **Fullscreen Modal**.
+- **Intentional Whitespace & Progressive Disclosure:** Use generous whitespace actively as a structural grouping tool rather than filling every pixel with controls. Keep primary, high-frequency actions directly accessible (using clean patterns like **Segmented Controls** for view/mode switching), and tuck infrequent or secondary actions inside `...` overflow menus or dedicated subviews.
 - **Edge Alignment:** Align the outer edges of islands, text columns, and controls on clean vertical and horizontal grid lines.
 - **Responsive by Default:** Unless building a specialized desktop-only tool, design layouts and islands to adapt cleanly across both desktop and mobile viewports.
 
