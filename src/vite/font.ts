@@ -3,26 +3,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { HtmlTagDescriptor, Plugin } from "vite";
 
+import { CS_SINGLEFILE_PLUGIN_NAME } from "./singlefile.ts";
+
 export type CSFontSans = "system" | "inter";
-export type CSFontBuildStrategy = "inline" | "normal";
 
 export interface CSFontOptions {
     /**
      * Primary sans-serif font family for the application.
      * - `"system"`: Native OS font stack defined in `typography.css` (0 KB network/bundle overhead).
      * - `"inter"`: Bundled Inter Variable (`inter.woff2`) with the system stack as fallback.
-     * @default "system"
      */
-    sans?: CSFontSans;
-
-    /**
-     * Delivery strategy during `vite build` when `sans` is set to `"inter"`.
-     * During `vite dev`, the font is always served normally via `/@fs/` to keep DevTools clean.
-     * - `"inline"`: Embeds `inter.woff2` as a Base64 data URI directly into `index.html` (zero network requests, zero FOUT/FOIT).
-     * - `"normal"`: Emits a hashed `.woff2` asset into the build output and injects a `<link rel="preload">` tag.
-     * @default "inline"
-     */
-    build?: CSFontBuildStrategy;
+    sans: CSFontSans;
 }
 
 const INTER_FONT_PATH = fileURLToPath(new URL("../assets/fonts/inter.woff2", import.meta.url));
@@ -36,24 +27,22 @@ function buildFontCss(fontUrl: string, display: "block" | "swap"): string {
  * Vite plugin that configures the root sans-serif typography (`--cs-font-sans`).
  *
  * Architectural Notes:
- * - Zero-Overhead Default (`sans: "system"`): Returns a no-op plugin so applications using the
+ * - Zero-Overhead System Mode (`sans: "system"`): Returns a no-op plugin so applications using the
  *   native system font stack never read, bundle, or emit `inter.woff2`.
  * - Clean DevTools in Dev (`vite dev`): Always serves `inter.woff2` as a normal file URL via
  *   Vite's `/@fs/` endpoint with `<link rel="preload">`, avoiding multi-kilobyte Base64 strings in the DOM inspector.
- * - Flexible Production Delivery (`vite build`): Defaults to `"inline"` (Base64 data URI in `<head>`
- *   for instant zero-request rendering in local/intranet tools) or `"normal"` (hashed Rollup asset + preload).
+ * - Automatic Single-File Handshake (`vite build`): Emits a hashed `.woff2` asset with `<link rel="preload">`
+ *   in normal builds, or automatically inlines `inter.woff2` as a Base64 data URI when `csSingleFile({ enabled: true })` is active.
  */
-export function csFont(options: CSFontOptions = {}): Plugin {
-    const sans = options.sans ?? "system";
-
-    if (sans === "system") {
+export function csFont(options: CSFontOptions): Plugin {
+    if (options.sans === "system") {
         return {
             name: "vite-plugin-cs-font",
         };
     }
 
-    const buildStrategy = options.build ?? "inline";
     let isBuild = false;
+    let isSingleFile = false;
     let baseUrl = "/";
     let emittedAssetUrl: string | undefined;
     let inlineDataUri: string | undefined;
@@ -73,6 +62,7 @@ export function csFont(options: CSFontOptions = {}): Plugin {
 
         configResolved(config) {
             isBuild = config.command === "build";
+            isSingleFile = config.plugins.some((plugin) => plugin.name === CS_SINGLEFILE_PLUGIN_NAME);
             baseUrl = config.base;
         },
 
@@ -81,7 +71,7 @@ export function csFont(options: CSFontOptions = {}): Plugin {
 
             const fontBuffer = readFileSync(INTER_FONT_PATH);
 
-            if (buildStrategy === "inline") {
+            if (isSingleFile) {
                 inlineDataUri = `data:font/woff2;base64,${fontBuffer.toString("base64")}`;
             } else {
                 // eslint-disable-next-line unicorn/no-this-outside-of-class
@@ -98,8 +88,8 @@ export function csFont(options: CSFontOptions = {}): Plugin {
         },
 
         transformIndexHtml() {
-            // 1. Production build with inlined Base64 data URI
-            if (isBuild && buildStrategy === "inline") {
+            // 1. Single-file production build: inline Base64 data URI directly in <head>
+            if (isBuild && isSingleFile) {
                 const dataUri =
                     inlineDataUri ?? `data:font/woff2;base64,${readFileSync(INTER_FONT_PATH).toString("base64")}`;
 
@@ -112,7 +102,7 @@ export function csFont(options: CSFontOptions = {}): Plugin {
                 ];
             }
 
-            // 2. Dev server (`/@fs/...`) or production build with external hashed asset (`build: "normal"`)
+            // 2. Dev server (`/@fs/...`) or standard production build with external hashed asset
             const normalizedFsPath = INTER_FONT_PATH.replaceAll("\\", "/");
             const devFontUrl = `/@fs${normalizedFsPath.startsWith("/") ? "" : "/"}${normalizedFsPath}`;
             const fontUrl = isBuild && emittedAssetUrl ? emittedAssetUrl : devFontUrl;

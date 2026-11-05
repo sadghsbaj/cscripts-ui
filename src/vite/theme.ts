@@ -3,7 +3,7 @@ import type { Plugin } from "vite";
 export type CSThemeMode = "light" | "dark" | "system";
 
 export interface CSThemeOptions {
-    mode?: CSThemeMode;
+    mode: CSThemeMode;
     lightColor?: string;
     darkColor?: string;
 }
@@ -12,8 +12,8 @@ function setMeta(colorExpr: string): string {
     return `let m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.name="theme-color";document.head.appendChild(m)}m.content=${colorExpr}`;
 }
 
-export function csTheme(options: CSThemeOptions = {}): Plugin {
-    const mode = options.mode ?? "system";
+export function csTheme(options: CSThemeOptions): Plugin {
+    const mode = options.mode;
     const light = options.lightColor ?? "#f4f4f5";
     const dark = options.darkColor ?? "#09090b";
 
