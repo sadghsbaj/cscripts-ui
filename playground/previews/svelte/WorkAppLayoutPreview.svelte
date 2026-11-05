@@ -1,5 +1,5 @@
 <script module>
-    import { WorkAppFrame, WorkAppHeader, WorkAppIntro, WorkAppMain, WorkAppSignature } from "cs/svelte";
+    import { WorkAppFrame, WorkAppHeader, WorkAppIntro, WorkAppMain, WorkAppSignature } from "cs/svelte/work";
 
     export const id = "work-app-layout";
     export const label = "App-Layout";

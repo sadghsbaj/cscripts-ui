@@ -4,7 +4,7 @@
 </script>
 
 <script lang="ts">
-    import { WORK_LOCATION_IDS, WORK_LOCATIONS, WorkLocation, type WorkLocationId } from "cs/svelte";
+    import { WORK_LOCATION_IDS, WORK_LOCATIONS, WorkLocation, type WorkLocationId } from "cs/svelte/work";
 </script>
 
 <div class="flex justify-center">

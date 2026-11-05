@@ -20,7 +20,7 @@ csSingleFile({ enabled: true }),
 
 ## 2. Work Application Shell & Primitives (`../svelte/work/`)
 
-NEVER invent custom app headers, brand logos, intro screens, or page wrappers for internal work tools. Always use the built-in work primitives exported from `cs/svelte` (or `cs/svelte/work`):
+NEVER invent custom app headers, brand logos, intro screens, or page wrappers for internal work tools. Always use the built-in work primitives exported exclusively from `cs/svelte/work`:
 
 1. **Discover all work exports:** Read `../svelte/work/index.ts` (and the sub-indexes `../svelte/work/app-intro/index.ts`, `../svelte/work/app-layout/index.ts`, `../svelte/work/locations/index.ts`).
 2. **Inspect component details:** Read the `.svelte` files in `../svelte/work/app-intro/`, `../svelte/work/app-layout/`, and `../svelte/work/locations/` to check exact props, context behavior, and CSS layout rules.
@@ -31,7 +31,7 @@ Every work application follows this top-level structure:
 
 ```svelte
 <script lang="ts">
-    import { WorkAppFrame, WorkAppHeader, WorkAppIntro, WorkAppMain, WorkAppSignature } from "cs/svelte";
+    import { WorkAppFrame, WorkAppHeader, WorkAppIntro, WorkAppMain, WorkAppSignature } from "cs/svelte/work";
 </script>
 
 <WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen">
