@@ -93,10 +93,10 @@ theme.set("dark");
 
 ### B. Vite Plugins (`cs/vite` — `../vite/index.ts`)
 
-`vite.config.ts` uses three explicit plugins from `cs/vite` (all options are required so project configuration is immediately visible):
+`vite.config.ts` uses four explicit plugins from `cs/vite` (all options are required so project configuration is immediately visible):
 
 ```ts
-import { csFont, csSingleFile, csTheme } from "cs/vite";
+import { csFont, csLucide, csSingleFile, csTheme } from "cs/vite";
 
 // 1. Initial theme & FOUC prevention ("light" | "dark" | "system")
 csTheme({ mode: "system" });
@@ -108,6 +108,10 @@ csFont({ sans: "system" });
 // 3. Single-file HTML bundling (true | false)
 // When enabled: true, bundles all JS, CSS, SVGs, public icons, and Inter font into a single dist/index.html.
 csSingleFile({ enabled: false });
+
+// 4. On-the-fly @lucide/svelte barrel optimizer (true | false)
+// Automatically rewrites `import { Check } from "@lucide/svelte"` into direct icon subpath imports.
+csLucide({ enabled: true });
 ```
 
 NEVER install external font packages (like `@fontsource/*`) or `vite-plugin-singlefile`—always configure `csFont` and `csSingleFile` in `vite.config.ts`.
