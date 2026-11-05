@@ -24,6 +24,7 @@ The library uses a strict custom ESLint flat config bundle (`src/eslint/`) that 
 - **UnoCSS Shortcuts (`shortcuts/enforce-shortcuts`):** Never combine raw layout utility classes (`flex justify-center items-center`) when a shortcut exists (`flex-center`). ESLint will auto-fix or error out.
 - **No Unicode Dots (`unicode-dots/no-unicode-dots`):** Unicode separator dots (`·`, `•`, etc.) are forbidden in code and text. Always use an empty span with dot utilities (`<span class="dot-md"></span>`).
 - **Modern Svelte Restrictions (`svelteConfig`):**
+    - Legacy `getContext` / `setContext` / `hasContext` imports from `"svelte"` are banned (use Svelte 5's type-safe `createContext`).
     - Legacy `use:action` directives are banned (use Svelte 5 `{@attach ...}` or element functions).
     - Direct `document.querySelector` / `document.getElementById` calls inside `.svelte` components are banned (use `bind:this` or element parameters).
     - Legacy `{@const}` tags are banned (use Svelte 5 `{const ...}` or `{let ...}`).

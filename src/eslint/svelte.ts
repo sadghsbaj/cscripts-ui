@@ -2,6 +2,13 @@ import type { Linter } from "eslint";
 import svelte from "eslint-plugin-svelte";
 import ts from "typescript-eslint";
 
+const forbiddenLegacyContextSelector = {
+    selector:
+        "ImportDeclaration[source.value='svelte'] ImportSpecifier[imported.name=/^(getContext|setContext|hasContext)$/]",
+    message:
+        "Legacy 'getContext' / 'setContext' / 'hasContext' is forbidden. Use Svelte 5's type-safe 'createContext' from 'svelte' instead.",
+};
+
 export const svelteConfig: Linter.Config[] = [
     ...svelte.configs.recommended,
 
@@ -15,11 +22,18 @@ export const svelteConfig: Linter.Config[] = [
         },
     },
     {
+        files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
+        rules: {
+            "no-restricted-syntax": ["error", forbiddenLegacyContextSelector],
+        },
+    },
+    {
         files: ["**/*.svelte"],
         rules: {
             "prefer-const": "off",
             "no-restricted-syntax": [
                 "error",
+                forbiddenLegacyContextSelector,
                 {
                     selector: "SvelteDirective[kind='Action']",
                     message:
