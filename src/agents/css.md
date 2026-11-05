@@ -6,7 +6,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 
 `../css/index.css` establishes a strict CSS `@layer` cascade so UnoCSS utilities can cleanly override foundation and component styles without specificity wars (`!important` is almost never needed):
 
-- **Top-level layers:** `foundation`, `components` (defined in `../css/index.css` and colocated Svelte component `<style>` blocks).
+- **Top-level layers:** `foundation`, `attachments`, `components` (defined in `../css/index.css`, attachment stylesheets, and colocated Svelte component `<style>` blocks).
 - **Foundation sub-layers:** `reset` and `base` (defined in `../css/foundation/index.css`).
 
 ## 2. Automated Foundation Behaviors (DO NOT RE-IMPLEMENT)
@@ -50,13 +50,13 @@ All custom CSS variables provided by `cs` are strictly prefixed with `--cs-`. Wh
     - `--cs-color-text-weaker`: Muted text, placeholders, subtle metadata.
     - **Rule:** NEVER use raw shades like `zinc-700` or `base-500` for text colors. Always use the 4 semantic text tokens.
 
-### Easings, Shapes & Typography
+### Easings, Containers, Shapes & Typography
 
 - **Easings (`../css/foundation/easings.css`):**
-  Pattern: `--cs-ease-<curve>-<direction>`
-    - Curves: `sine`, `quad`, `cubic`, `quart`, `quint`, `expo`, `circ`, `back`
-    - Directions: `in`, `out`, `in-out` (e.g., `--cs-ease-cubic-out`, `--cs-ease-back-in-out`)
-    - Physics spring: `--cs-spring-release`
+    - Standard curves (`--cs-ease-<curve>-<direction>`): Curves (`sine`, `quad`, `cubic`, `quart`, `quint`, `expo`, `circ`, `back`) × Directions (`in`, `out`, `in-out`), e.g., `--cs-ease-cubic-out`, `--cs-ease-expo-out`.
+    - Custom `linear(...)` physics springs (e.g., `--cs-spring-release`, `--cs-spring-snappy` — inspect `../css/foundation/easings.css` for all available curves).
+- **Containers (`../css/foundation/container.css`):**
+    - Standard max-width scale tokens (`--cs-container-3xs` through `--cs-container-7xl` plus `--cs-container-prose`). Inspect `../css/foundation/container.css` for exact pixel/ch values.
 - **Shapes (`../css/foundation/shapes.css`) & Typography (`../css/foundation/typography.css`):**
   Maps UnoCSS `presetWind4` scales to `--cs-*` variables:
     - Radii: `--cs-radius-none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`, `full`

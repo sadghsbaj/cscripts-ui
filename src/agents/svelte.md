@@ -16,7 +16,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 Svelte 5.29+ replaces legacy `use:action` with **Attachments** (https://svelte.dev/docs/svelte/@attach). NEVER write `use:myAction`.
 
 - **How it works:** An attachment is a function receiving the DOM element and optionally returning a cleanup function. It automatically re-runs when reactive state read inside it changes.
-- **Library Attachments:** Check `../svelte/attachments/` before writing custom DOM attachments.
+- **Library Attachments:** Read `../svelte/attachments/index.ts` (and the respective folders in `../svelte/attachments/`) to discover built-in attachments like `scrollFade` and `fadeMask` before writing custom DOM attachments.
 - **Syntax Example:**
     ```svelte
     <script lang="ts">
@@ -67,7 +67,9 @@ NEVER abuse `$effect` to synchronize state (e.g., reading state A inside `$effec
 - **Component Generics:** For generic components, use `<script lang="ts" generics="T extends Record<string, unknown>">`.
 - **Module Context:** Use `<script module lang="ts">` (not `context="module"`) for module-level exports and shared non-instance logic.
 
-## 3. Theme Management (`cs/svelte` & `cs/vite`)
+## 3. Theme & Build Configuration (`cs/svelte` & `cs/vite`)
+
+### A. Theme Management (`../svelte/theme.svelte.ts` & `../vite/theme.ts`)
 
 Theme state (`light` | `dark` | `system`), localStorage persistence (`cs-theme`), OS media query listeners, and native View Transitions (`document.startViewTransition` with automatic data-theme-switching transition suspension) are completely handled by `../svelte/theme.svelte.ts` in combination with the FOUC-prevention inline script in `../vite/theme.ts`.
 
@@ -88,3 +90,24 @@ theme.set("dark");
 ```
 
 > **SSR Note:** For multi-request SSR apps requiring request isolation, instantiate `new ThemeManager()` inside a context (`createContext`) instead of mutating the global `theme` singleton.
+
+### B. Vite Plugins (`cs/vite` — `../vite/index.ts`)
+
+`vite.config.ts` uses three explicit plugins from `cs/vite` (all options are required so project configuration is immediately visible):
+
+```ts
+import { csFont, csSingleFile, csTheme } from "cs/vite";
+
+// 1. Initial theme & FOUC prevention ("light" | "dark" | "system")
+csTheme({ mode: "system" });
+
+// 2. Root sans-serif font stack ("system" | "inter")
+// "inter" automatically uses the bundled Inter Variable woff2 without external font packages.
+csFont({ sans: "system" });
+
+// 3. Single-file HTML bundling (true | false)
+// When enabled: true, bundles all JS, CSS, SVGs, public icons, and Inter font into a single dist/index.html.
+csSingleFile({ enabled: false });
+```
+
+NEVER install external font packages (like `@fontsource/*`) or `vite-plugin-singlefile`—always configure `csFont` and `csSingleFile` in `vite.config.ts`.
