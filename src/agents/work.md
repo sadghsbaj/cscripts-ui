@@ -31,7 +31,7 @@ Every work application follows this top-level structure:
 
 ```svelte
 <script lang="ts">
-    import { WorkAppFrame, WorkAppHeader, WorkAppIntro, WorkAppMain, WorkAppSignature } from "cs/svelte/work";
+    import { WorkAppFrame, WorkAppHeader, WorkAppIntro, WorkAppMain } from "cs/svelte/work";
 </script>
 
 <WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen">
@@ -43,8 +43,6 @@ Every work application follows this top-level structure:
         <WorkAppMain>
             <!-- Primary application workspace islands -->
         </WorkAppMain>
-
-        <WorkAppSignature />
     </WorkAppFrame>
 </WorkAppIntro>
 ```
@@ -52,7 +50,6 @@ Every work application follows this top-level structure:
 ### Key Architectural Behaviors (DO NOT RE-IMPLEMENT)
 
 - **Identity Context (`WorkAppIntro` -> `WorkAppHeader`):** `<WorkAppIntro>` provides `toolCategory` and `toolName` via Svelte context (`getWorkAppIdentity`). `<WorkAppHeader>` automatically reads `toolName` from this context for its left pill without needing redundant props.
-- **Built-In Brand Badge (`WorkAppBrand`):** `<WorkAppHeader>` automatically renders `<WorkAppBrand />` (the Pfleiderer logo pill) on its right edge. Do NOT manually place `<WorkAppBrand />` inside `<WorkAppHeader>`—any `children` passed to `<WorkAppHeader>` are positioned between the left tool-name pill and the right brand pill.
-- **Single-Element Centered Frame (`WorkAppFrame`):** `<WorkAppFrame>` is a full-height (`100%`) flex/scroll container (`overflow-y: auto`, `scrollbar-lg`) that centers content to `--cs-container-5xl` (`1024px`) via dynamic `padding-inline` so the scrollbar stays at the outer viewport edge.
-- **Non-Intrusive Corner Watermark (`WorkAppSignature`):** Fixed to the bottom-right corner with `z-index: -1` inside `#app`'s isolated stacking context, so workspace cards naturally slide over it on narrower laptop viewports without collision.
+- **Built-In Brand Badge (`WorkAppBrand`):** `<WorkAppHeader>` automatically renders `<WorkAppBrand />` (the Pfleiderer logo pill) on its right edge by default (`showBrand = true`). Do NOT manually place `<WorkAppBrand />` inside `<WorkAppHeader>`—any `children` passed to `<WorkAppHeader>` are positioned between the left tool-name pill and the right brand pill.
+- **Single-Element Centered Frame & Built-In Signature (`WorkAppFrame` & `WorkAppSignature`):** `<WorkAppFrame>` is a full-height (`100%`) flex/scroll container (`overflow-y: auto`, `scrollbar-lg`) that centers content to `--cs-container-5xl` (`1024px`) via dynamic `padding-inline` so the scrollbar stays at the outer viewport edge. It also automatically renders `<WorkAppSignature />` in the bottom-right corner (`showSignature = true`, layered at `z-index: -1` inside `#app`'s isolated stacking context so workspace cards naturally slide over it on narrower laptops). Do NOT manually render `<WorkAppSignature />` inside `<WorkAppFrame>`.
 - **Locations (`WorkLocation` & `WORK_LOCATIONS`):** Inspect `../svelte/work/locations/index.ts` when rendering or referencing Pfleiderer DACH site maps (`baruth`, `arnsberg`, `gütersloh`, `leutkirch`, `neumarkt`).

@@ -8,15 +8,21 @@ Architectural Notes:
     (e.g. `gap-*`, `overflow-*`) apply directly while the scrollbar stays anchored to the viewport edge.
 - Pure Layout Primitive: Intentionally omits `background-color` so the root canvas surface
     (`--cs-color-elevation-0` defined on `html` in `reset.css`) or underlying background patterns shine through.
+- Built-In Signature: Automatically renders `<WorkAppSignature />` unless `showSignature={false}` is passed.
 -->
 <script lang="ts">
     import type { WorkAppFrameProps } from "./index";
+    import WorkAppSignature from "./WorkAppSignature.svelte";
 
-    let { children, class: className, ...rest }: WorkAppFrameProps = $props();
+    let { showSignature = true, children, class: className, ...rest }: WorkAppFrameProps = $props();
 </script>
 
 <div {...rest} class={["cs-work-app-frame scrollbar-lg", className]}>
     {@render children?.()}
+
+    {#if showSignature}
+        <WorkAppSignature />
+    {/if}
 </div>
 
 <style>

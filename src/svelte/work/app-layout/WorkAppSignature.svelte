@@ -3,6 +3,8 @@
 Subtle corner creator watermark (`<WorkAppSignature />`) for internal work tools.
 
 Architectural Notes:
+- Frame Integration: Automatically rendered inside `<WorkAppFrame />` by default (`showSignature = true`),
+  so it does not need to be placed manually in standard layouts. Exported standalone for custom frames.
 - Non-Intrusive Layering (`z-index: -1`): Because `#app` defines `isolation: isolate` in `reset.css`
   while the page canvas background (`--cs-color-elevation-0`) lives on `<html>`, `z-index: -1`
   places the watermark above the background canvas but strictly behind all normal application content.

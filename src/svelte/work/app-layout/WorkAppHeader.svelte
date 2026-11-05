@@ -5,13 +5,14 @@ Application header bar (`<WorkAppHeader />`) for internal work tools.
 Architectural Notes:
 - Context Integration: Automatically reads `toolName` from the parent `<WorkAppIntro />` context
   via `getWorkAppIdentity()`, while still allowing an explicit `toolName` prop override.
+- Built-In Brand Badge: Automatically renders `<WorkAppBrand />` on the right edge unless `showBrand={false}` is passed.
 -->
 <script lang="ts">
     import { getWorkAppIdentity } from "../app-intro/index";
     import type { WorkAppHeaderProps } from "./index";
     import WorkAppBrand from "./WorkAppBrand.svelte";
 
-    let { toolName, children, class: className, ...rest }: WorkAppHeaderProps = $props();
+    let { toolName, showBrand = true, children, class: className, ...rest }: WorkAppHeaderProps = $props();
 
     const identity = getWorkAppIdentity();
 </script>
@@ -23,7 +24,9 @@ Architectural Notes:
 
     {@render children?.()}
 
-    <WorkAppBrand />
+    {#if showBrand}
+        <WorkAppBrand />
+    {/if}
 </header>
 
 <style>
