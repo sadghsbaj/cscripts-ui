@@ -1,0 +1,20 @@
+/* ==========================================================================
+   CONTAINERS (Max-Width Scale)
+   ========================================================================== */
+
+:root {
+    --cs-container-3xs: 256px;
+    --cs-container-2xs: 288px;
+    --cs-container-xs: 320px;
+    --cs-container-sm: 384px;
+    --cs-container-md: 448px;
+    --cs-container-lg: 512px;
+    --cs-container-xl: 576px;
+    --cs-container-2xl: 672px;
+    --cs-container-3xl: 768px;
+    --cs-container-4xl: 896px;
+    --cs-container-5xl: 1024px;
+    --cs-container-6xl: 1152px;
+    --cs-container-7xl: 1280px;
+    --cs-container-prose: 65ch;
+}
