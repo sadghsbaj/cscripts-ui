@@ -7,7 +7,7 @@ Architectural Notes:
   panels, tables, or lists can shrink and scroll internally without overflowing the viewport.
 -->
 <script lang="ts">
-    import type { WorkAppMainProps } from "./index";
+    import type { WorkAppMainProps } from "./index.ts";
 
     let { children, class: className, ...rest }: WorkAppMainProps = $props();
 </script>

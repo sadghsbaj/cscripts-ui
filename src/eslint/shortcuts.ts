@@ -4,7 +4,7 @@
 
 import type { Linter, Rule } from "eslint";
 
-import { layoutShortcuts } from "../uno/shortcuts/layout";
+import { layoutShortcuts } from "../uno/shortcuts/layout.ts";
 
 interface ShortcutRule {
     name: string;

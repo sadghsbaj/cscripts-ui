@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { HtmlTagDescriptor, Plugin } from "vite";
 
-import { CS_SINGLEFILE_PLUGIN_NAME } from "./singlefile";
+import { CS_SINGLEFILE_PLUGIN_NAME } from "./singlefile.ts";
 
 export type CSFontSans = "system" | "inter";
 

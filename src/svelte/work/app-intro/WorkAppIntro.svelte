@@ -13,9 +13,9 @@ Architectural Notes:
     import { onDestroy, onMount } from "svelte";
     import logoUrl from "cs/assets/work/logo.svg";
 
-    import { WORK_LOCATIONS } from "../locations/index";
+    import { WORK_LOCATIONS } from "../locations/index.ts";
     import WorkLocation from "../locations/WorkLocation.svelte";
-    import { setWorkAppIdentity, type WorkAppIntroProps } from "./index";
+    import { setWorkAppIdentity, type WorkAppIntroProps } from "./index.ts";
     import { BOOT_SEQUENCE, workAppIntroState } from "./workAppIntroState.svelte";
 
     let { toolCategory, toolName, persist = true, children, ...rest }: WorkAppIntroProps = $props();

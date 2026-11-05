@@ -10,7 +10,7 @@ Architectural Notes:
   `stroke-width: 2.5` to the `600` button font weight.
 -->
 <script lang="ts">
-    import type { ButtonIconProps } from "./index";
+    import type { ButtonIconProps } from "./index.ts";
 
     let { icon: Icon, class: className, ...rest }: ButtonIconProps = $props();
 </script>

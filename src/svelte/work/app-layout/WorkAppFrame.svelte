@@ -11,7 +11,7 @@ Architectural Notes:
 - Built-In Signature: Automatically renders `<WorkAppSignature />` unless `showSignature={false}` is passed.
 -->
 <script lang="ts">
-    import type { WorkAppFrameProps } from "./index";
+    import type { WorkAppFrameProps } from "./index.ts";
     import WorkAppSignature from "./WorkAppSignature.svelte";
 
     let { showSignature = true, children, class: className, ...rest }: WorkAppFrameProps = $props();

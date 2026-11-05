@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { FADE_MASK_STRENGTHS, FADE_MASK_VARIANTS, fadeMask } from "./fade-mask.attach";
+import { FADE_MASK_STRENGTHS, FADE_MASK_VARIANTS, fadeMask } from "./fade-mask.attach.ts";
 
 describe("fadeMask Svelte 5 Element Attachment", () => {
     let container: HTMLDivElement;

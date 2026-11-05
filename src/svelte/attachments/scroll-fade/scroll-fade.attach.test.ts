@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { scrollFade } from "./scroll-fade.attach";
+import { scrollFade } from "./scroll-fade.attach.ts";
 
 /**
  * Helper to mock scroll metrics on an element.

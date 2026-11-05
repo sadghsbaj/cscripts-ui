@@ -11,7 +11,7 @@ Architectural Notes:
 <script lang="ts">
     import logoUrl from "cs/assets/work/logo.svg";
 
-    import type { WorkAppBrandProps } from "./index";
+    import type { WorkAppBrandProps } from "./index.ts";
 
     let { class: className, ...rest }: WorkAppBrandProps = $props();
 </script>

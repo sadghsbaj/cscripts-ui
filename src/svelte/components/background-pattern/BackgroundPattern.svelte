@@ -9,7 +9,7 @@ Architectural Notes:
 -->
 <script lang="ts">
     import * as variants from "./BackgroundPatternVariants.svelte";
-    import { BACKGROUND_PATTERN_SPACING, type BackgroundPatternProps } from "./index";
+    import { BACKGROUND_PATTERN_SPACING, type BackgroundPatternProps } from "./index.ts";
 
     // Unique per instance so multiple patterns don't collide in the DOM
     const uid = $props.id();

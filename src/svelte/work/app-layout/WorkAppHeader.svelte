@@ -8,8 +8,8 @@ Architectural Notes:
 - Built-In Brand Badge: Automatically renders `<WorkAppBrand />` on the right edge unless `showBrand={false}` is passed.
 -->
 <script lang="ts">
-    import { getWorkAppIdentity } from "../app-intro/index";
-    import type { WorkAppHeaderProps } from "./index";
+    import { getWorkAppIdentity } from "../app-intro/index.ts";
+    import type { WorkAppHeaderProps } from "./index.ts";
     import WorkAppBrand from "./WorkAppBrand.svelte";
 
     let { toolName, showBrand = true, children, class: className, ...rest }: WorkAppHeaderProps = $props();

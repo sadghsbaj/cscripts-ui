@@ -1,6 +1,6 @@
-import { dotShortcuts } from "./dots";
-import { layoutShortcuts } from "./layout";
-import { typographyShortcuts } from "./typography";
+import { dotShortcuts } from "./dots.ts";
+import { layoutShortcuts } from "./layout.ts";
+import { typographyShortcuts } from "./typography.ts";
 
 export const shortcuts: Record<string, string> = {
     ...layoutShortcuts,
@@ -8,6 +8,6 @@ export const shortcuts: Record<string, string> = {
     ...typographyShortcuts,
 };
 
-export { dotShortcuts } from "./dots";
-export { layoutShortcuts } from "./layout";
-export { typographyShortcuts } from "./typography";
+export { dotShortcuts } from "./dots.ts";
+export { layoutShortcuts } from "./layout.ts";
+export { typographyShortcuts } from "./typography.ts";

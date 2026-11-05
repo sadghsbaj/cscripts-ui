@@ -14,7 +14,7 @@ import {
     hasDescendantElement,
     isTruthyAttribute,
     shouldSkipFile,
-} from "./utils";
+} from "./utils.ts";
 
 export const buttonStructureRule: Rule.RuleModule = {
     meta: {

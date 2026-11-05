@@ -8,7 +8,7 @@ Architectural Notes:
   See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
-    import type { ButtonProps } from "./index";
+    import type { ButtonProps } from "./index.ts";
 
     let { variant, color, size, as = "button", iconOnly, class: className, children, ...rest }: ButtonProps = $props();
 </script>

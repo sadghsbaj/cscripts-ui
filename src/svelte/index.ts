@@ -1,3 +1,3 @@
-export * from "./components/index";
-export * from "./attachments/index";
+export * from "./components/index.ts";
+export * from "./attachments/index.ts";
 export * from "./theme.svelte";

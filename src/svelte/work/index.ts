@@ -1,3 +1,3 @@
-export * from "./locations/index";
-export * from "./app-intro/index";
-export * from "./app-layout/index";
+export * from "./locations/index.ts";
+export * from "./app-intro/index.ts";
+export * from "./app-layout/index.ts";

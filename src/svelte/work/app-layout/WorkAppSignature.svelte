@@ -14,7 +14,7 @@ Architectural Notes:
   and panels smoothly cover the watermark without visual collision.
 -->
 <script lang="ts">
-    import type { WorkAppSignatureProps } from "./index";
+    import type { WorkAppSignatureProps } from "./index.ts";
 
     let { class: className, ...rest }: WorkAppSignatureProps = $props();
 </script>
