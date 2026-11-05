@@ -15,7 +15,7 @@ Architectural Notes:
     let { children, class: className, ...rest }: WorkAppFrameProps = $props();
 </script>
 
-<div {...rest} class={["cs-work-app-frame", className]}>
+<div {...rest} class={["cs-work-app-frame scrollbar-lg", className]}>
     {@render children?.()}
 </div>
 
