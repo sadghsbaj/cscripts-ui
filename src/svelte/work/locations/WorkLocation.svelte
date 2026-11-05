@@ -4,7 +4,7 @@ SVG map primitive (`<WorkLocation />`) for rendering company plant regions (`arn
 `guetersloh`, `leutkirch`, `neumarkt`) with an optional location marker.
 -->
 <script lang="ts">
-    import { WORK_LOCATIONS, type WorkLocationProps } from "./index.ts";
+    import { WORK_LOCATIONS, type WorkLocationProps } from "../index.ts";
 
     let { location, marker = false, class: className, ...rest }: WorkLocationProps = $props();
 
