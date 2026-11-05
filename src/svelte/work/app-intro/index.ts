@@ -1,3 +1,4 @@
+import { createContext } from "svelte";
 import type { HTMLAttributes } from "svelte/elements";
 
 export { default as WorkAppIntro } from "./WorkAppIntro.svelte";
@@ -16,3 +17,10 @@ export interface WorkAppIntroProps extends HTMLAttributes<HTMLDivElement> {
      */
     persist?: boolean;
 }
+
+export interface WorkAppIdentityContext {
+    readonly toolCategory: string;
+    readonly toolName: string;
+}
+
+export const [getWorkAppIdentity, setWorkAppIdentity] = createContext<WorkAppIdentityContext>();

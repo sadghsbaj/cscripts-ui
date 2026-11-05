@@ -49,7 +49,7 @@
         size="md"
         variant="elevated"
         iconOnly
-        class="absolute right-8 top-8"
+        class="absolute right-8 top-8 z-100"
         aria-label="Sidebar umschalten"
         onclick={() => (sidebarIsOpen = !sidebarIsOpen)}
     >
@@ -58,7 +58,7 @@
     </Button>
 
     <aside
-        class="h-full sidebar {sidebarIsOpen ? '' : 'hidden'} w-280px flex flex-col gap-3 shrink-0 py-16 px-4 lg:px-8"
+        class="relative z-100 h-full sidebar {sidebarIsOpen ? '' : 'hidden'} w-280px flex flex-col gap-3 shrink-0 py-16 px-4 lg:px-8"
     >
         <h2 class="title-xl">Previews:</h2>
 

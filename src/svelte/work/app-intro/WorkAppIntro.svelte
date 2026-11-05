@@ -15,10 +15,19 @@ Architectural Notes:
 
     import { WORK_LOCATIONS } from "../locations/index";
     import WorkLocation from "../locations/WorkLocation.svelte";
-    import type { WorkAppIntroProps } from "./index";
+    import { setWorkAppIdentity, type WorkAppIntroProps } from "./index";
     import { BOOT_SEQUENCE, workAppIntroState } from "./workAppIntroState.svelte";
 
     let { toolCategory, toolName, persist = true, children, ...rest }: WorkAppIntroProps = $props();
+
+    setWorkAppIdentity({
+        get toolCategory() {
+            return toolCategory;
+        },
+        get toolName() {
+            return toolName;
+        },
+    });
 
     onMount(() => {
         if (persist) {

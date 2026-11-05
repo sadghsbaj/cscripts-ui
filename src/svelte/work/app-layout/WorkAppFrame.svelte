@@ -24,6 +24,7 @@ Architectural Notes:
         .cs-work-app-frame {
             display: flex;
             flex-direction: column;
+            gap: 32px;
             width: 100%;
             height: 100%;
             padding-block: 24px;
