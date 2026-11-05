@@ -1,0 +1,35 @@
+<!--
+@component
+Primary application layout frame (`<WorkAppFrame />`) for internal desktop-first work tools.
+
+Architectural Notes:
+- Single-Element Centering: Avoids an inner wrapper `<div>` by computing dynamic horizontal
+    padding via `max()`, keeping a single flex/scroll container where external utility classes
+    (e.g. `gap-*`, `overflow-*`) apply directly while the scrollbar stays anchored to the viewport edge.
+- Pure Layout Primitive: Intentionally omits `background-color` so the root canvas surface
+    (`--cs-color-elevation-0` defined on `html` in `reset.css`) or underlying background patterns shine through.
+-->
+<script lang="ts">
+    import type { WorkAppFrameProps } from "./index";
+
+    let { children, class: className, ...rest }: WorkAppFrameProps = $props();
+</script>
+
+<div {...rest} class={["cs-work-app-frame", className]}>
+    {@render children?.()}
+</div>
+
+<style>
+    @layer components {
+        .cs-work-app-frame {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            padding-block: 24px;
+            /* Enforces a minimum 24px gutter on smaller laptops while centering content to `--cs-container-5xl` (1024px) on wider monitors */
+            padding-inline: max(24px, calc((100% - var(--cs-container-5xl)) / 2));
+            overflow-y: auto;
+        }
+    }
+</style>

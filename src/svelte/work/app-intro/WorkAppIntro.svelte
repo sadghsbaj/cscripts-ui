@@ -124,6 +124,9 @@ Architectural Notes:
         }
 
         .cs-work-app-intro-workspace {
+            width: 100%;
+            height: 100%;
+
             transition:
                 scale 320ms var(--cs-ease-expo-out),
                 opacity 320ms var(--cs-ease-quad-out);
