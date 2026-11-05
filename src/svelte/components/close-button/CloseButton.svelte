@@ -9,7 +9,7 @@ Architectural Notes:
 -->
 <script lang="ts">
     import { X } from "@lucide/svelte";
-    import type { CloseButtonProps } from "./index.ts";
+    import type { CloseButtonProps } from "./index";
 
     let { variant, size, class: className, children, ...rest }: CloseButtonProps = $props();
 </script>

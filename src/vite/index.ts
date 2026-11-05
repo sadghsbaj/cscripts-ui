@@ -1,3 +1,3 @@
-export * from "./theme.ts";
-export * from "./font.ts";
-export * from "./singlefile.ts";
+export * from "./theme";
+export * from "./font";
+export * from "./singlefile";

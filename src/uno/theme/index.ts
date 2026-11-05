@@ -1,12 +1,12 @@
-import { colors } from "./colors.ts";
-import { easeCurves } from "./easings.ts";
+import { colors } from "./colors";
+import { easeCurves } from "./easings";
 
 export const theme = {
     colors,
     ease: easeCurves(),
 };
 
-export { semanticColor, SHADES, colors } from "./colors.ts";
-export { EASE_DIRS, EASE_FAMILIES, easeCurves } from "./easings.ts";
+export { semanticColor, SHADES, colors } from "./colors";
+export { EASE_DIRS, EASE_FAMILIES, easeCurves } from "./easings";
 
-export { fonts } from "./fonts.ts";
+export { fonts } from "./fonts";

@@ -15,21 +15,21 @@ import { defineConfig } from "eslint/config";
 import globals from "globals";
 import ts from "typescript-eslint";
 
-import { baseRulesConfig } from "./base-rules.ts";
-import { ignoresConfig } from "./ignores.ts";
-import { customRulesConfigs } from "./rules/index.ts";
-import { shortcutsConfig } from "./shortcuts.ts";
-import { svelteConfig } from "./svelte.ts";
-import { unicornConfig } from "./unicorn.ts";
-import { unocssConfig } from "./unocss.ts";
+import { baseRulesConfig } from "./base-rules";
+import { ignoresConfig } from "./ignores";
+import { customRulesConfigs } from "./rules/index";
+import { shortcutsConfig } from "./shortcuts";
+import { svelteConfig } from "./svelte";
+import { unicornConfig } from "./unicorn";
+import { unocssConfig } from "./unocss";
 
-export { baseRulesConfig } from "./base-rules.ts";
-export { ignoresConfig } from "./ignores.ts";
-export * from "./rules/index.ts";
-export { shortcutsConfig } from "./shortcuts.ts";
-export { svelteConfig } from "./svelte.ts";
-export { unicornConfig } from "./unicorn.ts";
-export { unocssConfig } from "./unocss.ts";
+export { baseRulesConfig } from "./base-rules";
+export { ignoresConfig } from "./ignores";
+export * from "./rules/index";
+export { shortcutsConfig } from "./shortcuts";
+export { svelteConfig } from "./svelte";
+export { unicornConfig } from "./unicorn";
+export { unocssConfig } from "./unocss";
 
 export const csEslint = defineConfig([
     ignoresConfig,

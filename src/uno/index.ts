@@ -1,10 +1,10 @@
 import extractorSvelte from "@unocss/extractor-svelte";
 import { presetWind4, transformerDirectives, transformerVariantGroup, type Preset } from "unocss";
 
-import { rules } from "./rules/index.ts";
-import { shortcuts } from "./shortcuts/index.ts";
-import { fonts, theme } from "./theme/index.ts";
-import { variants } from "./variants/index.ts";
+import { rules } from "./rules/index";
+import { shortcuts } from "./shortcuts/index";
+import { fonts, theme } from "./theme/index";
+import { variants } from "./variants/index";
 
 export function presetCS(): Preset {
     return {
@@ -33,7 +33,7 @@ export function presetCS(): Preset {
     };
 }
 
-export { rules } from "./rules/index.ts";
-export { shortcuts } from "./shortcuts/index.ts";
-export { theme } from "./theme/index.ts";
-export { variants } from "./variants/index.ts";
+export { rules } from "./rules/index";
+export { shortcuts } from "./shortcuts/index";
+export { theme } from "./theme/index";
+export { variants } from "./variants/index";

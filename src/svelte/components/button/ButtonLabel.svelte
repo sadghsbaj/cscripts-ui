@@ -10,7 +10,7 @@ Architectural Notes:
   preventing style collisions with badges, status indicators, or auxiliary spans.
 -->
 <script lang="ts">
-    import type { ButtonLabelProps } from "./index.ts";
+    import type { ButtonLabelProps } from "./index";
 
     let { class: className, children, ...rest }: ButtonLabelProps = $props();
 </script>

@@ -5,7 +5,7 @@
 
 import type { Linter, Rule } from "eslint";
 import type { AST } from "svelte-eslint-parser";
-import { getElementName, hasDescendantElement, shouldSkipFile } from "./utils.ts";
+import { getElementName, hasDescendantElement, shouldSkipFile } from "./utils";
 
 export const closeButtonHitAreaRule: Rule.RuleModule = {
     meta: {

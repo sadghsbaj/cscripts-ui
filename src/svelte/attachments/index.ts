@@ -1,2 +1,2 @@
-export * from "./fade-mask/fade-mask.attach.ts";
-export * from "./scroll-fade/scroll-fade.attach.ts";
+export * from "./fade-mask/fade-mask.attach";
+export * from "./scroll-fade/scroll-fade.attach";

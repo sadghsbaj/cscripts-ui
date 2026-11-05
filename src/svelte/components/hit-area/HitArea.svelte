@@ -15,7 +15,7 @@ Architectural Notes:
   badges, or physics-driven animations on the host.
 -->
 <script lang="ts">
-    import type { HitAreaProps } from "./index.ts";
+    import type { HitAreaProps } from "./index";
 
     let { size, class: className, ...rest }: HitAreaProps = $props();
 </script>
