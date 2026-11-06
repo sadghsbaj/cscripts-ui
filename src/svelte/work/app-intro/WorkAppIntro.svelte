@@ -11,10 +11,10 @@ Architectural Notes:
 -->
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import logoUrl from "cs/assets/work/logo.svg";
 
     import { WORK_LOCATIONS } from "../locations/index.ts";
     import WorkLocation from "../locations/WorkLocation.svelte";
+    import WorkLogo from "../logo/WorkLogo.svelte";
     import { setWorkAppIdentity, type WorkAppIntroProps } from "./index.ts";
     import { BOOT_SEQUENCE, workAppIntroState } from "./workAppIntroState.svelte";
 
@@ -81,7 +81,7 @@ Architectural Notes:
         <!-- Act 3: Centered brand logo layer (elevated slightly above vertical center) -->
         <div class="cs-work-app-intro-brand-layer">
             <div class="cs-work-app-intro-brand-content">
-                <img src={logoUrl} alt="Pfleiderer" class="cs-work-app-intro-brand-logo" />
+                <WorkLogo class="cs-work-app-intro-brand-logo" />
             </div>
         </div>
 
@@ -381,7 +381,7 @@ Architectural Notes:
             }
         }
 
-        .cs-work-app-intro-brand-logo {
+        :global(.cs-work-app-intro-brand-logo) {
             width: auto;
             height: 80px;
             object-fit: contain;
