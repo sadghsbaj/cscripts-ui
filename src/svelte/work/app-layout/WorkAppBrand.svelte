@@ -16,13 +16,17 @@ Architectural Notes:
     let { class: className, ...rest }: WorkAppBrandProps = $props();
 </script>
 
-<img alt="Pfleiderer" {...rest} src={logoUrl} class={["cs-work-app-brand-logo", className]} />
+<div {...rest} class={["cs-work-app-brand", className]}>
+    <img alt="Pfleiderer" src={logoUrl} class="cs-work-app-brand-logo" />
+</div>
 
 <style>
     @layer components {
-        .cs-work-app-brand-logo {
+        .cs-work-app-brand {
+            display: inline-flex;
+            align-items: center;
             height: 100%;
-            padding: 12px 20px;
+            padding-inline: 20px;
             background-color: var(--cs-color-elevation-1);
             border: 1px solid var(--cs-color-elevation-1-border);
             border-radius: var(--cs-radius-full);
@@ -30,6 +34,12 @@ Architectural Notes:
             box-shadow: var(--cs-shadow-sm);
             user-select: none;
             pointer-events: none;
+        }
+
+        .cs-work-app-brand-logo {
+            display: block;
+            width: auto;
+            height: 24px;
         }
     }
 </style>

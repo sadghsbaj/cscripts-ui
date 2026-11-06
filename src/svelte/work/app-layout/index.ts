@@ -1,4 +1,4 @@
-import type { HTMLAttributes, HTMLImgAttributes } from "svelte/elements";
+import type { HTMLAttributes } from "svelte/elements";
 
 export { default as WorkAppFrame } from "./WorkAppFrame.svelte";
 export { default as WorkAppHeader } from "./WorkAppHeader.svelte";
@@ -25,4 +25,4 @@ export interface WorkAppHeaderProps extends HTMLAttributes<HTMLElement> {
 
 export type WorkAppMainProps = HTMLAttributes<HTMLElement>;
 export type WorkAppSignatureProps = Omit<HTMLAttributes<HTMLSpanElement>, "children">;
-export type WorkAppBrandProps = Omit<HTMLImgAttributes, "src" | "children">;
+export type WorkAppBrandProps = Omit<HTMLAttributes<HTMLDivElement>, "children">;
