@@ -25,7 +25,7 @@
     {#each BACKGROUND_PATTERN_SIZES as size (size)}
         <div
             class="{!isElevated
-                ? 'bg-elevation-1 shadow-sm dark:(border border-elevation-1)'
+                ? 'bg-elevation-1 shadow-elevation-1'
                 : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">

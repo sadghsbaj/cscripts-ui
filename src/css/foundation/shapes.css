@@ -25,6 +25,16 @@
     --cs-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     --cs-shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
     --cs-shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
+    --cs-shadow-elevation-1: var(--cs-shadow-sm);
+}
+
+[data-theme="dark"] {
+    --cs-shadow-elevation-1: inset 0 1px 0 0 rgb(255 255 255 / 0.12), inset 0 0 0 1px rgb(255 255 255 / 0.05);
+}
+
+[data-theme="light"] {
+    --cs-shadow-elevation-1: var(--cs-shadow-sm);
 }
 
 /* ==========================================================================

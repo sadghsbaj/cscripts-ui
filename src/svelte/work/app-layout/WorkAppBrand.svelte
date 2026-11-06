@@ -27,10 +27,9 @@ Architectural Notes:
             height: 100%;
             padding-inline: 20px;
             background-color: var(--cs-color-elevation-1);
-            border: 1px solid var(--cs-color-elevation-1-border);
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-smooth);
-            box-shadow: var(--cs-shadow-sm);
+            box-shadow: var(--cs-shadow-elevation-1);
             user-select: none;
             pointer-events: none;
         }

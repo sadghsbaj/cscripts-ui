@@ -60,7 +60,7 @@ All custom CSS variables provided by `cs` are strictly prefixed with `--cs-`. Wh
 - **Shapes (`../css/foundation/shapes.css`) & Typography (`../css/foundation/typography.css`):**
   Maps UnoCSS `presetWind4` scales to `--cs-*` variables:
     - Radii: `--cs-radius-none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`, `full`
-    - Shadows: `--cs-shadow-2xs`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `inner`
+    - Shadows: `--cs-shadow-2xs`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `inner`, `elevation-1`
     - Squircles (`corner-shape`): `--cs-squircle`, `--cs-squircle-smooth`, `--cs-squircle-soft`
     - Typography: Inspect `../css/foundation/typography.css` for font, size, leading, and tracking tokens.
 - **Namespace Rule:** The `--cs-*` prefix is strictly reserved for `cs` library tokens. Consuming applications must NEVER define new custom properties starting with `--cs-` (use unprefixed `--my-var` or `--app-*` for app-specific variables, and only set `--cs-*` when intentionally overriding a library token like `--cs-scrollbar-size`).

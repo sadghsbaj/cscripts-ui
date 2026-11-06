@@ -55,18 +55,14 @@
 <WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen" persist={false}>
     <div class="relative w-full max-w-6xl mx-auto flex flex-col gap-6">
         <!-- Island 1: Intro-Steuerung & Test-Kontrollen -->
-        <section
-            class="bg-elevation-1 shadow-sm border border-elevation-1 rounded-3xl squircle p-6 lg:p-8 flex flex-col gap-5"
-        >
+        <section class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-6 lg:p-8 flex flex-col gap-5">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <h2 class="title-2xl">Intro-Choreografie Simulator</h2>
             </div>
         </section>
 
         <!-- Island 2: Simulierte Arbeitsoberfläche (Fracht-Automatisierung) -->
-        <section
-            class="bg-elevation-1 shadow-sm border border-elevation-1 rounded-3xl squircle p-6 lg:p-8 flex flex-col gap-6"
-        >
+        <section class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-6 lg:p-8 flex flex-col gap-6">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-col gap-1">
                     <h3 class="title-xl">Aktive Werkszufuhren & Frachtbelege</h3>

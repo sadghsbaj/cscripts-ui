@@ -9,6 +9,7 @@ Architectural Notes:
 -->
 <script lang="ts">
     import { X } from "@lucide/svelte";
+
     import type { CloseButtonProps } from "./index.ts";
 
     let { variant, size, class: className, children, ...rest }: CloseButtonProps = $props();
@@ -181,10 +182,9 @@ Architectural Notes:
             &[data-variant="elevated"] {
                 --_bg: var(--cs-color-elevation-1);
                 --_bg-hover: light-dark(var(--_bg), var(--cs-color-elevation-2));
-                --_border: 1px solid var(--cs-color-elevation-1-border);
-                --_shadow: var(--cs-shadow-sm);
+                --_shadow: var(--cs-shadow-elevation-1);
                 --_shadow-hover: var(--cs-shadow-md);
-                --_shadow-active: var(--cs-shadow-sm);
+                --_shadow-active: var(--cs-shadow-elevation-1);
             }
         }
     }

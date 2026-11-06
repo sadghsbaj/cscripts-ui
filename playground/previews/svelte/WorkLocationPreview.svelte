@@ -19,9 +19,7 @@
 </div>
 
 {#snippet previewCard(location: WorkLocationId, colorClass: string)}
-    <div
-        class="bg-elevation-1 shadow-sm dark:(border border-elevation-1) rounded-3xl squircle p-8 min-h-200px flex flex-col gap-5"
-    >
+    <div class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col gap-5">
         <h2 class="title-2xl">
             {WORK_LOCATIONS[location].label}
         </h2>

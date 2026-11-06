@@ -34,12 +34,11 @@ The following shortcuts are strictly enforced by ESLint (`../eslint/shortcuts.ts
 
 All semantic UnoCSS color tokens map to `--cs-color-*` variables (`../uno/theme/colors.ts` & `../uno/rules/colors.ts`) which resolve Light and Dark mode automatically via native CSS `light-dark()`. **NEVER write redundant `dark:bg-...` or `dark:text-...` pairs when using semantic tokens:**
 
-- **Surface Elevations & Borders (`../uno/rules/colors.ts`):**
+- **Surface Elevations & Shadows (`../uno/rules/colors.ts` & `../uno/rules/shapes.ts`):**
     - `bg-elevation-0`: App background (Light: `base-100`, Dark: `base-950`)
     - `bg-elevation-1`: Cards/panels on `elevation-0` (Light: `white`, Dark: `base-900`)
     - `bg-elevation-2`: Nested containers on `elevation-1` (Light: `base-100`, Dark: `base-800`)
-    - `border-elevation-1`: Subtle surface hairline for primary cards/islands (auto `light-dark()`, transparent in Light Mode, 5% hairline in Dark Mode)
-    - `border-elevation-2`: Subtle inner container border when extra contrast is needed (8% hairline in Dark Mode)
+    - `shadow-elevation-1`: Primary surface shadow for cards/islands (auto `light-dark()`: `shadow-sm` in Light Mode, top-lit inset hairline in Dark Mode). Eliminates manual dark borders.
 - **Text Hierarchy (`../uno/rules/colors.ts`):**
     - `text-strong`, `text-main` (default inherited), `text-weak`, `text-weaker`
     - **Rule:** NEVER use raw gray/zinc classes (`text-zinc-500`, `text-base-600`) for typography.

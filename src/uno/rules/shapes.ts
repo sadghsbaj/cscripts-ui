@@ -5,4 +5,5 @@ export const shapeRules: Rule[] = [
         /^squircle(?:-(smooth|soft))?$/,
         ([, type]) => ({ "corner-shape": `var(--cs-squircle${type ? `-${type}` : ""})` }),
     ],
+    [/^shadow-elevation-1$/, () => ({ "box-shadow": "var(--cs-shadow-elevation-1)" })],
 ];

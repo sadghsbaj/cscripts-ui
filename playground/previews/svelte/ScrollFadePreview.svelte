@@ -24,7 +24,7 @@
 {#snippet verticalCard(isElevated: boolean, size: ScrollFadeSize)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-sm dark:(border border-elevation-1)'
+            ? 'bg-elevation-1 shadow-elevation-1'
             : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">
@@ -46,7 +46,7 @@
 {#snippet horizontalCard(isElevated: boolean)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-sm dark:(border border-elevation-1)'
+            ? 'bg-elevation-1 shadow-elevation-1'
             : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">Horizontal</h2>
@@ -66,7 +66,7 @@
 {#snippet bothCard(isElevated: boolean)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-sm dark:(border border-elevation-1)'
+            ? 'bg-elevation-1 shadow-elevation-1'
             : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">Both</h2>
@@ -88,7 +88,7 @@
 {#snippet customSizeCard(isElevated: boolean)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-sm dark:(border border-elevation-1)'
+            ? 'bg-elevation-1 shadow-elevation-1'
             : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">Custom</h2>
