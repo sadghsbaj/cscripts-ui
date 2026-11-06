@@ -20,7 +20,7 @@ Architectural Notes:
 </script>
 
 <span {...rest} class={["cs-work-app-signature", className]}>
-    <span class="cs-work-app-signature-label">Erstellt von:</span>
+    <span class="cs-work-app-signature-label">Entwickelt von:</span>
     <span class="cs-work-app-signature-name">Colin Schäfer</span>
 </span>
 
@@ -47,7 +47,7 @@ Architectural Notes:
         }
 
         .cs-work-app-signature-name {
-            color: var(--cs-color-text-main);
+            color: var(--cs-color-text-weak);
             font-weight: 600;
         }
 

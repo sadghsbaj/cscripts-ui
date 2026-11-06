@@ -34,8 +34,8 @@ Architectural Notes:
             width: 100%;
             height: 100%;
             padding-block: 24px;
-            /* Enforces a minimum 24px gutter on smaller laptops while centering content to `--cs-container-5xl` (1024px) on wider monitors */
-            padding-inline: max(24px, calc((100% - var(--cs-container-5xl)) / 2));
+            /* Enforces a minimum 24px gutter on smaller laptops while centering content to `--cs-container-7xl` (1280px) on wider monitors */
+            padding-inline: max(24px, calc((100% - var(--cs-container-7xl)) / 2));
             overflow-y: auto;
         }
     }
