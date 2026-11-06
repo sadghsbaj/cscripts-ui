@@ -1,3 +1,11 @@
+<!--
+@component
+Official Pfleiderer brand vector logo (`<WorkLogo />`) with dual-tone base and accent fills.
+
+Architectural Notes:
+- Color Tokens: Consumes semantic `--cs-color-work-logo-base` (blue) and `--cs-color-work-logo-accent` (green).
+- Aspect Ratio: SVG viewBox `0 443.82 1024 137.97` preserves original corporate brand proportions.
+-->
 <script lang="ts">
     import type { WorkLogoProps } from "./index.ts";
 

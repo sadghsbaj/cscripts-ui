@@ -3,8 +3,9 @@
  * Configured as a warning so developers can selectively disable it via `<!-- eslint-disable-next-line -->` where appropriate.
  */
 
-import type { Linter, Rule } from "eslint";
 import type { AST } from "svelte-eslint-parser";
+import type { Linter, Rule } from "eslint";
+
 import { getElementName, hasDescendantElement, shouldSkipFile } from "./utils.ts";
 
 export const closeButtonHitAreaRule: Rule.RuleModule = {

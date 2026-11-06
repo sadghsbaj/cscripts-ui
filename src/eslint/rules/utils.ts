@@ -2,19 +2,15 @@
  * Shared AST helpers for custom Svelte component ESLint rules.
  */
 
-import type { Rule } from "eslint";
 import type { AST } from "svelte-eslint-parser";
+import type { Rule } from "eslint";
 
 /**
  * Determines whether a file should be ignored by custom component rules (tests, lint internals).
  */
 export function shouldSkipFile(context: Rule.RuleContext): boolean {
     const filename = context.filename ?? "";
-    return (
-        filename.includes("eslint/") ||
-        filename.endsWith(".test.ts") ||
-        filename.endsWith(".spec.ts")
-    );
+    return filename.includes("eslint/") || filename.endsWith(".test.ts") || filename.endsWith(".spec.ts");
 }
 
 /**
@@ -27,13 +23,9 @@ export function getElementName(node: AST.SvelteElement): string {
 /**
  * Finds an attribute on a Svelte element's start tag by its attribute name.
  */
-export function findAttribute(
-    node: AST.SvelteElement,
-    name: string
-): AST.SvelteAttribute | undefined {
+export function findAttribute(node: AST.SvelteElement, name: string): AST.SvelteAttribute | undefined {
     return node.startTag.attributes.find(
-        (attr): attr is AST.SvelteAttribute =>
-            attr.type === "SvelteAttribute" && attr.key.name === name
+        (attr): attr is AST.SvelteAttribute => attr.type === "SvelteAttribute" && attr.key.name === name
     );
 }
 
@@ -46,6 +38,14 @@ export function getLiteralStringValue(attr: AST.SvelteAttribute): string | undef
     const firstVal = attr.value[0];
     if (firstVal && firstVal.type === "SvelteLiteral") {
         return firstVal.value;
+    }
+    if (
+        firstVal &&
+        firstVal.type === "SvelteMustacheTag" &&
+        firstVal.expression.type === "Literal" &&
+        typeof firstVal.expression.value === "string"
+    ) {
+        return firstVal.expression.value;
     }
     return undefined;
 }
@@ -62,9 +62,7 @@ export function isTruthyAttribute(node: AST.SvelteElement, name: string): boolea
     return attr.value.some(
         (v) =>
             (v.type === "SvelteLiteral" && v.value === "true") ||
-            (v.type === "SvelteMustacheTag" &&
-                v.expression.type === "Literal" &&
-                v.expression.value === true)
+            (v.type === "SvelteMustacheTag" && v.expression.type === "Literal" && v.expression.value === true)
     );
 }
 
@@ -79,9 +77,9 @@ export function hasAccessibleLabel(node: AST.SvelteElement): boolean {
         (ariaLabel &&
             (Boolean(getLiteralStringValue(ariaLabel)?.trim()) ||
                 ariaLabel.value.some((v) => v.type === "SvelteMustacheTag"))) ||
-            (ariaLabelledBy &&
-                (Boolean(getLiteralStringValue(ariaLabelledBy)?.trim()) ||
-                    ariaLabelledBy.value.some((v) => v.type === "SvelteMustacheTag")))
+        (ariaLabelledBy &&
+            (Boolean(getLiteralStringValue(ariaLabelledBy)?.trim()) ||
+                ariaLabelledBy.value.some((v) => v.type === "SvelteMustacheTag")))
     );
 }
 
@@ -89,10 +87,7 @@ export function hasAccessibleLabel(node: AST.SvelteElement): boolean {
  * Recursively checks whether any descendant element matches a specific component/tag name.
  * Traverses Svelte elements, arrays of children, and conditional blocks ({#if} / {:else}).
  */
-export function hasDescendantElement(
-    children: AST.SvelteElement["children"],
-    targetName: string
-): boolean {
+export function hasDescendantElement(children: AST.SvelteElement["children"], targetName: string): boolean {
     for (const child of children) {
         if (child.type === "SvelteElement") {
             if (getElementName(child) === targetName) {
@@ -145,20 +140,14 @@ export function getImportedIconNames(context: Rule.RuleContext): Set<string> {
         }
 
         const customNode = node as unknown as { type: string; body?: unknown[] };
-        if (
-            customNode.type === "SvelteScriptElement" &&
-            Array.isArray(customNode.body)
-        ) {
+        if (customNode.type === "SvelteScriptElement" && Array.isArray(customNode.body)) {
             for (const item of customNode.body) {
                 const statement = item as {
                     type: string;
                     source?: { value?: unknown };
                     specifiers?: Array<{ local?: { name?: string } }>;
                 };
-                if (
-                    statement.type === "ImportDeclaration" &&
-                    typeof statement.source?.value === "string"
-                ) {
+                if (statement.type === "ImportDeclaration" && typeof statement.source?.value === "string") {
                     const src = statement.source.value.toLowerCase();
                     if (src.includes("lucide") || src.includes("icon")) {
                         const specifiers = statement.specifiers ?? [];
@@ -180,10 +169,7 @@ export function getImportedIconNames(context: Rule.RuleContext): Set<string> {
  * Finds all raw icon elements (<svg> or imported Lucide components) inside child nodes,
  * ignoring `<ButtonIcon>` components.
  */
-export function findRawIcons(
-    children: AST.SvelteElement["children"],
-    iconNames: Set<string>
-): AST.SvelteElement[] {
+export function findRawIcons(children: AST.SvelteElement["children"], iconNames: Set<string>): AST.SvelteElement[] {
     const icons: AST.SvelteElement[] = [];
 
     function search(nodes: AST.SvelteElement["children"]): void {

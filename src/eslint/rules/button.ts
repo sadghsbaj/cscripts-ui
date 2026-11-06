@@ -4,8 +4,9 @@
  * - `require-hit-area`: Suggests adding `<HitArea />` to `iconOnly` buttons to guarantee adequate touch target area.
  */
 
-import type { Linter, Rule } from "eslint";
 import type { AST } from "svelte-eslint-parser";
+import type { Linter, Rule } from "eslint";
+
 import {
     findRawIcons,
     getElementName,
@@ -24,14 +25,11 @@ export const buttonStructureRule: Rule.RuleModule = {
                 "Enforce <ButtonLabel> / <ButtonIcon> compound structure and accessible naming on <Button> components",
         },
         messages: {
-            missingLabelOrIconOnly:
-                '<Button> must either specify "iconOnly" or contain a <ButtonLabel> child.',
+            missingLabelOrIconOnly: '<Button> must either specify "iconOnly" or contain a <ButtonLabel> child.',
             missingIconOnlyAriaLabel:
                 'Icon-only <Button iconOnly> must specify an accessible "aria-label" or "aria-labelledby".',
-            missingIconInIconOnly:
-                'Icon-only <Button iconOnly> must contain a <ButtonIcon icon={...} /> child.',
-            unexpectedLabelInIconOnly:
-                'Icon-only <Button iconOnly> must not contain a <ButtonLabel> child.',
+            missingIconInIconOnly: "Icon-only <Button iconOnly> must contain a <ButtonIcon icon={...} /> child.",
+            unexpectedLabelInIconOnly: "Icon-only <Button iconOnly> must not contain a <ButtonLabel> child.",
             rawIconInButton:
                 "Use <ButtonIcon icon={{{name}}} /> instead of placing <{{name}}> directly inside <Button>.",
         },

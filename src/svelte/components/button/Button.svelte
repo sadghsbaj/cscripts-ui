@@ -29,16 +29,23 @@ Architectural Notes:
 <style>
     @layer components.primitive {
         .cs-button {
+            /* Dynamically computed from height instead of --cs-radius-full (9999px).
+            * A 9999px radius would trigger the CSS Corner Overlap reduction algorithm
+            * (CSS Backgrounds & Borders §5.5) on asymmetric corners (e.g. inside ButtonGroup),
+            * proportionally crushing small adjacent radii (e.g. 4px) down to near 0px. */
+            --_pill-radius: calc(var(--_height) / 2);
+
             isolation: isolate;
             position: relative;
             display: inline-flex;
             flex-shrink: 0;
             align-items: center;
             justify-content: center;
+            height: var(--_height);
             color: var(--_fg);
             font-weight: 600;
             white-space: nowrap;
-            border-radius: var(--cs-radius-full);
+            border-radius: var(--_pill-radius);
             corner-shape: var(--cs-squircle-smooth);
             user-select: none;
             transition:
@@ -100,7 +107,7 @@ Architectural Notes:
                 }
 
                 &:focus-visible {
-                    scale: 0.97;
+                    scale: var(--_active-focus-scale, 0.97);
                 }
             }
 
@@ -114,36 +121,36 @@ Architectural Notes:
             *   treated as general-purpose defaults.
             * ========================================================= */
             &[data-size="xs"] {
+                --_height: 28px;
                 gap: 4px;
-                height: 28px;
                 padding-inline: 8px;
                 font-size: var(--cs-text-xs);
             }
 
             &[data-size="sm"] {
+                --_height: 32px;
                 gap: 4px;
-                height: 32px;
                 padding-inline: 12px;
                 font-size: var(--cs-text-xs);
             }
 
             &[data-size="md"] {
+                --_height: 36px;
                 gap: 6px;
-                height: 36px;
                 padding-inline: 14px;
                 font-size: var(--cs-text-sm);
             }
 
             &[data-size="lg"] {
+                --_height: 40px;
                 gap: 6px;
-                height: 40px;
                 padding-inline: 16px;
                 font-size: var(--cs-text-sm);
             }
 
             &[data-size="xl"] {
+                --_height: 44px;
                 gap: 6px;
-                height: 44px;
                 padding-inline: 20px;
                 font-size: var(--cs-text-base);
             }
