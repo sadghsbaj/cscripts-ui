@@ -9,20 +9,19 @@ Architectural Notes:
   of the tool identity pill in `<WorkAppHeader />` for balanced left/right anchoring.
 -->
 <script lang="ts">
-    import logoUrl from "cs/assets/work/logo.svg";
-
+    import WorkLogo from "../logo/WorkLogo.svelte";
     import type { WorkAppBrandProps } from "./index.ts";
 
     let { class: className, ...rest }: WorkAppBrandProps = $props();
 </script>
 
 <div {...rest} class={["cs-work-app-brand", className]}>
-    <img alt="Pfleiderer" src={logoUrl} class="cs-work-app-brand-logo" />
+    <WorkLogo class="cs-work-app-brand-logo" />
 </div>
 
 <style>
     @layer components {
-        .cs-work-app-brand {
+        :global(.cs-work-app-brand) {
             display: inline-flex;
             align-items: center;
             height: 100%;
@@ -36,7 +35,7 @@ Architectural Notes:
             pointer-events: none;
         }
 
-        .cs-work-app-brand-logo {
+        :global(.cs-work-app-brand-logo) {
             display: block;
             width: auto;
             height: 24px;

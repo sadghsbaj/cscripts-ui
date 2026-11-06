@@ -1,6 +1,6 @@
 :root {
-    --cs-color-work-logo: #134094;
-    --cs-color-work-logo-fg: #00a870;
+    --cs-color-work-logo-base: light-dark(#134094, #1956c7);
+    --cs-color-work-logo-accent: light-dark(#00a870, #00e196);
 
     --cs-color-elevation-0: light-dark(var(--cs-color-base-100), var(--cs-color-base-950));
     --cs-color-elevation-1: light-dark(white, var(--cs-color-base-900));
