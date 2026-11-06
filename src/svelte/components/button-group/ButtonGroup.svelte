@@ -11,22 +11,10 @@ Architectural Notes:
 <script lang="ts">
     import type { ButtonGroupProps } from "./index.ts";
 
-    let {
-        orientation = "horizontal",
-        separators = false,
-        class: className,
-        children,
-        ...rest
-    }: ButtonGroupProps = $props();
+    let { orientation = "horizontal", class: className, children, ...rest }: ButtonGroupProps = $props();
 </script>
 
-<div
-    role="group"
-    {...rest}
-    class={["cs-button-group", className]}
-    data-orientation={orientation}
-    data-separators={separators}
->
+<div role="group" {...rest} class={["cs-button-group", className]} data-orientation={orientation}>
     {@render children?.()}
 </div>
 

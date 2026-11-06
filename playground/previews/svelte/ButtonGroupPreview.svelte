@@ -9,6 +9,7 @@
         Button,
         BUTTON_COLORS,
         ButtonGroup,
+        ButtonGroupSeparator,
         ButtonIcon,
         ButtonLabel,
         HitArea,
@@ -55,9 +56,11 @@
                         <Button size="md" {variant} {color}>
                             <ButtonLabel>Click me!</ButtonLabel>
                         </Button>
+                        <ButtonGroupSeparator />
                         <Button size="md" {variant} {color}>
                             <ButtonLabel>Click me!</ButtonLabel>
                         </Button>
+                        <ButtonGroupSeparator />
                         <Button size="md" {variant} {color}>
                             <ButtonLabel>Click me!</ButtonLabel>
                         </Button>
