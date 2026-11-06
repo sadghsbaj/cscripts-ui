@@ -27,7 +27,7 @@ Architectural Notes:
 </button>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         .cs-close-button {
             /* Close buttons share a unified text-weak -> text-strong hierarchy across all variants
             * to remain visually subordinate to primary content, unlike action buttons. */

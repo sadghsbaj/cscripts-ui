@@ -18,7 +18,7 @@ Architectural Notes:
 <Icon {...rest} aria-hidden="true" class={["cs-button-icon", className]} />
 
 <style>
-    @layer components {
+    @layer components.primitive {
         :global(.cs-button-icon) {
             flex-shrink: 0;
             width: calc(1em + 2px);

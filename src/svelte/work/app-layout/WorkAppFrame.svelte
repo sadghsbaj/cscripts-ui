@@ -26,7 +26,7 @@ Architectural Notes:
 </div>
 
 <style>
-    @layer components {
+    @layer components.composite {
         .cs-work-app-frame {
             display: flex;
             flex-direction: column;

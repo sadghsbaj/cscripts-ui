@@ -20,7 +20,7 @@ Architectural Notes:
 </div>
 
 <style>
-    @layer components {
+    @layer components.composite {
         :global(.cs-work-app-brand) {
             display: inline-flex;
             align-items: center;

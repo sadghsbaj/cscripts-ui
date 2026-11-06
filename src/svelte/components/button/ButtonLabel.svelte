@@ -20,7 +20,7 @@ Architectural Notes:
 </span>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         .cs-button-label {
             min-width: 0;
             overflow-x: clip;

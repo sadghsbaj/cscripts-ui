@@ -25,7 +25,7 @@ Architectural Notes:
 </span>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         .cs-work-app-signature {
             position: fixed;
             right: 24px;

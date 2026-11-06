@@ -17,7 +17,7 @@ Architectural Notes:
 </main>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         .cs-work-app-main {
             display: flex;
             flex: 1;

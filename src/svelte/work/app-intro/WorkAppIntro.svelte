@@ -102,7 +102,7 @@ Architectural Notes:
 {/if}
 
 <style>
-    @layer components {
+    @layer components.composite {
         /* =========================================================
         * STAGE & WORKSPACE HANDSHAKE (ACT 4 CURTAIN)
         * ---------------------------------------------------------
@@ -285,7 +285,7 @@ Architectural Notes:
             }
         }
 
-        /* Must remain at top level of `@layer components` (nested `@keyframes` inside rules are ignored) */
+        /* Must remain at top level of `@layer components.composite` (nested `@keyframes` inside rules are ignored) */
         @keyframes cs-work-app-intro-cad-draw {
             to {
                 stroke-dashoffset: 0;

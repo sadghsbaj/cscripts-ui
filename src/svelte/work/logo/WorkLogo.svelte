@@ -57,7 +57,7 @@
 </svg>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         .cs-work-logo-base {
             fill: var(--cs-color-work-logo-base, #134094);
         }

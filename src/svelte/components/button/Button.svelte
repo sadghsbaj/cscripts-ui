@@ -27,7 +27,7 @@ Architectural Notes:
 </svelte:element>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         .cs-button {
             isolation: isolate;
             position: relative;

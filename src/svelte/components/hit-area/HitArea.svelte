@@ -23,7 +23,7 @@ Architectural Notes:
 <span {...rest} aria-hidden="true" class={["cs-hit-area", className]} data-size={size}></span>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         /* =========================================================
          * ANCHOR CONTEXT AUTO-ESTABLISHMENT (:has)
          * ---------------------------------------------------------

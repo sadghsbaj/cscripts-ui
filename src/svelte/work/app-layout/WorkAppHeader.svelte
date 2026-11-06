@@ -30,7 +30,7 @@ Architectural Notes:
 </header>
 
 <style>
-    @layer components {
+    @layer components.composite {
         .cs-work-app-header {
             display: flex;
             flex-shrink: 0;

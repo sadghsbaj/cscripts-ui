@@ -27,7 +27,7 @@ SVG map primitive (`<WorkLocation />`) for rendering company plant regions (`arn
 </svg>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         .cs-work-location {
             --cs-work-location-stroke: currentColor;
             --cs-work-location-fill: color-mix(in oklch, var(--cs-work-location-stroke) 12%, transparent);

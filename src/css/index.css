@@ -1,3 +1,3 @@
-@layer foundation, attachments, components;
+@layer foundation, attachments, components.primitive, components.composite;
 
 @import "./foundation/index.css" layer(foundation);

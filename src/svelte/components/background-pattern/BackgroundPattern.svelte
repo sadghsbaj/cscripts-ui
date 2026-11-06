@@ -66,7 +66,7 @@ Architectural Notes:
 </svg>
 
 <style>
-    @layer components {
+    @layer components.primitive {
         /* =========================================================
          * ANCHOR CONTEXT AUTO-ESTABLISHMENT (:has)
          * ---------------------------------------------------------
