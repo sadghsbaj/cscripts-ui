@@ -82,6 +82,27 @@ Architectural Notes:
                     border-bottom-left-radius: var(--_pill-radius);
                 }
             }
+
+            /* =========================================================
+             * HIT AREA CONTAINMENT (Unidirectional Touch Expansion)
+             * ---------------------------------------------------------
+             * Constrains the touch expander to 100% on the shared layout axis
+             * to eliminate tap collision between adjacent buttons, while allowing
+             * the unconstrained cross-axis to expand freely into open space.
+             * ========================================================= */
+            &[data-orientation="horizontal"] :global(.cs-hit-area) {
+                left: 0;
+                width: 100%;
+                min-width: 0;
+                translate: 0 -50%;
+            }
+
+            &[data-orientation="vertical"] :global(.cs-hit-area) {
+                top: 0;
+                height: 100%;
+                min-height: 0;
+                translate: -50% 0;
+            }
         }
     }
 </style>
