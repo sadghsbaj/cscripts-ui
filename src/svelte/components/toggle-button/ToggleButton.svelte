@@ -52,6 +52,9 @@ Architectural Notes:
             * proportionally crushing small adjacent radii (e.g. 4px) down to near 0px. */
             --_pill-radius: calc(var(--_height) / 2);
 
+            /* Fill transition per state (consumed by ::after). */
+            --_fill-transition: transform 160ms cubic-bezier(0.4, 0, 1, 1), opacity 140ms linear;
+
             isolation: isolate;
             position: relative;
             display: inline-flex;
@@ -79,7 +82,7 @@ Architectural Notes:
                 content: "";
                 position: absolute;
                 inset: 0;
-                z-index: -1;
+                z-index: -2;
                 background-color: var(--_bg);
                 border: var(--_border, none);
                 border-radius: inherit;
@@ -91,12 +94,42 @@ Architectural Notes:
                     scale 600ms var(--cs-spring-release); /* CSS linear() transition */
             }
 
+            /* =========================================================
+            * PRESSED FILL (::after)
+            * ---------------------------------------------------------
+            * Lives above the base surface. Pops in from the center with a
+            * spring overshoot when pressed, shrinks back (no spring) when
+            * released. `transform` drives the pop, `scale` the shared
+            * pointer squash, so both compose without fighting.
+            * ========================================================= */
+            &::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: -1;
+                background-color: var(--_soft-bg);
+                border-radius: inherit;
+                corner-shape: inherit;
+                opacity: 0;
+                transform: scale(0.55);
+                transition:
+                    var(--_fill-transition),
+                    background-color 200ms var(--cs-ease-quad-out),
+                    scale 600ms var(--cs-spring-release);
+                pointer-events: none;
+            }
+
             @media (hover: hover) {
                 &:hover {
                     color: var(--_fg-hover, var(--_fg));
+
                     &::before {
                         background-color: var(--_bg-hover);
                         box-shadow: var(--_shadow-hover, var(--_shadow, none));
+                    }
+
+                    &::after {
+                        background-color: var(--_soft-bg-hover);
                     }
                 }
             }
@@ -119,7 +152,16 @@ Architectural Notes:
                         scale 140ms var(--cs-ease-quad-out);
                 }
 
-                &:not(:focus-visible)::before {
+                &::after {
+                    background-color: var(--_soft-bg-hover);
+                    transition:
+                        var(--_fill-transition),
+                        background-color 140ms var(--cs-ease-quad-out),
+                        scale 140ms var(--cs-ease-quad-out);
+                }
+
+                &:not(:focus-visible)::before,
+                &:not(:focus-visible)::after {
                     scale: var(--_active-squash, var(--cs-squash-subtle));
                 }
 
@@ -235,6 +277,10 @@ Architectural Notes:
 
             /* =========================================================
             * ARIA PRESSED
+            * ---------------------------------------------------------
+            * The base surface (::before) stays untouched. Pressed only
+            * reveals the fill layer (::after) with a spring pop and
+            * switches the foreground color.
             * ========================================================= */
             &[aria-pressed="false"] {
                 --_fg: var(--cs-color-base-soft-fg);
@@ -242,9 +288,13 @@ Architectural Notes:
             }
 
             &[aria-pressed="true"] {
-                --_bg: var(--_soft-bg);
-                --_bg-hover: var(--_soft-bg-hover);
                 --_fg: var(--_soft-fg);
+                --_fill-transition: transform 500ms var(--cs-spring-snappy), opacity 90ms linear;
+
+                &::after {
+                    opacity: 1;
+                    transform: scale(1);
+                }
             }
         }
     }
