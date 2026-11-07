@@ -26,10 +26,6 @@ Architectural Notes:
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-smooth);
 
-            &:has(> :global(.cs-toggle-button[data-variant="ghost"])) {
-                --_inner-radius: 4px;
-            }
-
             > :global(.cs-toggle-button) {
                 --_active-squash: 0.97;
                 --_active-focus-scale: 0.97;

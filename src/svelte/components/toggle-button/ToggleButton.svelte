@@ -23,9 +23,15 @@ Architectural Notes:
         ...rest
     }: ToggleButtonProps = $props();
 
-    function handleClick(event: MouseEvent): void {
-        pressed = !pressed;
-        (onclick as ((e: MouseEvent) => void) | undefined)?.(event);
+    function handleClick(
+        event: MouseEvent & {
+            currentTarget: EventTarget & HTMLButtonElement;
+        }
+    ): void {
+        onclick?.(event);
+        if (!event.defaultPrevented) {
+            pressed = !pressed;
+        }
     }
 </script>
 
