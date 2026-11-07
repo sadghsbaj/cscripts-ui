@@ -4,16 +4,52 @@ Composite container (`<ToggleButtonGroup />`) grouping multiple `<ToggleButton /
 a cohesive segmented or clustered control bar with coordinated corner radii and physics.
 
 Architectural Notes:
+- Selection Mode: Requires explicit `type` (`"single" | "multiple"`). In `"single"` mode, activating a button automatically deactivates the previously active sibling via Svelte context, while `allowDeselect` controls whether clicking an active button can clear the selection.
 - Layout & Flow: Supports horizontal and vertical orientations via `orientation` (`"horizontal" | "vertical"`).
 - Filtered Radii: Uses `:nth-child(1 of .cs-toggle-button)` to strictly target true toggle buttons and flatten inner radii.
 -->
 <script lang="ts">
-    import type { ToggleButtonGroupProps } from "./index.ts";
+    import { setToggleButtonGroupContext, type ToggleButtonGroupProps } from "./index.ts";
 
-    let { orientation = "horizontal", class: className, children, ...rest }: ToggleButtonGroupProps = $props();
+    let {
+        type,
+        allowDeselect = false,
+        orientation = "horizontal",
+        class: className,
+        children,
+        ...rest
+    }: ToggleButtonGroupProps = $props();
+
+    let activeDeactivate: (() => void) | undefined;
+
+    setToggleButtonGroupContext({
+        get type() {
+            return type;
+        },
+        get allowDeselect() {
+            return allowDeselect;
+        },
+        activate(deactivate: () => void): void {
+            if (type === "single" && activeDeactivate && activeDeactivate !== deactivate) {
+                activeDeactivate();
+            }
+            activeDeactivate = deactivate;
+        },
+        deactivate(deactivate: () => void): void {
+            if (activeDeactivate === deactivate) {
+                activeDeactivate = undefined;
+            }
+        },
+    });
 </script>
 
-<div role="group" {...rest} class={["cs-toggle-button-group", className]} data-orientation={orientation}>
+<div
+    role="group"
+    {...rest}
+    class={["cs-toggle-button-group", className]}
+    data-type={type}
+    data-orientation={orientation}
+>
     {@render children?.()}
 </div>
 

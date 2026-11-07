@@ -3,6 +3,8 @@
     import { PanelLeftClose } from "@lucide/svelte";
     import { Button, ButtonIcon, HitArea, ToggleButton, ToggleButtonLabel } from "cs/svelte";
 
+    import ToggleButtonGroup from "../../src/svelte/components/toggle-button-group/ToggleButtonGroup.svelte";
+
     interface SvelteModule {
         default: Component;
         id: string;
@@ -64,9 +66,11 @@
     >
         <h2 class="title-xl">Previews:</h2>
 
-        {#each previews as preview (preview.id)}
-            {@render sidebarOption(preview)}
-        {/each}
+        <ToggleButtonGroup type="single" orientation="vertical" class="gap-1">
+            {#each previews as preview (preview.id)}
+                {@render sidebarOption(preview)}
+            {/each}
+        </ToggleButtonGroup>
     </aside>
 
     <main class="size-full p-8 lg:p-16 flex flex-col gap-8 overflow-y-auto scrollbar-lg">

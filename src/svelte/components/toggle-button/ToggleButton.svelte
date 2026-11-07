@@ -9,6 +9,7 @@ Architectural Notes:
   See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
+    import { getToggleButtonGroupContext, hasToggleButtonGroupContext } from "../toggle-button-group/index.ts";
     import type { ToggleButtonProps } from "./index.ts";
 
     let {
@@ -23,15 +24,33 @@ Architectural Notes:
         ...rest
     }: ToggleButtonProps = $props();
 
+    const group = hasToggleButtonGroupContext() ? getToggleButtonGroupContext() : undefined;
+
+    function deactivate(): void {
+        pressed = false;
+    }
+
+    if (pressed) {
+        group?.activate(deactivate);
+    }
+
     function handleClick(
         event: MouseEvent & {
             currentTarget: EventTarget & HTMLButtonElement;
         }
     ): void {
         onclick?.(event);
-        if (!event.defaultPrevented) {
-            pressed = !pressed;
+        if (event.defaultPrevented) return;
+
+        if (pressed) {
+            if (group?.type === "single" && !group.allowDeselect) return;
+            pressed = false;
+            group?.deactivate(deactivate);
+            return;
         }
+
+        pressed = true;
+        group?.activate(deactivate);
     }
 </script>
 
@@ -288,18 +307,21 @@ Architectural Notes:
             }
 
             /* =========================================================
-            * ARIA PRESSED
-            * ---------------------------------------------------------
-            * The base surface (::before) stays untouched. Pressed only
-            * reveals the fill layer (::after) with a spring pop and
-            * switches the foreground color.
-            * ========================================================= */
+             * ARIA PRESSED
+             * ---------------------------------------------------------
+             * Reveals the fill layer (::after) with a spring pop while
+             * unifying the base surface (::before) to `base-soft` so
+             * `soft` and `ghost` render with identical pressed depth
+             * without outer-edge flashing during scale pop-in.
+             * ========================================================= */
             &[aria-pressed="false"] {
                 --_fg: var(--cs-color-base-soft-fg);
                 --_fg-hover: var(--cs-color-base-soft-fg-hover);
             }
 
             &[aria-pressed="true"] {
+                --_bg: var(--cs-color-base-soft);
+                --_bg-hover: var(--cs-color-base-soft-hover);
                 --_fg: var(--_soft-fg);
                 --_fill-transition: transform 500ms var(--cs-spring-snappy), opacity 90ms linear;
 

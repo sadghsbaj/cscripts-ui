@@ -44,8 +44,8 @@
         </h2>
         <div class="w-full h-full flex flex-col gap-2">
             <div class="flex gap-3 justify-between">
-                <ToggleButtonGroup orientation="horizontal">
-                    <ToggleButton size="md" {variant} {color}>
+                <ToggleButtonGroup type="single" orientation="horizontal" allowDeselect>
+                    <ToggleButton pressed size="md" {variant} {color}>
                         <ToggleButtonLabel>Click me!</ToggleButtonLabel>
                     </ToggleButton>
                     <ToggleButtonGroupSeparator />
@@ -71,18 +71,18 @@
         <h2 class="title-2xl ml-2">Toolbar</h2>
         <div class="w-full h-full flex flex-col gap-2">
             <div class="flex gap-3 justify-between">
-                <ToggleButtonGroup orientation="horizontal">
-                    <ToggleButton size="md" variant="soft" color="accent" aria-label="test" iconOnly>
+                <ToggleButtonGroup type="multiple" orientation="horizontal">
+                    <ToggleButton size="md" variant="soft" color="accent" aria-label="bold" iconOnly>
                         <ToggleButtonIcon icon={Bold}></ToggleButtonIcon>
                         <HitArea size="lg" />
                     </ToggleButton>
                     <ToggleButtonGroupSeparator />
-                    <ToggleButton size="md" variant="soft" color="accent" aria-label="test" iconOnly>
+                    <ToggleButton size="md" variant="soft" color="accent" aria-label="italic" iconOnly>
                         <ToggleButtonIcon icon={Italic}></ToggleButtonIcon>
                         <HitArea size="lg" />
                     </ToggleButton>
                     <ToggleButtonGroupSeparator />
-                    <ToggleButton size="md" variant="soft" color="accent" aria-label="test" iconOnly>
+                    <ToggleButton size="md" variant="soft" color="accent" aria-label="underline" iconOnly>
                         <ToggleButtonIcon icon={Underline}></ToggleButtonIcon>
                         <HitArea size="lg" />
                     </ToggleButton>
