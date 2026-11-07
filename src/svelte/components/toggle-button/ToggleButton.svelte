@@ -17,6 +17,7 @@ Architectural Notes:
         color,
         size,
         iconOnly,
+        value,
         pressed = $bindable(false),
         class: className,
         onclick,
@@ -25,14 +26,7 @@ Architectural Notes:
     }: ToggleButtonProps = $props();
 
     const group = hasToggleButtonGroupContext() ? getToggleButtonGroupContext() : undefined;
-
-    function deactivate(): void {
-        pressed = false;
-    }
-
-    if (pressed) {
-        group?.activate(deactivate);
-    }
+    const isPressed = $derived(group ? group.isSelected(value) : Boolean(pressed));
 
     function handleClick(
         event: MouseEvent & {
@@ -42,22 +36,19 @@ Architectural Notes:
         onclick?.(event);
         if (event.defaultPrevented) return;
 
-        if (pressed) {
-            if (group?.type === "single" && !group.allowDeselect) return;
-            pressed = false;
-            group?.deactivate(deactivate);
+        if (group) {
+            group.toggle(value);
             return;
         }
 
-        pressed = true;
-        group?.activate(deactivate);
+        pressed = !pressed;
     }
 </script>
 
 <button
     {...rest}
     type="button"
-    aria-pressed={pressed}
+    aria-pressed={isPressed}
     onclick={handleClick}
     class={["cs-toggle-button", className]}
     data-variant={variant}
@@ -77,13 +68,15 @@ Architectural Notes:
             * proportionally crushing small adjacent radii (e.g. 4px) down to near 0px. */
             --_pill-radius: calc(var(--_height) / 2);
 
-            /* Fill transition per state (consumed by ::after).
+            /* Synchronized opacity & fill transitions per state (consumed by ::before and ::after).
+             * ::before and ::after cross-fade their opacity using identical linear durations
+             * (90ms on press, 140ms on release) so opacity(::before) + opacity(::after) === 1
+             * at every frame—preventing mid-transition brightness spikes or delayed color shifts.
              * When releasing (pressed -> unpressed), transform deliberately uses a slower
-             * 300ms quad-in curve while opacity fades out in only 140ms. Because quad-in
-             * starts slowly, the fill barely shrinks (~0.90 scale) before becoming completely
-             * invisible. This yields a calm, smooth background fade for the human eye without
-             * an abrupt collapse, while still allowing ::after to settle at scale(0.55) so the
-             * next press pop-in has full spring distance and momentum. */
+             * 300ms quad-in curve while opacity fades out in only 140ms so the fill barely
+             * shrinks (~0.90 scale) before becoming invisible, while still settling at scale(0.55)
+             * for full spring distance on the next press. */
+            --_base-opacity-transition: opacity 140ms linear;
             --_fill-transition: transform 300ms var(--cs-ease-quad-in), opacity 140ms linear;
 
             isolation: isolate;
@@ -120,6 +113,7 @@ Architectural Notes:
                 corner-shape: inherit;
                 box-shadow: var(--_shadow, none);
                 transition:
+                    var(--_base-opacity-transition),
                     background-color 200ms var(--cs-ease-quad-out),
                     box-shadow 200ms var(--cs-ease-quad-out),
                     scale 600ms var(--cs-spring-release); /* CSS linear() transition */
@@ -178,6 +172,7 @@ Architectural Notes:
                     background-color: var(--_bg-hover);
                     box-shadow: var(--_shadow-active, none);
                     transition:
+                        var(--_base-opacity-transition),
                         background-color 140ms var(--cs-ease-quad-out),
                         box-shadow 140ms var(--cs-ease-quad-out),
                         scale 140ms var(--cs-ease-quad-out);
@@ -309,10 +304,9 @@ Architectural Notes:
             /* =========================================================
              * ARIA PRESSED
              * ---------------------------------------------------------
-             * Reveals the fill layer (::after) with a spring pop while
-             * unifying the base surface (::before) to `base-soft` so
-             * `soft` and `ghost` render with identical pressed depth
-             * without outer-edge flashing during scale pop-in.
+             * Synchronously cross-fades ::before (1 -> 0) and ::after
+             * (0 -> 1) in 90ms linear so total opacity stays 1.0 at every
+             * frame and pressed colors match pure soft button tokens.
              * ========================================================= */
             &[aria-pressed="false"] {
                 --_fg: var(--cs-color-base-soft-fg);
@@ -320,10 +314,13 @@ Architectural Notes:
             }
 
             &[aria-pressed="true"] {
-                --_bg: var(--cs-color-base-soft);
-                --_bg-hover: var(--cs-color-base-soft-hover);
                 --_fg: var(--_soft-fg);
+                --_base-opacity-transition: opacity 90ms linear;
                 --_fill-transition: transform 500ms var(--cs-spring-snappy), opacity 90ms linear;
+
+                &::before {
+                    opacity: 0;
+                }
 
                 &::after {
                     opacity: 1;

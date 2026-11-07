@@ -10,10 +10,12 @@ export type ToggleButtonGroupType = (typeof TOGGLE_BUTTON_GROUP_TYPES)[number];
 export type ToggleButtonGroupTypeProps =
     | {
           type: "single";
+          value?: string;
           allowDeselect?: boolean;
       }
     | {
           type: "multiple";
+          value?: string[];
           allowDeselect?: never;
       };
 
@@ -25,10 +27,8 @@ export type ToggleButtonGroupProps = HTMLAttributes<HTMLDivElement> &
 export type ToggleButtonGroupSeparatorProps = Omit<HTMLAttributes<HTMLSpanElement>, "children">;
 
 export interface ToggleButtonGroupContext {
-    readonly type: ToggleButtonGroupType;
-    readonly allowDeselect: boolean;
-    activate(deactivate: () => void): void;
-    deactivate(deactivate: () => void): void;
+    isSelected(itemValue: string | undefined): boolean;
+    toggle(itemValue: string | undefined): void;
 }
 
 export const [getToggleButtonGroupContext, setToggleButtonGroupContext, hasToggleButtonGroupContext] =

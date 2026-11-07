@@ -13,14 +13,25 @@ export type ToggleButtonColor = (typeof TOGGLE_BUTTON_COLORS)[number];
 export type ToggleButtonSize = (typeof TOGGLE_BUTTON_SIZES)[number];
 export type ToggleButtonVariant = (typeof TOGGLE_BUTTON_VARIANTS)[number];
 
-export type ToggleButtonProps = Omit<HTMLButtonAttributes, "color" | "size"> & {
-    variant: ToggleButtonVariant;
-    color: ToggleButtonColor;
-    size: ToggleButtonSize;
-    iconOnly?: boolean;
-    pressed?: boolean;
-    onclick?: MouseEventHandler<HTMLButtonElement>;
-};
+export type ToggleButtonStateProps =
+    | {
+          value: string;
+          pressed?: never;
+      }
+    | {
+          value?: never;
+          pressed?: boolean;
+      };
+
+export type ToggleButtonProps = Omit<HTMLButtonAttributes, "color" | "size" | "value"> &
+    ToggleButtonStateProps & {
+        variant: ToggleButtonVariant;
+        color: ToggleButtonColor;
+        size: ToggleButtonSize;
+        iconOnly?: boolean;
+        onclick?: MouseEventHandler<HTMLButtonElement>;
+    };
+
 export type ToggleButtonLabelProps = HTMLAttributes<HTMLSpanElement>;
 
 export type ToggleButtonIconComponentProps = Omit<SVGAttributes<SVGSVGElement>, "children"> &

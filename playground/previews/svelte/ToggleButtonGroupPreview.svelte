@@ -44,16 +44,18 @@
         </h2>
         <div class="w-full h-full flex flex-col gap-2">
             <div class="flex gap-3 justify-between">
-                <ToggleButtonGroup type="single" orientation="horizontal" allowDeselect>
-                    <ToggleButton pressed size="md" {variant} {color}>
+                {let selected = $state<string | undefined>("one")}
+
+                <ToggleButtonGroup type="single" bind:value={selected} orientation="horizontal" allowDeselect>
+                    <ToggleButton value="one" size="md" {variant} {color}>
                         <ToggleButtonLabel>Click me!</ToggleButtonLabel>
                     </ToggleButton>
                     <ToggleButtonGroupSeparator />
-                    <ToggleButton size="md" {variant} {color}>
+                    <ToggleButton value="two" size="md" {variant} {color}>
                         <ToggleButtonLabel>Click me!</ToggleButtonLabel>
                     </ToggleButton>
                     <ToggleButtonGroupSeparator />
-                    <ToggleButton size="md" {variant} {color}>
+                    <ToggleButton value="three" size="md" {variant} {color}>
                         <ToggleButtonLabel>Click me!</ToggleButtonLabel>
                     </ToggleButton>
                 </ToggleButtonGroup>
@@ -71,22 +73,33 @@
         <h2 class="title-2xl ml-2">Toolbar</h2>
         <div class="w-full h-full flex flex-col gap-2">
             <div class="flex gap-3 justify-between">
-                <ToggleButtonGroup type="multiple" orientation="horizontal">
-                    <ToggleButton size="md" variant="soft" color="accent" aria-label="bold" iconOnly>
-                        <ToggleButtonIcon icon={Bold}></ToggleButtonIcon>
+                {let selected = $state<string[]>([])}
+
+                <ToggleButtonGroup type="multiple" bind:value={selected} orientation="horizontal">
+                    <ToggleButton value="bold" size="md" variant="soft" color="accent" aria-label="bold" iconOnly>
+                        <ToggleButtonIcon icon={Bold} />
                         <HitArea size="lg" />
                     </ToggleButton>
                     <ToggleButtonGroupSeparator />
-                    <ToggleButton size="md" variant="soft" color="accent" aria-label="italic" iconOnly>
-                        <ToggleButtonIcon icon={Italic}></ToggleButtonIcon>
+                    <ToggleButton value="italic" size="md" variant="soft" color="accent" aria-label="italic" iconOnly>
+                        <ToggleButtonIcon icon={Italic} />
                         <HitArea size="lg" />
                     </ToggleButton>
                     <ToggleButtonGroupSeparator />
-                    <ToggleButton size="md" variant="soft" color="accent" aria-label="underline" iconOnly>
-                        <ToggleButtonIcon icon={Underline}></ToggleButtonIcon>
+                    <ToggleButton
+                        value="underline"
+                        size="md"
+                        variant="soft"
+                        color="accent"
+                        aria-label="underline"
+                        iconOnly
+                    >
+                        <ToggleButtonIcon icon={Underline} />
                         <HitArea size="lg" />
                     </ToggleButton>
                 </ToggleButtonGroup>
+
+                {JSON.stringify(selected)}
             </div>
         </div>
     </div>

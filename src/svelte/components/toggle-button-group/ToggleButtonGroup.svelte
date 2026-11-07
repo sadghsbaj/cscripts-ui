@@ -4,7 +4,7 @@ Composite container (`<ToggleButtonGroup />`) grouping multiple `<ToggleButton /
 a cohesive segmented or clustered control bar with coordinated corner radii and physics.
 
 Architectural Notes:
-- Selection Mode: Requires explicit `type` (`"single" | "multiple"`). In `"single"` mode, activating a button automatically deactivates the previously active sibling via Svelte context, while `allowDeselect` controls whether clicking an active button can clear the selection.
+- Selection Mode: Requires explicit `type` (`"single" | "multiple"`). Coordinates child `<ToggleButton value="...">` state via `bind:value` / `value` (`string | undefined` for `"single"`, `string[]` for `"multiple"`). In `"single"` mode, `allowDeselect` controls whether clicking the active button can clear `value` back to `undefined`.
 - Layout & Flow: Supports horizontal and vertical orientations via `orientation` (`"horizontal" | "vertical"`).
 - Filtered Radii: Uses `:nth-child(1 of .cs-toggle-button)` to strictly target true toggle buttons and flatten inner radii.
 -->
@@ -13,6 +13,7 @@ Architectural Notes:
 
     let {
         type,
+        value = $bindable(),
         allowDeselect = false,
         orientation = "horizontal",
         class: className,
@@ -20,25 +21,30 @@ Architectural Notes:
         ...rest
     }: ToggleButtonGroupProps = $props();
 
-    let activeDeactivate: (() => void) | undefined;
-
     setToggleButtonGroupContext({
-        get type() {
-            return type;
-        },
-        get allowDeselect() {
-            return allowDeselect;
-        },
-        activate(deactivate: () => void): void {
-            if (type === "single" && activeDeactivate && activeDeactivate !== deactivate) {
-                activeDeactivate();
+        isSelected(itemValue: string | undefined): boolean {
+            if (itemValue === undefined) return false;
+            if (type === "single") {
+                return value === itemValue;
             }
-            activeDeactivate = deactivate;
+            return Array.isArray(value) && value.includes(itemValue);
         },
-        deactivate(deactivate: () => void): void {
-            if (activeDeactivate === deactivate) {
-                activeDeactivate = undefined;
+        toggle(itemValue: string | undefined): void {
+            if (itemValue === undefined) return;
+
+            if (type === "single") {
+                if (value === itemValue) {
+                    if (allowDeselect) {
+                        value = undefined;
+                    }
+                    return;
+                }
+                value = itemValue;
+                return;
             }
+
+            const current = Array.isArray(value) ? value : [];
+            value = current.includes(itemValue) ? current.filter((v) => v !== itemValue) : [...current, itemValue];
         },
     });
 </script>
