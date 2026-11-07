@@ -325,7 +325,7 @@ Architectural Notes:
 
             &[aria-pressed="true"] {
                 --_fg: var(--_soft-fg);
-                --_fill-transition: transform 500ms var(--cs-spring-snappy), opacity 90ms linear;
+                --_fill-transition: transform 700ms var(--cs-spring-snappy), opacity 90ms linear;
 
                 &::after {
                     opacity: 1;
