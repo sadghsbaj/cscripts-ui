@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Component } from "svelte";
     import { PanelLeftClose } from "@lucide/svelte";
-    import { Button, ButtonIcon, ButtonLabel, HitArea } from "cs/svelte";
+    import { Button, ButtonIcon, ButtonLabel, HitArea, ToggleButton, ToggleButtonLabel } from "cs/svelte";
 
     interface SvelteModule {
         default: Component;
@@ -82,15 +82,15 @@
 </div>
 
 {#snippet sidebarOption(preview: (typeof previews)[number])}
-    {let isActive = $derived(preview.preview === activePreview)}
-
-    {#if isActive}
-        <Button size="lg" variant="soft" color="accent" class="w-full" onclick={() => changeActivePreview(preview)}>
-            <ButtonLabel>{preview.label}</ButtonLabel>
-        </Button>
-    {:else}
-        <Button size="lg" variant="elevated" class="w-full" onclick={() => changeActivePreview(preview)}>
-            <ButtonLabel>{preview.label}</ButtonLabel>
-        </Button>
-    {/if}
+    <ToggleButton
+        variant="soft"
+        color="accent"
+        size="lg"
+        pressed={activePreview === preview.preview}
+        onclick={() => changeActivePreview(preview)}
+    >
+        <ToggleButtonLabel>
+            {preview.label}
+        </ToggleButtonLabel>
+    </ToggleButton>
 {/snippet}
