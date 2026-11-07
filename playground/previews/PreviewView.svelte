@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Component } from "svelte";
     import { PanelLeftClose } from "@lucide/svelte";
-    import { Button, ButtonIcon, ButtonLabel, HitArea, ToggleButton, ToggleButtonLabel } from "cs/svelte";
+    import { Button, ButtonIcon, HitArea, ToggleButton, ToggleButtonLabel } from "cs/svelte";
 
     interface SvelteModule {
         default: Component;
@@ -85,7 +85,7 @@
     <ToggleButton
         variant="soft"
         color="accent"
-        size="lg"
+        size="md"
         pressed={activePreview === preview.preview}
         onclick={() => changeActivePreview(preview)}
     >

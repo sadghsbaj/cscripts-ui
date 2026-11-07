@@ -6,6 +6,7 @@ import { buttonConfig } from "./button.ts";
 import { closeButtonConfig } from "./close-button.ts";
 import { componentDocsConfig } from "./component-docs.ts";
 import { componentLayersConfig } from "./component-layers.ts";
+import { toggleButtonConfig } from "./toggle-button.ts";
 import { unicodeDotsConfig } from "./unicode-dots.ts";
 
 export { attachmentCssParser, attachmentLayerRule, attachmentLayersConfig } from "./attachment-layers.ts";
@@ -14,6 +15,7 @@ export { buttonGroupConfig, buttonGroupNoSolidRule, buttonGroupUniformButtonsRul
 export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
 export { componentCommentRule, componentDocsConfig } from "./component-docs.ts";
 export { componentLayersConfig, componentLayersRule } from "./component-layers.ts";
+export { toggleButtonConfig, toggleButtonHitAreaRule, toggleButtonStructureRule } from "./toggle-button.ts";
 export { FORBIDDEN_DOTS_REGEX, unicodeDotsConfig, unicodeDotsRule } from "./unicode-dots.ts";
 export * from "./utils.ts";
 
@@ -22,6 +24,7 @@ export const customRulesConfigs: Linter.Config[] = [
     buttonConfig,
     buttonGroupConfig,
     closeButtonConfig,
+    toggleButtonConfig,
     componentDocsConfig,
     componentLayersConfig,
     attachmentLayersConfig,
