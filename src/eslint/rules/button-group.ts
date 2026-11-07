@@ -157,11 +157,13 @@ export const buttonGroupUniformButtonsRule: Rule.RuleModule = {
                 const buttons = collectDirectGroupButtons(node.children);
                 if (buttons.length < 2) return;
 
-                for (const propName of CHECKED_PROPS) {
-                    const firstSig = getPropSignature(context, buttons[0], propName);
+                const [firstBtn, ...remainingButtons] = buttons;
+                if (!firstBtn) return;
 
-                    for (let i = 1; i < buttons.length; i++) {
-                        const currentBtn = buttons[i];
+                for (const propName of CHECKED_PROPS) {
+                    const firstSig = getPropSignature(context, firstBtn, propName);
+
+                    for (const currentBtn of remainingButtons) {
                         const currentSig = getPropSignature(context, currentBtn, propName);
 
                         if (currentSig.key !== firstSig.key) {
