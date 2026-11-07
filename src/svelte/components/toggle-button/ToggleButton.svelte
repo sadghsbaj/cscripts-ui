@@ -68,15 +68,13 @@ Architectural Notes:
             * proportionally crushing small adjacent radii (e.g. 4px) down to near 0px. */
             --_pill-radius: calc(var(--_height) / 2);
 
-            /* Synchronized opacity & fill transitions per state (consumed by ::before and ::after).
-             * ::before and ::after cross-fade their opacity using identical linear durations
-             * (90ms on press, 140ms on release) so opacity(::before) + opacity(::after) === 1
-             * at every frame—preventing mid-transition brightness spikes or delayed color shifts.
+            /* Fill transition per state (consumed by ::after).
              * When releasing (pressed -> unpressed), transform deliberately uses a slower
-             * 300ms quad-in curve while opacity fades out in only 140ms so the fill barely
-             * shrinks (~0.90 scale) before becoming invisible, while still settling at scale(0.55)
-             * for full spring distance on the next press. */
-            --_base-opacity-transition: opacity 140ms linear;
+             * 300ms quad-in curve while opacity fades out in only 140ms. Because quad-in
+             * starts slowly, the fill barely shrinks (~0.90 scale) before becoming completely
+             * invisible. This yields a calm, smooth background fade for the human eye without
+             * an abrupt collapse, while still allowing ::after to settle at scale(0.55) so the
+             * next press pop-in has full spring distance and momentum. */
             --_fill-transition: transform 300ms var(--cs-ease-quad-in), opacity 140ms linear;
 
             isolation: isolate;
@@ -113,7 +111,6 @@ Architectural Notes:
                 corner-shape: inherit;
                 box-shadow: var(--_shadow, none);
                 transition:
-                    var(--_base-opacity-transition),
                     background-color 200ms var(--cs-ease-quad-out),
                     box-shadow 200ms var(--cs-ease-quad-out),
                     scale 600ms var(--cs-spring-release); /* CSS linear() transition */
@@ -132,7 +129,7 @@ Architectural Notes:
                 position: absolute;
                 inset: 0;
                 z-index: -1;
-                background-color: var(--_soft-bg);
+                background-color: var(--_fill-bg);
                 border-radius: inherit;
                 corner-shape: inherit;
                 opacity: 0;
@@ -154,7 +151,7 @@ Architectural Notes:
                     }
 
                     &::after {
-                        background-color: var(--_soft-bg-hover);
+                        background-color: var(--_fill-bg-hover);
                     }
                 }
             }
@@ -172,14 +169,13 @@ Architectural Notes:
                     background-color: var(--_bg-hover);
                     box-shadow: var(--_shadow-active, none);
                     transition:
-                        var(--_base-opacity-transition),
                         background-color 140ms var(--cs-ease-quad-out),
                         box-shadow 140ms var(--cs-ease-quad-out),
                         scale 140ms var(--cs-ease-quad-out);
                 }
 
                 &::after {
-                    background-color: var(--_soft-bg-hover);
+                    background-color: var(--_fill-bg-hover);
                     transition:
                         var(--_fill-transition),
                         background-color 140ms var(--cs-ease-quad-out),
@@ -294,20 +290,34 @@ Architectural Notes:
             &[data-variant="soft"] {
                 --_bg: var(--cs-color-base-soft);
                 --_bg-hover: var(--cs-color-base-soft-hover);
+                --_fill-bg: light-dark(
+                    color-mix(in oklch, var(--_soft-bg-hover) 62%, white),
+                    color-mix(in oklch, var(--_soft-bg-hover) 62%, var(--cs-color-base-950))
+                );
+                --_fill-bg-hover: light-dark(
+                    color-mix(in oklch, var(--_soft-bg-hover) 82%, white),
+                    color-mix(in oklch, var(--_soft-bg-hover) 82%, var(--cs-color-base-950))
+                );
             }
 
             &[data-variant="ghost"] {
                 --_bg: transparent;
                 --_bg-hover: var(--cs-color-base-soft);
+                --_fill-bg: var(--_soft-bg);
+                --_fill-bg-hover: var(--_soft-bg-hover);
+
+                &[aria-pressed="true"] {
+                    --_bg-hover: transparent;
+                }
             }
 
             /* =========================================================
-             * ARIA PRESSED
-             * ---------------------------------------------------------
-             * Synchronously cross-fades ::before (1 -> 0) and ::after
-             * (0 -> 1) in 90ms linear so total opacity stays 1.0 at every
-             * frame and pressed colors match pure soft button tokens.
-             * ========================================================= */
+            * ARIA PRESSED
+            * ---------------------------------------------------------
+            * The base surface (::before) stays untouched. Pressed only
+            * reveals the fill layer (::after) with a spring pop and
+            * switches the foreground color.
+            * ========================================================= */
             &[aria-pressed="false"] {
                 --_fg: var(--cs-color-base-soft-fg);
                 --_fg-hover: var(--cs-color-base-soft-fg-hover);
@@ -315,12 +325,7 @@ Architectural Notes:
 
             &[aria-pressed="true"] {
                 --_fg: var(--_soft-fg);
-                --_base-opacity-transition: opacity 90ms linear;
                 --_fill-transition: transform 500ms var(--cs-spring-snappy), opacity 90ms linear;
-
-                &::before {
-                    opacity: 0;
-                }
 
                 &::after {
                     opacity: 1;
