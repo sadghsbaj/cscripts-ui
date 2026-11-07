@@ -4,15 +4,12 @@
 </script>
 
 <script lang="ts">
-    import { Plus } from "@lucide/svelte";
     import {
         Button,
         BUTTON_COLORS,
         ButtonGroup,
         ButtonGroupSeparator,
-        ButtonIcon,
         ButtonLabel,
-        HitArea,
         type ButtonColor,
         type ButtonVariant,
     } from "cs/svelte";
@@ -40,7 +37,7 @@
             ? 'bg-elevation-1 shadow-elevation-1'
             : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start px-2 gap-5"
     >
-        <h2 class="title-2xl">
+        <h2 class="title-2xl ml-2">
             {#if !isElevated}
                 {variant[0]?.toUpperCase() + variant.slice(1)}
                 +
@@ -66,7 +63,7 @@
                         </Button>
                     </ButtonGroup>
                 {:else}
-                    <ButtonGroup orientation="vertical">
+                    <ButtonGroup orientation="horizontal">
                         <Button size="md" variant="elevated">
                             <ButtonLabel>Click me!</ButtonLabel>
                         </Button>
