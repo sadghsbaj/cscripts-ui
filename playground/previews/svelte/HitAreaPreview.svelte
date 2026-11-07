@@ -1,8 +1,11 @@
 <script module lang="ts">
-    import type { HitAreaSize } from "cs/svelte";
-
     export const id = "hit-area";
     export const label = "Hit-Area";
+</script>
+
+<script lang="ts">
+    import { Plus } from "@lucide/svelte";
+    import { Button, ButtonIcon, HitArea, ToggleButton, ToggleButtonLabel, type HitAreaSize } from "cs/svelte";
 
     let showHitArea = $state(false);
 
@@ -22,21 +25,10 @@
     ];
 </script>
 
-<script lang="ts">
-    import { Plus } from "@lucide/svelte";
-    import { Button, ButtonIcon, ButtonLabel, HitArea } from "cs/svelte";
-</script>
-
 <div class="flex flex-col gap-5">
-    {#if showHitArea}
-        <Button size="md" variant="soft" color="accent" class="w-fit" onclick={() => (showHitArea = !showHitArea)}>
-            <ButtonLabel>Show Area</ButtonLabel>
-        </Button>
-    {:else}
-        <Button size="md" variant="soft" color="base" class="w-fit" onclick={() => (showHitArea = !showHitArea)}>
-            <ButtonLabel>Show Area</ButtonLabel>
-        </Button>
-    {/if}
+    <ToggleButton variant="soft" color="accent" size="md" class="self-start" bind:pressed={showHitArea}>
+        <ToggleButtonLabel>Show Hit-Area</ToggleButtonLabel>
+    </ToggleButton>
 
     <div class="flex justify-center">
         <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl px-2 lg:px-8">
