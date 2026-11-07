@@ -13,7 +13,9 @@ export const scrollbarRules: Rule[] = [
             const values = SCROLLBAR_SIZE_MAP[size as keyof typeof SCROLLBAR_SIZE_MAP];
             return [
                 {
-                    "--cs-scrollbar-size": values.size,
+                    [symbols.selector]: (s: string) => `${s}::-webkit-scrollbar`,
+                    width: values.size,
+                    height: values.size,
                 },
                 {
                     [symbols.parent]: "@supports (-moz-appearance: none)",
