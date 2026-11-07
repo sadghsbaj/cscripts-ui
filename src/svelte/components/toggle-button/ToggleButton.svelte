@@ -52,8 +52,14 @@ Architectural Notes:
             * proportionally crushing small adjacent radii (e.g. 4px) down to near 0px. */
             --_pill-radius: calc(var(--_height) / 2);
 
-            /* Fill transition per state (consumed by ::after). */
-            --_fill-transition: transform 160ms cubic-bezier(0.4, 0, 1, 1), opacity 140ms linear;
+            /* Fill transition per state (consumed by ::after).
+             * When releasing (pressed -> unpressed), transform deliberately uses a slower
+             * 300ms quad-in curve while opacity fades out in only 140ms. Because quad-in
+             * starts slowly, the fill barely shrinks (~0.90 scale) before becoming completely
+             * invisible. This yields a calm, smooth background fade for the human eye without
+             * an abrupt collapse, while still allowing ::after to settle at scale(0.55) so the
+             * next press pop-in has full spring distance and momentum. */
+            --_fill-transition: transform 300ms var(--cs-ease-quad-in), opacity 140ms linear;
 
             isolation: isolate;
             position: relative;
