@@ -30,10 +30,10 @@ Architectural Notes:
 <style>
     @layer components.primitive {
         .cs-close-button {
-            /* Close buttons share a unified text-weak -> text-strong hierarchy across all variants
+            /* Close buttons share a unified text-weak -> text-main hierarchy across all variants
             * to remain visually subordinate to primary content, unlike action buttons. */
             --_fg: var(--cs-color-text-weak);
-            --_fg-hover: var(--cs-color-text-strong);
+            --_fg-hover: var(--cs-color-text-main);
 
             isolation: isolate;
             position: relative;
@@ -183,7 +183,7 @@ Architectural Notes:
                 --_bg: var(--cs-color-elevation-1);
                 --_bg-hover: light-dark(var(--_bg), var(--cs-color-elevation-2));
                 --_shadow: var(--cs-shadow-elevation-1);
-                --_shadow-hover: var(--cs-shadow-md);
+                --_shadow-hover: var(--cs-shadow-elevation-1-hover);
                 --_shadow-active: var(--cs-shadow-elevation-1);
             }
         }

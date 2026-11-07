@@ -21,10 +21,10 @@ Due to physical differences in how human vision perceives contrast on light vs. 
 
 - In Light Mode, the app canvas (`elevation-0`) is light (`base-100`), while `elevation-1` is pure white (`#ffffff`).
 - White cannot brighten further. Darkening the white surface on hover would reduce contrast against the canvas, muddy the colors, and flatten the visual depth hierarchy.
-- **Solution:** The background color stays pure white on hover; interaction feedback relies entirely on **shadow lift** (`shadow-sm` stepping up to `shadow-md`).
+- **Solution:** The background color stays pure white on hover; interaction feedback relies entirely on **shadow lift** (`--cs-shadow-elevation-1` -> `--cs-shadow-elevation-1-hover`, stepping up from `shadow-sm` to `shadow-md`).
 
 ### B. Dark Mode: Surface Luminance Step
 
 - In Dark Mode, drop shadows are physically imperceptible against dark canvases (`base-950` / `base-900`).
-- Relying on shadow changes alone would make hover feedback nearly invisible.
-- **Solution:** Hover steps up the surface luminance from `elevation-1` (`base-900`) to `elevation-2` (`base-800`) via `light-dark(var(--_bg), var(--cs-color-elevation-2))`, providing immediate and tactile edge definition.
+- Relying on drop shadow changes alone would make hover feedback nearly invisible and destroy the top-lit inset edge.
+- **Solution:** `--cs-shadow-elevation-1-hover` maintains the exact top-lit inset hairline in Dark Mode (`var(--cs-shadow-elevation-1)`). Hover feedback steps up the surface luminance from `elevation-1` (`base-900`) to `elevation-2` (`base-800`) via `light-dark(var(--_bg), var(--cs-color-elevation-2))`, providing immediate and tactile edge definition.

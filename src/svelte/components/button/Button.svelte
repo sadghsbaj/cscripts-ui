@@ -225,6 +225,7 @@ Architectural Notes:
                 --_bg-hover: var(--_solid-bg-hover);
                 --_fg: var(--_solid-fg);
                 --_shadow: inset 0 1px 0 0 var(--_solid-shadow, rgb(255 255 255 / 0.26)), 0 1px 2px 0 rgb(0 0 0 / 0.08);
+                --_shadow-active: inset 0 1px 0 0 var(--_solid-shadow, rgb(255 255 255 / 0.26));
             }
 
             &[data-variant="soft"] {
@@ -251,9 +252,9 @@ Architectural Notes:
                 --_bg: var(--cs-color-elevation-1);
                 --_bg-hover: light-dark(var(--_bg), var(--cs-color-elevation-2));
                 --_fg: var(--cs-color-text-strong);
-                --_shadow: var(--cs-shadow-sm);
-                --_shadow-hover: var(--cs-shadow-md);
-                --_shadow-active: var(--cs-shadow-sm);
+                --_shadow: var(--cs-shadow-elevation-1);
+                --_shadow-hover: var(--cs-shadow-elevation-1-hover);
+                --_shadow-active: var(--cs-shadow-elevation-1);
             }
         }
     }

@@ -38,7 +38,8 @@ All semantic UnoCSS color tokens map to `--cs-color-*` variables (`../uno/theme/
     - `bg-elevation-0`: App background (Light: `base-100`, Dark: `base-950`)
     - `bg-elevation-1`: Cards/panels on `elevation-0` (Light: `white`, Dark: `base-900`)
     - `bg-elevation-2`: Nested containers on `elevation-1` (Light: `base-100`, Dark: `base-800`)
-    - `shadow-elevation-1`: Primary surface shadow for cards/islands (auto `light-dark()`: `shadow-sm` in Light Mode, top-lit inset hairline in Dark Mode). Eliminates manual dark borders.
+    - `shadow-elevation-1`: Primary surface shadow for cards/islands (Light: `shadow-sm`, Dark: top-lit inset hairline). Eliminates manual dark borders.
+    - `shadow-elevation-1-hover`: Interactive hover shadow (Light: `shadow-md`, Dark: retains top-lit inset hairline).
 - **Text Hierarchy (`../uno/rules/colors.ts`):**
     - `text-strong`, `text-main` (default inherited), `text-weak`, `text-weaker`
     - **Rule:** NEVER use raw gray/zinc classes (`text-zinc-500`, `text-base-600`) for typography.
