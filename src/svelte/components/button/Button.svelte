@@ -64,7 +64,6 @@ Architectural Notes:
                 inset: 0;
                 z-index: -1;
                 background-color: var(--_bg);
-                border: var(--_border, none);
                 border-radius: inherit;
                 corner-shape: inherit;
                 box-shadow: var(--_shadow, none);
