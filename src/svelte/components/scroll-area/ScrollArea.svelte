@@ -117,8 +117,8 @@ Architectural Notes:
             &[data-scrollbar="always"] > .cs-scroll-area-track,
             &[data-scrollbar="hover"]:is(:hover, [data-scrolling], [data-dragging]) > .cs-scroll-area-track,
             &[data-scrollbar="scroll"]:is([data-scrolling], [data-dragging]) > .cs-scroll-area-track {
-                translate: 0 0;
                 opacity: 1;
+                translate: 0 0;
                 pointer-events: auto;
             }
         }
@@ -147,29 +147,31 @@ Architectural Notes:
             position: absolute;
             z-index: 30;
             border-radius: var(--cs-radius-full);
-            translate: var(--_track-hide-translate);
+            corner-shape: var(--cs-squircle-soft);
             opacity: 0;
-            pointer-events: none;
+            translate: var(--_track-hide-translate);
             user-select: none;
-            touch-action: none;
             transition:
                 opacity 220ms var(--cs-ease-cubic-out),
                 translate 240ms var(--cs-ease-cubic-out);
+            pointer-events: none;
+            touch-action: none;
 
             /* Visual track pill that unfolds outward from the thumb's current position */
             &::before {
                 content: "";
                 position: absolute;
                 inset: 0;
-                border-radius: var(--cs-radius-full);
                 background-color: var(--_track-bg);
-                transform-origin: var(--_track-unfold-origin);
-                scale: var(--_track-folded-scale);
+                border-radius: inherit;
+                corner-shape: inherit;
                 opacity: 0;
-                pointer-events: none;
+                scale: var(--_track-folded-scale);
+                transform-origin: var(--_track-unfold-origin);
                 transition:
                     opacity 200ms var(--cs-ease-cubic-out),
                     scale 260ms var(--cs-ease-cubic-out);
+                pointer-events: none;
             }
 
             &[data-orientation="vertical"] {
@@ -186,8 +188,8 @@ Architectural Notes:
                     width: 100%;
                     height: var(--_thumb-size, 0px);
                     translate: 0 var(--_thumb-offset, 0px);
-                    transform-origin: right center;
                     scale: 0.5 1;
+                    transform-origin: right center;
                 }
             }
 
@@ -205,32 +207,32 @@ Architectural Notes:
                     width: var(--_thumb-size, 0px);
                     height: 100%;
                     translate: var(--_thumb-offset, 0px) 0;
-                    transform-origin: center bottom;
                     scale: 1 0.5;
+                    transform-origin: center bottom;
                 }
             }
 
             /* Stage 2: Track Hovered -> Inward Lift + Track Unfold + Elastic Thumb Pop */
             &:hover,
             &[data-dragging] {
-                translate: var(--_track-hover-translate);
                 opacity: 1;
-                pointer-events: auto;
+                translate: var(--_track-hover-translate);
                 transition:
                     opacity 150ms var(--cs-ease-expo-out),
                     translate 180ms var(--cs-ease-expo-out);
+                pointer-events: auto;
 
                 &::before {
-                    scale: 1;
                     opacity: 1;
+                    scale: 1;
                     transition:
                         opacity 140ms var(--cs-ease-quad-out),
                         scale 260ms var(--cs-ease-expo-out);
                 }
 
                 .cs-scroll-area-thumb {
-                    scale: 1;
                     background-color: var(--_thumb-bg-track-hover);
+                    scale: 1;
                     transition:
                         scale 220ms var(--cs-ease-back-out),
                         background-color 140ms var(--cs-ease-quad-out);
@@ -244,16 +246,17 @@ Architectural Notes:
 
             /* Stage 3b: Active Drag -> High-Contrast Highlight + Tactile Grip */
             &[data-dragging] .cs-scroll-area-thumb {
-                scale: var(--_thumb-drag-scale);
                 background-color: var(--_thumb-bg-thumb-hover);
+                scale: var(--_thumb-drag-scale);
             }
         }
 
         .cs-scroll-area-thumb {
             position: relative;
             z-index: 1;
-            border-radius: var(--cs-radius-full);
             background-color: var(--_thumb-bg);
+            border-radius: var(--cs-radius-full);
+            corner-shape: var(--cs-squircle-soft);
             transition:
                 scale 240ms var(--cs-ease-cubic-out),
                 background-color 200ms var(--cs-ease-quad-out);
