@@ -20,10 +20,15 @@
 
         /* =========================================================
         * DIRECTIONS
+        * ---------------------------------------------------------
+        * Omit `in oklch` on alpha masks: mask-image only evaluates the
+        * alpha channel (0 -> 1, identical across color spaces), and
+        * default sRGB interpolation keeps Firefox WebRender on its
+        * native GPU gradient fast-path instead of CPU blob rasterization.
         * ========================================================= */
         &[data-scroll-fade-direction="vertical"] {
             mask-image: linear-gradient(
-                to bottom in oklch,
+                to bottom,
                 transparent 0px,
                 black var(--cs-scroll-fade-top, 0px),
                 black calc(100% - var(--cs-scroll-fade-bottom, 0px)),
@@ -32,7 +37,7 @@
         }
         &[data-scroll-fade-direction="horizontal"] {
             mask-image: linear-gradient(
-                to right in oklch,
+                to right,
                 transparent 0px,
                 black var(--cs-scroll-fade-left, 0px),
                 black calc(100% - var(--cs-scroll-fade-right, 0px)),
@@ -42,14 +47,14 @@
         &[data-scroll-fade-direction="both"] {
             mask-image:
                 linear-gradient(
-                    to bottom in oklch,
+                    to bottom,
                     transparent 0px,
                     black var(--cs-scroll-fade-top, 0px),
                     black calc(100% - var(--cs-scroll-fade-bottom, 0px)),
                     transparent 100%
                 ),
                 linear-gradient(
-                    to right in oklch,
+                    to right,
                     transparent 0px,
                     black var(--cs-scroll-fade-left, 0px),
                     black calc(100% - var(--cs-scroll-fade-right, 0px)),

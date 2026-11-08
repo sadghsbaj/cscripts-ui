@@ -167,13 +167,13 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
 
                     if ((opts.edges === "both" || opts.edges === "start") && clampedScrollTop > opts.threshold) {
                         canScrollTop = true;
-                        topFade = opts.smooth ? Math.min(fadeSize, clampedScrollTop) : fadeSize;
+                        topFade = opts.smooth ? Math.round(Math.min(fadeSize, clampedScrollTop)) : fadeSize;
                     }
 
                     const remaining = maxScrollTop - clampedScrollTop;
                     if ((opts.edges === "both" || opts.edges === "end") && remaining > opts.threshold) {
                         canScrollBottom = true;
-                        bottomFade = opts.smooth ? Math.min(fadeSize, remaining) : fadeSize;
+                        bottomFade = opts.smooth ? Math.round(Math.min(fadeSize, remaining)) : fadeSize;
                     }
                 }
 
@@ -203,13 +203,13 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
 
                     if ((opts.edges === "both" || opts.edges === "start") && clampedScrollLeft > opts.threshold) {
                         canScrollLeft = true;
-                        leftFade = opts.smooth ? Math.min(fadeSize, clampedScrollLeft) : fadeSize;
+                        leftFade = opts.smooth ? Math.round(Math.min(fadeSize, clampedScrollLeft)) : fadeSize;
                     }
 
                     const remaining = maxScrollLeft - clampedScrollLeft;
                     if ((opts.edges === "both" || opts.edges === "end") && remaining > opts.threshold) {
                         canScrollRight = true;
-                        rightFade = opts.smooth ? Math.min(fadeSize, remaining) : fadeSize;
+                        rightFade = opts.smooth ? Math.round(Math.min(fadeSize, remaining)) : fadeSize;
                     }
                 }
 
