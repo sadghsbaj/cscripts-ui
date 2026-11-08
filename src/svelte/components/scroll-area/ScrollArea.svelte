@@ -17,6 +17,7 @@ Architectural Notes:
     import { ScrollAreaManager } from "./scrollAreaState.svelte.ts";
 
     let {
+        size,
         direction,
         scrollbar = "hover",
         overshoot = true,
@@ -26,6 +27,7 @@ Architectural Notes:
     }: ScrollAreaProps = $props();
 
     const scrollArea = new ScrollAreaManager({
+        getSize: () => size,
         getDirection: () => direction,
         getScrollbar: () => scrollbar,
         getOvershoot: () => overshoot,
@@ -34,6 +36,7 @@ Architectural Notes:
     setScrollAreaContext(scrollArea);
 
     $effect(() => {
+        void size;
         void direction;
         scrollArea.scheduleUpdate();
     });
@@ -42,6 +45,7 @@ Architectural Notes:
 <div
     {...rest}
     class={["cs-scroll-area", className]}
+    data-size={size}
     data-scrollbar={scrollbar}
     data-scrolling={scrollArea.isScrolling ? "" : undefined}
     data-dragging={scrollArea.draggingAxis ? "" : undefined}
@@ -96,8 +100,23 @@ Architectural Notes:
             flex-direction: column;
             overflow: hidden;
 
+            /* =========================================================
+             * SIZES (Resting thumb is 0.5x -> sm: 3->6px, md: 4->8px, lg: 6->12px)
+             * ========================================================= */
+            &[data-size="sm"] {
+                --_track-size: 6px;
+            }
+
+            &[data-size="md"] {
+                --_track-size: 8px;
+            }
+
+            &[data-size="lg"] {
+                --_track-size: 12px;
+            }
+
             &[data-both-scrollable] {
-                --_track-end-inset: 14px;
+                --_track-end-inset: calc(var(--_track-size, 8px) + 6px);
             }
 
             /* =========================================================
@@ -128,7 +147,7 @@ Architectural Notes:
 
             &[data-orientation="vertical"] {
                 inset: 3px 2px var(--_track-end-inset, 3px) auto;
-                width: 8px;
+                width: var(--_track-size, 8px);
 
                 .cs-scroll-area-thumb {
                     width: 100%;
@@ -141,7 +160,7 @@ Architectural Notes:
 
             &[data-orientation="horizontal"] {
                 inset: auto var(--_track-end-inset, 3px) 2px 3px;
-                height: 8px;
+                height: var(--_track-size, 8px);
 
                 .cs-scroll-area-thumb {
                     width: var(--_thumb-size, 0px);

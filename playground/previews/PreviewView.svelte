@@ -82,7 +82,7 @@
         </ToggleButtonGroup>
     </aside>
 
-    <ScrollArea direction="vertical" class="size-full">
+    <ScrollArea size="lg" direction="vertical" class="size-full">
         <ScrollAreaContent
             class="flex flex-col gap-8 p-8 lg:p-16"
             {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}

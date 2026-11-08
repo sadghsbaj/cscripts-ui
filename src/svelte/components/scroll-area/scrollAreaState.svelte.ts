@@ -1,6 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
-import type { ScrollAreaDirection, ScrollAreaScrollbar } from "./index.ts";
+import type { ScrollAreaDirection, ScrollAreaScrollbar, ScrollAreaSize } from "./index.ts";
 
 export type OvershootEdge = "top" | "bottom" | "left" | "right";
 export type ScrollbarAxis = "vertical" | "horizontal";
@@ -9,12 +9,18 @@ const OVERSHOOT_EDGES: readonly OvershootEdge[] = ["top", "bottom", "left", "rig
 const MIN_THUMB_SIZE = 28;
 const TRACK_START_INSET = 3;
 const TRACK_END_INSET = 3;
-const TRACK_CORNER_INSET = 14;
+const TRACK_CORNER_GAP = 6;
+const TRACK_SIZE_PX: Record<ScrollAreaSize, number> = {
+    sm: 6,
+    md: 8,
+    lg: 12,
+};
 const BOUNDARY_TOLERANCE = 2;
 const SCROLL_IDLE_DELAY_MS = 700;
 const OVERSHOOT_RELEASE_DELAY_MS = 150;
 
 export interface ScrollAreaStateOptions {
+    getSize: () => ScrollAreaSize;
     getDirection: () => ScrollAreaDirection;
     getScrollbar: () => ScrollAreaScrollbar;
     getOvershoot: () => boolean;
@@ -69,6 +75,10 @@ export class ScrollAreaManager {
 
     constructor(options: ScrollAreaStateOptions) {
         this.#options = options;
+    }
+
+    get size(): ScrollAreaSize {
+        return this.#options.getSize();
     }
 
     get direction(): ScrollAreaDirection {
@@ -155,8 +165,10 @@ export class ScrollAreaManager {
         this.canScrollY = canScrollY;
         this.canScrollX = canScrollX;
 
+        const cornerInset = TRACK_SIZE_PX[this.size] + TRACK_CORNER_GAP;
+
         if (canScrollY) {
-            const endInset = canScrollX ? TRACK_CORNER_INSET : TRACK_END_INSET;
+            const endInset = canScrollX ? cornerInset : TRACK_END_INSET;
             const trackHeight = Math.max(0, clientHeight - TRACK_START_INSET - endInset);
             const thumbHeight = Math.min(
                 trackHeight,
@@ -185,7 +197,7 @@ export class ScrollAreaManager {
         }
 
         if (canScrollX) {
-            const endInset = canScrollY ? TRACK_CORNER_INSET : TRACK_END_INSET;
+            const endInset = canScrollY ? cornerInset : TRACK_END_INSET;
             const trackWidth = Math.max(0, clientWidth - TRACK_START_INSET - endInset);
             const thumbWidth = Math.min(
                 trackWidth,
