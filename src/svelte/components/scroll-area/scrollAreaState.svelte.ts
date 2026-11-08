@@ -249,6 +249,11 @@ export class ScrollAreaManager {
         if (!this.overshoot || !this.#contentEl) return;
         const el = this.#contentEl;
 
+        // Ignore wheel events that originated inside a nested <ScrollAreaContent />
+        if (event.target instanceof Element && event.target.closest(".cs-scroll-area-content") !== el) {
+            return;
+        }
+
         // Browsers on Linux/Windows emit vertical deltaY with shiftKey=true during Shift+Wheel horizontal scrolling.
         const useYAsX = event.deltaX === 0 && event.shiftKey;
         const deltaX = useYAsX ? event.deltaY : event.deltaX;

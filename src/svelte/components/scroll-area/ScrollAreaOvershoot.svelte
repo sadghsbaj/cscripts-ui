@@ -11,12 +11,14 @@ GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered ins
 <div class="cs-scroll-area-overshoot" aria-hidden="true">
     {#each scrollArea.activeOvershootEdges as edge (edge)}
         {let value = $derived(scrollArea.overshootValues[edge])}
+        {let depthScale = $derived(0.55 + value * 0.45)}
+        {let isVerticalEdge = $derived(edge === "top" || edge === "bottom")}
 
         <div
             class="cs-scroll-area-overshoot-edge"
             data-edge={edge}
-            data-active={value > 0 ? "" : undefined}
-            style:--_overshoot={value}
+            style:opacity={value}
+            style:scale={isVerticalEdge ? `1 ${depthScale}` : `${depthScale} 1`}
         ></div>
     {/each}
 </div>
@@ -78,19 +80,11 @@ GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered ins
                 scale 250ms var(--cs-ease-expo-out);
             pointer-events: none;
 
-            &[data-active] {
-                opacity: var(--_overshoot, 0);
-            }
-
             &:is([data-edge="top"], [data-edge="bottom"]) {
                 --_core-shape: ellipse 44% 62%;
                 --_glow-shape: ellipse 49% 100%;
                 height: 32px;
                 scale: 1 0.55;
-
-                &[data-active] {
-                    scale: 1 calc(0.55 + var(--_overshoot, 0) * 0.45);
-                }
             }
 
             &:is([data-edge="left"], [data-edge="right"]) {
@@ -98,10 +92,6 @@ GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered ins
                 --_glow-shape: ellipse 100% 49%;
                 width: 32px;
                 scale: 0.55 1;
-
-                &[data-active] {
-                    scale: calc(0.55 + var(--_overshoot, 0) * 0.45) 1;
-                }
             }
 
             &[data-edge="top"] {
