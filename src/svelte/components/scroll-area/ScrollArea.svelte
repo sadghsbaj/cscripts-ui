@@ -137,13 +137,37 @@ Architectural Notes:
             touch-action: none;
             transition:
                 opacity 220ms var(--cs-ease-cubic-out),
-                translate 240ms var(--cs-ease-cubic-out),
-                background-color 200ms var(--cs-ease-quad-out),
-                box-shadow 200ms var(--cs-ease-quad-out);
+                translate 240ms var(--cs-ease-cubic-out);
+
+            /* Visual track pill that unfolds outward from the thumb's current position */
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: var(--cs-radius-full);
+                background-color: light-dark(
+                    color-mix(in oklch, var(--cs-color-base-900) 6%, transparent),
+                    color-mix(in oklch, var(--cs-color-base-100) 8%, transparent)
+                );
+                box-shadow: inset 0 0 0 1px
+                    light-dark(
+                        color-mix(in oklch, var(--cs-color-base-900) 4%, transparent),
+                        color-mix(in oklch, var(--cs-color-base-100) 5%, transparent)
+                    );
+                transform-origin: var(--_track-unfold-origin);
+                scale: var(--_track-folded-scale);
+                opacity: 0;
+                pointer-events: none;
+                transition:
+                    opacity 200ms var(--cs-ease-cubic-out),
+                    scale 260ms var(--cs-ease-cubic-out);
+            }
 
             &[data-orientation="vertical"] {
                 --_track-hide-translate: 5px 0;
                 --_track-hover-translate: -1.5px 0;
+                --_track-unfold-origin: right calc(var(--_thumb-offset, 0px) + var(--_thumb-size, 0px) * 0.5);
+                --_track-folded-scale: 0.45 0.25;
                 --_thumb-drag-scale: 1.12 1;
 
                 inset: 3px 2px var(--_track-end-inset, 3px) auto;
@@ -161,6 +185,8 @@ Architectural Notes:
             &[data-orientation="horizontal"] {
                 --_track-hide-translate: 0 5px;
                 --_track-hover-translate: 0 -1.5px;
+                --_track-unfold-origin: calc(var(--_thumb-offset, 0px) + var(--_thumb-size, 0px) * 0.5) bottom;
+                --_track-folded-scale: 0.25 0.45;
                 --_thumb-drag-scale: 1 1.12;
 
                 inset: auto var(--_track-end-inset, 3px) 2px 3px;
@@ -175,32 +201,29 @@ Architectural Notes:
                 }
             }
 
-            /* Stage 2: Inward Lift + Snappy Thumb Expansion */
+            /* Stage 2: Inward Lift + Track Unfold + Elastic Thumb Pop */
             &:hover,
             &[data-dragging] {
                 translate: var(--_track-hover-translate);
                 opacity: 1;
                 pointer-events: auto;
-                background-color: light-dark(
-                    color-mix(in oklch, var(--cs-color-base-900) 5.5%, transparent),
-                    color-mix(in oklch, var(--cs-color-base-100) 7%, transparent)
-                );
-                box-shadow: inset 0 0 0 1px
-                    light-dark(
-                        color-mix(in oklch, var(--cs-color-base-900) 4%, transparent),
-                        color-mix(in oklch, var(--cs-color-base-100) 5%, transparent)
-                    );
                 transition:
                     opacity 150ms var(--cs-ease-expo-out),
-                    translate 180ms var(--cs-ease-expo-out),
-                    background-color 140ms var(--cs-ease-quad-out),
-                    box-shadow 140ms var(--cs-ease-quad-out);
+                    translate 180ms var(--cs-ease-expo-out);
+
+                &::before {
+                    scale: 1;
+                    opacity: 1;
+                    transition:
+                        opacity 140ms var(--cs-ease-quad-out),
+                        scale 260ms var(--cs-ease-expo-out);
+                }
 
                 .cs-scroll-area-thumb {
                     scale: 1;
                     background-color: var(--cs-scrollbar-thumb-hover);
                     transition:
-                        scale 150ms var(--cs-ease-expo-out),
+                        scale 220ms var(--cs-ease-back-out),
                         background-color 140ms var(--cs-ease-quad-out);
                 }
             }
@@ -216,10 +239,12 @@ Architectural Notes:
         }
 
         .cs-scroll-area-thumb {
+            position: relative;
+            z-index: 1;
             border-radius: var(--cs-radius-full);
             background-color: var(--cs-scrollbar-thumb);
             transition:
-                scale 260ms var(--cs-ease-cubic-out),
+                scale 240ms var(--cs-ease-cubic-out),
                 background-color 200ms var(--cs-ease-quad-out);
         }
     }
