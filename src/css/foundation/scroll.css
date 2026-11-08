@@ -1,5 +1,7 @@
 /* ==========================================================================
-   SCROLLBAR
+   NATIVE BROWSER SCROLLBARS
+   Note: These tokens only style native OS/browser scrollbars. The custom
+   <ScrollArea /> overlay component defines its own internal state colors.
    ========================================================================== */
 
 @property --cs-scrollbar-size {
@@ -10,12 +12,12 @@
 
 :root {
     --cs-scrollbar-size: 8px;
-    --cs-scrollbar-track: transparent;
-    --cs-scrollbar-thumb: light-dark(
+    --cs-color-scrollbar-track: transparent;
+    --cs-color-scrollbar-thumb: light-dark(
         color-mix(in oklch, var(--cs-color-base-900) 20%, transparent),
         color-mix(in oklch, var(--cs-color-base-100) 22%, transparent)
     );
-    --cs-scrollbar-thumb-hover: light-dark(
+    --cs-color-scrollbar-thumb-hover: light-dark(
         color-mix(in oklch, var(--cs-color-base-900) 35%, transparent),
         color-mix(in oklch, var(--cs-color-base-100) 38%, transparent)
     );
@@ -25,7 +27,7 @@
 @supports (-moz-appearance: none) {
     * {
         scrollbar-width: thin;
-        scrollbar-color: var(--cs-scrollbar-thumb) var(--cs-scrollbar-track);
+        scrollbar-color: var(--cs-color-scrollbar-thumb) var(--cs-color-scrollbar-track);
     }
 }
 
@@ -40,18 +42,18 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--cs-scrollbar-track);
+    background: var(--cs-color-scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
     min-width: 50px;
     min-height: 50px;
-    background-color: var(--cs-scrollbar-thumb);
+    background-color: var(--cs-color-scrollbar-thumb);
     background-clip: padding-box;
-    border: 2px solid var(--cs-scrollbar-track);
+    border: 2px solid var(--cs-color-scrollbar-track);
     border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--cs-scrollbar-thumb-hover);
+    background-color: var(--cs-color-scrollbar-thumb-hover);
 }

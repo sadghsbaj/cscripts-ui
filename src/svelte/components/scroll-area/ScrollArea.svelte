@@ -127,6 +127,23 @@ Architectural Notes:
          * OVERLAY SCROLLBAR TRACK & THUMB
          * ========================================================= */
         .cs-scroll-area-track {
+            --_track-bg: light-dark(
+                color-mix(in oklch, var(--cs-color-base-900) 6%, transparent),
+                color-mix(in oklch, var(--cs-color-base-100) 8%, transparent)
+            );
+            --_thumb-bg: light-dark(
+                color-mix(in oklch, var(--cs-color-base-900) 20%, transparent),
+                color-mix(in oklch, var(--cs-color-base-100) 22%, transparent)
+            );
+            --_thumb-bg-track-hover: light-dark(
+                color-mix(in oklch, var(--cs-color-base-900) 36%, transparent),
+                color-mix(in oklch, var(--cs-color-base-100) 44%, transparent)
+            );
+            --_thumb-bg-thumb-hover: light-dark(
+                color-mix(in oklch, var(--cs-color-base-900) 54%, transparent),
+                color-mix(in oklch, var(--cs-color-base-100) 76%, transparent)
+            );
+
             position: absolute;
             z-index: 30;
             border-radius: var(--cs-radius-full);
@@ -145,15 +162,7 @@ Architectural Notes:
                 position: absolute;
                 inset: 0;
                 border-radius: var(--cs-radius-full);
-                background-color: light-dark(
-                    color-mix(in oklch, var(--cs-color-base-900) 6%, transparent),
-                    color-mix(in oklch, var(--cs-color-base-100) 8%, transparent)
-                );
-                box-shadow: inset 0 0 0 1px
-                    light-dark(
-                        color-mix(in oklch, var(--cs-color-base-900) 4%, transparent),
-                        color-mix(in oklch, var(--cs-color-base-100) 5%, transparent)
-                    );
+                background-color: var(--_track-bg);
                 transform-origin: var(--_track-unfold-origin);
                 scale: var(--_track-folded-scale);
                 opacity: 0;
@@ -201,7 +210,7 @@ Architectural Notes:
                 }
             }
 
-            /* Stage 2: Inward Lift + Track Unfold + Elastic Thumb Pop */
+            /* Stage 2: Track Hovered -> Inward Lift + Track Unfold + Elastic Thumb Pop */
             &:hover,
             &[data-dragging] {
                 translate: var(--_track-hover-translate);
@@ -221,20 +230,22 @@ Architectural Notes:
 
                 .cs-scroll-area-thumb {
                     scale: 1;
-                    background-color: var(--cs-scrollbar-thumb-hover);
+                    background-color: var(--_thumb-bg-track-hover);
                     transition:
                         scale 220ms var(--cs-ease-back-out),
                         background-color 140ms var(--cs-ease-quad-out);
+
+                    /* Stage 3a: Thumb Directly Hovered -> High-Contrast Highlight */
+                    &:hover {
+                        background-color: var(--_thumb-bg-thumb-hover);
+                    }
                 }
             }
 
-            /* Stage 3: Tactile Grip on Active Drag */
+            /* Stage 3b: Active Drag -> High-Contrast Highlight + Tactile Grip */
             &[data-dragging] .cs-scroll-area-thumb {
                 scale: var(--_thumb-drag-scale);
-                background-color: light-dark(
-                    color-mix(in oklch, var(--cs-color-base-900) 52%, transparent),
-                    color-mix(in oklch, var(--cs-color-base-100) 58%, transparent)
-                );
+                background-color: var(--_thumb-bg-thumb-hover);
             }
         }
 
@@ -242,7 +253,7 @@ Architectural Notes:
             position: relative;
             z-index: 1;
             border-radius: var(--cs-radius-full);
-            background-color: var(--cs-scrollbar-thumb);
+            background-color: var(--_thumb-bg);
             transition:
                 scale 240ms var(--cs-ease-cubic-out),
                 background-color 200ms var(--cs-ease-quad-out);
