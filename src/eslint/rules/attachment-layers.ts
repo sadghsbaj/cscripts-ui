@@ -62,7 +62,7 @@ export const attachmentLayerRule: Rule.RuleModule = {
 };
 
 export const attachmentLayersConfig: Linter.Config = {
-    files: ["**/attachments/**/*.css"],
+    files: ["**/*.css"],
     languageOptions: {
         parser: attachmentCssParser,
     },
