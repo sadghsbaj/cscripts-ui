@@ -45,7 +45,6 @@ Architectural Notes:
             color: var(--_fg);
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-soft);
-            user-select: none;
             transition:
                 color 200ms var(--cs-ease-quad-out),
                 scale 200ms var(--cs-ease-expo-out);

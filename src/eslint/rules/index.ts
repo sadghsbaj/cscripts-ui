@@ -6,6 +6,7 @@ import { buttonConfig } from "./button.ts";
 import { closeButtonConfig } from "./close-button.ts";
 import { componentDocsConfig } from "./component-docs.ts";
 import { componentLayersConfig } from "./component-layers.ts";
+import { scrollAreaConfig } from "./scroll-area.ts";
 import { toggleButtonGroupConfig } from "./toggle-button-group.ts";
 import { toggleButtonConfig } from "./toggle-button.ts";
 import { unicodeDotsConfig } from "./unicode-dots.ts";
@@ -16,6 +17,11 @@ export { buttonGroupConfig, buttonGroupNoSolidRule, buttonGroupUniformButtonsRul
 export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
 export { componentCommentRule, componentDocsConfig } from "./component-docs.ts";
 export { componentLayersConfig, componentLayersRule } from "./component-layers.ts";
+export {
+    scrollAreaConfig,
+    scrollAreaScrollFadeOnContentRule,
+    scrollAreaStructureRule,
+} from "./scroll-area.ts";
 export {
     toggleButtonGroupConfig,
     toggleButtonGroupNoRegularButtonRule,
@@ -32,6 +38,7 @@ export const customRulesConfigs: Linter.Config[] = [
     closeButtonConfig,
     toggleButtonConfig,
     toggleButtonGroupConfig,
+    scrollAreaConfig,
     componentDocsConfig,
     componentLayersConfig,
     attachmentLayersConfig,

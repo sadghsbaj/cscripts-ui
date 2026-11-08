@@ -230,6 +230,14 @@ textarea,
     opacity: 1; /* 4 */
 }
 
+button,
+[role="button"],
+input:where([type="button"], [type="reset"], [type="submit"]),
+summary {
+    user-select: none;
+    touch-action: manipulation;
+}
+
 /*
   Restore default font weight.
 */

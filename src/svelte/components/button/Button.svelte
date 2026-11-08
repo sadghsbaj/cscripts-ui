@@ -47,7 +47,6 @@ Architectural Notes:
             white-space: nowrap;
             border-radius: var(--_pill-radius);
             corner-shape: var(--cs-squircle-smooth);
-            user-select: none;
             transition:
                 color 200ms var(--cs-ease-quad-out),
                 scale 200ms var(--cs-ease-expo-out);

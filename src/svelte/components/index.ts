@@ -5,3 +5,4 @@ export * from "./toggle-button-group/index.ts";
 export * from "./close-button/index.ts";
 export * from "./hit-area/index.ts";
 export * from "./background-pattern/index.ts";
+export * from "./scroll-area/index.ts";

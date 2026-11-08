@@ -1,7 +1,16 @@
 <script lang="ts">
     import type { Component } from "svelte";
     import { PanelLeftClose } from "@lucide/svelte";
-    import { Button, ButtonIcon, HitArea, ToggleButton, ToggleButtonLabel } from "cs/svelte";
+    import {
+        Button,
+        ButtonIcon,
+        HitArea,
+        ScrollArea,
+        ScrollAreaContent,
+        scrollFade,
+        ToggleButton,
+        ToggleButtonLabel,
+    } from "cs/svelte";
 
     import ToggleButtonGroup from "../../src/svelte/components/toggle-button-group/ToggleButtonGroup.svelte";
 
@@ -73,16 +82,21 @@
         </ToggleButtonGroup>
     </aside>
 
-    <main class="size-full p-8 lg:p-16 flex flex-col gap-8 overflow-y-auto scrollbar-lg">
-        <div class="flex gap-1 items-center">
-            <h1 class="title-4xl">{previews.find((p) => p.preview === activePreview)?.label}</h1>
-        </div>
+    <ScrollArea direction="vertical" class="size-full">
+        <ScrollAreaContent
+            class="flex flex-col gap-8 p-8 lg:p-16"
+            {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
+        >
+            <div class="flex gap-1 items-center">
+                <h1 class="title-4xl">{previews.find((p) => p.preview === activePreview)?.label}</h1>
+            </div>
 
-        {#if activePreview}
-            {let PreviewComponent = $derived(activePreview)}
-            <PreviewComponent />
-        {/if}
-    </main>
+            {#if activePreview}
+                {let PreviewComponent = $derived(activePreview)}
+                <PreviewComponent />
+            {/if}
+        </ScrollAreaContent>
+    </ScrollArea>
 </div>
 
 {#snippet sidebarOption(preview: (typeof previews)[number])}

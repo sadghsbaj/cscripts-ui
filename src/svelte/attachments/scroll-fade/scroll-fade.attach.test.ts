@@ -92,7 +92,6 @@ describe("scrollFade Svelte 5 Element Attachment", () => {
             expect(div.dataset.scrollFadeSize).toBe("md");
             expect(div.dataset.scrollFadeDirection).toBe("vertical");
             expect(div.dataset.scrollFadeEdges).toBe("both");
-            expect(div.dataset.scrollFadeOvershoot).toBe("true");
 
             cleanup?.();
         });
@@ -391,37 +390,6 @@ describe("scrollFade Svelte 5 Element Attachment", () => {
         });
     });
 
-    describe("Overshoot Claw Indicators", () => {
-        test("should mount overshoot viewport and edge elements when overshoot is true", () => {
-            const div = document.createElement("div");
-            container.append(div);
-
-            const attach = scrollFade({ size: "md", direction: "vertical", edges: "both", overshoot: true });
-            const cleanup = attach(div);
-
-            expect(div.dataset.scrollFadeOvershoot).toBe("true");
-            const overlay = div.querySelector(".cs-scroll-overshoot-viewport");
-            expect(overlay).not.toBeNull();
-            expect(overlay?.querySelectorAll(".cs-scroll-overshoot-edge").length).toBe(2);
-
-            cleanup?.();
-            expect(div.querySelector(".cs-scroll-overshoot-viewport")).toBeNull();
-        });
-
-        test("should not mount overshoot overlay when overshoot is false", () => {
-            const div = document.createElement("div");
-            container.append(div);
-
-            const attach = scrollFade({ size: "md", direction: "vertical", edges: "both", overshoot: false });
-            const cleanup = attach(div);
-
-            expect(div.dataset.scrollFadeOvershoot).toBeUndefined();
-            expect(div.querySelector(".cs-scroll-overshoot-viewport")).toBeNull();
-
-            cleanup?.();
-        });
-    });
-
     describe("Teardown & Cleanup Lifecycle", () => {
         test("should remove class, data attributes, and CSS custom properties upon cleanup", () => {
             const div = document.createElement("div");
@@ -443,7 +411,6 @@ describe("scrollFade Svelte 5 Element Attachment", () => {
             expect(div.dataset.scrollFadeEdges).toBeUndefined();
             expect(div.dataset.scrollFadeCanScrollStart).toBeUndefined();
             expect(div.dataset.scrollFadeCanScrollEnd).toBeUndefined();
-            expect(div.dataset.scrollFadeOvershoot).toBeUndefined();
             expect(div.style.getPropertyValue("--cs-scroll-fade-top")).toBe("");
             expect(div.style.getPropertyValue("--cs-scroll-fade-bottom")).toBe("");
             expect(div.style.getPropertyValue("--cs-scroll-fade-left")).toBe("");
