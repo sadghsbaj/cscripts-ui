@@ -19,6 +19,7 @@ export { componentCommentRule, componentDocsConfig } from "./component-docs.ts";
 export { componentLayersConfig, componentLayersRule } from "./component-layers.ts";
 export {
     scrollAreaConfig,
+    scrollAreaNoOuterContentClassesRule,
     scrollAreaScrollFadeOnContentRule,
     scrollAreaStructureRule,
 } from "./scroll-area.ts";
