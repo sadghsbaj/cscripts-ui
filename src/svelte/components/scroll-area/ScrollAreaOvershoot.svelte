@@ -24,13 +24,25 @@ GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered ins
 <style>
     @layer components.composite {
         .cs-scroll-area-overshoot {
+            --_overshoot-tint: light-dark(
+                color-mix(in oklch, var(--cs-color-base-800) 78%, var(--cs-color-accent-600)),
+                color-mix(in oklch, var(--cs-color-base-100) 82%, var(--cs-color-accent-400))
+            );
             --_overshoot-core-color: light-dark(
-                color-mix(in oklch, var(--cs-color-base-900) 24%, transparent),
-                color-mix(in oklch, var(--cs-color-base-100) 38%, transparent)
+                color-mix(in oklch, var(--_overshoot-tint) 24%, transparent),
+                color-mix(in oklch, var(--_overshoot-tint) 22%, transparent)
+            );
+            --_overshoot-core-mid-color: light-dark(
+                color-mix(in oklch, var(--_overshoot-tint) 16%, transparent),
+                color-mix(in oklch, var(--_overshoot-tint) 14%, transparent)
             );
             --_overshoot-glow-color: light-dark(
-                color-mix(in oklch, var(--cs-color-base-900) 12%, transparent),
-                color-mix(in oklch, var(--cs-color-base-100) 20%, transparent)
+                color-mix(in oklch, var(--_overshoot-tint) 14%, transparent),
+                color-mix(in oklch, var(--_overshoot-tint) 10%, transparent)
+            );
+            --_overshoot-glow-mid-color: light-dark(
+                color-mix(in oklch, var(--_overshoot-tint) 8%, transparent),
+                color-mix(in oklch, var(--_overshoot-tint) 6%, transparent)
             );
 
             position: absolute;
@@ -49,9 +61,15 @@ GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered ins
                 radial-gradient(
                     var(--_core-shape) at var(--_origin),
                     var(--_overshoot-core-color) 0%,
+                    var(--_overshoot-core-mid-color) 48%,
                     transparent 100%
                 ),
-                radial-gradient(var(--_glow-shape) at var(--_origin), var(--_overshoot-glow-color) 0%, transparent 100%);
+                radial-gradient(
+                    var(--_glow-shape) at var(--_origin),
+                    var(--_overshoot-glow-color) 0%,
+                    var(--_overshoot-glow-mid-color) 58%,
+                    transparent 100%
+                );
             opacity: 0;
             transform-origin: var(--_origin);
             user-select: none;
@@ -65,9 +83,9 @@ GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered ins
             }
 
             &:is([data-edge="top"], [data-edge="bottom"]) {
-                --_core-shape: ellipse 52% 42%;
-                --_glow-shape: ellipse 75% 100%;
-                height: 28px;
+                --_core-shape: ellipse 44% 62%;
+                --_glow-shape: ellipse 49% 100%;
+                height: 32px;
                 scale: 1 0.55;
 
                 &[data-active] {
@@ -76,9 +94,9 @@ GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered ins
             }
 
             &:is([data-edge="left"], [data-edge="right"]) {
-                --_core-shape: ellipse 42% 52%;
-                --_glow-shape: ellipse 100% 75%;
-                width: 28px;
+                --_core-shape: ellipse 62% 44%;
+                --_glow-shape: ellipse 100% 49%;
+                width: 32px;
                 scale: 0.55 1;
 
                 &[data-active] {
