@@ -112,11 +112,12 @@ Architectural Notes:
             }
 
             /* =========================================================
-             * SCROLLBAR VISIBILITY MODES
+             * SCROLLBAR VISIBILITY MODES (Stage 1: Edge-Glide Enter)
              * ========================================================= */
             &[data-scrollbar="always"] > .cs-scroll-area-track,
             &[data-scrollbar="hover"]:is(:hover, [data-scrolling], [data-dragging]) > .cs-scroll-area-track,
             &[data-scrollbar="scroll"]:is([data-scrolling], [data-dragging]) > .cs-scroll-area-track {
+                translate: 0 0;
                 opacity: 1;
                 pointer-events: auto;
             }
@@ -129,15 +130,22 @@ Architectural Notes:
             position: absolute;
             z-index: 30;
             border-radius: var(--cs-radius-full);
+            translate: var(--_track-hide-translate);
             opacity: 0;
             pointer-events: none;
             user-select: none;
             touch-action: none;
             transition:
-                opacity 200ms var(--cs-ease-quad-out),
-                background-color 160ms var(--cs-ease-quad-out);
+                opacity 220ms var(--cs-ease-cubic-out),
+                translate 240ms var(--cs-ease-cubic-out),
+                background-color 200ms var(--cs-ease-quad-out),
+                box-shadow 200ms var(--cs-ease-quad-out);
 
             &[data-orientation="vertical"] {
+                --_track-hide-translate: 5px 0;
+                --_track-hover-translate: -1.5px 0;
+                --_thumb-drag-scale: 1.12 1;
+
                 inset: 3px 2px var(--_track-end-inset, 3px) auto;
                 width: var(--_track-size, 8px);
 
@@ -151,6 +159,10 @@ Architectural Notes:
             }
 
             &[data-orientation="horizontal"] {
+                --_track-hide-translate: 0 5px;
+                --_track-hover-translate: 0 -1.5px;
+                --_thumb-drag-scale: 1 1.12;
+
                 inset: auto var(--_track-end-inset, 3px) 2px 3px;
                 height: var(--_track-size, 8px);
 
@@ -163,25 +175,42 @@ Architectural Notes:
                 }
             }
 
+            /* Stage 2: Inward Lift + Snappy Thumb Expansion */
             &:hover,
             &[data-dragging] {
+                translate: var(--_track-hover-translate);
                 opacity: 1;
                 pointer-events: auto;
                 background-color: light-dark(
-                    color-mix(in oklch, var(--cs-color-base-900) 5%, transparent),
-                    color-mix(in oklch, var(--cs-color-base-100) 6%, transparent)
+                    color-mix(in oklch, var(--cs-color-base-900) 5.5%, transparent),
+                    color-mix(in oklch, var(--cs-color-base-100) 7%, transparent)
                 );
+                box-shadow: inset 0 0 0 1px
+                    light-dark(
+                        color-mix(in oklch, var(--cs-color-base-900) 4%, transparent),
+                        color-mix(in oklch, var(--cs-color-base-100) 5%, transparent)
+                    );
+                transition:
+                    opacity 150ms var(--cs-ease-expo-out),
+                    translate 180ms var(--cs-ease-expo-out),
+                    background-color 140ms var(--cs-ease-quad-out),
+                    box-shadow 140ms var(--cs-ease-quad-out);
 
                 .cs-scroll-area-thumb {
                     scale: 1;
                     background-color: var(--cs-scrollbar-thumb-hover);
+                    transition:
+                        scale 150ms var(--cs-ease-expo-out),
+                        background-color 140ms var(--cs-ease-quad-out);
                 }
             }
 
+            /* Stage 3: Tactile Grip on Active Drag */
             &[data-dragging] .cs-scroll-area-thumb {
+                scale: var(--_thumb-drag-scale);
                 background-color: light-dark(
-                    color-mix(in oklch, var(--cs-color-base-900) 48%, transparent),
-                    color-mix(in oklch, var(--cs-color-base-100) 52%, transparent)
+                    color-mix(in oklch, var(--cs-color-base-900) 52%, transparent),
+                    color-mix(in oklch, var(--cs-color-base-100) 58%, transparent)
                 );
             }
         }
@@ -190,8 +219,8 @@ Architectural Notes:
             border-radius: var(--cs-radius-full);
             background-color: var(--cs-scrollbar-thumb);
             transition:
-                scale 240ms var(--cs-ease-expo-out),
-                background-color 160ms var(--cs-ease-quad-out);
+                scale 260ms var(--cs-ease-cubic-out),
+                background-color 200ms var(--cs-ease-quad-out);
         }
     }
 </style>
