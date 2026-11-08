@@ -18,7 +18,8 @@ Components in `cs` deliberately **require explicit configuration** via required 
 The foundation cascade layer (`src/css/foundation/`) globally manages common interactive behaviors. Component stylesheets should never re-implement these properties:
 
 ### A. Cursor Styles
-- Interactive elements (`button`, `[role="button"]`, clickable targets) automatically receive `cursor: pointer`.
+- Interactive elements (`button`, `[role="button"]`) deliberately retain the native `default` cursor following OS design specifications (Apple & Windows HIG) rather than forcing `cursor: pointer`.
+- Only actual navigation links (`:any-link`) receive `cursor: pointer`.
 - Pseudo-elements (`::before`) and hit-areas inherit the host's cursor via `cursor: inherit`.
 
 ### B. Focus Rings & Outlines (`focus.css`)

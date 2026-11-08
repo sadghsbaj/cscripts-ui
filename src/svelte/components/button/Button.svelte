@@ -52,6 +52,10 @@ Architectural Notes:
                 color 200ms var(--cs-ease-quad-out),
                 scale 200ms var(--cs-ease-expo-out);
 
+            &:any-link {
+                cursor: pointer;
+            }
+
             /* =========================================================
              * ELASTIC SURFACE (::before)
              * ---------------------------------------------------------
