@@ -3,6 +3,11 @@
         mask-repeat: no-repeat;
         mask-size: 100% 100%;
 
+        &[data-scroll-fade-overshoot="true"] {
+            position: relative;
+            overscroll-behavior: contain;
+        }
+
         /* =========================================================
         * SIZES
         * ========================================================= */
@@ -56,6 +61,109 @@
                     transparent 100%
                 );
             mask-composite: intersect;
+        }
+    }
+
+    /* =========================================================
+     * GTK4-STYLE OVERSHOOT CLAW INDICATOR
+     * ========================================================= */
+    .cs-scroll-overshoot-viewport {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        user-select: none;
+        overflow: hidden;
+        border-radius: inherit;
+        z-index: 20;
+
+        /* Theme-aware GTK4 overshoot colors */
+        --_overshoot-pill-color: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 45%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 80%, transparent)
+        );
+        --_overshoot-glow-color: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 14%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 28%, transparent)
+        );
+    }
+
+    .cs-scroll-overshoot-edge {
+        position: absolute;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+        user-select: none;
+        opacity: var(--_overshoot-val, 0);
+        transition: opacity 220ms var(--cs-ease-quad-out);
+
+        &::after {
+            content: "";
+            border-radius: 9999px;
+            background-color: var(--_overshoot-pill-color);
+            box-shadow: 0 0 6px var(--_overshoot-glow-color);
+            transition: transform 220ms var(--cs-ease-expo-out);
+        }
+
+        /* Top & Bottom: Horizontal claws */
+        &[data-edge="top"],
+        &[data-edge="bottom"] {
+            left: 0;
+            right: 0;
+            height: 24px;
+
+            &::after {
+                height: 3px;
+                width: 84px;
+                transform: scaleX(calc(0.6 + var(--_overshoot-val, 0) * 0.6));
+            }
+        }
+
+        &[data-edge="top"] {
+            top: 0;
+            align-items: flex-start;
+            --_overshoot-val: var(--cs-scroll-overshoot-top, 0);
+            background: radial-gradient(ellipse 60% 100% at 50% 0%, var(--_overshoot-glow-color) 0%, transparent 100%);
+            &::after { margin-top: 1px; }
+        }
+
+        &[data-edge="bottom"] {
+            bottom: 0;
+            align-items: flex-end;
+            --_overshoot-val: var(--cs-scroll-overshoot-bottom, 0);
+            background: radial-gradient(ellipse 60% 100% at 50% 100%, var(--_overshoot-glow-color) 0%, transparent 100%);
+            &::after { margin-bottom: 1px; }
+        }
+
+        /* Left & Right: Vertical claws */
+        &[data-edge="left"],
+        &[data-edge="right"] {
+            top: 0;
+            bottom: 0;
+            width: 24px;
+            flex-direction: column;
+
+            &::after {
+                width: 3px;
+                height: 84px;
+                transform: scaleY(calc(0.6 + var(--_overshoot-val, 0) * 0.6));
+            }
+        }
+
+        &[data-edge="left"] {
+            left: 0;
+            justify-content: flex-start;
+            --_overshoot-val: var(--cs-scroll-overshoot-left, 0);
+            background: radial-gradient(ellipse 100% 60% at 0% 50%, var(--_overshoot-glow-color) 0%, transparent 100%);
+            &::after { margin-left: 1px; }
+        }
+
+        &[data-edge="right"] {
+            right: 0;
+            justify-content: flex-end;
+            --_overshoot-val: var(--cs-scroll-overshoot-right, 0);
+            background: radial-gradient(ellipse 100% 60% at 100% 50%, var(--_overshoot-glow-color) 0%, transparent 100%);
+            &::after { margin-right: 1px; }
         }
     }
 }

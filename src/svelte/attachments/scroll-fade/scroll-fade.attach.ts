@@ -74,6 +74,12 @@ export interface ScrollFadeOptions {
     smooth?: boolean;
 
     /**
+     * Whether to show a subtle GTK-style overscroll claw indicator when scrolling past boundaries.
+     * @default true
+     */
+    overshoot?: boolean;
+
+    /**
      * Callback fired whenever the scroll fade states update.
      */
     onFadeChange?: (detail: ScrollFadeDetail) => void;
@@ -83,6 +89,7 @@ const DEFAULT_OPTIONS: Required<Omit<ScrollFadeOptions, "onFadeChange" | "size" 
     enabled: true,
     threshold: 1,
     smooth: true,
+    overshoot: true,
 };
 
 /**
@@ -121,6 +128,52 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
         node.dataset.scrollFadeSize = opts.size;
         node.dataset.scrollFadeDirection = opts.direction;
         node.dataset.scrollFadeEdges = opts.edges;
+
+        let overlay: HTMLDivElement | null = null;
+        let decayTimeoutId: ReturnType<typeof setTimeout> | null = null;
+        let decayAnimationId: number | null = null;
+        let overshootTop = 0;
+        let overshootBottom = 0;
+        let overshootLeft = 0;
+        let overshootRight = 0;
+
+        if (opts.overshoot) {
+            node.dataset.scrollFadeOvershoot = "true";
+
+            overlay = document.createElement("div");
+            overlay.className = "cs-scroll-overshoot-viewport";
+            overlay.setAttribute("aria-hidden", "true");
+
+            const isVertical = opts.direction === "vertical" || opts.direction === "both";
+            const isHorizontal = opts.direction === "horizontal" || opts.direction === "both";
+
+            if (isVertical && (opts.edges === "both" || opts.edges === "start")) {
+                const edge = document.createElement("div");
+                edge.className = "cs-scroll-overshoot-edge";
+                edge.dataset.edge = "top";
+                overlay.append(edge);
+            }
+            if (isVertical && (opts.edges === "both" || opts.edges === "end")) {
+                const edge = document.createElement("div");
+                edge.className = "cs-scroll-overshoot-edge";
+                edge.dataset.edge = "bottom";
+                overlay.append(edge);
+            }
+            if (isHorizontal && (opts.edges === "both" || opts.edges === "start")) {
+                const edge = document.createElement("div");
+                edge.className = "cs-scroll-overshoot-edge";
+                edge.dataset.edge = "left";
+                overlay.append(edge);
+            }
+            if (isHorizontal && (opts.edges === "both" || opts.edges === "end")) {
+                const edge = document.createElement("div");
+                edge.className = "cs-scroll-overshoot-edge";
+                edge.dataset.edge = "right";
+                overlay.append(edge);
+            }
+
+            node.append(overlay);
+        }
 
         let fadeSize = 0;
 
@@ -236,6 +289,37 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
                 lastCanScrollEnd = canScrollEnd;
             }
 
+            // Sync overshoot indicator position and reset overshoot when scrolling back into content
+            if (overlay) {
+                overlay.style.transform = `translate(${node.scrollLeft}px, ${node.scrollTop}px)`;
+
+                if (isVertical) {
+                    const rawScrollTop = node.scrollTop;
+                    const maxScrollTop = Math.max(0, node.scrollHeight - node.clientHeight);
+                    if (rawScrollTop > opts.threshold && overshootTop > 0) {
+                        overshootTop = 0;
+                        node.style.setProperty("--cs-scroll-overshoot-top", "0");
+                    }
+                    if (rawScrollTop < maxScrollTop - opts.threshold && overshootBottom > 0) {
+                        overshootBottom = 0;
+                        node.style.setProperty("--cs-scroll-overshoot-bottom", "0");
+                    }
+                }
+
+                if (isHorizontal) {
+                    const rawScrollLeft = Math.abs(node.scrollLeft);
+                    const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+                    if (rawScrollLeft > opts.threshold && overshootLeft > 0) {
+                        overshootLeft = 0;
+                        node.style.setProperty("--cs-scroll-overshoot-left", "0");
+                    }
+                    if (rawScrollLeft < maxScrollLeft - opts.threshold && overshootRight > 0) {
+                        overshootRight = 0;
+                        node.style.setProperty("--cs-scroll-overshoot-right", "0");
+                    }
+                }
+            }
+
             // Optional callback notification
             if (opts.onFadeChange) {
                 opts.onFadeChange({
@@ -267,6 +351,119 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
         // Scroll listener (passive for native 60/120fps scrolling performance)
         node.addEventListener("scroll", scheduleUpdate, { passive: true });
 
+        // GTK4-style overscroll decay physics and wheel listener
+        let lastDecayTime = 0;
+
+        const startDecay = (): void => {
+            if (decayAnimationId !== null) return;
+            lastDecayTime = performance.now();
+
+            const tick = (now: number): void => {
+                const delta = Math.min(50, now - lastDecayTime);
+                lastDecayTime = now;
+
+                // Smooth exponential decay (~0.88 per 16ms frame)
+                const rate = Math.pow(0.88, delta / 16.67);
+
+                overshootTop *= rate;
+                overshootBottom *= rate;
+                overshootLeft *= rate;
+                overshootRight *= rate;
+
+                if (overshootTop < 0.015) overshootTop = 0;
+                if (overshootBottom < 0.015) overshootBottom = 0;
+                if (overshootLeft < 0.015) overshootLeft = 0;
+                if (overshootRight < 0.015) overshootRight = 0;
+
+                node.style.setProperty("--cs-scroll-overshoot-top", overshootTop.toFixed(3));
+                node.style.setProperty("--cs-scroll-overshoot-bottom", overshootBottom.toFixed(3));
+                node.style.setProperty("--cs-scroll-overshoot-left", overshootLeft.toFixed(3));
+                node.style.setProperty("--cs-scroll-overshoot-right", overshootRight.toFixed(3));
+
+                decayAnimationId =
+                    overshootTop > 0 || overshootBottom > 0 || overshootLeft > 0 || overshootRight > 0
+                        ? requestAnimationFrame(tick)
+                        : null;
+            };
+
+            decayAnimationId = requestAnimationFrame(tick);
+        };
+
+        const handleWheel = (event: WheelEvent): void => {
+            const isVertical = opts.direction === "vertical" || opts.direction === "both";
+            const isHorizontal = opts.direction === "horizontal" || opts.direction === "both";
+
+            const boundaryThreshold = Math.max(2, opts.threshold);
+            let triggered = false;
+
+            // 1. Vertical boundary detection
+            if (isVertical && opts.direction !== "horizontal") {
+                const rawScrollTop = node.scrollTop;
+                const maxScrollTop = Math.max(0, node.scrollHeight - node.clientHeight);
+
+                if (maxScrollTop > boundaryThreshold) {
+                    if ((opts.edges === "both" || opts.edges === "start") && rawScrollTop <= boundaryThreshold && event.deltaY < 0) {
+                        const impulse = Math.min(1, Math.abs(event.deltaY) / 75);
+                        overshootTop = Math.min(1, Math.max(overshootTop, impulse));
+                        node.style.setProperty("--cs-scroll-overshoot-top", overshootTop.toFixed(3));
+                        triggered = true;
+                    } else if ((opts.edges === "both" || opts.edges === "end") && rawScrollTop >= maxScrollTop - boundaryThreshold && event.deltaY > 0) {
+                        const impulse = Math.min(1, Math.abs(event.deltaY) / 75);
+                        overshootBottom = Math.min(1, Math.max(overshootBottom, impulse));
+                        node.style.setProperty("--cs-scroll-overshoot-bottom", overshootBottom.toFixed(3));
+                        triggered = true;
+                    }
+                }
+            }
+
+            // 2. Horizontal boundary detection (handles trackpad deltaX, Shift+Wheel, or vertical wheel on horizontal containers)
+            if (isHorizontal) {
+                const deltaH =
+                    event.deltaX !== 0
+                        ? event.deltaX
+                        : event.shiftKey || opts.direction === "horizontal"
+                          ? event.deltaY
+                          : 0;
+
+                const rawScrollLeft = Math.abs(node.scrollLeft);
+                const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+
+                if (maxScrollLeft > boundaryThreshold && deltaH !== 0) {
+                    if ((opts.edges === "both" || opts.edges === "start") && rawScrollLeft <= boundaryThreshold && deltaH < 0) {
+                        const impulse = Math.min(1, Math.abs(deltaH) / 75);
+                        overshootLeft = Math.min(1, Math.max(overshootLeft, impulse));
+                        node.style.setProperty("--cs-scroll-overshoot-left", overshootLeft.toFixed(3));
+                        triggered = true;
+                    } else if ((opts.edges === "both" || opts.edges === "end") && rawScrollLeft >= maxScrollLeft - boundaryThreshold && deltaH > 0) {
+                        const impulse = Math.min(1, Math.abs(deltaH) / 75);
+                        overshootRight = Math.min(1, Math.max(overshootRight, impulse));
+                        node.style.setProperty("--cs-scroll-overshoot-right", overshootRight.toFixed(3));
+                        triggered = true;
+                    }
+                }
+            }
+
+            if (triggered) {
+                // Cancel active decay animation while user is actively pushing against the boundary
+                if (decayAnimationId !== null) {
+                    cancelAnimationFrame(decayAnimationId);
+                    decayAnimationId = null;
+                }
+                // Reset hold timer before decay begins
+                if (decayTimeoutId !== null) {
+                    clearTimeout(decayTimeoutId);
+                }
+                decayTimeoutId = setTimeout(() => {
+                    decayTimeoutId = null;
+                    startDecay();
+                }, 100);
+            }
+        };
+
+        if (opts.overshoot) {
+            node.addEventListener("wheel", handleWheel, { passive: true });
+        }
+
         // ResizeObserver to detect dimension changes of the container and its content
         let resizeObserver: ResizeObserver | null = null;
         if (typeof ResizeObserver !== "undefined") {
@@ -276,10 +473,10 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
             });
             resizeObserver.observe(node);
 
-            // Also observe direct children to catch content size changes (e.g. accordions, items)
+            // Also observe direct children (excluding internal overshoot overlay)
             for (let i = 0; i < node.children.length; i++) {
                 const child = node.children[i];
-                if (child instanceof HTMLElement) {
+                if (child instanceof HTMLElement && child !== overlay) {
                     resizeObserver.observe(child);
                 }
             }
@@ -293,7 +490,7 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
                 if (resizeObserver) {
                     for (let i = 0; i < node.children.length; i++) {
                         const child = node.children[i];
-                        if (child instanceof HTMLElement) {
+                        if (child instanceof HTMLElement && child !== overlay) {
                             resizeObserver.observe(child);
                         }
                     }
@@ -318,7 +515,26 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
                 animationFrameId = null;
             }
 
+            if (decayTimeoutId !== null) {
+                clearTimeout(decayTimeoutId);
+                decayTimeoutId = null;
+            }
+
+            if (decayAnimationId !== null) {
+                cancelAnimationFrame(decayAnimationId);
+                decayAnimationId = null;
+            }
+
             node.removeEventListener("scroll", scheduleUpdate);
+
+            if (opts.overshoot) {
+                node.removeEventListener("wheel", handleWheel);
+            }
+
+            if (overlay) {
+                overlay.remove();
+                overlay = null;
+            }
 
             if (resizeObserver) {
                 resizeObserver.disconnect();
@@ -337,10 +553,15 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
             delete node.dataset.scrollFadeEdges;
             delete node.dataset.scrollFadeCanScrollStart;
             delete node.dataset.scrollFadeCanScrollEnd;
+            delete node.dataset.scrollFadeOvershoot;
             node.style.removeProperty("--cs-scroll-fade-top");
             node.style.removeProperty("--cs-scroll-fade-bottom");
             node.style.removeProperty("--cs-scroll-fade-left");
             node.style.removeProperty("--cs-scroll-fade-right");
+            node.style.removeProperty("--cs-scroll-overshoot-top");
+            node.style.removeProperty("--cs-scroll-overshoot-bottom");
+            node.style.removeProperty("--cs-scroll-overshoot-left");
+            node.style.removeProperty("--cs-scroll-overshoot-right");
         };
     };
 }
