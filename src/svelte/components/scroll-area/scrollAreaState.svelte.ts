@@ -250,8 +250,7 @@ export class ScrollAreaManager {
         const el = this.#contentEl;
 
         // Browsers on Linux/Windows emit vertical deltaY with shiftKey=true during Shift+Wheel horizontal scrolling.
-        // Also allow standard vertical wheel events to trigger horizontal overshoot on horizontal-only containers.
-        const useYAsX = event.deltaX === 0 && (event.shiftKey || this.direction === "horizontal");
+        const useYAsX = event.deltaX === 0 && event.shiftKey;
         const deltaX = useYAsX ? event.deltaY : event.deltaX;
         const deltaY = useYAsX ? 0 : event.deltaY;
 
