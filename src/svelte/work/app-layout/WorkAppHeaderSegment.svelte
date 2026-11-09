@@ -46,7 +46,7 @@ Architectural Notes:
             height: 100%;
 
             &[data-island] {
-                padding-inline: 16px;
+                padding-inline: 14px;
                 background-color: var(--cs-color-elevation-1);
                 border-radius: var(--cs-radius-full);
                 corner-shape: var(--cs-squircle-smooth);
