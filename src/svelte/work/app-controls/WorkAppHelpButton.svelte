@@ -39,7 +39,6 @@ Architectural Notes:
             --_height: 48px;
             width: 48px;
             height: 48px;
-            corner-shape: var(--cs-suqircle-smooth);
         }
     }
 </style>
