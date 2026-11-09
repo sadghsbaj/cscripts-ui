@@ -7,11 +7,13 @@ export { default as WorkAppMain } from "./WorkAppMain.svelte";
 export { default as WorkAppSignature } from "./WorkAppSignature.svelte";
 export { default as WorkAppBrand } from "./WorkAppBrand.svelte";
 
-export const WORK_APP_HEADER_SEGMENT_ALIGNMENTS = ["start", "center", "end"] as const;
+export const WORK_APP_HEADER_SEGMENT_ALIGNMENTS = ["before", "start", "center", "end", "after"] as const;
 export type WorkAppHeaderSegmentAlignment = (typeof WORK_APP_HEADER_SEGMENT_ALIGNMENTS)[number];
 
 export interface WorkAppHeaderSegmentProps extends HTMLAttributes<HTMLDivElement> {
     align: WorkAppHeaderSegmentAlignment;
+    renderIsland?: boolean;
+    /** @deprecated Use `renderIsland` instead. */
     island?: boolean;
 }
 

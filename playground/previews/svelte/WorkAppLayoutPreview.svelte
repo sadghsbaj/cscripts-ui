@@ -23,7 +23,7 @@
     <WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen" persist={false}>
         <WorkAppFrame>
             <WorkAppHeader>
-                <WorkAppHeaderSegment align="start" island>
+                <WorkAppHeaderSegment align="before" renderIsland>
                     <WorkAppStatusDot status="success" onclick={() => alert("Dateisystem-Verbindung ausgewählt")} />
                 </WorkAppHeaderSegment>
 

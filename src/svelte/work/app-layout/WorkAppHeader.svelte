@@ -43,6 +43,10 @@ Architectural Notes:
             height: 48px;
         }
 
+        :global(.cs-work-app-header-segment[data-alignment="before"]) {
+            order: 5;
+        }
+
         .cs-work-app-tool-identity {
             display: inline-flex;
             flex-shrink: 0;
@@ -81,6 +85,10 @@ Architectural Notes:
 
         :global(.cs-work-app-brand) {
             order: 50;
+        }
+
+        :global(.cs-work-app-header-segment[data-alignment="after"]) {
+            order: 60;
         }
 
         /* Backward compatibility for un-segmented child nodes */
