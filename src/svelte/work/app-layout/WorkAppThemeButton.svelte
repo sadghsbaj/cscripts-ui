@@ -18,13 +18,6 @@ Architectural Notes:
         onclick,
         ...rest
     }: WorkAppThemeButtonProps = $props();
-
-    function handleClick(event: MouseEvent & { currentTarget: EventTarget & HTMLElement }): void {
-        onclick?.(event);
-        if (!event.defaultPrevented) {
-            theme.cycle();
-        }
-    }
 </script>
 
 <Button
@@ -33,7 +26,12 @@ Architectural Notes:
     variant="elevated"
     iconOnly
     aria-label={ariaLabel}
-    onclick={handleClick}
+    onclick={(event) => {
+        onclick?.(event);
+        if (!event.defaultPrevented) {
+            theme.cycle();
+        }
+    }}
     class={["cs-work-app-theme-button", className]}
 >
     <ButtonIcon icon={theme.icon} />

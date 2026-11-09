@@ -11,7 +11,10 @@ export { default as WorkAppMain } from "./WorkAppMain.svelte";
 export { default as WorkAppSignature } from "./WorkAppSignature.svelte";
 export { default as WorkAppBrand } from "./WorkAppBrand.svelte";
 
-export type WorkAppThemeButtonProps = Omit<ButtonProps, "children" | "color" | "iconOnly" | "size" | "variant"> & {
+export type WorkAppThemeButtonProps = Omit<
+    ButtonProps,
+    "as" | "children" | "color" | "iconOnly" | "size" | "variant"
+> & {
     "aria-label"?: string;
 };
 
