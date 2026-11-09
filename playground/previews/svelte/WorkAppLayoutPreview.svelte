@@ -3,6 +3,7 @@
         WorkAppFrame,
         WorkAppHeader,
         WorkAppHeaderSegment,
+        WorkAppHelpButton,
         WorkAppIntro,
         WorkAppMain,
         WorkAppThemeButton,
@@ -22,6 +23,7 @@
         <WorkAppFrame>
             <WorkAppHeader>
                 <WorkAppHeaderSegment align="end">
+                    <WorkAppHelpButton onclick={() => alert("Handbuch / Hilfe geöffnet")} />
                     <WorkAppThemeButton />
                 </WorkAppHeaderSegment>
             </WorkAppHeader>

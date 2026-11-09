@@ -18,4 +18,4 @@ Before writing code, read the relevant domain guide(s) below:
 5. **Code Style & ESLint Rules (`./code-style.md`)**
    Read BEFORE outputting code to ensure compliance with custom lint rules (shortcuts, unicode-dots, etc.).
 6. **Internal Work Applications (`./work.md`)**
-   Read ONLY when building internal company / Pfleiderer work tools (`WorkAppIntro`, `WorkAppFrame`, `WorkAppHeader`, `WorkAppHeaderSegment`, `WorkAppThemeButton`, `WorkAppMain`, `WorkAppSignature`, `WorkLocation`, and standalone single-file build defaults).
+   Read ONLY when building internal company / Pfleiderer work tools (`WorkAppIntro`, `WorkAppFrame`, `WorkAppHeader`, `WorkAppHeaderSegment`, `WorkAppThemeButton`, `WorkAppHelpButton`, `WorkAppMain`, `WorkAppSignature`, `WorkLocation`, and standalone single-file build defaults).
