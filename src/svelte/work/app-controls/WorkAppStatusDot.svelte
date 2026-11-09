@@ -5,7 +5,7 @@ filesystem, or system state directly as an interactive telemetry dot.
 
 Architectural Notes:
 - Element Structure: The button element itself is the 12px dot (no wrapping span or container).
-- Telemetry: 12px live LED dot with calm halo ping driven by `--cs-ease-cubic-out`.
+- Telemetry: 12px live LED dot with concentric dual-ring halo ping driven by `--cs-ease-cubic-out`.
 - Managed Accessibility: Automatically generates a strict `aria-label` from status and label state.
 - Standalone Primitiv: Place inside `<WorkAppHeaderSegment island>` or any custom container.
 -->
@@ -56,28 +56,52 @@ Architectural Notes:
                 --_dot-color: var(--cs-color-base-400);
             }
 
+            &[data-pulse]::before,
             &[data-pulse]::after {
                 content: "";
                 position: absolute;
                 inset: 0;
                 background-color: inherit;
                 border-radius: inherit;
-                opacity: 0.75;
-                animation: cs-status-ping 2.2s var(--cs-ease-cubic-out) infinite;
                 pointer-events: none;
+            }
+
+            /* Inner pulse ring: closer to core dot, softer */
+            &[data-pulse]::after {
+                opacity: 0.6;
+                animation: cs-status-ping-inner 2.4s var(--cs-ease-cubic-out) infinite;
+            }
+
+            /* Outer pulse ring: further out, even more delicate and faint */
+            &[data-pulse]::before {
+                opacity: 0.3;
+                animation: cs-status-ping-outer 2.4s var(--cs-ease-cubic-out) infinite;
             }
         }
 
-        @keyframes cs-status-ping {
+        @keyframes cs-status-ping-inner {
             0% {
-                opacity: 0.75;
+                opacity: 0.6;
                 transform: scale(1);
             }
 
-            70%,
+            65%,
             100% {
                 opacity: 0;
-                transform: scale(2.2);
+                transform: scale(1.85);
+            }
+        }
+
+        @keyframes cs-status-ping-outer {
+            0% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            75%,
+            100% {
+                opacity: 0;
+                transform: scale(2.6);
             }
         }
     }
