@@ -1,18 +1,18 @@
 <!--
 @component
-Cockpit status indicator pill (`<WorkAppStatusPill />`) for displaying connection,
-filesystem, or system state in `<WorkAppHeader>`.
+Cockpit status indicator dot (`<WorkAppStatusDot />`) for displaying connection,
+filesystem, or system state directly as an interactive telemetry dot.
 
 Architectural Notes:
-- Geometry: Perfectly sized 48x48 squircle pill matching the theme and help buttons (`rounded-full squircle bg-elevation-1`).
-- Telemetry: 12px live LED status dot with calm halo ping driven by `--cs-ease-cubic-out`.
+- Element Structure: The button element itself is the 12px dot (no wrapping span or container).
+- Telemetry: 12px live LED dot with calm halo ping driven by `--cs-ease-cubic-out`.
 - Managed Accessibility: Automatically generates a strict `aria-label` from status and label state.
-- Interactivity: Operates as an indicator button with native default cursor and tactile spring feedback.
+- Standalone Primitiv: Place inside `<WorkAppHeaderSegment island>` or any custom container.
 -->
 <script lang="ts">
-    import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusPillProps } from "./index.ts";
+    import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusDotProps } from "./index.ts";
 
-    let { status = "success", label, pulse = true, class: className, ...rest }: WorkAppStatusPillProps = $props();
+    let { status = "success", label, pulse = true, class: className, ...rest }: WorkAppStatusDotProps = $props();
 
     const displayLabel = $derived(label ?? WORK_APP_STATUS_DEFAULTS[status]);
     const computedAriaLabel = $derived(`${displayLabel} (${status})`);
@@ -21,25 +21,24 @@ Architectural Notes:
 <button
     {...rest}
     type="button"
-    class={["cs-work-app-status-pill", className]}
+    class={["cs-work-app-status-dot", className]}
     data-status={status}
+    data-pulse={pulse ? "" : undefined}
     aria-label={computedAriaLabel}
->
-    <span class="cs-work-app-status-dot" data-pulse={pulse ? "" : undefined}></span>
-</button>
+></button>
 
 <style>
     @layer components.composite {
-        .cs-work-app-status-pill {
-            flex-shrink: 0;
-            align-items: center;
-            justify-content: center;
-            height: 48px;
-            padding-inline: 16px;
-            background-color: var(--cs-color-elevation-1);
+        .cs-work-app-status-dot {
+            position: relative;
+            display: block;
+            width: 12px;
+            height: 12px;
+            padding: 0;
+            background-color: var(--_dot-color);
+            border: none;
             border-radius: var(--cs-radius-full);
-            corner-shape: var(--cs-squircle-smooth);
-            box-shadow: var(--cs-shadow-elevation-1);
+            cursor: default;
 
             &[data-status="success"] {
                 --_dot-color: var(--cs-color-success-solid);
@@ -56,15 +55,6 @@ Architectural Notes:
             &[data-status="base"] {
                 --_dot-color: var(--cs-color-base-400);
             }
-        }
-
-        .cs-work-app-status-dot {
-            position: relative;
-            display: block;
-            width: 12px;
-            height: 12px;
-            background-color: var(--_dot-color, var(--cs-color-success-solid));
-            border-radius: var(--cs-radius-full);
 
             &[data-pulse]::after {
                 content: "";

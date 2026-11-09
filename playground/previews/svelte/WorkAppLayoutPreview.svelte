@@ -6,7 +6,7 @@
         WorkAppHelpButton,
         WorkAppIntro,
         WorkAppMain,
-        WorkAppStatusPill,
+        WorkAppStatusDot,
         WorkAppThemeButton,
     } from "cs/svelte/work";
 
@@ -23,12 +23,8 @@
     <WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen" persist={false}>
         <WorkAppFrame>
             <WorkAppHeader>
-                <WorkAppHeaderSegment align="start">
-                    <WorkAppStatusPill
-                        status="success"
-                        label="Verbunden"
-                        onclick={() => alert("Dateisystem-Verbindung ausgewählt")}
-                    />
+                <WorkAppHeaderSegment align="start" island>
+                    <WorkAppStatusDot status="success" onclick={() => alert("Dateisystem-Verbindung ausgewählt")} />
                 </WorkAppHeaderSegment>
 
                 <WorkAppHeaderSegment align="end">

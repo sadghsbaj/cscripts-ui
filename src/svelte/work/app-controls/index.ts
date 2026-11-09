@@ -7,8 +7,9 @@ export { default as WorkAppThemeButton } from "./WorkAppThemeButton.svelte";
 export { default as WorkAppHeaderThemeButton } from "./WorkAppThemeButton.svelte";
 export { default as WorkAppHelpButton } from "./WorkAppHelpButton.svelte";
 export { default as WorkAppDocsButton } from "./WorkAppHelpButton.svelte";
-export { default as WorkAppStatusPill } from "./WorkAppStatusPill.svelte";
-export { default as WorkAppStatusButton } from "./WorkAppStatusPill.svelte";
+export { default as WorkAppStatusDot } from "./WorkAppStatusDot.svelte";
+export { default as WorkAppStatusPill } from "./WorkAppStatusDot.svelte";
+export { default as WorkAppStatusButton } from "./WorkAppStatusDot.svelte";
 
 export const WORK_APP_STATUS_COLORS = ["success", "warning", "danger", "base"] as const;
 export type WorkAppStatusColor = (typeof WORK_APP_STATUS_COLORS)[number];
@@ -20,13 +21,14 @@ export const WORK_APP_STATUS_DEFAULTS: Record<WorkAppStatusColor, string> = {
     base: "Inaktiv",
 };
 
-export interface WorkAppStatusPillProps extends Omit<HTMLButtonAttributes, "color" | "children" | "aria-label"> {
+export interface WorkAppStatusDotProps extends Omit<HTMLButtonAttributes, "color" | "children" | "aria-label"> {
     status?: WorkAppStatusColor;
     label?: string;
     pulse?: boolean;
 }
 
-export type WorkAppStatusButtonProps = WorkAppStatusPillProps;
+export type WorkAppStatusPillProps = WorkAppStatusDotProps;
+export type WorkAppStatusButtonProps = WorkAppStatusDotProps;
 
 export interface WorkAppThemeButtonProps extends Omit<HTMLButtonAttributes, "color" | "children"> {
     "aria-label"?: string;
