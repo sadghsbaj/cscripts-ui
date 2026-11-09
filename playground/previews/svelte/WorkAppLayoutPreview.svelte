@@ -1,7 +1,12 @@
 <script module>
-    import { Button, ButtonIcon, HitArea } from "cs/svelte/components";
-    import { theme } from "cs/svelte/theme";
-    import { WorkAppFrame, WorkAppHeader, WorkAppHeaderSegment, WorkAppIntro, WorkAppMain } from "cs/svelte/work";
+    import {
+        WorkAppFrame,
+        WorkAppHeader,
+        WorkAppHeaderSegment,
+        WorkAppIntro,
+        WorkAppMain,
+        WorkAppThemeButton,
+    } from "cs/svelte/work";
 
     export const id = "work-app-layout";
     export const label = "App-Layout";
@@ -17,16 +22,7 @@
         <WorkAppFrame>
             <WorkAppHeader>
                 <WorkAppHeaderSegment align="end">
-                    <Button
-                        size="xl"
-                        variant="elevated"
-                        iconOnly
-                        aria-label="Theme wechseln"
-                        onclick={() => theme.cycle()}
-                    >
-                        <ButtonIcon icon={theme.icon} />
-                        <HitArea size="md" />
-                    </Button>
+                    <WorkAppThemeButton />
                 </WorkAppHeaderSegment>
             </WorkAppHeader>
             <WorkAppMain>
