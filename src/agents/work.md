@@ -31,13 +31,20 @@ Every work application follows this top-level structure:
 
 ```svelte
 <script lang="ts">
-    import { WorkAppFrame, WorkAppHeader, WorkAppIntro, WorkAppMain } from "cs/svelte/work";
+    import { WorkAppFrame, WorkAppHeader, WorkAppHeaderSegment, WorkAppIntro, WorkAppMain } from "cs/svelte/work";
 </script>
 
 <WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen">
     <WorkAppFrame>
         <WorkAppHeader>
-            <!-- Optional central header controls (tabs, segmented controls, actions) -->
+            <!-- Optional custom segments: align="start" | "center" | "end" -->
+            <WorkAppHeaderSegment align="center" island>
+                <!-- Central controls (tabs, segmented controls) -->
+            </WorkAppHeaderSegment>
+
+            <WorkAppHeaderSegment align="end">
+                <!-- Trailing actions (theme switch, quick actions) -->
+            </WorkAppHeaderSegment>
         </WorkAppHeader>
 
         <WorkAppMain>
