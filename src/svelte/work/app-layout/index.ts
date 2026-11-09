@@ -2,9 +2,18 @@ import type { HTMLAttributes } from "svelte/elements";
 
 export { default as WorkAppFrame } from "./WorkAppFrame.svelte";
 export { default as WorkAppHeader } from "./WorkAppHeader.svelte";
+export { default as WorkAppHeaderSegment } from "./WorkAppHeaderSegment.svelte";
 export { default as WorkAppMain } from "./WorkAppMain.svelte";
 export { default as WorkAppSignature } from "./WorkAppSignature.svelte";
 export { default as WorkAppBrand } from "./WorkAppBrand.svelte";
+
+export const WORK_APP_HEADER_SEGMENT_ALIGNMENTS = ["start", "center", "end"] as const;
+export type WorkAppHeaderSegmentAlignment = (typeof WORK_APP_HEADER_SEGMENT_ALIGNMENTS)[number];
+
+export interface WorkAppHeaderSegmentProps extends HTMLAttributes<HTMLDivElement> {
+    align: WorkAppHeaderSegmentAlignment;
+    island?: boolean;
+}
 
 export interface WorkAppFrameProps extends HTMLAttributes<HTMLDivElement> {
     /**
