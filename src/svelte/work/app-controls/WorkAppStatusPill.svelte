@@ -31,33 +31,15 @@ Architectural Notes:
 <style>
     @layer components.composite {
         .cs-work-app-status-pill {
-            display: inline-flex;
             flex-shrink: 0;
             align-items: center;
             justify-content: center;
-            width: 48px;
             height: 48px;
-            padding: 0;
+            padding-inline: 16px;
             background-color: var(--cs-color-elevation-1);
-            border: none;
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-smooth);
             box-shadow: var(--cs-shadow-elevation-1);
-            user-select: none;
-            transition:
-                box-shadow 200ms var(--cs-ease-quad-out),
-                scale 200ms var(--cs-ease-expo-out);
-            cursor: default;
-
-            @media (hover: hover) {
-                &:hover {
-                    box-shadow: var(--cs-shadow-elevation-1-hover);
-                }
-            }
-
-            &:active {
-                scale: var(--cs-squash-subtle, 0.98);
-            }
 
             &[data-status="success"] {
                 --_dot-color: var(--cs-color-success-solid);
