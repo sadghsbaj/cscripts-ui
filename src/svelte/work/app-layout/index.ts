@@ -1,6 +1,4 @@
-import type { HTMLAttributes } from "svelte/elements";
-
-import type { ButtonProps } from "../../components/button/index.ts";
+import type { HTMLAttributes, HTMLButtonAttributes } from "svelte/elements";
 
 export { default as WorkAppFrame } from "./WorkAppFrame.svelte";
 export { default as WorkAppHeader } from "./WorkAppHeader.svelte";
@@ -11,12 +9,9 @@ export { default as WorkAppMain } from "./WorkAppMain.svelte";
 export { default as WorkAppSignature } from "./WorkAppSignature.svelte";
 export { default as WorkAppBrand } from "./WorkAppBrand.svelte";
 
-export type WorkAppThemeButtonProps = Omit<
-    ButtonProps,
-    "as" | "children" | "color" | "iconOnly" | "size" | "variant"
-> & {
+export interface WorkAppThemeButtonProps extends HTMLButtonAttributes {
     "aria-label"?: string;
-};
+}
 
 export const WORK_APP_HEADER_SEGMENT_ALIGNMENTS = ["start", "center", "end"] as const;
 export type WorkAppHeaderSegmentAlignment = (typeof WORK_APP_HEADER_SEGMENT_ALIGNMENTS)[number];
