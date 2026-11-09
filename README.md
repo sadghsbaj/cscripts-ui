@@ -57,22 +57,26 @@ export default [...cs, { rules: { "no-console": "off" } }];
 
 All plugins ship with `cs`; the project itself only needs `eslint` (`bun add -d eslint`). Individual rule sets (e.g. `svelteConfig`, `unicornConfig`) are also exported from `cs/eslint`. Keep `typescript` on `~6`, since typescript-eslint does not support TypeScript 7 yet.
 
-4. Svelte Components
+4. Svelte Components & Primitives
 
 ```svelte
 <script lang="ts">
-    import { Button, ButtonLabel } from "cs/svelte";
+    import { Button, ButtonLabel } from "cs/svelte/components";
 </script>
 ```
 
 ## Project Structure
 
-- src/css/ — CSS foundation (reset, design tokens, global behaviors).
-- src/uno/ — UnoCSS preset (theme, variants, rules, shortcuts) mirroring the CSS tokens.
+- src/css/ — CSS foundation (reset, design tokens, global behaviors), exported as `cs/css`.
+- src/uno/ — UnoCSS preset (theme, variants, rules, shortcuts) mirroring the CSS tokens, exported as `cs/uno`.
 - src/eslint/ — Shared ESLint flat config, exported as `cs/eslint`.
-- src/vite/ — Vite plugins (`csTheme`), exported as `cs/vite`.
+- src/vite/ — Vite plugins (`csTheme`, `csFont`, `csLucide`, `csSingleFile`), exported as `cs/vite`.
 - template/ — Starter for new projects; copy it and adjust `index.html` (title, app name).
-- src/svelte/ — Svelte 5 components (`src/svelte/components/`), explanations, and theme state.
+- src/svelte/ — Svelte 5 library exports:
+    - `cs/svelte/components` — UI primitives (`Button`, `ScrollArea`, `HitArea`, etc.).
+    - `cs/svelte/attachments` — Modern Svelte 5 attachments (`scrollFade`, `fadeMask`).
+    - `cs/svelte/work` — Internal Pfleiderer work application shell (`WorkAppFrame`, `WorkAppIntro`, etc.).
+    - `cs/svelte/theme` — Reactive theme management and icon state.
 - playground/ — Local Vite test app (ignored when installed in other projects).
 
 ## Local Development Workflow

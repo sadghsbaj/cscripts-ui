@@ -5,7 +5,14 @@
 
 <script lang="ts">
     import { Plus } from "@lucide/svelte";
-    import { Button, ButtonIcon, HitArea, ToggleButton, ToggleButtonLabel, type HitAreaSize } from "cs/svelte";
+    import {
+        Button,
+        ButtonIcon,
+        HitArea,
+        ToggleButton,
+        ToggleButtonLabel,
+        type HitAreaSize,
+    } from "cs/svelte/components";
 
     let showHitArea = $state(false);
 

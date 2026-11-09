@@ -16,7 +16,7 @@
         ToggleButtonLabel,
         type ToggleButtonColor,
         type ToggleButtonVariant,
-    } from "cs/svelte";
+    } from "cs/svelte/components";
 </script>
 
 <div class="flex justify-center">

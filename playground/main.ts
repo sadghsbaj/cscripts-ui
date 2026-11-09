@@ -1,6 +1,6 @@
 // Must be imported first to establish the `@layer foundation, components` cascade order before component styles load.
 import "cs/css";
-import "cs/svelte";
+import "cs/svelte/theme";
 
 import { mount } from "svelte";
 

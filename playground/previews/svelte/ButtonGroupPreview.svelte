@@ -12,7 +12,7 @@
         ButtonLabel,
         type ButtonColor,
         type ButtonVariant,
-    } from "cs/svelte";
+    } from "cs/svelte/components";
 
     const variants = ["solid", "soft", "ghost"] as const satisfies readonly Exclude<ButtonVariant, "elevated">[];
 </script>

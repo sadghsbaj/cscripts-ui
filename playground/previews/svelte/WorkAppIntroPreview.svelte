@@ -5,7 +5,7 @@
 
 <script lang="ts">
     import { Check, Truck } from "@lucide/svelte";
-    import { Button, ButtonLabel } from "cs/svelte";
+    import { Button, ButtonLabel } from "cs/svelte/components";
     import { WorkAppIntro } from "cs/svelte/work";
 
     const sampleShipments = [

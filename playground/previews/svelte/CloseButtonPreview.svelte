@@ -4,7 +4,7 @@
 </script>
 
 <script lang="ts">
-    import { CLOSE_BUTTON_SIZES, CloseButton, HitArea, type CloseButtonVariant } from "cs/svelte";
+    import { CLOSE_BUTTON_SIZES, CloseButton, HitArea, type CloseButtonVariant } from "cs/svelte/components";
 </script>
 
 <div class="flex justify-center">

@@ -4,7 +4,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 
 ## 1. Component Architecture Philosophy
 
-- **UI Components & Interactive Primitives (`../svelte/components/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte` components. Components use a clean compound architecture with colocated `@layer components` CSS and require explicit prop configuration (`variant`, `size`, `color`) without implicit fallback defaults:
+- **UI Components & Interactive Primitives (`../svelte/components/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte/components`. Components use a clean compound architecture with colocated `@layer components` CSS and require explicit prop configuration (`variant`, `size`, `color`) without implicit fallback defaults:
     1. **Discover available components:** Read `../svelte/components/index.ts` to see all exported components, sub-components, and prop types.
     2. **Inspect implementation & conventions:** Read the specific `../svelte/components/<name>/` files and architectural guides in `../svelte/explanations/` before using or building components.
 - **Static Layout & Surface Containers:** Do NOT wrap simple static layout containers (islands, cards, flex/grid wrappers) into redundant `.svelte` components when native HTML elements styled with UnoCSS utilities and semantic surface tokens (`bg-elevation-1`, `squircle`, etc.) suffice.
@@ -67,25 +67,28 @@ NEVER abuse `$effect` to synchronize state (e.g., reading state A inside `$effec
 - **Component Generics:** For generic components, use `<script lang="ts" generics="T extends Record<string, unknown>">`.
 - **Module Context:** Use `<script module lang="ts">` (not `context="module"`) for module-level exports and shared non-instance logic.
 
-## 3. Theme & Build Configuration (`cs/svelte` & `cs/vite`)
+## 3. Theme & Build Configuration (`cs/svelte/theme` & `cs/vite`)
 
-### A. Theme Management (`../svelte/theme.svelte.ts` & `../vite/theme.ts`)
+### A. Theme Management (`cs/svelte/theme` & `../vite/theme.ts`)
 
-Theme state (`light` | `dark` | `system`), localStorage persistence (`cs-theme`), OS media query listeners, and native View Transitions (`document.startViewTransition` with automatic data-theme-switching transition suspension) are completely handled by `../svelte/theme.svelte.ts` in combination with the FOUC-prevention inline script in `../vite/theme.ts`.
+Theme state (`light` | `dark` | `system`), localStorage persistence (`cs-theme`), OS media query listeners, and native View Transitions (`document.startViewTransition` with automatic data-theme-switching transition suspension) are completely handled by `cs/svelte/theme` in combination with the FOUC-prevention inline script in `../vite/theme.ts`.
 
 NEVER implement a custom theme store or manual `document.documentElement.dataset.theme` toggling.
 
 **Usage in Svelte:**
 
 ```ts
-import { theme, type ThemeMode } from "cs/svelte";
+import { theme, type ThemeMode } from "cs/svelte/theme";
 
 // Read reactive properties ($state-backed getters):
 // theme.mode -> "light" | "dark" | "system"
 // theme.resolved -> "light" | "dark"
+// theme.icon -> Monitor | Sun | Moon (Lucide component matching preference)
+// theme.resolvedIcon -> Sun | Moon (Lucide component matching applied scheme)
 
 // Mutate theme (automatically triggers View Transition & storage sync):
 theme.toggle();
+theme.cycle(); // Cycles through ["system", "light", "dark"]
 theme.set("dark");
 ```
 

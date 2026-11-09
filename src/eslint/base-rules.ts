@@ -30,6 +30,19 @@ export const baseRulesConfig: Linter.Config[] = [
                     default: ["signature", "field", "constructor", ["get", "set", "method"]],
                 },
             ],
+
+            "no-restricted-imports": [
+                "error",
+                {
+                    paths: [
+                        {
+                            name: "cs/svelte",
+                            message:
+                                "Do not import from 'cs/svelte' directly. Use 'cs/svelte/components', 'cs/svelte/attachments', 'cs/svelte/work', or 'cs/svelte/theme' instead.",
+                        },
+                    ],
+                },
+            ],
         },
     },
     {

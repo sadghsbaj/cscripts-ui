@@ -23,9 +23,9 @@
         },
         "./assets/*": "./src/assets/*",
         "./uno": "./src/uno/index.ts",
-        "./svelte": {
-            "svelte": "./src/svelte/index.ts",
-            "default": "./src/svelte/index.ts"
+        "./svelte/theme": {
+            "svelte": "./src/svelte/theme.svelte.ts",
+            "default": "./src/svelte/theme.svelte.ts"
         },
         "./svelte/components": {
             "svelte": "./src/svelte/components/index.ts",
