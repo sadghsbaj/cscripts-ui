@@ -3,8 +3,9 @@
 Primary `<main>` content region (`<WorkAppMain />`) inside `<WorkAppFrame />`.
 
 Architectural Notes:
-- Flex-Safe Scrolling: Combines `flex: 1` with `min-height: 0` so nested scrollable
-  panels, tables, or lists can shrink and scroll internally without overflowing the viewport.
+- Flex Growth: Uses `flex: 1 0 auto` so the main content region fills remaining space down to the
+  signature on shorter screens while naturally expanding with large scrollable content.
+- Overflow Protection: Sets `min-width: 0` to prevent wide nested tables or code blocks from blowing out the horizontal layout.
 -->
 <script lang="ts">
     import type { WorkAppMainProps } from "./index.ts";
@@ -20,11 +21,10 @@ Architectural Notes:
     @layer components.primitive {
         .cs-work-app-main {
             display: flex;
-            flex: 1;
+            flex: 1 0 auto;
             flex-direction: column;
             gap: 24px;
-            height: 100%;
-            min-height: 0;
+            min-width: 0;
         }
     }
 </style>
