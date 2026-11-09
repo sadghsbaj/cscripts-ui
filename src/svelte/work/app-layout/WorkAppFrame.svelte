@@ -17,7 +17,7 @@ Architectural Notes:
     let { showSignature = true, children, class: className, ...rest }: WorkAppFrameProps = $props();
 </script>
 
-<div {...rest} class={["cs-work-app-frame scrollbar-lg", className]}>
+<div {...rest} class={["cs-work-app-frame", className]}>
     {@render children?.()}
 
     {#if showSignature}
@@ -32,11 +32,10 @@ Architectural Notes:
             flex-direction: column;
             gap: 32px;
             width: 100%;
-            height: 100%;
+            min-height: 100%;
             padding-block: 24px;
             /* Enforces a minimum 24px gutter on smaller laptops while centering content to `--cs-container-7xl` (1280px) on wider monitors */
             padding-inline: max(24px, calc((100% - var(--cs-container-7xl)) / 2));
-            overflow-y: auto;
         }
     }
 </style>
