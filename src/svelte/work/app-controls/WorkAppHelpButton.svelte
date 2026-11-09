@@ -22,12 +22,12 @@ Architectural Notes:
 </script>
 
 <Button
+    {...rest}
     size="xl"
     variant="elevated"
     iconOnly
     aria-label={ariaLabel}
     class={["cs-work-app-help-button", className]}
-    {...rest}
 >
     <ButtonIcon {icon} />
     <HitArea size="md" />

@@ -5,31 +5,28 @@ filesystem, or system state in `<WorkAppHeader>`.
 
 Architectural Notes:
 - Geometry: 48px height matching the tool identity and brand badges (`rounded-full squircle bg-elevation-1`).
-- Vertical Hierarchy: Centered semantic pulse dot stacked above compact micro-typography (11px).
-- Interactivity: Operates as an accessible button with tactile spring squash on press, ready for directory chooser or connection dialog triggers.
+- Horizontal Flow: 10px live LED status dot with calm halo ping paired side-by-side with 13px typography.
+- Managed Accessibility: Automatically generates a strict `aria-label` from status and label state.
+- Interactivity: Operates as an indicator button with native default cursor and tactile spring squash on press.
 -->
 <script lang="ts">
-    import type { WorkAppStatusPillProps } from "./index.ts";
+    import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusPillProps } from "./index.ts";
 
-    let {
-        status = "success",
-        label = "Verbunden",
-        pulse = true,
-        "aria-label": ariaLabel,
-        class: className,
-        ...rest
-    }: WorkAppStatusPillProps = $props();
+    let { status = "success", label, pulse = true, class: className, ...rest }: WorkAppStatusPillProps = $props();
+
+    const displayLabel = $derived(label ?? WORK_APP_STATUS_DEFAULTS[status]);
+    const computedAriaLabel = $derived(`${displayLabel} (${status})`);
 </script>
 
 <button
+    {...rest}
     type="button"
-    aria-label={ariaLabel ?? `${label} (${status})`}
     class={["cs-work-app-status-pill", className]}
     data-status={status}
-    {...rest}
+    aria-label={computedAriaLabel}
 >
     <span class="cs-work-app-status-dot" data-pulse={pulse ? "" : undefined}></span>
-    <span class="cs-work-app-status-label text-trim-truncate">{label}</span>
+    <span class="cs-work-app-status-label text-trim-truncate">{displayLabel}</span>
 </button>
 
 <style>
@@ -37,8 +34,8 @@ Architectural Notes:
         .cs-work-app-status-pill {
             display: inline-flex;
             flex-shrink: 0;
-            flex-direction: column;
-            gap: 4px;
+            flex-direction: row;
+            gap: 10px;
             align-items: center;
             justify-content: center;
             height: 48px;
@@ -52,15 +49,11 @@ Architectural Notes:
             transition:
                 box-shadow 200ms var(--cs-ease-quad-out),
                 scale 200ms var(--cs-ease-expo-out);
-            cursor: pointer;
+            cursor: default;
 
             @media (hover: hover) {
                 &:hover {
                     box-shadow: var(--cs-shadow-elevation-1-hover);
-
-                    .cs-work-app-status-label {
-                        color: var(--cs-color-text-main);
-                    }
                 }
             }
 
@@ -88,10 +81,11 @@ Architectural Notes:
         .cs-work-app-status-dot {
             position: relative;
             display: block;
-            width: 7px;
-            height: 7px;
+            width: 10px;
+            height: 10px;
             background-color: var(--_dot-color, var(--cs-color-success-solid));
             border-radius: var(--cs-radius-full);
+            box-shadow: 0 0 0 1.5px var(--cs-color-elevation-1);
 
             &[data-pulse]::after {
                 content: "";
@@ -100,19 +94,18 @@ Architectural Notes:
                 background-color: inherit;
                 border-radius: inherit;
                 opacity: 0.75;
-                animation: cs-status-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+                animation: cs-status-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
                 pointer-events: none;
             }
         }
 
         .cs-work-app-status-label {
-            color: var(--cs-color-text-weak);
-            font-size: 11px;
-            font-weight: 600;
+            color: var(--cs-color-text-main);
+            font-size: 13px;
+            font-weight: 550;
             line-height: 1;
-            letter-spacing: 0.02em;
+            letter-spacing: -0.01em;
             white-space: nowrap;
-            transition: color 200ms var(--cs-ease-quad-out);
         }
 
         @keyframes cs-status-ping {
@@ -121,10 +114,10 @@ Architectural Notes:
                 transform: scale(1);
             }
 
-            75%,
+            70%,
             100% {
                 opacity: 0;
-                transform: scale(2.4);
+                transform: scale(2.2);
             }
         }
     }

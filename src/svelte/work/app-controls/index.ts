@@ -13,7 +13,14 @@ export { default as WorkAppStatusButton } from "./WorkAppStatusPill.svelte";
 export const WORK_APP_STATUS_COLORS = ["success", "warning", "danger", "base"] as const;
 export type WorkAppStatusColor = (typeof WORK_APP_STATUS_COLORS)[number];
 
-export interface WorkAppStatusPillProps extends Omit<HTMLButtonAttributes, "color" | "children"> {
+export const WORK_APP_STATUS_DEFAULTS: Record<WorkAppStatusColor, string> = {
+    success: "Verbunden",
+    warning: "Wartend",
+    danger: "Getrennt",
+    base: "Inaktiv",
+};
+
+export interface WorkAppStatusPillProps extends Omit<HTMLButtonAttributes, "color" | "children" | "aria-label"> {
     status?: WorkAppStatusColor;
     label?: string;
     pulse?: boolean;
