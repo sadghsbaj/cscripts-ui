@@ -4,10 +4,10 @@ Cockpit status indicator pill (`<WorkAppStatusPill />`) for displaying connectio
 filesystem, or system state in `<WorkAppHeader>`.
 
 Architectural Notes:
-- Geometry: 48px height matching the tool identity and brand badges (`rounded-full squircle bg-elevation-1`).
-- Horizontal Flow: 10px live LED status dot with calm halo ping paired side-by-side with 13px typography.
+- Geometry: Perfectly sized 48x48 squircle pill matching the theme and help buttons (`rounded-full squircle bg-elevation-1`).
+- Telemetry: 12px live LED status dot with calm halo ping driven by `--cs-ease-cubic-out`.
 - Managed Accessibility: Automatically generates a strict `aria-label` from status and label state.
-- Interactivity: Operates as an indicator button with native default cursor and tactile spring squash on press.
+- Interactivity: Operates as an indicator button with native default cursor and tactile spring feedback.
 -->
 <script lang="ts">
     import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusPillProps } from "./index.ts";
@@ -26,7 +26,6 @@ Architectural Notes:
     aria-label={computedAriaLabel}
 >
     <span class="cs-work-app-status-dot" data-pulse={pulse ? "" : undefined}></span>
-    <span class="cs-work-app-status-label text-trim-truncate">{displayLabel}</span>
 </button>
 
 <style>
@@ -34,12 +33,11 @@ Architectural Notes:
         .cs-work-app-status-pill {
             display: inline-flex;
             flex-shrink: 0;
-            flex-direction: row;
-            gap: 10px;
             align-items: center;
             justify-content: center;
+            width: 48px;
             height: 48px;
-            padding-inline: 16px;
+            padding: 0;
             background-color: var(--cs-color-elevation-1);
             border: none;
             border-radius: var(--cs-radius-full);
@@ -81,11 +79,10 @@ Architectural Notes:
         .cs-work-app-status-dot {
             position: relative;
             display: block;
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             background-color: var(--_dot-color, var(--cs-color-success-solid));
             border-radius: var(--cs-radius-full);
-            box-shadow: 0 0 0 1.5px var(--cs-color-elevation-1);
 
             &[data-pulse]::after {
                 content: "";
@@ -94,18 +91,9 @@ Architectural Notes:
                 background-color: inherit;
                 border-radius: inherit;
                 opacity: 0.75;
-                animation: cs-status-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+                animation: cs-status-ping 2.2s var(--cs-ease-cubic-out) infinite;
                 pointer-events: none;
             }
-        }
-
-        .cs-work-app-status-label {
-            color: var(--cs-color-text-main);
-            font-size: 13px;
-            font-weight: 550;
-            line-height: 1;
-            letter-spacing: -0.01em;
-            white-space: nowrap;
         }
 
         @keyframes cs-status-ping {
