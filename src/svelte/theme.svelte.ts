@@ -1,4 +1,5 @@
-import { flushSync } from "svelte";
+import { flushSync, type Component } from "svelte";
+import { Monitor, Moon, Sun } from "@lucide/svelte";
 
 /**
  * @file Reactive Theme Manager for Svelte 5 Applications.
@@ -32,7 +33,14 @@ import { flushSync } from "svelte";
  *    (`setContext` / `getContext`) to achieve absolute request-level isolation.
  */
 
-export type ThemeMode = "light" | "dark" | "system";
+export const THEME_MODES = ["system", "light", "dark"] as const;
+export type ThemeMode = (typeof THEME_MODES)[number];
+
+export const THEME_ICONS = {
+    system: Monitor,
+    light: Sun,
+    dark: Moon,
+} as const;
 
 const STORAGE_KEY = "cs-theme";
 
@@ -40,7 +48,7 @@ const STORAGE_KEY = "cs-theme";
  * Runtime type guard to validate ThemeMode values.
  */
 export const isValidMode = (v: unknown): v is ThemeMode =>
-    typeof v === "string" && ["light", "dark", "system"].includes(v);
+    typeof v === "string" && (THEME_MODES as readonly string[]).includes(v);
 
 /**
  * Defensive localStorage getter handling SecurityError / QuotaExceededError.
@@ -163,6 +171,20 @@ export class ThemeManager {
     }
 
     /**
+     * The icon of the active theme mode preference ('light', 'dark', or 'system').
+     */
+    get icon(): Component {
+        return THEME_ICONS[this.#mode];
+    }
+
+    /**
+     * The actual resolved icon of the currently applied theme ('light' or 'dark').
+     */
+    get resolvedIcon(): Component {
+        return THEME_ICONS[this.#resolved];
+    }
+
+    /**
      * Updates the theme preference.
      * @param newMode - The new theme mode selection.
      */
@@ -181,6 +203,19 @@ export class ThemeManager {
     toggle(): void {
         if (typeof window === "undefined") return;
         this.set(this.#resolved === "dark" ? "light" : "dark");
+    }
+
+    /**
+     * Cycles the active theme between system, light and dark.
+     */
+    cycle(modes: readonly ThemeMode[] = THEME_MODES): void {
+        if (typeof window === "undefined") return;
+        const currentIndex = modes.indexOf(this.#mode);
+        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % modes.length;
+        const nextMode = modes[nextIndex];
+        if (nextMode) {
+            this.set(nextMode);
+        }
     }
 
     /**
