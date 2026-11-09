@@ -19,8 +19,8 @@ Architectural Notes:
         ...rest
     }: WorkAppThemeButtonProps = $props();
 
-    function handleClick(event: MouseEvent): void {
-        onclick?.(event as MouseEvent & { currentTarget: EventTarget & HTMLButtonElement });
+    function handleClick(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }): void {
+        onclick?.(event);
         if (!event.defaultPrevented) {
             theme.cycle();
         }
@@ -28,6 +28,7 @@ Architectural Notes:
 </script>
 
 <Button
+    as="button"
     {...rest}
     size="xl"
     variant="elevated"

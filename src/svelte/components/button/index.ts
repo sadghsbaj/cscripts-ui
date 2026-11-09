@@ -30,12 +30,13 @@ export type ButtonVariantProps =
           color?: never;
       };
 
-export type ButtonProps = Omit<HTMLButtonAttributes, "color" | "size"> &
-    Omit<HTMLAnchorAttributes, "color" | "size"> &
-    Omit<HTMLLabelAttributes, "color" | "size"> &
+export type ButtonProps = (
+    | (Omit<HTMLButtonAttributes, "color" | "size"> & { as?: "button" })
+    | (Omit<HTMLAnchorAttributes, "color" | "size"> & { as: "a" })
+    | (Omit<HTMLLabelAttributes, "color" | "size"> & { as: "label" })
+) &
     ButtonVariantProps & {
         size: ButtonSize;
-        as?: ButtonElement;
         iconOnly?: boolean;
     };
 
