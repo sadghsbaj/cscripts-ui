@@ -21,7 +21,7 @@ export const WORK_APP_STATUS_DEFAULTS: Record<WorkAppStatusColor, string> = {
     base: "Inaktiv",
 };
 
-export interface WorkAppStatusDotProps extends Omit<HTMLButtonAttributes, "color" | "children" | "aria-label"> {
+export interface WorkAppStatusDotProps extends Omit<HTMLButtonAttributes, "color" | "aria-label"> {
     status?: WorkAppStatusColor;
     label?: string;
     pulse?: boolean;

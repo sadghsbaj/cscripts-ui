@@ -33,7 +33,7 @@ Architectural Notes:
             gap: 32px;
             width: 100%;
             min-height: 100%;
-            padding-block: 24px;
+            padding-block: 24px 64px;
             /* Enforces a minimum 24px gutter on smaller laptops while centering content to `--cs-container-7xl` (1280px) on wider monitors */
             padding-inline: max(24px, calc((100% - var(--cs-container-7xl)) / 2));
         }

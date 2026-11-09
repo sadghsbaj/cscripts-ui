@@ -12,7 +12,14 @@ Architectural Notes:
 <script lang="ts">
     import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusDotProps } from "./index.ts";
 
-    let { status = "success", label, pulse = true, class: className, ...rest }: WorkAppStatusDotProps = $props();
+    let {
+        status = "success",
+        label,
+        pulse = true,
+        class: className,
+        children,
+        ...rest
+    }: WorkAppStatusDotProps = $props();
 
     const displayLabel = $derived(label ?? WORK_APP_STATUS_DEFAULTS[status]);
     const computedAriaLabel = $derived(`${displayLabel} (${status})`);
@@ -25,7 +32,10 @@ Architectural Notes:
     data-status={status}
     data-pulse={pulse ? "" : undefined}
     aria-label={computedAriaLabel}
-></button>
+>
+    <!-- Important so that we can use HitArea -->
+    {@render children?.()}
+</button>
 
 <style>
     @layer components.composite {
