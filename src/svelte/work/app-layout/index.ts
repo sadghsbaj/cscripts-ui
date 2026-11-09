@@ -9,7 +9,7 @@ export { default as WorkAppMain } from "./WorkAppMain.svelte";
 export { default as WorkAppSignature } from "./WorkAppSignature.svelte";
 export { default as WorkAppBrand } from "./WorkAppBrand.svelte";
 
-export interface WorkAppThemeButtonProps extends HTMLButtonAttributes {
+export interface WorkAppThemeButtonProps extends Omit<HTMLButtonAttributes, "color" | "children"> {
     "aria-label"?: string;
 }
 

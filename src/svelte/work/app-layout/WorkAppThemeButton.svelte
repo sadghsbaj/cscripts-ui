@@ -28,7 +28,6 @@ Architectural Notes:
 </script>
 
 <Button
-    as="button"
     {...rest}
     size="xl"
     variant="elevated"
