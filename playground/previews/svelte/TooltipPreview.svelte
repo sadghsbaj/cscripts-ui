@@ -9,7 +9,7 @@
     import { HitArea } from "cs/svelte/hit-area";
     import { ToggleButton, ToggleButtonIcon } from "cs/svelte/toggle-button";
     import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
-    import { Tooltip, tooltip } from "cs/svelte/tooltip";
+    import { Tooltip, tooltip, TooltipIcon, TooltipKbd, TooltipText } from "cs/svelte/tooltip";
 
     let activeFormatting = $state<string[]>(["bold"]);
 </script>
@@ -118,31 +118,37 @@
             </div>
         </div>
 
-        <!-- Custom / Rich Tooltip -->
+        <!-- Custom / Compound Tooltip -->
         <div
             class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
-            <h2 class="title-2xl">Icon & Shortcut</h2>
+            <h2 class="title-2xl">Compound Tooltip</h2>
             <div class="flex flex-wrap gap-3 items-center">
-                <Button
-                    variant="soft"
-                    color="base"
-                    size="md"
-                    {@attach tooltip({ target: "preview-icon-tooltip", placement: "top" })}
-                >
-                    <ButtonLabel>Icon</ButtonLabel>
-                </Button>
-                <Tooltip id="preview-icon-tooltip" text="Information" icon={Info} />
-
                 <Button
                     variant="soft"
                     color="base"
                     size="md"
                     {@attach tooltip({ target: "preview-rich-tooltip", placement: "top" })}
                 >
-                    <ButtonLabel>Shortcut</ButtonLabel>
+                    <ButtonLabel>Props</ButtonLabel>
                 </Button>
-                <Tooltip id="preview-rich-tooltip" text="Speichern" shortcut="Ctrl + S" />
+                <Tooltip id="preview-rich-tooltip" text="Speichern" icon={Info} shortcut="Ctrl + S" />
+
+                <Button
+                    variant="soft"
+                    color="base"
+                    size="md"
+                    {@attach tooltip({ target: "preview-compound-tooltip", placement: "top" })}
+                >
+                    <ButtonLabel>Compound</ButtonLabel>
+                </Button>
+                <Tooltip id="preview-compound-tooltip">
+                    <TooltipIcon icon={Info} />
+                    <TooltipText>Speichern</TooltipText>
+                    <span class="cs-tooltip-shortcuts">
+                        <TooltipKbd>Ctrl + S</TooltipKbd>
+                    </span>
+                </Tooltip>
             </div>
         </div>
     </div>

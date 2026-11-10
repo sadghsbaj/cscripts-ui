@@ -6,13 +6,16 @@ Architectural Notes:
 - Fixed Surface: Uses `size="content"` and default `placement="top"`. All dynamic positioning,
   offsets, delays, and trigger attachments are driven externally by the `tooltip` attachment
   (`tooltip.attach.svelte.ts`) to keep the container minimal and unopinionated.
-- Styling: Renders an elevated squircle badge (`bg-elevation-1`, `squircle-smooth`, `text-xs font-500`)
-  with discrete popover transition styling.
+- Sizing & Centering: Enforces `block-size: 26px` with zero vertical padding, allowing flexbox
+  to vertically align text, icons, and keyboard badges along the optical center axis.
 -->
 
 <script lang="ts">
     import { type TooltipProps } from ".";
     import Popover from "../popover/Popover.svelte";
+    import TooltipIcon from "./TooltipIcon.svelte";
+    import TooltipKbd from "./TooltipKbd.svelte";
+    import TooltipText from "./TooltipText.svelte";
 
     let { id, text, icon, shortcut, class: className, children, ...rest }: TooltipProps = $props();
 
@@ -32,21 +35,21 @@ Architectural Notes:
         {@render children()}
     {:else}
         {#if resolvedIcon && resolvedIcon.position === "start"}
-            <resolvedIcon.component class="cs-tooltip-icon" aria-hidden="true" />
+            <TooltipIcon icon={resolvedIcon.component} />
         {/if}
 
         {#if text}
-            <span class="cs-tooltip-text">{text}</span>
+            <TooltipText>{text}</TooltipText>
         {/if}
 
         {#if resolvedIcon && resolvedIcon.position === "end"}
-            <resolvedIcon.component class="cs-tooltip-icon" aria-hidden="true" />
+            <TooltipIcon icon={resolvedIcon.component} />
         {/if}
 
         {#if shortcuts.length > 0}
             <span class="cs-tooltip-shortcuts">
                 {#each shortcuts as key (key)}
-                    <kbd class="cs-tooltip-kbd">{key}</kbd>
+                    <TooltipKbd>{key}</TooltipKbd>
                 {/each}
             </span>
         {/if}
@@ -74,55 +77,11 @@ Architectural Notes:
             box-shadow: var(--cs-shadow-elevation-1);
         }
 
-        :global(.cs-tooltip-text) {
-            min-inline-size: 0;
-            overflow-x: clip;
-            overflow-y: visible;
-            color: var(--cs-color-text-strong);
-            font-size: var(--_fs);
-            font-weight: 600;
-            line-height: var(--cs-leading-none);
-            text-overflow: ellipsis;
-            letter-spacing: var(--cs-tracking-tight);
-            white-space: nowrap;
-            text-box-trim: trim-both;
-            text-box-edge: cap alphabetic;
-            text-box: trim-both cap alphabetic;
-        }
-
-        :global(.cs-tooltip-icon) {
-            flex-shrink: 0;
-            inline-size: calc(var(--_fs) + 1px);
-            block-size: calc(var(--_fs) + 1px);
-            color: var(--cs-color-text-strong, currentColor);
-            stroke-width: 2.25;
-        }
-
         :global(.cs-tooltip-shortcuts) {
             display: inline-flex;
             gap: 2px;
             align-items: center;
             margin-inline-start: 2px;
-        }
-
-        :global(.cs-tooltip-kbd) {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-inline-size: 16px;
-            padding: 2px 4px;
-            color: var(--cs-color-text-strong, currentColor);
-            font-family: var(--cs-font-sans);
-            font-size: 11px;
-            font-weight: 500;
-            line-height: var(--cs-leading-none);
-            line-height: var(--cs-leading-tight);
-            text-box-trim: trim-both;
-            text-box-edge: cap alphabetic;
-            text-box: trim-both cap alphabetic;
-            background-color: var(--cs-color-elevation-2);
-            border-radius: var(--cs-radius-full);
-            corner-shape: var(--cs-squircle-smooth);
         }
     }
 </style>
