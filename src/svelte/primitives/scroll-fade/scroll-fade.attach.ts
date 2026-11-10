@@ -5,7 +5,7 @@
 
 import type { Attachment } from "svelte/attachments";
 
-import "./scroll-fade.css";
+import "./scroll-fade.attach.css";
 
 export const SCROLL_FADE_DIRECTIONS = ["vertical", "horizontal", "both"] as const;
 export const SCROLL_FADE_EDGES = ["both", "start", "end"] as const;

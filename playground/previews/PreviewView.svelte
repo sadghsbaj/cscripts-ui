@@ -1,17 +1,12 @@
 <script lang="ts">
     import type { Component } from "svelte";
     import { PanelLeftClose } from "@lucide/svelte";
-    import { scrollFade } from "cs/svelte/attachments";
-    import {
-        Button,
-        ButtonIcon,
-        HitArea,
-        ScrollArea,
-        ScrollAreaContent,
-        ToggleButton,
-        ToggleButtonGroup,
-        ToggleButtonLabel,
-    } from "cs/svelte/components";
+    import { Button, ButtonIcon } from "cs/svelte/button";
+    import { HitArea } from "cs/svelte/hit-area";
+    import { ScrollArea, ScrollAreaContent } from "cs/svelte/scroll-area";
+    import { scrollFade } from "cs/svelte/scroll-fade";
+    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
+    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
 
     interface SvelteModule {
         default: Component;

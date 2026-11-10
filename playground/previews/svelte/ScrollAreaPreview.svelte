@@ -4,8 +4,8 @@
 </script>
 
 <script lang="ts">
-    import { scrollFade } from "cs/svelte/attachments";
-    import { SCROLL_AREA_SIZES, ScrollArea, ScrollAreaContent, type ScrollAreaSize } from "cs/svelte/components";
+    import { SCROLL_AREA_SIZES, ScrollArea, ScrollAreaContent, type ScrollAreaSize } from "cs/svelte/scroll-area";
+    import { scrollFade } from "cs/svelte/scroll-fade";
 
     const items = Array.from({ length: 12 }, (_, i) => `Item ${i + 1}`);
 </script>

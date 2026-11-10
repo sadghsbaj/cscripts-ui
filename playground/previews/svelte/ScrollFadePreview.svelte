@@ -4,7 +4,7 @@
 </script>
 
 <script lang="ts">
-    import { SCROLL_FADE_SIZES, scrollFade, type ScrollFadeSize } from "cs/svelte/attachments";
+    import { SCROLL_FADE_SIZES, scrollFade, type ScrollFadeSize } from "cs/svelte/scroll-fade";
 
     const items = Array.from({ length: 12 }, (_, i) => `Item ${i + 1}`);
 </script>

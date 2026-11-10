@@ -11,10 +11,10 @@
         BUTTON_SIZES,
         ButtonIcon,
         ButtonLabel,
-        HitArea,
         type ButtonColor,
         type ButtonVariant,
-    } from "cs/svelte/components";
+    } from "cs/svelte/button";
+    import { HitArea } from "cs/svelte/hit-area";
 
     const variants = ["solid", "soft", "ghost"] as const satisfies readonly Exclude<ButtonVariant, "elevated">[];
 </script>

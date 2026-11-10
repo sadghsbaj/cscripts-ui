@@ -5,8 +5,8 @@
 
 <script lang="ts">
     import { Plus } from "@lucide/svelte";
+    import { HitArea } from "cs/svelte/hit-area";
     import {
-        HitArea,
         TOGGLE_BUTTON_COLORS,
         TOGGLE_BUTTON_SIZES,
         TOGGLE_BUTTON_VARIANTS,
@@ -15,7 +15,7 @@
         ToggleButtonLabel,
         type ToggleButtonColor,
         type ToggleButtonVariant,
-    } from "cs/svelte/components";
+    } from "cs/svelte/toggle-button";
 </script>
 
 <div class="flex justify-center">

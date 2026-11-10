@@ -5,18 +5,17 @@
 
 <script lang="ts">
     import { Bold, Italic, Underline } from "@lucide/svelte";
+    import { HitArea } from "cs/svelte/hit-area";
     import {
-        HitArea,
         TOGGLE_BUTTON_COLORS,
         TOGGLE_BUTTON_VARIANTS,
         ToggleButton,
-        ToggleButtonGroup,
-        ToggleButtonGroupSeparator,
         ToggleButtonIcon,
         ToggleButtonLabel,
         type ToggleButtonColor,
         type ToggleButtonVariant,
-    } from "cs/svelte/components";
+    } from "cs/svelte/toggle-button";
+    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
 </script>
 
 <div class="flex justify-center">

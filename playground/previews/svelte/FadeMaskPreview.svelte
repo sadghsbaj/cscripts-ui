@@ -4,8 +4,8 @@
 </script>
 
 <script lang="ts">
-    import { FADE_MASK_STRENGTHS, FADE_MASK_VARIANTS, fadeMask, type FadeMaskVariant } from "cs/svelte/attachments";
-    import { BackgroundPattern } from "cs/svelte/components";
+    import { BackgroundPattern } from "cs/svelte/background-pattern";
+    import { FADE_MASK_STRENGTHS, FADE_MASK_VARIANTS, fadeMask, type FadeMaskVariant } from "cs/svelte/fade-mask";
 </script>
 
 <div class="flex justify-center">

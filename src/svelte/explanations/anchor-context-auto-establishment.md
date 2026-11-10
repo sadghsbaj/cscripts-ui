@@ -24,14 +24,18 @@ Historically, achieving this required the parent element to declare `position: r
 Rather than forcing `position: relative` on the host, `cs` utilizes `contain: layout`.
 
 ### A. Zero Positioning Conflicts
+
 If the host element already has an explicit positioning context (such as `position: absolute` on badges, floating action buttons, pinned toolbars, or `position: sticky` on headers), overriding it with `position: relative` breaks the host element's positioning in the outer layout.
 
 In contrast, `contain: layout` is **positioning-neutral**:
+
 - It leaves the parent's `position` property intact (`static`, `relative`, `absolute`, `fixed`, or `sticky`).
 - Per the CSS Containment specification (Level 1 / Level 2), any element with `contain: layout` automatically becomes a **containing block for absolutely positioned descendants**.
 
 ### B. Layout Isolation & Subtree Performance
+
 `contain: layout` creates an independent layout boundary:
+
 - Geometry calculations and reflows within the host or child component are contained within the subtree.
 - They do not invalidate or trigger reflows in the parent document tree, optimizing frame rates during active interactions and animations.
 
@@ -56,5 +60,6 @@ Components declare host containment directly within their scoped `@layer compone
 ```
 
 ### Key Principles:
+
 - **Direct Child Combinator (`>`):** Always target direct children (`:has(> .cs-...)`) so containment is applied exclusively to the immediate host element, preventing unintended containment on higher-level ancestor wrappers.
 - **Zero Host Setup:** Consumers simply nest `<HitArea />` or `<BackgroundPattern />` inside any HTML element or component without adding styling classes or wrapper configurations.

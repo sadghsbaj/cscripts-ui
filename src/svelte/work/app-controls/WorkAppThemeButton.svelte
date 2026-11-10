@@ -7,8 +7,8 @@ Architectural Notes:
 - Automated Reactive State: Cycles through theme modes on click (`theme.cycle()`) and renders the matching mode icon (`theme.icon`).
 -->
 <script lang="ts">
-    import { Button, ButtonIcon } from "../../components/button/index.ts";
-    import { HitArea } from "../../components/hit-area/index.ts";
+    import { Button, ButtonIcon } from "../../primitives/button/index.ts";
+    import { HitArea } from "../../primitives/hit-area/index.ts";
     import { theme } from "../../theme.svelte.ts";
     import type { WorkAppThemeButtonProps } from "./index.ts";
 

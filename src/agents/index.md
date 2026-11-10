@@ -14,7 +14,7 @@ Before writing code, read the relevant domain guide(s) below:
 3. **UnoCSS Utilities & Shortcuts (`./uno.md`)**
    Read BEFORE adding utility classes, layouts, colors, or typography classes.
 4. **Svelte 5 & State/Components (`./svelte.md`)**
-   Read BEFORE creating UI components, managing theme state, configuring `cs/vite`, or using `cs/svelte/*` (`cs/svelte/components`, `cs/svelte/attachments`, `cs/svelte/theme`).
+   Read BEFORE creating UI components, managing theme state, configuring `cs/vite`, or using `cs/svelte/*` (`cs/svelte/<primitive>`, `cs/svelte/work`, `cs/svelte/theme`).
 5. **Code Style & ESLint Rules (`./code-style.md`)**
    Read BEFORE outputting code to ensure compliance with custom lint rules (shortcuts, unicode-dots, etc.).
 6. **Internal Work Applications (`./work.md`)**

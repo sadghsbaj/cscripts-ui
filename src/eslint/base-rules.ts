@@ -38,7 +38,17 @@ export const baseRulesConfig: Linter.Config[] = [
                         {
                             name: "cs/svelte",
                             message:
-                                "Do not import from 'cs/svelte' directly. Use 'cs/svelte/components', 'cs/svelte/attachments', 'cs/svelte/work', or 'cs/svelte/theme' instead.",
+                                "Do not import from 'cs/svelte' directly. Use subpath imports like 'cs/svelte/<primitive>', 'cs/svelte/work', or 'cs/svelte/theme' instead.",
+                        },
+                        {
+                            name: "cs/svelte/components",
+                            message:
+                                "Import directly from subpaths like 'cs/svelte/<primitive>' instead of 'cs/svelte/components'.",
+                        },
+                        {
+                            name: "cs/svelte/attachments",
+                            message:
+                                "Import directly from subpaths like 'cs/svelte/<primitive>' instead of 'cs/svelte/attachments'.",
                         },
                     ],
                 },

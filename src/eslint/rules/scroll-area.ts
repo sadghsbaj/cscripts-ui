@@ -11,7 +11,8 @@ import type { Linter, Rule } from "eslint";
 import { findAttribute, getElementName, getLiteralStringValue, hasDescendantElement, shouldSkipFile } from "./utils.ts";
 
 const PADDING_UTILITY_REGEX = /^p[xytblrse]?-(?:\d+(?:\.\d+)?|px|full|auto|\[.+\])$/;
-const GAP_SPACE_UTILITY_REGEX = /^(?:gap-(?:[xy]-)?(?:\d+(?:\.\d+)?|px|\[.+\])|space-[xy]-(?:\d+(?:\.\d+)?|px|reverse|\[.+\]))$/;
+const GAP_SPACE_UTILITY_REGEX =
+    /^(?:gap-(?:[xy]-)?(?:\d+(?:\.\d+)?|px|\[.+\])|space-[xy]-(?:\d+(?:\.\d+)?|px|reverse|\[.+\]))$/;
 const OVERFLOW_SCROLLBAR_UTILITY_REGEX =
     /^(?:overflow-(?:[xy]-)?(?:auto|scroll|hidden|clip|visible)|scrollbar-(?:sm|md|lg|none)|no-scrollbar)$/;
 

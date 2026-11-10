@@ -31,13 +31,13 @@ Architectural Notes:
 <style>
     @layer components.composite {
         .cs-scroll-area-content {
-            flex: 1 1 auto;
-            min-width: 0;
-            min-height: 0;
-            width: 100%;
-            height: 100%;
-            scrollbar-width: none;
             -ms-overflow-style: none;
+            flex: 1 1 auto;
+            width: 100%;
+            min-width: 0;
+            height: 100%;
+            min-height: 0;
+            scrollbar-width: none;
 
             &::-webkit-scrollbar {
                 display: none;

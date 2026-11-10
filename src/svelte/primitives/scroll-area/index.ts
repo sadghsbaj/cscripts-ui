@@ -23,5 +23,4 @@ export interface ScrollAreaProps extends HTMLAttributes<HTMLDivElement> {
 
 export type ScrollAreaContentProps = HTMLAttributes<HTMLDivElement>;
 
-export const [getScrollAreaContext, setScrollAreaContext, hasScrollAreaContext] =
-    createContext<ScrollAreaManager>();
+export const [getScrollAreaContext, setScrollAreaContext, hasScrollAreaContext] = createContext<ScrollAreaManager>();

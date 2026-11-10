@@ -4,9 +4,9 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 
 ## 1. Component Architecture Philosophy
 
-- **UI Components & Interactive Primitives (`../svelte/components/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte/components`. Components use a clean compound architecture with colocated `@layer components` CSS and require explicit prop configuration (`variant`, `size`, `color`) without implicit fallback defaults:
-    1. **Discover available components:** Read `../svelte/components/index.ts` to see all exported components, sub-components, and prop types.
-    2. **Inspect implementation & conventions:** Read the specific `../svelte/components/<name>/` files and architectural guides in `../svelte/explanations/` before using or building components.
+- **UI Components & Interactive Primitives (`../svelte/primitives/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte/<primitive>`. Primitives use a clean compound architecture with colocated CSS and require explicit prop configuration (`variant`, `size`, `color`) without implicit fallback defaults:
+    1. **Discover available primitives:** Check `../svelte/primitives/<name>/index.ts` to see exported components, attachments, and types.
+    2. **Inspect implementation & conventions:** Read the specific `../svelte/primitives/<name>/` files and architectural guides in `../svelte/explanations/` before using or building primitives.
 - **Static Layout & Surface Containers:** Do NOT wrap simple static layout containers (islands, cards, flex/grid wrappers) into redundant `.svelte` components when native HTML elements styled with UnoCSS utilities and semantic surface tokens (`bg-elevation-1`, `squircle`, etc.) suffice.
 
 ## 2. Modern Svelte 5 Features (MANDATORY — DO NOT USE LEGACY PATTERNS)
@@ -16,7 +16,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 Svelte 5.29+ replaces legacy `use:action` with **Attachments** (https://svelte.dev/docs/svelte/@attach). NEVER write `use:myAction`.
 
 - **How it works:** An attachment is a function receiving the DOM element and optionally returning a cleanup function. It automatically re-runs when reactive state read inside it changes.
-- **Library Attachments:** Read `../svelte/attachments/index.ts` (and the respective folders in `../svelte/attachments/`) to discover built-in attachments like `scrollFade` and `fadeMask` before writing custom DOM attachments.
+- **Library Attachments:** Read the respective folders in `../svelte/primitives/` (such as `scroll-fade` or `fade-mask`) to discover built-in attachments like `scrollFade` and `fadeMask` before writing custom DOM attachments. Attachments use `.attach.ts` and `.attach.css`.
 - **Syntax Example:**
     ```svelte
     <script lang="ts">

@@ -1,6 +1,7 @@
 <script module>
-    import { scrollFade } from "cs/svelte/attachments";
-    import { HitArea, ScrollArea, ScrollAreaContent } from "cs/svelte/components";
+    import { HitArea } from "cs/svelte/hit-area";
+    import { ScrollArea, ScrollAreaContent } from "cs/svelte/scroll-area";
+    import { scrollFade } from "cs/svelte/scroll-fade";
     import {
         WorkAppFrame,
         WorkAppHeader,

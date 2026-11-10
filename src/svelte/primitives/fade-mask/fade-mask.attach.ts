@@ -5,7 +5,7 @@
 
 import type { Attachment } from "svelte/attachments";
 
-import "./fade-mask.css";
+import "./fade-mask.attach.css";
 
 export const FADE_MASK_VARIANTS = ["radial", "top", "bottom", "left", "right", "block", "inline"] as const;
 export const FADE_MASK_STRENGTHS = ["sm", "md", "lg"] as const;

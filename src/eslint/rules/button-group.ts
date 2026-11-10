@@ -60,11 +60,7 @@ interface PropSignature {
     attr?: AST.SvelteAttribute;
 }
 
-function getPropSignature(
-    context: Rule.RuleContext,
-    button: AST.SvelteElement,
-    propName: string
-): PropSignature {
+function getPropSignature(context: Rule.RuleContext, button: AST.SvelteElement, propName: string): PropSignature {
     const attr = findAttribute(button, propName);
     if (!attr) {
         return { key: "omitted", display: "(omitted)" };
@@ -118,12 +114,7 @@ function collectDirectGroupButtons(children: AST.SvelteElement["children"]): AST
             buttons.push(...collectDirectGroupButtons(child.children as AST.SvelteElement["children"]));
         }
 
-        if (
-            "else" in child &&
-            child.else &&
-            "children" in child.else &&
-            Array.isArray(child.else.children)
-        ) {
+        if ("else" in child && child.else && "children" in child.else && Array.isArray(child.else.children)) {
             buttons.push(...collectDirectGroupButtons(child.else.children as AST.SvelteElement["children"]));
         }
     }
@@ -137,7 +128,8 @@ export const buttonGroupUniformButtonsRule: Rule.RuleModule = {
     meta: {
         type: "problem",
         docs: {
-            description: "Enforce consistent 'size', 'variant', and 'color' props across all <Button> elements in a <ButtonGroup>",
+            description:
+                "Enforce consistent 'size', 'variant', and 'color' props across all <Button> elements in a <ButtonGroup>",
         },
         messages: {
             mismatchedButtonProp:

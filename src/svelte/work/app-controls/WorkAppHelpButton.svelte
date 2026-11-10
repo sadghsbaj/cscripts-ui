@@ -9,8 +9,8 @@ Architectural Notes:
 <script lang="ts">
     import { BookOpen } from "@lucide/svelte";
 
-    import { Button, ButtonIcon } from "../../components/button/index.ts";
-    import { HitArea } from "../../components/hit-area/index.ts";
+    import { Button, ButtonIcon } from "../../primitives/button/index.ts";
+    import { HitArea } from "../../primitives/hit-area/index.ts";
     import type { WorkAppHelpButtonProps } from "./index.ts";
 
     let {

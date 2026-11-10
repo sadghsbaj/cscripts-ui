@@ -9,7 +9,7 @@
         BACKGROUND_PATTERN_VARIANTS,
         BackgroundPattern,
         type BackgroundPatternVariant,
-    } from "cs/svelte/components";
+    } from "cs/svelte/background-pattern";
 </script>
 
 <div class="flex justify-center">

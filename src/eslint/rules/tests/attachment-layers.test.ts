@@ -11,7 +11,7 @@ const ruleTester = new RuleTester({
 
 describe("attachment-layers ESLint rules", () => {
     describe("attachment-layers/require-attachment-layer", () => {
-        it("enforces @layer attachments on CSS files in attachments directories", () => {
+        it("enforces @layer attachments on .attach.css files in primitives directories", () => {
             ruleTester.run("attachment-layers/require-attachment-layer", attachmentLayerRule, {
                 valid: [
                     {
@@ -22,7 +22,7 @@ describe("attachment-layers ESLint rules", () => {
     }
 }
 `,
-                        filename: "src/svelte/attachments/fade-mask/fade-mask.css",
+                        filename: "src/svelte/primitives/fade-mask/fade-mask.attach.css",
                     },
                     {
                         // Non-attachment CSS files are exempt
@@ -42,7 +42,7 @@ describe("attachment-layers ESLint rules", () => {
     mask-repeat: no-repeat;
 }
 `,
-                        filename: "src/svelte/attachments/fade-mask/fade-mask.css",
+                        filename: "src/svelte/primitives/fade-mask/fade-mask.attach.css",
                         errors: [{ messageId: "missingAttachmentLayer" }],
                     },
                     {
@@ -52,7 +52,7 @@ describe("attachment-layers ESLint rules", () => {
     .cs-fade-mask { color: red; }
 }
 `,
-                        filename: "src/svelte/attachments/fade-mask/fade-mask.css",
+                        filename: "src/svelte/primitives/fade-mask/fade-mask.attach.css",
                         errors: [{ messageId: "missingAttachmentLayer" }],
                     },
                 ],

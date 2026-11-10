@@ -100,8 +100,7 @@ export const toggleButtonHitAreaRule: Rule.RuleModule = {
     meta: {
         type: "suggestion",
         docs: {
-            description:
-                "Advise using <HitArea /> inside <ToggleButton iconOnly> to satisfy touch target guidelines",
+            description: "Advise using <HitArea /> inside <ToggleButton iconOnly> to satisfy touch target guidelines",
         },
         messages: {
             missingHitArea:

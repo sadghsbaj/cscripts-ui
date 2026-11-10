@@ -4,15 +4,8 @@
 </script>
 
 <script lang="ts">
-    import {
-        Button,
-        BUTTON_COLORS,
-        ButtonGroup,
-        ButtonGroupSeparator,
-        ButtonLabel,
-        type ButtonColor,
-        type ButtonVariant,
-    } from "cs/svelte/components";
+    import { Button, BUTTON_COLORS, ButtonLabel, type ButtonColor, type ButtonVariant } from "cs/svelte/button";
+    import { ButtonGroup, ButtonGroupSeparator } from "cs/svelte/button-group";
 
     const variants = ["solid", "soft", "ghost"] as const satisfies readonly Exclude<ButtonVariant, "elevated">[];
 </script>

@@ -1,7 +1,7 @@
 import type { Component } from "svelte";
 import type { HTMLButtonAttributes } from "svelte/elements";
 
-import type { ButtonIconComponentProps } from "../../components/button/index.ts";
+import type { ButtonIconComponentProps } from "../../primitives/button/index.ts";
 
 export { default as WorkAppThemeButton } from "./WorkAppThemeButton.svelte";
 export { default as WorkAppHeaderThemeButton } from "./WorkAppThemeButton.svelte";

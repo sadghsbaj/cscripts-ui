@@ -20,6 +20,10 @@ export type ButtonSize = (typeof BUTTON_SIZES)[number];
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 export type ButtonElement = "button" | "a" | "label";
 
+type InterestAttributes = {
+    interestfor?: string;
+};
+
 export type ButtonVariantProps =
     | {
           variant: Exclude<ButtonVariant, "elevated">;
@@ -33,7 +37,7 @@ export type ButtonVariantProps =
 export type ButtonProps = (
     | (Omit<HTMLButtonAttributes, "color" | "size"> & { as?: "button" })
     | (Omit<HTMLAnchorAttributes, "color" | "size"> & { as: "a" })
-    | (Omit<HTMLLabelAttributes, "color" | "size"> & { as: "label" })
+    | ((Omit<HTMLLabelAttributes, "color" | "size"> & { as: "label" }) & InterestAttributes)
 ) &
     ButtonVariantProps & {
         size: ButtonSize;

@@ -28,11 +28,7 @@
         * VARIANTS
         * ========================================================= */
         &[data-fade-mask-variant="radial"] {
-            mask-image: radial-gradient(
-                in oklch,
-                black var(--cs-fade-mask-start),
-                transparent var(--cs-fade-mask-end)
-            );
+            mask-image: radial-gradient(in oklch, black var(--cs-fade-mask-start), transparent var(--cs-fade-mask-end));
         }
 
         &[data-fade-mask-variant="top"] {

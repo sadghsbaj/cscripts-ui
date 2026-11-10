@@ -3,10 +3,7 @@ import * as svelteParser from "svelte-eslint-parser";
 import { describe, it } from "bun:test";
 import { RuleTester } from "eslint";
 
-import {
-    toggleButtonGroupNoRegularButtonRule,
-    toggleButtonGroupUniformButtonsRule,
-} from "../toggle-button-group.ts";
+import { toggleButtonGroupNoRegularButtonRule, toggleButtonGroupUniformButtonsRule } from "../toggle-button-group.ts";
 
 const ruleTester = new RuleTester({
     languageOptions: {

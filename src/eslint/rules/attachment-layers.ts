@@ -1,5 +1,5 @@
 /**
- * Enforces `@layer attachments` on all standalone CSS files inside `attachments/` folders.
+ * Enforces `@layer attachments` on all standalone `.attach.css` files inside `primitives/` folders.
  */
 
 import type { Linter, Rule } from "eslint";
@@ -35,7 +35,7 @@ export const attachmentLayerRule: Rule.RuleModule = {
     meta: {
         type: "problem",
         docs: {
-            description: "Enforce @layer attachments on CSS files in attachments directories",
+            description: "Enforce @layer attachments on .attach.css files in primitives directories",
         },
         messages: {
             missingAttachmentLayer: "Attachment CSS must be wrapped in '@layer attachments { ... }'.",
@@ -45,7 +45,7 @@ export const attachmentLayerRule: Rule.RuleModule = {
 
     create(context: Rule.RuleContext): Rule.RuleListener {
         const filename = context.filename ?? "";
-        if (!filename.includes("attachments")) return {};
+        if (!filename.includes(".attach.css") || !filename.includes("svelte/primitives/")) return {};
 
         return {
             Program(node: unknown): void {
@@ -62,7 +62,7 @@ export const attachmentLayerRule: Rule.RuleModule = {
 };
 
 export const attachmentLayersConfig: Linter.Config = {
-    files: ["**/*.css"],
+    files: ["**/*.attach.css"],
     languageOptions: {
         parser: attachmentCssParser,
     },

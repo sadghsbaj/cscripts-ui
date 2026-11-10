@@ -27,19 +27,59 @@
             "svelte": "./src/svelte/theme.svelte.ts",
             "default": "./src/svelte/theme.svelte.ts"
         },
-        "./svelte/components": {
-            "svelte": "./src/svelte/components/index.ts",
-            "default": "./src/svelte/components/index.ts"
-        },
-        "./svelte/attachments": {
-            "svelte": "./src/svelte/attachments/index.ts",
-            "default": "./src/svelte/attachments/index.ts"
-        },
         "./svelte/work": {
             "svelte": "./src/svelte/work/index.ts",
             "default": "./src/svelte/work/index.ts"
         },
+        "./svelte/button": {
+            "svelte": "./src/svelte/primitives/button/index.ts",
+            "default": "./src/svelte/primitives/button/index.ts"
+        },
+        "./svelte/button-group": {
+            "svelte": "./src/svelte/primitives/button-group/index.ts",
+            "default": "./src/svelte/primitives/button-group/index.ts"
+        },
+        "./svelte/toggle-button": {
+            "svelte": "./src/svelte/primitives/toggle-button/index.ts",
+            "default": "./src/svelte/primitives/toggle-button/index.ts"
+        },
+        "./svelte/toggle-button-group": {
+            "svelte": "./src/svelte/primitives/toggle-button-group/index.ts",
+            "default": "./src/svelte/primitives/toggle-button-group/index.ts"
+        },
+        "./svelte/close-button": {
+            "svelte": "./src/svelte/primitives/close-button/index.ts",
+            "default": "./src/svelte/primitives/close-button/index.ts"
+        },
+        "./svelte/hit-area": {
+            "svelte": "./src/svelte/primitives/hit-area/index.ts",
+            "default": "./src/svelte/primitives/hit-area/index.ts"
+        },
+        "./svelte/background-pattern": {
+            "svelte": "./src/svelte/primitives/background-pattern/index.ts",
+            "default": "./src/svelte/primitives/background-pattern/index.ts"
+        },
+        "./svelte/scroll-area": {
+            "svelte": "./src/svelte/primitives/scroll-area/index.ts",
+            "default": "./src/svelte/primitives/scroll-area/index.ts"
+        },
+        "./svelte/scroll-fade": {
+            "svelte": "./src/svelte/primitives/scroll-fade/index.ts",
+            "default": "./src/svelte/primitives/scroll-fade/index.ts"
+        },
+        "./svelte/fade-mask": {
+            "svelte": "./src/svelte/primitives/fade-mask/index.ts",
+            "default": "./src/svelte/primitives/fade-mask/index.ts"
+        },
+        "./svelte/floating": {
+            "svelte": "./src/svelte/primitives/floating/index.ts",
+            "default": "./src/svelte/primitives/floating/index.ts"
+        },
         "./svelte/explanations/*": "./src/svelte/explanations/*",
+        "./svelte/*": {
+            "svelte": "./src/svelte/primitives/*/index.ts",
+            "default": "./src/svelte/primitives/*/index.ts"
+        },
         "./eslint": "./src/eslint/index.ts"
     },
     "devDependencies": {

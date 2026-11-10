@@ -29,7 +29,7 @@ export const componentLayersRule: Rule.RuleModule = {
 
     create(context: Rule.RuleContext): Rule.RuleListener {
         const filename = context.filename ?? "";
-        if (!filename.includes("svelte/components/") && !filename.includes("svelte/work/")) {
+        if (!filename.includes("svelte/primitives/") && !filename.includes("svelte/work/")) {
             return {};
         }
 
@@ -45,10 +45,7 @@ export const componentLayersRule: Rule.RuleModule = {
 
                 if (!css) return;
 
-                const layerMatches = Array.from(
-                    css.matchAll(/@layer\s+([a-zA-Z0-9_.-]+)/g),
-                    (m) => m[1]
-                );
+                const layerMatches = Array.from(css.matchAll(/@layer\s+([a-zA-Z0-9_.-]+)/g), (m) => m[1]);
 
                 if (layerMatches.length === 0) {
                     context.report({
