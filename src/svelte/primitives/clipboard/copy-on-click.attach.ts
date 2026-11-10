@@ -167,9 +167,9 @@ async function resolveCopyText(
  * })}>Copy</button>
  * ```
  */
-export function copyOnClick<T extends HTMLElement | SVGElement = HTMLElement>(
+export function copyOnClick(
     sourceOrOptions?: CopySource | CopyOnClickOptions
-): Attachment<T> {
+): Attachment<HTMLElement | SVGElement> {
     const options: CopyOnClickOptions =
         typeof sourceOrOptions === "string" ||
         typeof sourceOrOptions === "function" ||
@@ -194,7 +194,7 @@ export function copyOnClick<T extends HTMLElement | SVGElement = HTMLElement>(
         return () => () => {};
     }
 
-    return (node: T) => {
+    return (node) => {
         let feedbackTimerId: ReturnType<typeof setTimeout> | null = null;
         let isUnmounted = false;
 

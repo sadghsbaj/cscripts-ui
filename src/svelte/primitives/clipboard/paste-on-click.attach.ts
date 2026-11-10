@@ -241,9 +241,9 @@ function insertTextIntoContentEditable(element: HTMLElement, text: string, mode:
  * })}>Replace All</button>
  * ```
  */
-export function pasteOnClick<T extends HTMLElement | SVGElement = HTMLElement>(
+export function pasteOnClick(
     targetOrOptions?: PasteSource | PasteOnClickOptions
-): Attachment<T> {
+): Attachment<HTMLElement | SVGElement> {
     const options: PasteOnClickOptions =
         typeof targetOrOptions === "function" || targetOrOptions instanceof HTMLElement
             ? { target: targetOrOptions }
@@ -268,7 +268,7 @@ export function pasteOnClick<T extends HTMLElement | SVGElement = HTMLElement>(
         return () => () => {};
     }
 
-    return (node: T) => {
+    return (node) => {
         let feedbackTimerId: ReturnType<typeof setTimeout> | null = null;
         let isUnmounted = false;
 

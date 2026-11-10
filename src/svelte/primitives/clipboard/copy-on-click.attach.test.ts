@@ -198,7 +198,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             container.append(svg);
 
-            const attach = copyOnClick<SVGSVGElement>("svg-copy-token");
+            const attach = copyOnClick("svg-copy-token");
             const cleanup = attach(svg);
 
             svg.dispatchEvent(
