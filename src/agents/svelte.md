@@ -68,9 +68,20 @@ NEVER abuse `$effect` to synchronize state (e.g., reading state A inside `$effec
 - **Component Generics:** For generic components, use `<script lang="ts" generics="T extends Record<string, unknown>">`.
 - **Module Context:** Use `<script module lang="ts">` (not `context="module"`) for module-level exports and shared non-instance logic.
 
-## 3. Theme & Build Configuration (`cs/svelte/theme` & `cs/vite`)
+## 3. Theme, Browser Storage & Build Configuration (`cs/svelte/theme`, `cs/svelte/browser-storage` & `cs/vite`)
 
-### A. Theme Management (`cs/svelte/theme` & `../vite/theme.ts`)
+### A. Browser Storage (`cs/svelte/browser-storage` — `../svelte/primitives/browser-storage/index.ts`)
+
+Local HTML applications opened via `file://` in Chromium/Edge share a **single global `localStorage` / `sessionStorage` bucket**. Direct access to native `localStorage` or `sessionStorage` is strictly forbidden by ESLint (`browser-storage/no-native-storage`).
+
+1. **Mandatory App Prefix in `main.ts` (`browser-storage/require-storage-prefix`):**
+   Every application must call `configureStoragePrefix("<unique-app-id>")` with a non-empty string in `src/main.ts` before mounting `<App />`.
+2. **Reading & Writing Storage:**
+   Always use the helpers from `cs/svelte/browser-storage` (`getLocalStorage`, `setLocalStorage`, `getLocalStorageJson`, `setLocalStorageJson`, `removeLocalStorage`, `clearLocalStorage`, `onLocalStorageChange`, and the matching `SessionStorage` equivalents). All helpers automatically prepend the configured app prefix (`"<prefix>:<key>"`), handle `SecurityError` / `QuotaExceededError` / SSR safely, and scope `clearLocalStorage()` strictly to the current app's prefix.
+3. **Global Cross-App Keys (`{ prefix: false }`):**
+   Pass `{ prefix: false }` ONLY for intentional cross-application keys that should synchronize across all local `file://` tools (such as `"cs-theme"`).
+
+### B. Theme Management (`cs/svelte/theme` & `../vite/theme.ts`)
 
 Theme state (`light` | `dark` | `system`), localStorage persistence (`cs-theme`), OS media query listeners, and native View Transitions (`document.startViewTransition` with automatic data-theme-switching transition suspension) are completely handled by `cs/svelte/theme` in combination with the FOUC-prevention inline script in `../vite/theme.ts`.
 
@@ -95,7 +106,7 @@ theme.set("dark");
 
 > **SSR Note:** For multi-request SSR apps requiring request isolation, instantiate `new ThemeManager()` inside a context (`createContext`) instead of mutating the global `theme` singleton.
 
-### B. Vite Plugins (`cs/vite` — `../vite/index.ts`)
+### C. Vite Plugins (`cs/vite` — `../vite/index.ts`)
 
 `vite.config.ts` uses four explicit plugins from `cs/vite` (all options are required so project configuration is immediately visible):
 

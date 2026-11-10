@@ -1,5 +1,6 @@
 import { flushSync, type Component } from "svelte";
 import { Monitor, Moon, Sun } from "@lucide/svelte";
+import { getLocalStorage, onLocalStorageChange, setLocalStorage } from "cs/svelte/browser-storage";
 
 /**
  * @file Reactive Theme Manager for Svelte 5 Applications.
@@ -57,30 +58,6 @@ export const isValidMode = (v: unknown): v is ThemeMode =>
     typeof v === "string" && (THEME_MODES as readonly string[]).includes(v);
 
 /**
- * Defensive localStorage getter handling SecurityError / QuotaExceededError.
- */
-function safeGetStorage(key: string): string | null {
-    try {
-        return typeof window !== "undefined" && window.localStorage ? localStorage.getItem(key) : null;
-    } catch {
-        return null;
-    }
-}
-
-/**
- * Defensive localStorage setter handling SecurityError / QuotaExceededError.
- */
-function safeSetStorage(key: string, value: string): void {
-    try {
-        if (typeof window !== "undefined" && window.localStorage) {
-            localStorage.setItem(key, value);
-        }
-    } catch {
-        // Safe fall-through on restricted storage access
-    }
-}
-
-/**
  * Reactive theme manager for Svelte 5 applications.
  * Coordinates user preferences, OS color schemes, and document styling.
  */
@@ -92,7 +69,7 @@ export class ThemeManager {
 
     #mediaQuery: MediaQueryList | null = null;
     #mediaListener: (() => void) | null = null;
-    #storageListener: ((event: StorageEvent) => void) | null = null;
+    #unsubscribeStorage: (() => void) | null = null;
 
     constructor(initialMode: ThemeMode = "system", initialResolved: "light" | "dark" = "light") {
         if (typeof window === "undefined") {
@@ -109,7 +86,7 @@ export class ThemeManager {
             return;
         }
 
-        const stored = safeGetStorage(STORAGE_KEY);
+        const stored = getLocalStorage(STORAGE_KEY, { prefix: false });
         const validMode = isValidMode(stored) ? stored : isValidMode(initialMode) ? initialMode : "system";
         this.#mode = validMode;
 
@@ -132,19 +109,17 @@ export class ThemeManager {
             this.#mediaQuery.addEventListener?.("change", this.#mediaListener);
         }
 
-        this.#storageListener = (event: StorageEvent) => {
-            const isTargetKey = event.key === STORAGE_KEY || event.key === null;
-            const isTargetStorage = !event.storageArea || event.storageArea === localStorage;
-            if (!isTargetKey || !isTargetStorage) return;
-
-            const rawVal = event.newValue;
-            const newMode = isValidMode(rawVal) ? rawVal : "system";
-            if (newMode !== this.#mode) {
-                this.#mode = newMode;
-                this.apply();
-            }
-        };
-        window.addEventListener("storage", this.#storageListener);
+        this.#unsubscribeStorage = onLocalStorageChange(
+            STORAGE_KEY,
+            (rawVal) => {
+                const newMode = isValidMode(rawVal) ? rawVal : "system";
+                if (newMode !== this.#mode) {
+                    this.#mode = newMode;
+                    this.apply();
+                }
+            },
+            { prefix: false }
+        );
     }
 
     /**
@@ -157,8 +132,9 @@ export class ThemeManager {
         if (this.#mediaQuery && this.#mediaListener) {
             this.#mediaQuery.removeEventListener?.("change", this.#mediaListener);
         }
-        if (this.#storageListener) {
-            window.removeEventListener("storage", this.#storageListener);
+        if (this.#unsubscribeStorage) {
+            this.#unsubscribeStorage();
+            this.#unsubscribeStorage = null;
         }
     }
 
@@ -199,7 +175,7 @@ export class ThemeManager {
         if (!isValidMode(newMode)) return;
         if (newMode === this.#mode) return;
         this.#mode = newMode;
-        safeSetStorage(STORAGE_KEY, newMode);
+        setLocalStorage(STORAGE_KEY, newMode, { prefix: false });
         this.apply();
     }
 

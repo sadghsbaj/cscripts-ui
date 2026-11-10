@@ -1,3 +1,5 @@
+import { getLocalStorage, getSessionStorage, setLocalStorage, setSessionStorage } from "cs/svelte/browser-storage";
+
 import type { WorkLocationId } from "../locations";
 
 const SESSION_STORAGE_KEY = "cs-pfleiderer-boot-session";
@@ -72,12 +74,8 @@ class WorkAppIntroManager {
             this.phase = "idle";
         }, 2770);
 
-        try {
-            sessionStorage.setItem(SESSION_STORAGE_KEY, "1");
-            localStorage.setItem(LOCAL_STORAGE_KEY, String(Date.now()));
-        } catch (error) {
-            console.warn(error);
-        }
+        setSessionStorage(SESSION_STORAGE_KEY, "1", { prefix: false });
+        setLocalStorage(LOCAL_STORAGE_KEY, String(Date.now()), { prefix: false });
     }
 
     /**
@@ -85,26 +83,22 @@ class WorkAppIntroManager {
      * occurred within `FAST_BOOT_WINDOW_MS` (30 minutes).
      */
     triggerSmartBoot(): void {
-        try {
-            const hasSession = sessionStorage.getItem(SESSION_STORAGE_KEY) === "1";
+        const hasSession = getSessionStorage(SESSION_STORAGE_KEY, { prefix: false }) === "1";
 
-            if (hasSession) {
-                this.startBoot("instant");
-                return;
-            }
-
-            const lastTimestamp = Number(localStorage.getItem(LOCAL_STORAGE_KEY) ?? "0");
-            const elapsed = Date.now() - lastTimestamp;
-
-            if (lastTimestamp > 0 && elapsed < FAST_BOOT_WINDOW_MS) {
-                this.startBoot("instant");
-                return;
-            }
-
-            this.startBoot("cold");
-        } catch {
-            this.startBoot("cold");
+        if (hasSession) {
+            this.startBoot("instant");
+            return;
         }
+
+        const lastTimestamp = Number(getLocalStorage(LOCAL_STORAGE_KEY, { prefix: false }) ?? "0");
+        const elapsed = Date.now() - lastTimestamp;
+
+        if (lastTimestamp > 0 && elapsed < FAST_BOOT_WINDOW_MS) {
+            this.startBoot("instant");
+            return;
+        }
+
+        this.startBoot("cold");
     }
 
     skipBoot = (): void => {

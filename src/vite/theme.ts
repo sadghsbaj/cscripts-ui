@@ -1,5 +1,7 @@
 import type { Plugin } from "vite";
 
+import { verifyStoragePrefix } from "./storage.ts";
+
 export type CSThemeMode = "light" | "dark" | "system";
 
 export interface CSThemeOptions {
@@ -26,6 +28,11 @@ export function csTheme(options: CSThemeOptions): Plugin {
 
     return {
         name: "vite-plugin-cs-theme",
+        configResolved(config) {
+            if (config.plugins.every((plugin) => plugin.name !== "vite-plugin-cs-storage-check")) {
+                verifyStoragePrefix(config);
+            }
+        },
         transformIndexHtml() {
             return [
                 {

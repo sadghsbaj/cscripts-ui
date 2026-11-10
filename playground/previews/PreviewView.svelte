@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Component } from "svelte";
     import { PanelLeftClose } from "@lucide/svelte";
+    import { getLocalStorage, setLocalStorage } from "cs/svelte/browser-storage";
     import { Button, ButtonIcon } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
     import { ScrollArea, ScrollAreaContent } from "cs/svelte/scroll-area";
@@ -20,7 +21,7 @@
         preview: Component;
     }
 
-    const SAVED_PREVIEW_KEY = "cscripts-saved-preview";
+    const SAVED_PREVIEW_KEY = "saved-preview";
 
     const modules = import.meta.glob<SvelteModule>("./svelte/*.svelte", { eager: true });
 
@@ -33,17 +34,12 @@
     });
 
     let activePreview = $state<Component | undefined>(
-        previews.find((p) => p.id === localStorage.getItem(SAVED_PREVIEW_KEY))?.preview
+        previews.find((p) => p.id === getLocalStorage(SAVED_PREVIEW_KEY))?.preview
     );
 
     function changeActivePreview(preview: PreviewItem): void {
         activePreview = preview.preview;
-
-        try {
-            localStorage.setItem(SAVED_PREVIEW_KEY, preview.id);
-        } catch (error) {
-            console.warn(error);
-        }
+        setLocalStorage(SAVED_PREVIEW_KEY, preview.id);
     }
 
     let sidebarIsOpen = $state(false);

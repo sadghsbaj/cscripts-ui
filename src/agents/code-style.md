@@ -23,6 +23,8 @@ The library uses a strict custom ESLint flat config bundle (`src/eslint/`) that 
 
 - **UnoCSS Shortcuts (`shortcuts/enforce-shortcuts`):** Never combine raw layout utility classes (`flex justify-center items-center`) when a shortcut exists (`flex-center`). ESLint will auto-fix or error out.
 - **No Unicode Dots (`unicode-dots/no-unicode-dots`):** Unicode separator dots (`·`, `•`, etc.) are forbidden in code and text. Always use an empty span with dot utilities (`<span class="dot-md"></span>`).
+- **Prefix-Isolated Browser Storage (`browser-storage/no-native-storage` & `browser-storage/require-storage-prefix`):** Never access native `localStorage` or `sessionStorage` directly. Always configure a unique non-empty prefix via `configureStoragePrefix("app-id")` in `main.ts` and use `cs/svelte/browser-storage` helpers.
+- **Standardized Clipboard (`clipboard/no-native-clipboard` & `clipboard/prefer-clipboard-icons`):** Never call `navigator.clipboard` or `document.execCommand("copy")` directly; use `cs/svelte/clipboard` attachments, icons (`<CopyIcon />`, `<PasteIcon />`), and utilities.
 - **Modern Svelte Restrictions (`svelteConfig`):**
     - Legacy `getContext` / `setContext` / `hasContext` imports from `"svelte"` are banned (use Svelte 5's type-safe `createContext`).
     - Legacy `use:action` directives are banned (use Svelte 5 `{@attach ...}` or element functions).
