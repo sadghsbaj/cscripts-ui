@@ -16,7 +16,8 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 Svelte 5.29+ replaces legacy `use:action` with **Attachments** (https://svelte.dev/docs/svelte/@attach). NEVER write `use:myAction`.
 
 - **How it works:** An attachment is a function receiving the DOM element and optionally returning a cleanup function. It automatically re-runs when reactive state read inside it changes.
-- **Library Attachments:** Read the respective folders in `../svelte/primitives/` (such as `scroll-fade` or `fade-mask`) to discover built-in attachments like `scrollFade` and `fadeMask` before writing custom DOM attachments. Attachments use `.attach.ts` and `.attach.css`.
+- **Library Attachments:** Read the respective folders in `../svelte/primitives/` (such as `scroll-fade`, `fade-mask`, `tooltip`, or `clipboard`) to discover built-in attachments before writing custom DOM logic:
+    - **Clipboard (`cs/svelte/clipboard`):** NEVER write manual `navigator.clipboard` calls, custom `copied = $state(false)` timers, or manual `<Copy />` / `<Check />` icon toggles. Always pair `{@attach copyOnClick(...)}` with `<CopyIcon />` and `{@attach pasteOnClick(...)}` with `<PasteIcon />` inside `<Button>` / `<ToggleButton>` (the icons automatically animate via CSS data attributes). For imperative script-level clipboard access outside UI triggers, use `copyToClipboard()` and `readFromClipboard()` from `cs/svelte/clipboard`.
 - **Syntax Example:**
     ```svelte
     <script lang="ts">
