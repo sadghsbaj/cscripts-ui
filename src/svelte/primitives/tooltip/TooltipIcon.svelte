@@ -18,8 +18,8 @@ Architectural Notes:
     @layer components.composite {
         :global(.cs-tooltip-icon) {
             flex-shrink: 0;
-            inline-size: calc(var(--_fs, var(--cs-text-xs)) + 1px);
-            block-size: calc(var(--_fs, var(--cs-text-xs)) + 1px);
+            inline-size: var(--_fs, var(--cs-text-xs));
+            block-size: var(--_fs, var(--cs-text-xs));
             color: var(--cs-color-text-strong, currentColor);
             stroke-width: 2.25;
             pointer-events: none;

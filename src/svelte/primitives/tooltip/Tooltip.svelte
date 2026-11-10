@@ -64,8 +64,11 @@ Architectural Notes:
 
         :global(.cs-tooltip) {
             --_fs: 13px;
+            --_tx: 0px;
+            --_ty: 4px;
+            --_origin: bottom center;
 
-            gap: 4px;
+            gap: 6px;
             align-items: center;
             justify-content: center;
             max-inline-size: min(320px, 80vw);
@@ -75,13 +78,105 @@ Architectural Notes:
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-smooth);
             box-shadow: var(--cs-shadow-elevation-1);
+
+            /* --- CLOSED / EXIT STATE --- */
+            opacity: 0;
+            filter: blur(1.5px);
+            translate: calc(var(--_tx) * 0.5) calc(var(--_ty) * 0.5);
+            scale: 0.95;
+            transform-origin: var(--_origin);
+
+            /* Exit-Transition */
+            transition:
+                opacity 100ms var(--cs-ease-quad-in),
+                scale 100ms var(--cs-ease-quad-in),
+                translate 100ms var(--cs-ease-quad-in),
+                filter 80ms var(--cs-ease-quad-in),
+                display 100ms allow-discrete,
+                overlay 100ms allow-discrete;
         }
 
-        :global(.cs-tooltip-shortcuts) {
+        /* --- PLACEMENT: TOP --- */
+        :global(.cs-tooltip[data-placement^="top"]) {
+            --_tx: 0px;
+            --_ty: 5px;
+            --_origin: bottom center;
+        }
+
+        :global(.cs-tooltip[data-placement="top"]:popover-open:state(flipped)) {
+            --_tx: 0px;
+            --_ty: -5px;
+            --_origin: top center;
+        }
+
+        /* --- PLACEMENT: BOTTOM --- */
+        :global(.cs-tooltip[data-placement^="bottom"]) {
+            --_tx: 0px;
+            --_ty: -5px;
+            --_origin: top center;
+        }
+
+        :global(.cs-tooltip[data-placement="bottom"]:popover-open:state(flipped)) {
+            --_tx: 0px;
+            --_ty: 5px;
+            --_origin: bottom center;
+        }
+
+        /* --- PLACEMENT: LEFT --- */
+        :global(.cs-tooltip[data-placement^="left"]),
+        :global(.cs-tooltip[data-placement^="inline-start"]) {
+            --_tx: 5px;
+            --_ty: 0px;
+            --_origin: center right;
+        }
+
+        :global(.cs-tooltip[data-placement^="left"]:popover-open:state(flipped)),
+        :global(.cs-tooltip[data-placement^="inline-start"]:popover-open:state(flipped)) {
+            --_tx: -5px;
+            --_ty: 0px;
+            --_origin: center left;
+        }
+
+        /* --- 4. PLACEMENT: RIGHT --- */
+        :global(.cs-tooltip[data-placement^="right"]),
+        :global(.cs-tooltip[data-placement^="inline-end"]) {
+            --_tx: -5px;
+            --_ty: 0px;
+            --_origin: center left;
+        }
+
+        :global(.cs-tooltip[data-placement^="right"]:popover-open:state(flipped)),
+        :global(.cs-tooltip[data-placement^="inline-end"]:popover-open:state(flipped)) {
+            --_tx: 5px;
+            --_ty: 0px;
+            --_origin: center right;
+        }
+
+        /* --- OPEN STATE -- */
+        :global(.cs-tooltip:popover-open) {
             display: inline-flex;
-            gap: 2px;
-            align-items: center;
-            margin-inline-start: 2px;
+            opacity: 1;
+            filter: blur(0px);
+            translate: 0 0;
+            scale: 1;
+
+            transition:
+                opacity 110ms var(--cs-ease-quart-out),
+                filter 120ms var(--cs-ease-quart-out),
+                scale 260ms var(--cs-spring-snappy),
+                translate 260ms var(--cs-spring-snappy),
+                display 260ms allow-discrete,
+                overlay 260ms allow-discrete;
+        }
+
+        /* --- ENTRY KEYFRAME --- */
+        @starting-style {
+            :global(.cs-tooltip:popover-open) {
+                opacity: 0;
+                filter: blur(2.5px);
+                translate: var(--_tx) var(--_ty);
+                scale: 0.88;
+            }
         }
     }
 </style>

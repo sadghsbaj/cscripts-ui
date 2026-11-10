@@ -109,6 +109,8 @@ function applyTargetStyles(id: string, opts: NormalizedOptions): HTMLElement | n
     const targetEl = document.getElementById(id);
     if (!targetEl) return null;
 
+    targetEl.dataset.placement = opts.placement ?? targetEl.dataset.placement ?? "top";
+
     if (opts.placement) {
         targetEl.dataset.placement = opts.placement;
     }
