@@ -63,6 +63,7 @@ type MountedTooltipState = {
 };
 
 const mountedTooltips = new WeakMap<HTMLElement, MountedTooltipState>();
+const disarmedTriggers = new WeakSet<HTMLElement>();
 
 let lastCloseTimestamp = 0;
 const WARMUP_WINDOW_MS = 300;
@@ -98,10 +99,12 @@ function resolveTooltipId(node: HTMLElement, opts: NormalizedOptions): string {
     return id;
 }
 
-function applyTriggerAttributes(node: HTMLElement, id: string, delay: string): void {
+function applyTriggerAttributes(node: HTMLElement, id: string, delay: string, armInterest: boolean): void {
     node.style.setProperty("anchor-name", `--anchor-${id}`);
     node.style.setProperty("interest-delay", delay);
-    node.setAttribute("interestfor", id);
+    if (armInterest) {
+        node.setAttribute("interestfor", id);
+    }
     node.setAttribute("aria-describedby", id);
 }
 
@@ -134,6 +137,7 @@ function bindDismissLifecycle(
             targetEl.hidePopover();
             lastCloseTimestamp = Date.now();
         }
+        disarmedTriggers.add(node);
         node.removeAttribute("interestfor");
     };
 
@@ -141,6 +145,7 @@ function bindDismissLifecycle(
         if (targetEl?.matches(":popover-open")) {
             lastCloseTimestamp = Date.now();
         }
+        disarmedTriggers.delete(node);
         if (!node.hasAttribute("interestfor")) {
             node.setAttribute("interestfor", id);
         }
@@ -150,6 +155,33 @@ function bindDismissLifecycle(
     const applyWarmup = (): void => {
         const isWarm = Date.now() - lastCloseTimestamp < WARMUP_WINDOW_MS;
         node.style.setProperty("interest-delay", isWarm ? `0ms ${closeDelay}` : defaultDelay);
+    };
+
+    const handlePointerEnter = (): void => {
+        disarmedTriggers.delete(node);
+        if (!node.hasAttribute("interestfor")) {
+            node.setAttribute("interestfor", id);
+        }
+        applyWarmup();
+    };
+
+    const handleFocusIn = (): void => {
+        // Native `interestfor` triggers on any DOM focus, including programmatic focus
+        // restoration when switching OS windows (e.g. Hyprland) after a pointer click.
+        // Disarm `interestfor` when focus is not keyboard-driven (`:focus-visible`) and
+        // the pointer is not actively hovering the trigger.
+        if (!node.matches(":focus-visible")) {
+            if (!node.matches(":hover")) {
+                disarmedTriggers.add(node);
+                node.removeAttribute("interestfor");
+            }
+            return;
+        }
+        disarmedTriggers.delete(node);
+        if (!node.hasAttribute("interestfor")) {
+            node.setAttribute("interestfor", id);
+        }
+        applyWarmup();
     };
 
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -164,8 +196,8 @@ function bindDismissLifecycle(
         dismiss();
     };
 
-    node.addEventListener("pointerenter", applyWarmup);
-    node.addEventListener("focusin", applyWarmup);
+    node.addEventListener("pointerenter", handlePointerEnter);
+    node.addEventListener("focusin", handleFocusIn);
     node.addEventListener("pointerdown", dismiss);
     node.addEventListener("keydown", handleKeyDown);
     node.addEventListener("pointerleave", restore);
@@ -173,8 +205,8 @@ function bindDismissLifecycle(
     window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
 
     return () => {
-        node.removeEventListener("pointerenter", applyWarmup);
-        node.removeEventListener("focusin", applyWarmup);
+        node.removeEventListener("pointerenter", handlePointerEnter);
+        node.removeEventListener("focusin", handleFocusIn);
         node.removeEventListener("pointerdown", dismiss);
         node.removeEventListener("keydown", handleKeyDown);
         node.removeEventListener("pointerleave", restore);
@@ -189,7 +221,7 @@ export function tooltip(options: TooltipAttachmentOptions): Attachment<HTMLEleme
         const delay = opts.delay ?? "400ms 150ms";
 
         const id = resolveTooltipId(node, opts);
-        applyTriggerAttributes(node, id, delay);
+        applyTriggerAttributes(node, id, delay, !disarmedTriggers.has(node));
 
         const targetEl = applyTargetStyles(id, opts);
         const unbindLifecycle = bindDismissLifecycle(node, id, targetEl, delay);
@@ -202,6 +234,7 @@ export function tooltip(options: TooltipAttachmentOptions): Attachment<HTMLEleme
                     return;
                 }
 
+                disarmedTriggers.delete(node);
                 const entry = mountedTooltips.get(node);
                 if (entry) {
                     unmount(entry.instance);
