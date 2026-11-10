@@ -48,7 +48,9 @@ export const buttonStructureRule: Rule.RuleModule = {
 
                 const isIconOnly = isTruthyAttribute(node, "iconOnly");
                 const hasLabel = hasDescendantElement(node.children, "ButtonLabel");
-                const hasButtonIcon = hasDescendantElement(node.children, "ButtonIcon");
+                const hasButtonIcon =
+                    hasDescendantElement(node.children, "ButtonIcon") ||
+                    hasDescendantElement(node.children, "CopyIcon");
 
                 if (isIconOnly) {
                     if (!hasAccessibleLabel(node)) {
