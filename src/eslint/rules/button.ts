@@ -50,7 +50,8 @@ export const buttonStructureRule: Rule.RuleModule = {
                 const hasLabel = hasDescendantElement(node.children, "ButtonLabel");
                 const hasButtonIcon =
                     hasDescendantElement(node.children, "ButtonIcon") ||
-                    hasDescendantElement(node.children, "CopyIcon");
+                    hasDescendantElement(node.children, "CopyIcon") ||
+                    hasDescendantElement(node.children, "PasteIcon");
 
                 if (isIconOnly) {
                     if (!hasAccessibleLabel(node)) {

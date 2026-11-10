@@ -129,9 +129,24 @@ function setFeedbackState(node: HTMLElement | SVGElement, state: "pasted" | "pas
     if (!("dataset" in node) || !node.dataset) {
         return;
     }
+    const hadState =
+        node.dataset.pasted !== undefined ||
+        node.dataset.pasteError !== undefined ||
+        node.dataset.pasteEmpty !== undefined;
+
     delete node.dataset.pasted;
     delete node.dataset.pasteError;
     delete node.dataset.pasteEmpty;
+
+    if (hadState) {
+        // Force a synchronous subtree style & animation flush so consecutive clicks within
+        // `feedbackDuration` reliably restart descendant CSS keyframe animations.
+        if (typeof node.getAnimations === "function") {
+            node.getAnimations({ subtree: true });
+        } else {
+            void node.getBoundingClientRect();
+        }
+    }
 
     node.dataset[state] = "";
 }
@@ -322,7 +337,6 @@ export function pasteOnClick(
             } catch (error: unknown) {
                 if (isUnmounted) return;
 
-                clearFeedbackTimer();
                 setFeedbackState(node, "pasteError");
                 onError?.({ error, node, event });
                 scheduleFeedbackReset();
@@ -332,7 +346,6 @@ export function pasteOnClick(
             if (isUnmounted) return;
 
             if (clipboardText === null) {
-                clearFeedbackTimer();
                 setFeedbackState(node, "pasteError");
                 onError?.({
                     error: new Error("Clipboard read operation failed or was denied"),
@@ -344,7 +357,6 @@ export function pasteOnClick(
             }
 
             if (clipboardText === "") {
-                clearFeedbackTimer();
                 setFeedbackState(node, "pasteEmpty");
                 onEmpty?.({ node, event });
                 scheduleFeedbackReset();
@@ -372,7 +384,6 @@ export function pasteOnClick(
                     } catch (error: unknown) {
                         if (isUnmounted) return;
 
-                        clearFeedbackTimer();
                         setFeedbackState(node, "pasteError");
                         onError?.({ error, node, event });
                         scheduleFeedbackReset();
@@ -384,7 +395,6 @@ export function pasteOnClick(
                     } else {
                         if (isUnmounted) return;
 
-                        clearFeedbackTimer();
                         setFeedbackState(node, "pasteError");
                         onError?.({
                             error: new Error("Target element supplier returned null, undefined, or an invalid element"),
@@ -409,7 +419,6 @@ export function pasteOnClick(
                     } catch (error: unknown) {
                         if (isUnmounted) return;
 
-                        clearFeedbackTimer();
                         setFeedbackState(node, "pasteError");
                         onError?.({ error, node, event });
                         scheduleFeedbackReset();

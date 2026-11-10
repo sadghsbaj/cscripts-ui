@@ -4,9 +4,8 @@
 </script>
 
 <script lang="ts">
-    import { ClipboardPaste } from "@lucide/svelte";
-    import { Button, BUTTON_SIZES, ButtonIcon, ButtonLabel } from "cs/svelte/button";
-    import { CopyIcon, copyOnClick, pasteOnClick } from "cs/svelte/clipboard";
+    import { BUTTON_SIZES, Button, ButtonLabel } from "cs/svelte/button";
+    import { CopyIcon, copyOnClick, PasteIcon, pasteOnClick } from "cs/svelte/clipboard";
     import { HitArea } from "cs/svelte/hit-area";
     import { tooltip } from "cs/svelte/tooltip";
 
@@ -15,11 +14,11 @@
 
 <div class="flex justify-center">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        <!-- 1. Icon-Only Sizes -->
+        <!-- 1. Copy Icon-Only Sizes -->
         <div
             class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
-            <h2 class="title-2xl">Icon-Only</h2>
+            <h2 class="title-2xl">Copy Sizes</h2>
             <div class="flex flex-wrap gap-3 items-center">
                 {#each BUTTON_SIZES as size (size)}
                     <Button
@@ -38,11 +37,11 @@
             </div>
         </div>
 
-        <!-- 2. Button Variants with Label -->
+        <!-- 2. Copy Variants with Label -->
         <div
             class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
-            <h2 class="title-2xl">With Label</h2>
+            <h2 class="title-2xl">Copy Variants</h2>
             <div class="flex flex-wrap gap-3 items-center">
                 <Button variant="soft" color="base" size="md" {@attach copyOnClick("bun add cs")}>
                     <CopyIcon />
@@ -61,34 +60,11 @@
             </div>
         </div>
 
-        <!-- 3. Elevated Surface -->
-        <div class="bg-elevation-0 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5">
-            <h2 class="title-2xl">Elevated</h2>
-            <div class="flex flex-wrap gap-3 items-center">
-                <Button
-                    variant="elevated"
-                    size="md"
-                    iconOnly
-                    aria-label="Kopieren"
-                    {@attach copyOnClick("elevated-copy")}
-                    {@attach tooltip("Kopieren")}
-                >
-                    <CopyIcon />
-                    <HitArea size="md" />
-                </Button>
-
-                <Button variant="elevated" size="md" {@attach copyOnClick("elevated-copy")}>
-                    <CopyIcon />
-                    <ButtonLabel>Code kopieren</ButtonLabel>
-                </Button>
-            </div>
-        </div>
-
-        <!-- 4. Error Feedback State -->
+        <!-- 3. Copy Error Feedback -->
         <div
             class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
-            <h2 class="title-2xl">Error State</h2>
+            <h2 class="title-2xl">Copy Error</h2>
             <div class="flex flex-wrap gap-3 items-center">
                 <Button
                     variant="soft"
@@ -115,46 +91,124 @@
             </div>
         </div>
 
-        <!-- 5. Async / Pending State -->
+        <!-- 4. Paste Icon-Only Sizes -->
         <div
             class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
-            <h2 class="title-2xl">Static States</h2>
-            <div class="flex flex-wrap gap-4 items-center text-lg">
-                <CopyIcon status="idle" />
-                <CopyIcon status="pending" />
-                <CopyIcon status="copied" />
-                <CopyIcon status="error" />
+            <h2 class="title-2xl">Paste Sizes</h2>
+            <div class="flex flex-wrap gap-3 items-center">
+                {#each BUTTON_SIZES as size (size)}
+                    <Button
+                        variant="soft"
+                        color="base"
+                        {size}
+                        iconOnly
+                        aria-label="Einfügen"
+                        {@attach pasteOnClick((e) => {
+                            pasteValue = e.text;
+                        })}
+                        {@attach tooltip("Einfügen")}
+                    >
+                        <PasteIcon />
+                        <HitArea size="md" />
+                    </Button>
+                {/each}
             </div>
         </div>
 
-        <!-- 6. Paste On Click -->
+        <!-- 5. Paste into Input -->
         <div
             class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
-            <h2 class="title-2xl">Paste</h2>
-            <div class="flex gap-2 items-center w-full">
-                <input
-                    bind:value={pasteValue}
-                    placeholder="Ziel..."
-                    class="bg-base-soft rounded-xl px-3 h-36px w-full text-sm outline-none"
-                />
+            <h2 class="title-2xl">Paste Input</h2>
+            <div class="flex flex-col gap-3 w-full">
+                <div class="flex gap-2 items-center w-full">
+                    <input
+                        bind:value={pasteValue}
+                        placeholder="Ziel..."
+                        class="bg-base-soft rounded-xl px-3 h-36px w-full text-sm outline-none"
+                    />
+                    <Button
+                        variant="soft"
+                        color="base"
+                        size="md"
+                        iconOnly
+                        aria-label="Einfügen"
+                        {@attach pasteOnClick({
+                            mode: "replace",
+                            target: (e) => {
+                                pasteValue = e.text;
+                            },
+                        })}
+                        {@attach tooltip("Einfügen")}
+                    >
+                        <PasteIcon />
+                        <HitArea size="md" />
+                    </Button>
+                </div>
+
+                <div class="flex flex-wrap gap-2 items-center">
+                    <Button
+                        variant="soft"
+                        color="base"
+                        size="sm"
+                        {@attach copyOnClick("")}
+                    >
+                        <CopyIcon />
+                        <ButtonLabel>Leer kopieren</ButtonLabel>
+                    </Button>
+
+                    <Button
+                        variant="solid"
+                        color="accent"
+                        size="sm"
+                        {@attach pasteOnClick((e) => {
+                            pasteValue = e.text;
+                        })}
+                    >
+                        <PasteIcon />
+                        <ButtonLabel>Paste</ButtonLabel>
+                    </Button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Paste Error & Static States -->
+        <div
+            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+        >
+            <h2 class="title-2xl">Paste States</h2>
+            <div class="flex flex-wrap gap-3 items-center">
                 <Button
                     variant="soft"
                     color="base"
                     size="md"
                     iconOnly
-                    aria-label="Einfügen"
-                    {@attach pasteOnClick({
-                        target: (e) => {
-                            pasteValue = e.text;
-                        },
-                    })}
-                    {@attach tooltip("Einfügen")}
+                    aria-label="Paste Error simulieren"
+                    {@attach pasteOnClick(() => null)}
+                    {@attach tooltip("Paste Error")}
                 >
-                    <ButtonIcon icon={ClipboardPaste} />
+                    <PasteIcon />
                     <HitArea size="md" />
                 </Button>
+
+                <Button
+                    variant="soft"
+                    color="danger"
+                    size="md"
+                    {@attach pasteOnClick(() => null)}
+                >
+                    <PasteIcon />
+                    <ButtonLabel>Fail Paste</ButtonLabel>
+                </Button>
+            </div>
+
+            <div class="flex flex-wrap gap-4 items-center text-lg">
+                <PasteIcon status="idle" />
+                <PasteIcon status="pending" />
+                <PasteIcon status="pasted" />
+                <PasteIcon status="empty" />
+                <PasteIcon status="error" />
             </div>
         </div>
     </div>

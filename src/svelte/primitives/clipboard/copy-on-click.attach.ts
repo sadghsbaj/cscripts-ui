@@ -103,8 +103,20 @@ function setFeedbackState(node: HTMLElement | SVGElement, state: "copied" | "cop
     if (!("dataset" in node) || !node.dataset) {
         return;
     }
+    const hadState = node.dataset.copied !== undefined || node.dataset.copyError !== undefined;
+
     delete node.dataset.copied;
     delete node.dataset.copyError;
+
+    if (hadState) {
+        // Force a synchronous subtree style & animation flush so consecutive clicks within
+        // `feedbackDuration` reliably restart descendant CSS keyframe animations.
+        if (typeof node.getAnimations === "function") {
+            node.getAnimations({ subtree: true });
+        } else {
+            void node.getBoundingClientRect();
+        }
+    }
 
     node.dataset[state] = "";
 }
@@ -248,7 +260,6 @@ export function copyOnClick(
             } catch (error: unknown) {
                 if (isUnmounted) return;
 
-                clearFeedbackTimer();
                 setFeedbackState(node, "copyError");
                 onError?.({ error, node, event });
                 scheduleFeedbackReset();
@@ -263,7 +274,6 @@ export function copyOnClick(
             } catch (error: unknown) {
                 if (isUnmounted) return;
 
-                clearFeedbackTimer();
                 setFeedbackState(node, "copyError");
                 onError?.({ error, node, event });
                 scheduleFeedbackReset();
@@ -271,8 +281,6 @@ export function copyOnClick(
             }
 
             if (isUnmounted) return;
-
-            clearFeedbackTimer();
 
             if (isSuccess) {
                 setFeedbackState(node, "copied");

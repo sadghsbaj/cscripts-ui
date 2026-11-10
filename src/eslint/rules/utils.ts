@@ -176,7 +176,7 @@ export function findRawIcons(children: AST.SvelteElement["children"], iconNames:
         for (const child of nodes) {
             if (child.type === "SvelteElement") {
                 const tagName = getElementName(child);
-                if (["ButtonIcon", "ToggleButtonIcon", "CopyIcon"].includes(tagName)) continue;
+                if (["ButtonIcon", "ToggleButtonIcon", "CopyIcon", "PasteIcon"].includes(tagName)) continue;
 
                 if (
                     tagName === "svg" ||

@@ -53,7 +53,8 @@ export const toggleButtonStructureRule: Rule.RuleModule = {
                 const hasLabel = hasDescendantElement(node.children, "ToggleButtonLabel");
                 const hasButtonIcon =
                     hasDescendantElement(node.children, "ToggleButtonIcon") ||
-                    hasDescendantElement(node.children, "CopyIcon");
+                    hasDescendantElement(node.children, "CopyIcon") ||
+                    hasDescendantElement(node.children, "PasteIcon");
 
                 if (isIconOnly) {
                     if (!hasAccessibleLabel(node)) {

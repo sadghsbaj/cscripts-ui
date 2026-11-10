@@ -81,6 +81,12 @@ Architectural Notes:
                 height: 50%;
             }
 
+            /* Inherit high-contrast foreground color on solid button surfaces */
+            :global(:is(.cs-button, .cs-toggle-button)[data-variant="solid"]) > & {
+                --_check-color: var(--cs-copy-icon-check-color, currentColor);
+                --_error-color: var(--cs-copy-icon-error-color, currentColor);
+            }
+
             > :global(svg) {
                 width: 100%;
                 height: 100%;
