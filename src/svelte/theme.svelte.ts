@@ -42,6 +42,12 @@ export const THEME_ICONS = {
     dark: Moon,
 } as const;
 
+export const GERMAN_THEME_LABELS = {
+    system: "System",
+    light: "Hell",
+    dark: "Dunkel",
+};
+
 const STORAGE_KEY = "cs-theme";
 
 /**

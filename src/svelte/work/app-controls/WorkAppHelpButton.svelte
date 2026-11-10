@@ -11,6 +11,7 @@ Architectural Notes:
 
     import { Button, ButtonIcon } from "../../primitives/button/index.ts";
     import { HitArea } from "../../primitives/hit-area/index.ts";
+    import { tooltip } from "../../primitives/tooltip/tooltip.attach.svelte.ts";
     import type { WorkAppHelpButtonProps } from "./index.ts";
 
     let {
@@ -28,6 +29,7 @@ Architectural Notes:
     iconOnly
     aria-label={ariaLabel}
     class={["cs-work-app-help-button", className]}
+    {@attach tooltip({ text: "Hilfe", placement: "bottom" })}
 >
     <ButtonIcon {icon} />
     <HitArea size="md" />

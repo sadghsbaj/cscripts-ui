@@ -9,7 +9,8 @@ Architectural Notes:
 <script lang="ts">
     import { Button, ButtonIcon } from "../../primitives/button/index.ts";
     import { HitArea } from "../../primitives/hit-area/index.ts";
-    import { theme } from "../../theme.svelte.ts";
+    import { tooltip } from "../../primitives/tooltip/tooltip.attach.svelte.ts";
+    import { GERMAN_THEME_LABELS, theme } from "../../theme.svelte.ts";
     import type { WorkAppThemeButtonProps } from "./index.ts";
 
     let {
@@ -35,6 +36,7 @@ Architectural Notes:
     aria-label={ariaLabel}
     onclick={handleClick}
     class={["cs-work-app-theme-button", className]}
+    {@attach tooltip({ text: `Erscheinung: ${GERMAN_THEME_LABELS[theme.mode]}`, placement: "bottom" })}
 >
     <ButtonIcon icon={theme.icon} />
     <HitArea size="md" />

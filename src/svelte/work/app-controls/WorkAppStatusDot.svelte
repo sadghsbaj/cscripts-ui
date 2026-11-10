@@ -10,6 +10,7 @@ Architectural Notes:
 - Standalone Primitiv: Place inside `<WorkAppHeaderSegment island>` or any custom container.
 -->
 <script lang="ts">
+    import { tooltip } from "../../primitives/tooltip/tooltip.attach.svelte.ts";
     import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusDotProps } from "./index.ts";
 
     let {
@@ -32,6 +33,7 @@ Architectural Notes:
     data-status={status}
     data-pulse={pulse ? "" : undefined}
     aria-label={computedAriaLabel}
+    {@attach tooltip({ text: WORK_APP_STATUS_DEFAULTS[status], placement: "bottom", offset: "24px" })}
 >
     <!-- Important so that we can use HitArea -->
     {@render children?.()}
