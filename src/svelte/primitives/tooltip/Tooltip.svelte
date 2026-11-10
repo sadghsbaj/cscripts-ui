@@ -178,5 +178,12 @@ Architectural Notes:
                 scale: 0.88;
             }
         }
+
+        :global(.cs-tooltip-shortcuts) {
+            display: inline-flex;
+            gap: 2px;
+            align-items: center;
+            margin-inline-start: 2px;
+        }
     }
 </style>
