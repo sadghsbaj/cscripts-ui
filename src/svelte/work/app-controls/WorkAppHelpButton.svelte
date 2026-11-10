@@ -38,7 +38,6 @@ Architectural Notes:
 <style>
     @layer components.composite {
         :global(.cs-work-app-help-button) {
-            --_height: 48px;
             width: 48px;
             height: 48px;
         }
