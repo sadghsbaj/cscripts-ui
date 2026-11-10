@@ -29,10 +29,12 @@
                         id={popoverId}
                         {placement}
                         size="content"
-                        class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main flex flex-col gap-1"
+                        class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main"
                     >
-                        <span class="font-600">Placement: {placement}</span>
-                        <span class="text-weak">Popover positioned relative to anchor</span>
+                        <div class="flex flex-col gap-1">
+                            <span class="font-600">Placement: {placement}</span>
+                            <span class="text-weak">Popover positioned relative to anchor</span>
+                        </div>
                     </Popover>
                 {/each}
             </div>
@@ -60,18 +62,20 @@
                         id={popoverId}
                         placement="bottom"
                         {size}
-                        class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main flex flex-col gap-1"
+                        class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main"
                     >
-                        <span class="font-600">{size}</span>
-                        <span class="text-weak">
-                            {#if size === "content"}
-                                Fits content width
-                            {:else if size === "anchor"}
-                                Exactly matches anchor width
-                            {:else}
-                                Min anchor width, expands if content is wider
-                            {/if}
-                        </span>
+                        <div class="flex flex-col gap-1">
+                            <span class="font-600">{size}</span>
+                            <span class="text-weak">
+                                {#if size === "content"}
+                                    Fits content width
+                                {:else if size === "anchor"}
+                                    Exactly matches anchor width
+                                {:else}
+                                    Min anchor width, expands if content is wider
+                                {/if}
+                            </span>
+                        </div>
                     </Popover>
                 {/each}
             </div>
@@ -97,10 +101,12 @@
                     placement="top"
                     size="content"
                     offset="24px"
-                    class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main flex flex-col gap-1"
+                    class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main"
                 >
-                    <span class="font-600">Offset: 24px</span>
-                    <span class="text-weak">Increased spacing from anchor</span>
+                    <div class="flex flex-col gap-1">
+                        <span class="font-600">Offset: 24px</span>
+                        <span class="text-weak">Increased spacing from anchor</span>
+                    </div>
                 </Popover>
 
                 <!-- Hint / Hover Mode -->
@@ -117,10 +123,12 @@
                     popover="hint"
                     placement="bottom"
                     size="content"
-                    class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main flex flex-col gap-1"
+                    class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main"
                 >
-                    <span class="font-600">Hint Popover</span>
-                    <span class="text-weak">Triggered via hover or focus</span>
+                    <div class="flex flex-col gap-1">
+                        <span class="font-600">Hint Popover</span>
+                        <span class="text-weak">Triggered via hover or focus</span>
+                    </div>
                 </Popover>
             </div>
         </div>

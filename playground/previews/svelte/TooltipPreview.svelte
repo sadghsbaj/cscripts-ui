@@ -4,7 +4,7 @@
 </script>
 
 <script lang="ts">
-    import { Bold, Italic, Plus, Settings, Share2, Trash2, Underline } from "@lucide/svelte";
+    import { Bold, Info, Italic, Plus, Settings, Share2, Trash2, Underline } from "@lucide/svelte";
     import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
     import { ToggleButton, ToggleButtonIcon } from "cs/svelte/toggle-button";
@@ -79,7 +79,7 @@
                         value="bold"
                         iconOnly
                         aria-label="Fett"
-                        {@attach tooltip({ text: "Fett (⌘B)", placement: "bottom-start" })}
+                        {@attach tooltip({ text: "Fett", shortcut: "Ctrl + B", placement: "bottom-start" })}
                     >
                         <ToggleButtonIcon icon={Bold} />
                         <HitArea size="md" />
@@ -94,7 +94,7 @@
                         value="italic"
                         iconOnly
                         aria-label="Kursiv"
-                        {@attach tooltip({ text: "Kursiv (⌘I)", placement: "bottom" })}
+                        {@attach tooltip({ text: "Kursiv", shortcut: "Ctrl + I", placement: "bottom" })}
                     >
                         <ToggleButtonIcon icon={Italic} />
                         <HitArea size="md" />
@@ -109,7 +109,7 @@
                         value="underline"
                         iconOnly
                         aria-label="Unterstrichen"
-                        {@attach tooltip({ text: "Unterstrichen (⌘U)", placement: "bottom-end" })}
+                        {@attach tooltip({ text: "Unterstrichen", shortcut: "Ctrl + U", placement: "bottom-end" })}
                     >
                         <ToggleButtonIcon icon={Underline} />
                         <HitArea size="md" />
@@ -122,21 +122,27 @@
         <div
             class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
-            <h2 class="title-2xl">Compound Tooltip</h2>
-            <div class="flex items-center">
+            <h2 class="title-2xl">Icon & Shortcut</h2>
+            <div class="flex flex-wrap gap-3 items-center">
+                <Button
+                    variant="soft"
+                    color="base"
+                    size="md"
+                    {@attach tooltip({ target: "preview-icon-tooltip", placement: "top" })}
+                >
+                    <ButtonLabel>Icon</ButtonLabel>
+                </Button>
+                <Tooltip id="preview-icon-tooltip" text="Information" icon={Info} />
+
                 <Button
                     variant="soft"
                     color="base"
                     size="md"
                     {@attach tooltip({ target: "preview-rich-tooltip", placement: "top" })}
                 >
-                    <ButtonLabel>Hover for shortcut</ButtonLabel>
+                    <ButtonLabel>Shortcut</ButtonLabel>
                 </Button>
-
-                <Tooltip id="preview-rich-tooltip">
-                    <span>Dokument speichern</span>
-                    <kbd class="px-1.5 py-0.5 rounded bg-elevation-2 font-mono text-[10px]">⌘S</kbd>
-                </Tooltip>
+                <Tooltip id="preview-rich-tooltip" text="Speichern" shortcut="Ctrl + S" />
             </div>
         </div>
     </div>

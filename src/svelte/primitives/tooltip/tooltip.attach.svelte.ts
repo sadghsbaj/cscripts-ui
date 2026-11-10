@@ -19,6 +19,7 @@
 import { mount, unmount } from "svelte";
 import type { Attachment } from "svelte/attachments";
 
+import type { TooltipIconConfig } from ".";
 import { type PopoverPlacement } from "../popover";
 import Tooltip from "./Tooltip.svelte";
 
@@ -32,21 +33,32 @@ export type TooltipAttachmentOptions =
     | string
     | (TooltipBaseOptions & {
           text: string;
+          icon?: TooltipIconConfig;
+          shortcut?: string | string[];
           target?: never;
       })
     | (TooltipBaseOptions & {
           target: string;
           text?: never;
+          icon?: never;
+          shortcut?: never;
       });
 
 type NormalizedOptions = TooltipBaseOptions & {
     text?: string;
+    icon?: TooltipIconConfig;
+    shortcut?: string | string[];
     target?: string;
 };
 
 type MountedTooltipState = {
     id: string;
-    props: { id: string; text: string };
+    props: {
+        id: string;
+        text: string;
+        icon?: TooltipIconConfig;
+        shortcut?: string | string[];
+    };
     instance: Record<string, unknown>;
 };
 
@@ -65,11 +77,18 @@ function resolveTooltipId(node: HTMLElement, opts: NormalizedOptions): string {
 
     if (existing) {
         existing.props.text = text;
+        existing.props.icon = opts.icon;
+        existing.props.shortcut = opts.shortcut;
         return existing.id;
     }
 
     const id = `tooltip-${crypto.randomUUID()}`;
-    const reactiveProps = $state({ id, text });
+    const reactiveProps = $state({
+        id,
+        text,
+        icon: opts.icon,
+        shortcut: opts.shortcut,
+    });
     const instance = mount(Tooltip, {
         target: document.body,
         props: reactiveProps,
