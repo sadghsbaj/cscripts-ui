@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/no-incorrect-template-string-interpolation */
 import * as svelteParser from "svelte-eslint-parser";
-import { describe, it } from "bun:test";
+import { describe, it } from "vitest";
 import { RuleTester } from "eslint";
 
 import { toggleButtonGroupNoRegularButtonRule, toggleButtonGroupUniformButtonsRule } from "../toggle-button-group.ts";

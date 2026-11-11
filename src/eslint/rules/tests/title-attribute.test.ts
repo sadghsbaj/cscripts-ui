@@ -1,5 +1,5 @@
 import * as svelteParser from "svelte-eslint-parser";
-import { describe, it } from "bun:test";
+import { describe, it } from "vitest";
 import { RuleTester } from "eslint";
 
 import { noTitleAttributeRule } from "../title-attribute.ts";

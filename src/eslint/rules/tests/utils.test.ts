@@ -1,5 +1,5 @@
 import { parseForESLint, type AST } from "svelte-eslint-parser";
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import type { Rule } from "eslint";
 
 import {

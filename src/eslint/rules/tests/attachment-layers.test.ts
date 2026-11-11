@@ -1,4 +1,4 @@
-import { describe, it } from "bun:test";
+import { describe, it } from "vitest";
 import { RuleTester } from "eslint";
 
 import { attachmentCssParser, attachmentLayerRule } from "../attachment-layers.ts";
