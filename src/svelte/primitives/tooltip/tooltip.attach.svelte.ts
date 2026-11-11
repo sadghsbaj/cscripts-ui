@@ -1,26 +1,22 @@
 /**
  * @description Svelte 5 DOM attachment that powers tooltips across simple text and custom overlays.
  *
+ * Built on top of `popoverTrigger({ mode: "hint" })`, which owns all trigger behavior (anchor wiring,
+ * `interestfor` and delays, warmup phase, focus-restoration guard, dismissal on press, key and scroll).
+ *
  * Core Capabilities:
  * - Dual Mode: Automatically mounts a lightweight `<Tooltip />` instance when given a string or `text`,
  *   or pairs seamlessly with a custom compound tooltip element via its `target` ID.
- * - Automated Wiring: Manages `--anchor-${id}`, `interest-delay`, `interestfor`, and accessibility
- *   via `aria-describedby` without manual attribute wiring.
+ * - Accessibility: Manages `aria-describedby` without manual attribute wiring.
  * - Centralized Configuration: Drives positioning (`data-placement`) and `--popover-offset` directly
  *   on the target element, ensuring all settings live in the attachment rather than component props.
- * - Warmup Phase: Tracks global tooltip dismissal timestamps (`WARMUP_WINDOW_MS = 300`) to open
- *   instantaneously (`0ms` delay) when moving between adjacent tooltip triggers, and restores the
- *   full delay once cold.
- * - Dismissal Lifecycle: Automatically dismisses on click (`pointerdown`), keyboard action (`Space` / `Enter`),
- *   and viewport or container scrolling (`scroll` with capture), re-arming upon pointer leave so tooltips
- *   never obstruct ongoing interactions.
  */
 
 import { mount, unmount } from "svelte";
 import type { Attachment } from "svelte/attachments";
 
 import type { TooltipIconConfig } from ".";
-import { type PopoverPlacement } from "../popover";
+import { popoverTrigger, type PopoverPlacement } from "../popover";
 import Tooltip from "./Tooltip.svelte";
 
 export type TooltipBaseOptions = {
@@ -63,10 +59,6 @@ type MountedTooltipState = {
 };
 
 const mountedTooltips = new WeakMap<HTMLElement, MountedTooltipState>();
-const disarmedTriggers = new WeakSet<HTMLElement>();
-
-let lastCloseTimestamp = 0;
-const WARMUP_WINDOW_MS = 300;
 
 function resolveTooltipId(node: HTMLElement, opts: NormalizedOptions): string {
     if (typeof opts.target === "string") {
@@ -99,142 +91,37 @@ function resolveTooltipId(node: HTMLElement, opts: NormalizedOptions): string {
     return id;
 }
 
-function applyTriggerAttributes(node: HTMLElement, id: string, delay: string, armInterest: boolean): void {
-    node.style.setProperty("anchor-name", `--anchor-${id}`);
-    node.style.setProperty("interest-delay", delay);
-    if (armInterest) {
-        node.setAttribute("interestfor", id);
-    }
-    node.setAttribute("aria-describedby", id);
-}
-
-function applyTargetStyles(id: string, opts: NormalizedOptions): HTMLElement | null {
+function applyTargetStyles(id: string, opts: NormalizedOptions): void {
     const targetEl = document.getElementById(id);
-    if (!targetEl) return null;
+    if (!targetEl) return;
 
     targetEl.dataset.placement = opts.placement ?? targetEl.dataset.placement ?? "top";
 
-    if (opts.placement) {
-        targetEl.dataset.placement = opts.placement;
-    }
     if (opts.offset) {
         targetEl.style.setProperty("--popover-offset", opts.offset);
     }
-
-    return targetEl;
-}
-
-function bindDismissLifecycle(
-    node: HTMLElement,
-    id: string,
-    targetEl: HTMLElement | null,
-    defaultDelay: string
-): () => void {
-    const closeDelay = defaultDelay.split(" ", 2)[1] ?? "150ms";
-
-    const dismiss = (): void => {
-        if (targetEl?.matches(":popover-open")) {
-            targetEl.hidePopover();
-            lastCloseTimestamp = Date.now();
-        }
-        disarmedTriggers.add(node);
-        node.removeAttribute("interestfor");
-    };
-
-    const restore = (): void => {
-        if (targetEl?.matches(":popover-open")) {
-            lastCloseTimestamp = Date.now();
-        }
-        disarmedTriggers.delete(node);
-        if (!node.hasAttribute("interestfor")) {
-            node.setAttribute("interestfor", id);
-        }
-        node.style.setProperty("interest-delay", defaultDelay);
-    };
-
-    const applyWarmup = (): void => {
-        const isWarm = Date.now() - lastCloseTimestamp < WARMUP_WINDOW_MS;
-        node.style.setProperty("interest-delay", isWarm ? `0ms ${closeDelay}` : defaultDelay);
-    };
-
-    const handlePointerEnter = (): void => {
-        disarmedTriggers.delete(node);
-        if (!node.hasAttribute("interestfor")) {
-            node.setAttribute("interestfor", id);
-        }
-        applyWarmup();
-    };
-
-    const handleFocusIn = (): void => {
-        // Native `interestfor` triggers on any DOM focus, including programmatic focus
-        // restoration when switching OS windows (e.g. Hyprland) after a pointer click.
-        // Disarm `interestfor` when focus is not keyboard-driven (`:focus-visible`) and
-        // the pointer is not actively hovering the trigger.
-        if (!node.matches(":focus-visible")) {
-            if (!node.matches(":hover")) {
-                disarmedTriggers.add(node);
-                node.removeAttribute("interestfor");
-            }
-            return;
-        }
-        disarmedTriggers.delete(node);
-        if (!node.hasAttribute("interestfor")) {
-            node.setAttribute("interestfor", id);
-        }
-        applyWarmup();
-    };
-
-    const handleKeyDown = (event: KeyboardEvent): void => {
-        if (event.key === "Enter" || event.key === " ") {
-            dismiss();
-        }
-    };
-
-    const handleScroll = (event: Event): void => {
-        if (!targetEl?.matches(":popover-open")) return;
-        if (event.target instanceof Node && targetEl.contains(event.target)) return;
-        dismiss();
-    };
-
-    node.addEventListener("pointerenter", handlePointerEnter);
-    node.addEventListener("focusin", handleFocusIn);
-    node.addEventListener("pointerdown", dismiss);
-    node.addEventListener("keydown", handleKeyDown);
-    node.addEventListener("pointerleave", restore);
-    node.addEventListener("focusout", restore);
-    window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
-
-    return () => {
-        node.removeEventListener("pointerenter", handlePointerEnter);
-        node.removeEventListener("focusin", handleFocusIn);
-        node.removeEventListener("pointerdown", dismiss);
-        node.removeEventListener("keydown", handleKeyDown);
-        node.removeEventListener("pointerleave", restore);
-        node.removeEventListener("focusout", restore);
-        window.removeEventListener("scroll", handleScroll, { capture: true });
-    };
 }
 
 export function tooltip(options: TooltipAttachmentOptions): Attachment<HTMLElement> {
     return (node) => {
         const opts: NormalizedOptions = typeof options === "string" ? { text: options } : options;
-        const delay = opts.delay ?? "400ms 150ms";
 
         const id = resolveTooltipId(node, opts);
-        applyTriggerAttributes(node, id, delay, !disarmedTriggers.has(node));
+        const unbindTrigger = popoverTrigger({ target: id, mode: "hint", delay: opts.delay })(node);
 
-        const targetEl = applyTargetStyles(id, opts);
-        const unbindLifecycle = bindDismissLifecycle(node, id, targetEl, delay);
+        node.setAttribute("aria-describedby", id);
+        applyTargetStyles(id, opts);
 
         return () => {
-            unbindLifecycle();
+            if (typeof unbindTrigger === "function") unbindTrigger();
 
+            // A reactive re-run re-applies `aria-describedby` synchronously, so the tooltip instance
+            // is only unmounted once the trigger is really gone.
             queueMicrotask(() => {
                 if (node.isConnected && node.hasAttribute("aria-describedby")) {
                     return;
                 }
 
-                disarmedTriggers.delete(node);
                 const entry = mountedTooltips.get(node);
                 if (entry) {
                     unmount(entry.instance);
@@ -242,9 +129,6 @@ export function tooltip(options: TooltipAttachmentOptions): Attachment<HTMLEleme
                 }
             });
 
-            node.style.removeProperty("anchor-name");
-            node.style.removeProperty("interest-delay");
-            node.removeAttribute("interestfor");
             node.removeAttribute("aria-describedby");
         };
     };
