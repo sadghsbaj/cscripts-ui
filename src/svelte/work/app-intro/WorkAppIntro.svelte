@@ -204,50 +204,59 @@ Architectural Notes:
 
         .cs-work-app-intro-location-card {
             /* Stagger timings derived per card from its `--_index` (0..4) */
-            --_cad-delay: calc(var(--_index) * 55ms);
-            --_lock-delay: calc(var(--_index) * 85ms);
+            --_cad-delay: calc(var(--_index) * 80ms);
+            --_lock-delay: calc(var(--_index) * 90ms);
+            --_draw-dir: 1;
 
             position: absolute;
             display: flex;
             flex-direction: column;
             gap: 10px;
             align-items: center;
-            translate: -50% -50%;
+            opacity: 0;
+            translate: -50% calc(-50% + 10px);
+            scale: 0.92;
+            animation: cs-work-app-intro-card-enter 480ms var(--cs-ease-expo-out) var(--_cad-delay) forwards;
 
             /**
             * Realistic Germany compass & latitude/longitude topology with harmonized spacing:
             * - Baruth/Mark (52.05°N, 13.50°E)
-            * - Gütersloh (51.90°N, 8.38°E)  
-            * - Arnsberg (51.39°N, 8.06°E)  
-            * - Neumarkt (49.28°N, 11.46°E)  
-            * - Leutkirch (47.82°N, 10.02°E)  
+            * - Gütersloh (51.90°N, 8.38°E)
+            * - Arnsberg (51.39°N, 8.06°E)
+            * - Neumarkt (49.28°N, 11.46°E)
+            * - Leutkirch (47.82°N, 10.02°E)
             */
             &[data-location="neumarkt"] {
                 --_index: 0;
+                --_draw-dir: 1;
                 top: 59%;
                 left: 65%;
                 width: 155px;
             }
             &[data-location="baruth"] {
                 --_index: 1;
+                --_draw-dir: -1;
                 top: 15%;
                 left: 77%;
                 width: 160px;
             }
             &[data-location="guetersloh"] {
                 --_index: 2;
+                --_draw-dir: 1;
                 top: 17%;
                 left: 29%;
                 width: 138px;
             }
             &[data-location="arnsberg"] {
                 --_index: 3;
+                --_draw-dir: -1;
                 top: 50%;
                 left: 20%;
                 width: 155px;
             }
             &[data-location="leutkirch"] {
                 --_index: 4;
+                --_draw-dir: 1;
                 top: 82%;
                 left: 44%;
                 width: 132px;
@@ -267,24 +276,35 @@ Architectural Notes:
 
                 .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
                     --cs-work-location-fill: var(--cs-color-accent-soft);
+                    --cs-work-location-stroke-width: 10.5px;
                     --cs-work-location-marker-scale: 1;
                 }
             }
 
             /* `WorkLocation` normalizes path length via `pathLength="1"`, allowing a 0..1 dasharray draw */
             :global(.cs-work-location-map) {
-                stroke-dasharray: 1;
-                stroke-dashoffset: 1;
-                transition: fill 280ms var(--cs-ease-quad-out) var(--_lock-delay);
-                animation: cs-work-app-intro-cad-draw 850ms var(--cs-ease-cubic-out) var(--_cad-delay) forwards;
+                stroke-dasharray: 1 2;
+                stroke-dashoffset: var(--_draw-dir);
+                transition:
+                    fill 260ms var(--cs-ease-quad-out) var(--_lock-delay),
+                    stroke-width 260ms var(--cs-ease-expo-out) var(--_lock-delay);
+                animation: cs-work-app-intro-cad-draw 540ms var(--cs-ease-expo-out) var(--_cad-delay) forwards;
             }
 
             :global(.cs-work-location-marker) {
-                transition: scale 280ms var(--cs-spring-release) var(--_lock-delay);
+                transition: scale 340ms var(--cs-spring-release) var(--_lock-delay);
             }
         }
 
         /* Must remain at top level of `@layer components.composite` (nested `@keyframes` inside rules are ignored) */
+        @keyframes cs-work-app-intro-card-enter {
+            to {
+                opacity: 1;
+                translate: -50% -50%;
+                scale: 1;
+            }
+        }
+
         @keyframes cs-work-app-intro-cad-draw {
             to {
                 stroke-dashoffset: 0;
@@ -294,6 +314,24 @@ Architectural Notes:
         .cs-work-app-intro-location-figure {
             position: relative;
             width: 100%;
+
+            .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
+                animation: cs-work-app-intro-figure-lock 380ms var(--cs-ease-expo-out) var(--_lock-delay);
+            }
+        }
+
+        @keyframes cs-work-app-intro-figure-lock {
+            0% {
+                scale: 1;
+            }
+
+            35% {
+                scale: 1.055;
+            }
+
+            100% {
+                scale: 1;
+            }
         }
 
         .cs-work-app-intro-location-name {
@@ -304,13 +342,16 @@ Architectural Notes:
             text-transform: uppercase;
             letter-spacing: var(--cs-tracking-widest);
             opacity: 0;
+            filter: blur(3px);
             translate: 0 6px;
             transition:
-                opacity 240ms var(--cs-ease-quad-out) var(--_lock-delay),
-                translate 280ms var(--cs-ease-expo-out) var(--_lock-delay);
+                opacity 220ms var(--cs-ease-quad-out) var(--_lock-delay),
+                translate 280ms var(--cs-ease-expo-out) var(--_lock-delay),
+                filter 240ms var(--cs-ease-quad-out) var(--_lock-delay);
 
             .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
                 opacity: 1;
+                filter: blur(0);
                 translate: 0 0;
             }
         }
@@ -334,20 +375,33 @@ Architectural Notes:
             translate: -50% -50%;
             scale: 1;
 
+            &::after {
+                content: "";
+                position: absolute;
+                inset: -1.5px;
+                border: 1px solid var(--cs-color-accent-500);
+                border-radius: inherit;
+                opacity: 0;
+            }
+
             .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
-                animation: sonar-pulse 560ms var(--cs-ease-expo-out) var(--_lock-delay) forwards;
+                animation: sonar-pulse 620ms var(--cs-ease-expo-out) var(--_lock-delay) forwards;
+
+                &::after {
+                    animation: sonar-pulse 680ms var(--cs-ease-expo-out) calc(var(--_lock-delay) + 110ms) forwards;
+                }
             }
         }
 
         @keyframes sonar-pulse {
             0% {
-                opacity: 0.85;
-                scale: 1;
+                opacity: 0.9;
+                scale: 0.8;
             }
 
             100% {
                 opacity: 0;
-                scale: 3.6;
+                scale: 3.8;
             }
         }
 

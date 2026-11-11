@@ -61,8 +61,57 @@ const HINT_WARMUP_WINDOW_MS = 300;
  */
 const disarmedTriggers = new WeakSet<HTMLElement>();
 
-/** Timestamp of the last hint dismissal, shared by all hint triggers for the warmup phase. */
-let lastHintCloseTimestamp = 0;
+let registeredHintTriggers = 0;
+let hintWarmTimer: ReturnType<typeof setTimeout> | undefined;
+
+function markHintWarm(): void {
+    if (typeof document === "undefined") return;
+    clearTimeout(hintWarmTimer);
+    document.documentElement.dataset.csHintWarm = "";
+}
+
+function scheduleHintCooldown(): void {
+    if (typeof document === "undefined") return;
+    clearTimeout(hintWarmTimer);
+    hintWarmTimer = setTimeout(() => {
+        delete document.documentElement.dataset.csHintWarm;
+    }, HINT_WARMUP_WINDOW_MS);
+}
+
+function clearHintWarm(): void {
+    if (typeof document === "undefined") return;
+    clearTimeout(hintWarmTimer);
+    delete document.documentElement.dataset.csHintWarm;
+}
+
+function handleGlobalToggle(event: Event): void {
+    if (!(event.target instanceof HTMLElement)) return;
+    if (event.target.getAttribute("popover") !== "hint") return;
+
+    const newState = (event as { newState?: string }).newState;
+    if (newState === "open") {
+        markHintWarm();
+    } else if (newState === "closed") {
+        scheduleHintCooldown();
+    }
+}
+
+function registerHintWarmup(): () => void {
+    if (typeof document === "undefined") return (): void => {};
+
+    if (registeredHintTriggers === 0) {
+        document.addEventListener("toggle", handleGlobalToggle, { capture: true });
+    }
+    registeredHintTriggers++;
+
+    return (): void => {
+        registeredHintTriggers = Math.max(0, registeredHintTriggers - 1);
+        if (registeredHintTriggers === 0) {
+            document.removeEventListener("toggle", handleGlobalToggle, { capture: true });
+            clearHintWarm();
+        }
+    };
+}
 
 function isPopoverOpen(element: HTMLElement | null): boolean {
     if (!element) return false;
@@ -133,6 +182,7 @@ function bindToggle(node: HTMLElement, target: string, triggerOn: "pointerdown" 
 function bindHint(node: HTMLElement, options: HintOptions): () => void {
     const { target, delay = DEFAULT_HINT_DELAY, dismissOnPress = true } = options;
     const closeDelay = delay.split(" ", 2)[1] ?? DEFAULT_HINT_CLOSE_DELAY;
+    const unregisterWarmup = registerHintWarmup();
 
     function getTarget(): HTMLElement | null {
         return document.getElementById(target);
@@ -150,31 +200,25 @@ function bindHint(node: HTMLElement, options: HintOptions): () => void {
         node.removeAttribute("interestfor");
     }
 
-    function applyWarmup(): void {
-        const isWarm = Date.now() - lastHintCloseTimestamp < HINT_WARMUP_WINDOW_MS;
-        node.style.setProperty("interest-delay", isWarm ? `0ms ${closeDelay}` : delay);
-    }
-
     function dismiss(): void {
         const targetEl = getTarget();
         if (isPopoverOpen(targetEl)) {
             targetEl?.hidePopover();
-            lastHintCloseTimestamp = Date.now();
         }
+        clearHintWarm();
         disarm();
     }
 
     function restore(): void {
         if (isPopoverOpen(getTarget())) {
-            lastHintCloseTimestamp = Date.now();
+            markHintWarm();
+            scheduleHintCooldown();
         }
         arm();
-        node.style.setProperty("interest-delay", delay);
     }
 
     function handlePointerEnter(): void {
         arm();
-        applyWarmup();
     }
 
     function handleFocusIn(): void {
@@ -187,7 +231,6 @@ function bindHint(node: HTMLElement, options: HintOptions): () => void {
         }
 
         arm();
-        applyWarmup();
     }
 
     function handleKeyDown(event: KeyboardEvent): void {
@@ -205,6 +248,7 @@ function bindHint(node: HTMLElement, options: HintOptions): () => void {
     }
 
     node.style.setProperty("interest-delay", delay);
+    node.style.setProperty("--_hint-close-delay", closeDelay);
     if (!disarmedTriggers.has(node)) {
         node.setAttribute("interestfor", target);
     }
@@ -220,7 +264,14 @@ function bindHint(node: HTMLElement, options: HintOptions): () => void {
         node.addEventListener("keydown", handleKeyDown);
     }
 
+    let isCleanedUp = false;
+
     return () => {
+        if (isCleanedUp) return;
+        isCleanedUp = true;
+
+        unregisterWarmup();
+
         node.removeEventListener("pointerenter", handlePointerEnter);
         node.removeEventListener("focusin", handleFocusIn);
         node.removeEventListener("pointerleave", restore);
@@ -231,6 +282,7 @@ function bindHint(node: HTMLElement, options: HintOptions): () => void {
 
         node.removeAttribute("interestfor");
         node.style.removeProperty("interest-delay");
+        node.style.removeProperty("--_hint-close-delay");
 
         // An immediate re-run (reactive update) re-applies the anchor synchronously and keeps the disarmed
         // state. Only a real teardown forgets it.

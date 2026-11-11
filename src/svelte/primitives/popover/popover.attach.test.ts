@@ -88,6 +88,7 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
         activeCleanups.length = 0;
         trigger.remove();
         popover.remove();
+        delete document.documentElement.dataset.csHintWarm;
         vi.useRealTimers();
     });
 
@@ -438,51 +439,66 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
         });
 
         describe("Warmup phase", () => {
-            test("opens instantly when entering shortly after a dismissal", () => {
+            test("configures the hint close delay CSS property for acceleration", () => {
                 popoverTrigger({ target: "pop", mode: "hint" })(trigger);
-                popover.setOpen(true);
-                pointerDown(trigger);
+                expect(trigger.style.getPropertyValue("--_hint-close-delay")).toBe("150ms");
 
-                vi.advanceTimersByTime(100);
-                trigger.dispatchEvent(new Event("pointerenter"));
-
-                expect(trigger.style.getPropertyValue("interest-delay")).toBe("0ms 150ms");
+                const custom = document.createElement("button");
+                document.body.append(custom);
+                popoverTrigger({ target: "pop", mode: "hint", delay: "600ms 80ms" })(custom);
+                expect(custom.style.getPropertyValue("--_hint-close-delay")).toBe("80ms");
+                custom.remove();
             });
 
-            test("is shared between different triggers", () => {
-                const other = document.createElement("button");
-                document.body.append(other);
+            test("activates global warm attribute when a hint popover opens", () => {
                 popoverTrigger({ target: "pop", mode: "hint" })(trigger);
-                popoverTrigger({ target: "pop", mode: "hint", delay: "500ms 80ms" })(other);
 
-                popover.setOpen(true);
-                pointerDown(trigger);
-                other.dispatchEvent(new Event("pointerenter"));
+                const openEvent = new Event("toggle");
+                Object.assign(openEvent, { newState: "open" });
+                popover.setAttribute("popover", "hint");
+                popover.dispatchEvent(openEvent);
 
-                expect(other.style.getPropertyValue("interest-delay")).toBe("0ms 80ms");
-                other.remove();
+                expect("csHintWarm" in document.documentElement.dataset).toBe(true);
             });
 
-            test("restores the full delay once the warmup window has passed", () => {
+            test("keeps global warm active and clears it after warmup window passes", () => {
                 popoverTrigger({ target: "pop", mode: "hint" })(trigger);
-                popover.setOpen(true);
-                pointerDown(trigger);
+                popover.setAttribute("popover", "hint");
+
+                const openEvent = new Event("toggle");
+                Object.assign(openEvent, { newState: "open" });
+                popover.dispatchEvent(openEvent);
+
+                const closeEvent = new Event("toggle");
+                Object.assign(closeEvent, { newState: "closed" });
+                popover.dispatchEvent(closeEvent);
+
+                expect("csHintWarm" in document.documentElement.dataset).toBe(true);
 
                 vi.advanceTimersByTime(301);
-                trigger.dispatchEvent(new Event("pointerenter"));
-
-                expect(trigger.style.getPropertyValue("interest-delay")).toBe("400ms 150ms");
+                expect("csHintWarm" in document.documentElement.dataset).toBe(false);
             });
 
-            test("pointerleave resets the delay and records an open popover as just closed", () => {
+            test("pointerleave on an open trigger arms warmup and cools down after 300ms", () => {
                 popoverTrigger({ target: "pop", mode: "hint" })(trigger);
                 popover.setOpen(true);
 
                 trigger.dispatchEvent(new Event("pointerleave"));
-                expect(trigger.style.getPropertyValue("interest-delay")).toBe("400ms 150ms");
+                expect("csHintWarm" in document.documentElement.dataset).toBe(true);
 
-                trigger.dispatchEvent(new Event("pointerenter"));
-                expect(trigger.style.getPropertyValue("interest-delay")).toBe("0ms 150ms");
+                vi.advanceTimersByTime(301);
+                expect("csHintWarm" in document.documentElement.dataset).toBe(false);
+            });
+
+            test("dismissing the trigger clears warmup immediately", () => {
+                popoverTrigger({ target: "pop", mode: "hint" })(trigger);
+                popover.setOpen(true);
+
+                trigger.dispatchEvent(new Event("pointerleave"));
+                expect("csHintWarm" in document.documentElement.dataset).toBe(true);
+
+                pointerDown(trigger);
+                expect("csHintWarm" in document.documentElement.dataset).toBe(false);
             });
         });
     });
