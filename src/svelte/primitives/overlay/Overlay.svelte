@@ -50,6 +50,44 @@ Architectural Notes:
 
 <style>
     @layer components.primitive {
-        /* Styling is intentionally left open for customization */
+        .cs-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100dvw;
+            max-width: none;
+            height: 100dvh;
+            max-height: none;
+            overflow: hidden;
+        }
+
+        /* =========================================================
+        * VARIANTS
+        * ========================================================= */
+        .cs-overlay[data-variant="blur"] {
+            background-color: light-dark(
+                color-mix(in oklch, var(--cs-color-base-950) 18%, transparent),
+                color-mix(in oklch, black 65%, transparent)
+            );
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+        }
+
+        .cs-overlay[data-variant="dim"] {
+            background-color: light-dark(
+                color-mix(in oklch, var(--cs-color-base-950) 28%, transparent),
+                color-mix(in oklch, black 65%, transparent)
+            );
+        }
+
+        .cs-overlay[data-variant="opaque"] {
+            background-color: var(--cs-color-elevation-0);
+        }
+
+        .cs-overlay[data-variant="transparent"] {
+            background-color: transparent;
+        }
     }
 </style>
