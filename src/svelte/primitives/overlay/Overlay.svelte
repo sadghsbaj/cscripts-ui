@@ -50,6 +50,12 @@ Architectural Notes:
 
 <style>
     @layer components.primitive {
+        /* Exposed on :root so external controls (e.g. floating close buttons)
+         * or child panels can align to the overlay's exact viewport boundaries. */
+        :root {
+            --cs-overlay-padding: clamp(1rem, 0.5rem + 2dvmin, 2rem);
+        }
+
         .cs-overlay {
             position: fixed;
             inset: 0;
@@ -57,9 +63,14 @@ Architectural Notes:
             align-items: center;
             justify-content: center;
             width: 100dvw;
+
+            /* Override user-agent stylesheet limits for [popover], which otherwise enforce
+             * `max-width: calc(100% - 2em)` and `max-height: calc(100% - 2em)`.
+             * Base box resets (margin, border) are globally provided by reset.css. */
             max-width: none;
             height: 100dvh;
             max-height: none;
+            padding: var(--cs-overlay-padding);
             overflow: hidden;
         }
 
@@ -68,7 +79,7 @@ Architectural Notes:
         * ========================================================= */
         .cs-overlay[data-variant="blur"] {
             background-color: light-dark(
-                color-mix(in oklch, var(--cs-color-base-950) 18%, transparent),
+                color-mix(in oklch, var(--cs-color-base-950) 12%, transparent),
                 color-mix(in oklch, black 65%, transparent)
             );
             backdrop-filter: blur(16px) saturate(160%);
