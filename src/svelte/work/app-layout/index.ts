@@ -35,5 +35,11 @@ export interface WorkAppHeaderProps extends HTMLAttributes<HTMLElement> {
 }
 
 export type WorkAppMainProps = HTMLAttributes<HTMLElement>;
-export type WorkAppSignatureProps = Omit<HTMLAttributes<HTMLSpanElement>, "children">;
+export interface WorkAppSignatureProps extends Omit<HTMLAttributes<HTMLButtonElement>, "children"> {
+    /**
+     * Tooltip text displayed when hovering the creator info button.
+     * @default "Entwickelt von Colin Schäfer"
+     */
+    text?: string;
+}
 export type WorkAppBrandProps = Omit<HTMLAttributes<HTMLDivElement>, "children">;
