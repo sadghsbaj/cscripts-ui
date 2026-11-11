@@ -16,7 +16,7 @@ import type {
 } from "./index.ts";
 
 export const DEFAULT_GUARD_DELAY_MS = 350;
-export const MORPH_TRANSITION_DURATION_MS = 420;
+export const MORPH_TRANSITION_DURATION_MS = 350;
 
 /**
  * Window after a state change in which multi-click follow-ups (`event.detail > 1`) are still swallowed.

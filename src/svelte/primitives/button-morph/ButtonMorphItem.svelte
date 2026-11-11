@@ -45,7 +45,7 @@ Architectural Notes:
              * ---------------------------------------------------------
              * - `active`: Sits on top (z-index: 2) and receives all input.
              * - `exiting`: Remains in the shared grid cell (z-index: 1) for
-             *   the 420ms transition window so its content can animate out
+             *   the 350ms transition window so its content can animate out
              *   underneath the incoming button.
              * - `inactive`: Taken out of grid track sizing (`position: absolute`
              *   + `width: max-content`) while hidden. This prevents wide inactive
@@ -92,7 +92,7 @@ Architectural Notes:
             }
 
             /* =========================================================
-             * SHARED MORPH SHELL LOCK (During 420ms Transition Window)
+             * SHARED MORPH SHELL LOCK (During 350ms Transition Window)
              * ---------------------------------------------------------
              * While `.cs-button-morph[data-transitioning]` is active, both the
              * outgoing (`exiting`) and incoming (`active`) buttons are locked to
@@ -117,7 +117,7 @@ Architectural Notes:
              *   middle outwards, and a shrinking pill swallows the old content the
              *   same way. Text motion is bound to the geometry the eye already
              *   tracks, so almost no extra translate/blur is needed to look clean.
-             * - Trade-off: the focus ring is clipped for the ~420ms of the morph.
+             * - Trade-off: the focus ring is clipped for the ~350ms of the morph.
              * ========================================================= */
             :global(.cs-button-morph[data-transitioning]) &:is([data-state="active"], [data-state="exiting"]) {
                 width: 100%;

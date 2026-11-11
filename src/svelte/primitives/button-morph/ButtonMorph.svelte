@@ -100,9 +100,9 @@ Architectural Notes:
             isolation: isolate;
             position: relative;
             display: inline-grid;
+            flex-shrink: 0;
             place-items: center;
             vertical-align: middle;
-            flex-shrink: 0;
 
             &[data-direction="backward"] {
                 --_enter-y: -3px;
@@ -120,18 +120,18 @@ Architectural Notes:
              *    `--_morph-height`. Without `minmax(0, 1fr)`, a wider incoming
              *    button's intrinsic `min-content` width would immediately blow
              *    out the grid track to the right on frame 0.
-             * 2. `--cs-spring-morph` (420ms) provides tactile initial friction
+             * 2. `--cs-spring-morph` (350ms) provides tactile initial friction
              *    and a gentle ~1.4% settle so the eye can comfortably track
              *    the pill morphing and pushing adjacent layout siblings.
              * ========================================================= */
             &[data-measured] {
-                grid-template-columns: minmax(0, 1fr);
                 grid-template-rows: minmax(0, 1fr);
+                grid-template-columns: minmax(0, 1fr);
                 width: var(--_morph-width);
                 height: var(--_morph-height);
                 transition:
-                    width 420ms var(--cs-spring-morph),
-                    height 420ms var(--cs-spring-morph);
+                    width 350ms var(--cs-spring-morph),
+                    height 350ms var(--cs-spring-morph);
             }
 
             /* =========================================================
@@ -184,14 +184,14 @@ Architectural Notes:
 
         @keyframes cs-button-morph-surface {
             from {
+                --_morph-corner: var(--_morph-from-corner, 1.6);
                 background-color: var(--_morph-from-bg, transparent);
                 box-shadow: var(--_morph-from-shadow, none);
-                --_morph-corner: var(--_morph-from-corner, 1.6);
             }
             to {
+                --_morph-corner: var(--_morph-to-corner, 1.6);
                 background-color: var(--_morph-to-bg, transparent);
                 box-shadow: var(--_morph-to-shadow, none);
-                --_morph-corner: var(--_morph-to-corner, 1.6);
             }
         }
     }
