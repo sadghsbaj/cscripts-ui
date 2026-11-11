@@ -16,7 +16,7 @@ import { unicodeDotsConfig } from "./unicode-dots.ts";
 
 export { attachmentCssParser, attachmentLayerRule, attachmentLayersConfig } from "./attachment-layers.ts";
 export { browserStorageConfig, noNativeStorageRule, requireStoragePrefixRule } from "./browser-storage.ts";
-export { buttonConfig, buttonHitAreaRule, buttonStructureRule } from "./button.ts";
+export { buttonConfig, buttonHitAreaRule, buttonStructureRule, buttonTooltipRule } from "./button.ts";
 export { buttonGroupConfig, buttonGroupNoSolidRule, buttonGroupUniformButtonsRule } from "./button-group.ts";
 export { clipboardConfig, noNativeClipboardRule, preferClipboardIconsRule } from "./clipboard.ts";
 export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
@@ -34,7 +34,12 @@ export {
     toggleButtonGroupNoRegularButtonRule,
     toggleButtonGroupUniformButtonsRule,
 } from "./toggle-button-group.ts";
-export { toggleButtonConfig, toggleButtonHitAreaRule, toggleButtonStructureRule } from "./toggle-button.ts";
+export {
+    toggleButtonConfig,
+    toggleButtonHitAreaRule,
+    toggleButtonStructureRule,
+    toggleButtonTooltipRule,
+} from "./toggle-button.ts";
 export { FORBIDDEN_DOTS_REGEX, unicodeDotsConfig, unicodeDotsRule } from "./unicode-dots.ts";
 export * from "./utils.ts";
 

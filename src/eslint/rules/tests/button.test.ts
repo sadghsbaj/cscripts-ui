@@ -2,7 +2,7 @@ import * as svelteParser from "svelte-eslint-parser";
 import { describe, it } from "bun:test";
 import { RuleTester } from "eslint";
 
-import { buttonHitAreaRule, buttonStructureRule } from "../button.ts";
+import { buttonHitAreaRule, buttonStructureRule, buttonTooltipRule } from "../button.ts";
 
 const ruleTester = new RuleTester({
     languageOptions: {
@@ -87,6 +87,34 @@ describe("button ESLint rules", () => {
                         code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close"><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "missingHitArea" }],
+                    },
+                ],
+            });
+        });
+    });
+
+    describe("button/require-tooltip", () => {
+        it("advises tooltip attachment on icon-only buttons", () => {
+            ruleTester.run("button/require-tooltip", buttonTooltipRule, {
+                valid: [
+                    {
+                        code: '<Button variant="soft" color="accent" size="md"><ButtonLabel>Normal</ButtonLabel></Button>',
+                        filename: "src/Component.svelte",
+                    },
+                    {
+                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close" {@attach tooltip("Close")}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
+                        filename: "src/Component.svelte",
+                    },
+                    {
+                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close" {@attach tooltip({ text: "Close" })}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
+                        filename: "src/Component.svelte",
+                    },
+                ],
+                invalid: [
+                    {
+                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close"><ButtonIcon icon={X} /></Button>',
+                        filename: "src/Component.svelte",
+                        errors: [{ messageId: "missingTooltip" }],
                     },
                 ],
             });

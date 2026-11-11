@@ -204,3 +204,35 @@ export function findRawIcons(children: AST.SvelteElement["children"], iconNames:
     search(children);
     return icons;
 }
+
+/**
+ * Checks whether an element specifies a tooltip attachment (e.g. `{@attach tooltip(...)}`)
+ * or a tooltip prop.
+ */
+export function hasTooltipAttachment(node: AST.SvelteElement): boolean {
+    if (findAttribute(node, "tooltip")) {
+        return true;
+    }
+
+    for (const attr of node.startTag.attributes) {
+        if (attr.type === "SvelteAttachTag") {
+            const expr = attr.expression;
+            if (expr.type === "CallExpression") {
+                if (expr.callee.type === "Identifier" && expr.callee.name.toLowerCase().includes("tooltip")) {
+                    return true;
+                }
+                if (
+                    expr.callee.type === "MemberExpression" &&
+                    expr.callee.property.type === "Identifier" &&
+                    expr.callee.property.name.toLowerCase().includes("tooltip")
+                ) {
+                    return true;
+                }
+            } else if (expr.type === "Identifier" && expr.name.toLowerCase().includes("tooltip")) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}

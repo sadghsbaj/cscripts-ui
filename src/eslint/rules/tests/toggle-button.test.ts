@@ -2,7 +2,7 @@ import * as svelteParser from "svelte-eslint-parser";
 import { describe, it } from "bun:test";
 import { RuleTester } from "eslint";
 
-import { toggleButtonHitAreaRule, toggleButtonStructureRule } from "../toggle-button.ts";
+import { toggleButtonHitAreaRule, toggleButtonStructureRule, toggleButtonTooltipRule } from "../toggle-button.ts";
 
 const ruleTester = new RuleTester({
     languageOptions: {
@@ -101,6 +101,34 @@ describe("toggle-button ESLint rules", () => {
                         code: '<ToggleButton variant="soft" color="accent" size="md" iconOnly aria-label="Add"><ToggleButtonIcon icon={Bookmark} /></ToggleButton>',
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "missingHitArea" }],
+                    },
+                ],
+            });
+        });
+    });
+
+    describe("toggle-button/require-tooltip", () => {
+        it("advises tooltip attachment on icon-only toggle buttons", () => {
+            ruleTester.run("toggle-button/require-tooltip", toggleButtonTooltipRule, {
+                valid: [
+                    {
+                        code: '<ToggleButton variant="soft" color="accent" size="md"><ToggleButtonLabel>Add</ToggleButtonLabel></ToggleButton>',
+                        filename: "src/Component.svelte",
+                    },
+                    {
+                        code: '<ToggleButton variant="soft" color="accent" size="md" iconOnly aria-label="Bookmark" {@attach tooltip("Bookmark")}><HitArea /><ToggleButtonIcon icon={Bookmark} /></ToggleButton>',
+                        filename: "src/Component.svelte",
+                    },
+                    {
+                        code: '<ToggleButton variant="soft" color="accent" size="md" iconOnly aria-label="Bookmark" {@attach tooltip({ text: "Bookmark" })}><HitArea /><ToggleButtonIcon icon={Bookmark} /></ToggleButton>',
+                        filename: "src/Component.svelte",
+                    },
+                ],
+                invalid: [
+                    {
+                        code: '<ToggleButton variant="soft" color="accent" size="md" iconOnly aria-label="Bookmark"><ToggleButtonIcon icon={Bookmark} /></ToggleButton>',
+                        filename: "src/Component.svelte",
+                        errors: [{ messageId: "missingTooltip" }],
                     },
                 ],
             });

@@ -16,7 +16,7 @@ The library uses a strict custom ESLint flat config bundle (`src/eslint/`) that 
 
 ### A. Custom Rules Directory (`src/eslint/rules/`)
 
-- **Domain Consistency & Explicitness:** Custom design system and component rules are organized modularly under `src/eslint/rules/`. They enforce compound component structure, accessibility requirements, and touch target guidelines (`<HitArea />`).
+- **Domain Consistency & Explicitness:** Custom design system and component rules are organized modularly under `src/eslint/rules/`. They enforce compound component structure, accessibility requirements, touch target guidelines (`<HitArea />`), and tooltip guidance on icon-only controls (`{@attach tooltip(...)}`).
 - **Inspecting Rules on Error:** If `bunx --bun eslint .` flags custom errors or warnings whose context or expected structure is unclear, agents should inspect the rule definitions directly in `src/eslint/rules/` to understand their exact AST validation requirements.
 
 ### B. General Enforced Rules

@@ -13,6 +13,7 @@ import {
     getImportedIconNames,
     hasAccessibleLabel,
     hasDescendantElement,
+    hasTooltipAttachment,
     isTruthyAttribute,
     shouldSkipFile,
 } from "./utils.ts";
@@ -129,6 +130,43 @@ export const buttonHitAreaRule: Rule.RuleModule = {
     },
 };
 
+/**
+ * Advisory rule warning when icon-only `<Button iconOnly>` components omit a tooltip attachment.
+ * Configured as a warning so developers can selectively disable it via `<!-- eslint-disable-next-line -->` where appropriate.
+ */
+export const buttonTooltipRule: Rule.RuleModule = {
+    meta: {
+        type: "suggestion",
+        docs: {
+            description: "Advise attaching a tooltip to <Button iconOnly> to clarify its action for sighted users",
+        },
+        messages: {
+            missingTooltip:
+                'Icon-only <Button iconOnly> should specify a tooltip via \'{@attach tooltip("...")}\' (from "cs/svelte/tooltip") to clarify its action for sighted users.',
+        },
+        schema: [],
+    },
+
+    create(context: Rule.RuleContext): Rule.RuleListener {
+        if (shouldSkipFile(context)) return {};
+
+        return {
+            SvelteElement(rawNode: Rule.Node): void {
+                const node = rawNode as unknown as AST.SvelteElement;
+                if (getElementName(node) !== "Button") return;
+                if (!isTruthyAttribute(node, "iconOnly")) return;
+
+                if (!hasTooltipAttachment(node)) {
+                    context.report({
+                        node: node.startTag as unknown as Rule.Node,
+                        messageId: "missingTooltip",
+                    });
+                }
+            },
+        };
+    },
+};
+
 export const buttonConfig: Linter.Config = {
     files: ["**/*.svelte"],
     plugins: {
@@ -136,11 +174,13 @@ export const buttonConfig: Linter.Config = {
             rules: {
                 "require-structure": buttonStructureRule,
                 "require-hit-area": buttonHitAreaRule,
+                "require-tooltip": buttonTooltipRule,
             },
         },
     },
     rules: {
         "button/require-structure": "error",
         "button/require-hit-area": "warn",
+        "button/require-tooltip": "warn",
     },
 };

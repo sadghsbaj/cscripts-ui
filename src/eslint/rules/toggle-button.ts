@@ -13,6 +13,7 @@ import {
     getImportedIconNames,
     hasAccessibleLabel,
     hasDescendantElement,
+    hasTooltipAttachment,
     isTruthyAttribute,
     shouldSkipFile,
 } from "./utils.ts";
@@ -132,6 +133,43 @@ export const toggleButtonHitAreaRule: Rule.RuleModule = {
     },
 };
 
+/**
+ * Advisory rule warning when icon-only `<ToggleButton iconOnly>` components omit a tooltip attachment.
+ * Configured as a warning so developers can selectively disable it via `<!-- eslint-disable-next-line -->` where appropriate.
+ */
+export const toggleButtonTooltipRule: Rule.RuleModule = {
+    meta: {
+        type: "suggestion",
+        docs: {
+            description: "Advise attaching a tooltip to <ToggleButton iconOnly> to clarify its action for mouse users",
+        },
+        messages: {
+            missingTooltip:
+                'Icon-only <ToggleButton iconOnly> should specify a tooltip via \'{@attach tooltip("...")}\' (from "cs/svelte/tooltip") to clarify its action for sighted users.',
+        },
+        schema: [],
+    },
+
+    create(context: Rule.RuleContext): Rule.RuleListener {
+        if (shouldSkipFile(context)) return {};
+
+        return {
+            SvelteElement(rawNode: Rule.Node): void {
+                const node = rawNode as unknown as AST.SvelteElement;
+                if (getElementName(node) !== "ToggleButton") return;
+                if (!isTruthyAttribute(node, "iconOnly")) return;
+
+                if (!hasTooltipAttachment(node)) {
+                    context.report({
+                        node: node.startTag as unknown as Rule.Node,
+                        messageId: "missingTooltip",
+                    });
+                }
+            },
+        };
+    },
+};
+
 export const toggleButtonConfig: Linter.Config = {
     files: ["**/*.svelte"],
     plugins: {
@@ -139,11 +177,13 @@ export const toggleButtonConfig: Linter.Config = {
             rules: {
                 "require-structure": toggleButtonStructureRule,
                 "require-hit-area": toggleButtonHitAreaRule,
+                "require-tooltip": toggleButtonTooltipRule,
             },
         },
     },
     rules: {
         "toggle-button/require-structure": "error",
         "toggle-button/require-hit-area": "warn",
+        "toggle-button/require-tooltip": "warn",
     },
 };

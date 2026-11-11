@@ -10,6 +10,7 @@ import {
     getLiteralStringValue,
     hasAccessibleLabel,
     hasDescendantElement,
+    hasTooltipAttachment,
     isTruthyAttribute,
     shouldSkipFile,
 } from "../utils.ts";
@@ -174,6 +175,25 @@ describe("utils AST helpers", () => {
             expect(rawNames).toContain("Check");
             expect(rawNames).toContain("svg");
             expect(rawNames).not.toContain("ButtonIcon");
+        });
+    });
+
+    describe("hasTooltipAttachment", () => {
+        it("detects tooltip attachments on elements", () => {
+            const parsed = parseSnippet(`
+                <Button {@attach tooltip("Settings")} />
+                <Button {@attach tooltip({ text: "Settings" })} />
+                <Button {@attach customTooltip("Settings")} />
+                <Button tooltip="Settings" />
+                <Button />
+            `);
+
+            const [b1, b2, b3, b4, b5] = parsed.elements;
+            expect(hasTooltipAttachment(b1!)).toBe(true);
+            expect(hasTooltipAttachment(b2!)).toBe(true);
+            expect(hasTooltipAttachment(b3!)).toBe(true);
+            expect(hasTooltipAttachment(b4!)).toBe(true);
+            expect(hasTooltipAttachment(b5!)).toBe(false);
         });
     });
 });
