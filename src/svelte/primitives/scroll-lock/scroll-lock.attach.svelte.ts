@@ -199,6 +199,8 @@ export function scrollLock(source?: ScrollLockSource): Attachment<HTMLElement> {
 
             if (!canScroll) {
                 event.preventDefault();
+                // Isolate the boundary so cancelled gestures do not bubble into ancestor containers.
+                event.stopPropagation();
             }
         }
 
@@ -215,6 +217,8 @@ export function scrollLock(source?: ScrollLockSource): Attachment<HTMLElement> {
 
             if (!canScroll) {
                 event.preventDefault();
+                // Isolate the boundary so cancelled gestures do not bubble into ancestor containers.
+                event.stopPropagation();
             }
         }
 

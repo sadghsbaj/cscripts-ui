@@ -246,7 +246,8 @@ export class ScrollAreaManager {
     };
 
     handleWheel = (event: WheelEvent): void => {
-        if (!this.overshoot || !this.#contentEl) return;
+        // Disregard wheel gestures cancelled or consumed by child controls (e.g. overlays, sliders, editors).
+        if (event.defaultPrevented || !this.overshoot || !this.#contentEl) return;
         const el = this.#contentEl;
 
         // Ignore wheel events that originated inside a nested <ScrollAreaContent />
