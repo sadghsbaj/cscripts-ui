@@ -72,3 +72,50 @@ Architectural Notes:
 >
     {@render children?.()}
 </div>
+
+<style>
+    @layer components.composite {
+        .cs-button-morph {
+            /* =========================================================
+             * DIRECTIONAL CONTENT VECTORS
+             * ---------------------------------------------------------
+             * Forward transitions (e.g. "idle" -> "confirm") roll incoming
+             * content upward from +6px while outgoing content exits to -6px.
+             * Backward transitions (e.g. reset back to "idle") invert the
+             * vertical axis so the spatial mental model feels reversible.
+             * ========================================================= */
+            --_enter-y: 6px;
+            --_exit-y: -6px;
+
+            isolation: isolate;
+            position: relative;
+            display: inline-grid;
+            place-items: center;
+            vertical-align: middle;
+            flex-shrink: 0;
+
+            &[data-direction="backward"] {
+                --_enter-y: -6px;
+                --_exit-y: 6px;
+            }
+
+            /* =========================================================
+             * MEASURED SHELL & SPRING INTERPOLATION
+             * ---------------------------------------------------------
+             * Before `ResizeObserver` captures the initial slot dimensions,
+             * the container sizes naturally to its active child (SSR-safe).
+             * Once `[data-measured]` is set, explicit pixel dimensions take
+             * over so subsequent state changes interpolate smoothly via
+             * `--cs-spring-snappy` (~4% tactile overshoot) and push/pull
+             * adjacent layout siblings without abrupt jumps.
+             * ========================================================= */
+            &[data-measured] {
+                width: var(--_morph-width);
+                height: var(--_morph-height);
+                transition:
+                    width 320ms var(--cs-spring-snappy),
+                    height 320ms var(--cs-spring-snappy);
+            }
+        }
+    }
+</style>
