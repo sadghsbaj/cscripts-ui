@@ -9,6 +9,7 @@ import { clipboardConfig } from "./clipboard.ts";
 import { closeButtonConfig } from "./close-button.ts";
 import { componentDocsConfig } from "./component-docs.ts";
 import { componentLayersConfig } from "./component-layers.ts";
+import { overlayConfig } from "./overlay.ts";
 import { scrollAreaConfig } from "./scroll-area.ts";
 import { titleAttributeConfig } from "./title-attribute.ts";
 import { toggleButtonGroupConfig } from "./toggle-button-group.ts";
@@ -28,6 +29,7 @@ export { clipboardConfig, noNativeClipboardRule, preferClipboardIconsRule } from
 export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
 export { componentCommentRule, componentDocsConfig } from "./component-docs.ts";
 export { componentLayersConfig, componentLayersRule } from "./component-layers.ts";
+export { overlayConfig, overlayPreferFocusTrapOnContentRule } from "./overlay.ts";
 export {
     scrollAreaConfig,
     scrollAreaNoOuterContentClassesRule,
@@ -63,5 +65,6 @@ export const customRulesConfigs: Linter.Config[] = [
     componentDocsConfig,
     componentLayersConfig,
     attachmentLayersConfig,
+    overlayConfig,
     titleAttributeConfig,
 ];
