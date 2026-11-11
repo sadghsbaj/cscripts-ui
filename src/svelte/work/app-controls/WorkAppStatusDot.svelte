@@ -50,7 +50,32 @@ Architectural Notes:
             background-color: var(--_dot-color);
             border: none;
             border-radius: var(--cs-radius-full);
+
+            transition:
+                background-color 220ms var(--cs-ease-quad-out),
+                scale 500ms var(--cs-spring-release);
             cursor: default;
+
+            @media (hover: hover) {
+                &:hover {
+                    scale: 1.12;
+                    transition:
+                        background-color 220ms var(--cs-ease-quad-out),
+                        scale 180ms var(--cs-ease-quart-out);
+                }
+            }
+
+            &:active {
+                scale: 0.88;
+                transition:
+                    background-color 220ms var(--cs-ease-quad-out),
+                    scale 120ms var(--cs-ease-quad-out);
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--cs-color-accent-solid);
+                outline-offset: 3px;
+            }
 
             &[data-status="success"] {
                 --_dot-color: var(--cs-color-success-solid);
