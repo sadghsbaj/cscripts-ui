@@ -12,7 +12,7 @@
         "test": "bunx --bun vitest run",
         "test:watch": "bunx --bun vitest",
         "format": "bunx prettier --write .",
-        "lint": "eslint ."
+        "lint": "bunx --bun eslint ."
     },
     "exports": {
         "./agents/*": "./src/agents/*",
