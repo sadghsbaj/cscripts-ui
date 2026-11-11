@@ -32,12 +32,7 @@
             </div>
 
             <div class="w-full flex-center min-h-80px">
-                <ButtonMorph
-                    bind:value={deleteMode}
-                    resetTimeout={3000}
-                    resetOnOutsideClick
-                    resetOnEscape
-                >
+                <ButtonMorph bind:value={deleteMode} resetTimeout={3000} resetOnOutsideClick resetOnEscape>
                     <ButtonMorphItem value="idle">
                         <Button variant="soft" color="danger" size="md" onclick={() => (deleteMode = "confirm")}>
                             <ButtonIcon icon={Trash2} />
@@ -69,12 +64,7 @@
                     <ButtonLabel>Bearbeiten</ButtonLabel>
                 </Button>
 
-                <ButtonMorph
-                    bind:value={iconMorphMode}
-                    resetTimeout={3000}
-                    resetOnOutsideClick
-                    resetOnEscape
-                >
+                <ButtonMorph bind:value={iconMorphMode} resetTimeout={3000} resetOnOutsideClick resetOnEscape>
                     <ButtonMorphItem value="icon">
                         <Button
                             variant="ghost"
@@ -101,9 +91,7 @@
         </div>
 
         <!-- 3. Cross-Size & Variant Morph (Elevated lg <-> Soft Accent sm) -->
-        <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
-        >
+        <div class="bg-elevation-0 p-8 min-h-220px flex flex-col justify-between items-start gap-6">
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Size & Surface</h2>
                 <span class="description-sm whitespace-nowrap">Elevated lg to Soft Accent sm</span>
@@ -138,12 +126,7 @@
             </div>
 
             <div class="w-full flex-center min-h-80px">
-                <ButtonMorph
-                    bind:value={publishStep}
-                    resetTimeout={3500}
-                    resetOnOutsideClick
-                    resetOnEscape
-                >
+                <ButtonMorph bind:value={publishStep} resetTimeout={3500} resetOnOutsideClick resetOnEscape>
                     <ButtonMorphItem value="idle">
                         <Button variant="soft" color="base" size="md" onclick={() => (publishStep = "confirm")}>
                             <ButtonIcon icon={Send} />
@@ -178,12 +161,7 @@
             </div>
 
             <div class="w-full flex-center min-h-80px">
-                <ButtonMorph
-                    bind:value={closeMorphMode}
-                    resetTimeout={3000}
-                    resetOnOutsideClick
-                    resetOnEscape
-                >
+                <ButtonMorph bind:value={closeMorphMode} resetTimeout={3000} resetOnOutsideClick resetOnEscape>
                     <ButtonMorphItem value="close">
                         <CloseButton variant="soft" size="md" onclick={() => (closeMorphMode = "discard")}>
                             <HitArea size="md" />

@@ -45,8 +45,8 @@ Architectural Notes:
              * ---------------------------------------------------------
              * - `active`: Sits on top (z-index: 2) and receives all input.
              * - `exiting`: Remains in the shared grid cell (z-index: 1) for
-             *   the 320ms transition window so its surface and content can
-             *   animate out smoothly underneath the incoming button.
+             *   the 420ms transition window so its content can animate out
+             *   underneath the incoming button.
              * - `inactive`: Taken out of grid track sizing (`position: absolute`
              *   + `width: max-content`) while hidden. This prevents wide inactive
              *   buttons from inflating the resting container width, while still
@@ -92,83 +92,94 @@ Architectural Notes:
             }
 
             /* =========================================================
-             * SHARED MORPH SHELL LOCK (During 320ms Transition Window)
+             * SHARED MORPH SHELL LOCK (During 420ms Transition Window)
              * ---------------------------------------------------------
              * While `.cs-button-morph[data-transitioning]` is active, both the
              * outgoing (`exiting`) and incoming (`active`) buttons are locked to
-             * 100% of the interpolating container dimensions and share the exact
-             * same `--_pill-radius`.
+             * 100% of the interpolating container dimensions.
              *
-             * Why this matters:
-             * 1. Both buttons' `::before` / `::after` surfaces stay 100%
-             *    congruent in every frame—even when morphing across different
-             *    sizes (`sm` <-> `lg`) or shapes (`iconOnly` <-> text pill).
-             * 2. The `:focus-visible` ring on the newly focused `<button>`
-             *    tracks the morphing pill geometry 1:1 without detaching.
-             * 3. `text-overflow: clip` on `.cs-button-label` prevents premature
-             *    `...` ellipsis flickering while the pill expands to fit new text.
+             * Why `min-width: 0`, `padding-inline: 0`, and `flex-shrink: 0` on
+             * `.cs-button-label` are critical for X-axis stability:
+             * - Standard `.cs-button-label` has `min-width: 0` (`flex-shrink: 1`).
+             *   If a wide button (e.g. 154px) is constrained to a narrow shell
+             *   (e.g. 32px) at the start/end of a morph, Flexbox would crush the
+             *   label width down to 0px and shove the adjacent icon sideways across
+             *   the X-axis as the label expands/collapses.
+             * - Setting `flex-shrink: 0` on the label and `padding-inline: 0` on
+             *   the centered flex button keeps the `[Icon + Label]` lockup at its
+             *   exact final width and dead-centered at 50% of the pill from frame 0
+             *   to frame 100, eliminating any horizontal drift. When the lockup is
+             *   wider than the current shell it overflows evenly on both sides.
+             *
+             * Why `clip-path` (shape-aware reveal):
+             * - The item is clipped to the pill silhouette while morphing. A
+             *   growing pill therefore uncovers the new, centered content from the
+             *   middle outwards, and a shrinking pill swallows the old content the
+             *   same way. Text motion is bound to the geometry the eye already
+             *   tracks, so almost no extra translate/blur is needed to look clean.
+             * - Trade-off: the focus ring is clipped for the ~420ms of the morph.
              * ========================================================= */
             :global(.cs-button-morph[data-transitioning]) &:is([data-state="active"], [data-state="exiting"]) {
                 width: 100%;
+                min-width: 0;
                 height: 100%;
+                min-height: 0;
+                clip-path: inset(0 round var(--cs-radius-full));
 
                 > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button)) {
-                    --_pill-radius: calc(var(--_morph-height, var(--_height, 36px)) / 2);
-
                     width: 100%;
+                    min-width: 0;
                     height: 100%;
+                    min-height: 0;
+                    padding-inline: 0;
                     aspect-ratio: auto;
-                    border-radius: var(--_pill-radius);
+                    border-radius: var(--cs-radius-full);
                 }
 
                 :global(:is(.cs-button-label, .cs-toggle-button-label)) {
+                    flex-shrink: 0;
                     text-overflow: clip;
+                }
+
+                /* =========================================================
+                 * HIDDEN BUTTON SURFACES
+                 * ---------------------------------------------------------
+                 * The shell's own `::before` (see ButtonMorph) draws the single
+                 * interpolating surface, so each button's real surface is hidden
+                 * for the transition. Their resolved colors equal the shell's
+                 * start/end colors, which makes the handoff invisible.
+                 * ========================================================= */
+                > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button))::before,
+                > :global(.cs-toggle-button)::after {
+                    opacity: 0;
+                    transition: none;
                 }
             }
 
             /* =========================================================
-             * SURFACE & CONTENT CHOREOGRAPHY (Active Enter vs. Exiting Leave)
+             * CONTENT CHOREOGRAPHY (Out -> Morph -> In)
              * ---------------------------------------------------------
              * Gated by `[data-transitioning]` so initial page render never
              * triggers an entry animation.
              *
-             * - Surface Layer (`::before` / `::after`):
-             *   The incoming surface (`z-index: 2`) fades in quickly (`180ms`
-             *   quad-out) with a subtle elastic pulse, while the outgoing
-             *   surface (`z-index: 1`) delays its fade-out by `50ms` (`180ms`
-             *   quad-in). Overlapping the two alpha curves prevents mid-transition
-             *   opacity dips (background bleed-through) when morphing between
-             *   two opaque buttons, while still fading cleanly to transparent
-             *   when morphing into a `ghost` button.
-             *
-             * - Content Layer (Icons & Labels):
-             *   Uses directional vertical slot-roll (`--_enter-y` / `--_exit-y`),
-             *   scale (`0.88 <-> 1`), and Gaussian motion blur (`2.5px <-> 0px`)
-             *   so old and new glyphs never clash legibly during crossfade.
+             * Content is deliberately sequenced instead of cross-faded:
+             * 1. The outgoing lockup leaves fast (0-130ms) while the surface is
+             *    still close to its start color.
+             * 2. The incoming lockup only starts at 150ms. The surface color change
+             *    (300ms, quad-in-out) has its midpoint at the same moment, so the
+             *    gap between both lockups is exactly where the surface is half-way.
+             *    Old content therefore never sits on the new surface, and new
+             *    content never sits on the old one (the "dirty" contrast mix).
+             * Icon and label move as one rigid lockup (no child stagger).
              * ========================================================= */
             :global(.cs-button-morph[data-transitioning]) &[data-state="active"] {
-                > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button))::before {
-                    animation: cs-button-morph-surface-enter 260ms var(--cs-spring-snappy) both;
-                }
-
                 > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button))
                     > :global(*:not(.cs-hit-area)) {
-                    animation: cs-button-morph-content-enter 280ms var(--cs-spring-snappy) 20ms both;
-                }
-
-                /* Subtle 15ms lead-in stagger when an icon is paired with a label */
-                > :global(:is(.cs-button, .cs-toggle-button))
-                    > :global(*:not(.cs-hit-area):nth-child(2)) {
-                    animation-delay: 35ms;
+                    animation: cs-button-morph-content-enter 280ms var(--cs-ease-cubic-out) 150ms both;
                 }
             }
 
             :global(.cs-button-morph[data-transitioning]) &[data-state="exiting"] {
-                > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button))::before,
-                > :global(.cs-toggle-button)::after {
-                    animation: cs-button-morph-surface-exit 180ms var(--cs-ease-quad-in) 50ms both;
-                }
-
                 > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button))
                     > :global(*:not(.cs-hit-area)) {
                     animation: cs-button-morph-content-exit 130ms var(--cs-ease-quad-in) both;
@@ -176,45 +187,16 @@ Architectural Notes:
             }
         }
 
-        @keyframes cs-button-morph-surface-enter {
-            0% {
-                opacity: 0;
-                scale: 0.96;
-            }
-            65% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 1;
-                scale: 1;
-            }
-        }
-
-        @keyframes cs-button-morph-surface-exit {
-            0% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-            }
-        }
-
         @keyframes cs-button-morph-content-enter {
             0% {
                 opacity: 0;
-                filter: blur(2.5px);
-                translate: 0 var(--_enter-y, 6px);
-                scale: 0.88;
-            }
-            60% {
-                opacity: 1;
-                filter: blur(0px);
+                filter: blur(1px);
+                translate: 0 var(--_enter-y, 3px);
             }
             100% {
                 opacity: 1;
                 filter: blur(0px);
                 translate: 0 0;
-                scale: 1;
             }
         }
 
@@ -223,13 +205,11 @@ Architectural Notes:
                 opacity: 1;
                 filter: blur(0px);
                 translate: 0 0;
-                scale: 1;
             }
             100% {
                 opacity: 0;
-                filter: blur(2.5px);
-                translate: 0 var(--_exit-y, -6px);
-                scale: 0.88;
+                filter: blur(1px);
+                translate: 0 var(--_exit-y, -3px);
             }
         }
     }

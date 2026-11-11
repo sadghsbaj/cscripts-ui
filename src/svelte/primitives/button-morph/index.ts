@@ -10,6 +10,7 @@ export {
     MORPH_TRANSITION_DURATION_MS,
     type ButtonMorphDimensions,
     type ButtonMorphStateOptions,
+    type ButtonMorphSurface,
 } from "./buttonMorphState.svelte.ts";
 
 export const BUTTON_MORPH_DIRECTIONS = ["forward", "backward"] as const;

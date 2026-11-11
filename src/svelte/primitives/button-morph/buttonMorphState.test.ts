@@ -346,6 +346,78 @@ describe("ButtonMorphManager (buttonMorphState.svelte.ts)", () => {
         });
     });
 
+    describe("Continuous Morph Surface Snapshot", () => {
+        test("should snapshot resolved background and shadow of outgoing and incoming buttons on state change", () => {
+            const surfaces = new Map<Element, { bg: string; shadow: string }>([
+                [idleBtn, { bg: "rgb(255 0 0 / 0.1)", shadow: "none" }],
+                [confirmBtn, { bg: "rgb(255 0 0)", shadow: "0 1px 2px black" }],
+            ]);
+
+            vi.spyOn(window, "getComputedStyle").mockImplementation((element: Element, pseudo?: string | null) => {
+                const surface = surfaces.get(element);
+                return {
+                    backgroundColor: surface?.bg ?? "",
+                    boxShadow: surface?.shadow ?? "",
+                    content: pseudo === "::after" ? "none" : '""',
+                    opacity: "1",
+                } as unknown as CSSStyleDeclaration;
+            });
+
+            let current = "idle";
+            const morph = new ButtonMorphManager({
+                getValue: () => current,
+                setValue: (next) => {
+                    current = next;
+                },
+            });
+
+            const cleanRoot = morph.attachRoot(rootEl);
+            const cleanIdle = morph.attachItem("idle")(idleSlot);
+            const cleanConfirm = morph.attachItem("confirm")(confirmSlot);
+
+            expect(morph.surfaceFrom).toBeNull();
+            expect(morph.surfaceTo).toBeNull();
+
+            current = "confirm";
+            morph.syncValue();
+
+            expect(morph.surfaceFrom).toEqual({ background: "rgb(255 0 0 / 0.1)", shadow: "none" });
+            expect(morph.surfaceTo).toEqual({ background: "rgb(255 0 0)", shadow: "0 1px 2px black" });
+
+            cleanIdle?.();
+            cleanConfirm?.();
+            cleanRoot?.();
+        });
+
+        test("should leave surfaces null when computed styles cannot be resolved", () => {
+            vi.spyOn(window, "getComputedStyle").mockImplementation(() => {
+                throw new Error("unsupported");
+            });
+
+            let current = "idle";
+            const morph = new ButtonMorphManager({
+                getValue: () => current,
+                setValue: (next) => {
+                    current = next;
+                },
+            });
+
+            const cleanRoot = morph.attachRoot(rootEl);
+            const cleanIdle = morph.attachItem("idle")(idleSlot);
+            const cleanConfirm = morph.attachItem("confirm")(confirmSlot);
+
+            current = "confirm";
+            morph.syncValue();
+
+            expect(morph.surfaceFrom).toBeNull();
+            expect(morph.surfaceTo).toBeNull();
+
+            cleanIdle?.();
+            cleanConfirm?.();
+            cleanRoot?.();
+        });
+    });
+
     describe("Auto-Reset (Timeout, Hover Pause, Outside Click & Escape)", () => {
         test("should automatically reset to defaultValue after resetTimeout and pause while pointer is hovered", () => {
             let current = "idle";

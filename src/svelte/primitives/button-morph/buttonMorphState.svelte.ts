@@ -5,6 +5,7 @@
  * and hover-aware auto-reset timers.
  */
 
+import { untrack } from "svelte";
 import type { Attachment } from "svelte/attachments";
 
 import type {
@@ -15,7 +16,7 @@ import type {
 } from "./index.ts";
 
 export const DEFAULT_GUARD_DELAY_MS = 250;
-export const MORPH_TRANSITION_DURATION_MS = 320;
+export const MORPH_TRANSITION_DURATION_MS = 420;
 
 const INTERACTIVE_CHILD_Selector =
     'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
@@ -23,6 +24,15 @@ const INTERACTIVE_CHILD_Selector =
 export interface ButtonMorphDimensions {
     width: number;
     height: number;
+}
+
+/**
+ * Resolved visual surface of a button (computed background and shadow), used by the morph shell
+ * to interpolate a single continuous body between two buttons instead of cross-fading two surfaces.
+ */
+export interface ButtonMorphSurface {
+    background: string;
+    shadow: string;
 }
 
 export interface ButtonMorphStateOptions {
@@ -78,6 +88,41 @@ function findSlotButtonElement(slotNode: HTMLElement): HTMLElement {
 }
 
 /**
+ * Reads the effective resting surface (background + shadow) of a slot's button.
+ *
+ * Buttons draw their surface on `::before` (and `ToggleButton` additionally reveals a pressed fill on
+ * `::after`), so the values are read from the pseudo-elements. Computed values are fully resolved
+ * (`light-dark()`, `color-mix()`), which lets the shell interpolate them without knowing any variant.
+ * Returns `null` when styles cannot be resolved (e.g. virtual DOM environments).
+ */
+function readButtonSurface(slotNode: HTMLElement): ButtonMorphSurface | null {
+    if (typeof getComputedStyle !== "function") return null;
+
+    const button = findSlotButtonElement(slotNode);
+
+    try {
+        const before = getComputedStyle(button, "::before");
+        const after = getComputedStyle(button, "::after");
+
+        const hasPressedFill =
+            Boolean(after.backgroundColor) &&
+            after.content !== "none" &&
+            after.content !== "normal" &&
+            Number(after.opacity) >= 0.5;
+
+        const background = hasPressedFill ? after.backgroundColor : before.backgroundColor;
+        if (!background) return null;
+
+        return {
+            background,
+            shadow: before.boxShadow || "none",
+        };
+    } catch {
+        return null;
+    }
+}
+
+/**
  * Resolves the focusable interactive target inside a `<ButtonMorphItem />` slot.
  */
 function findFocusableChild(slotNode: HTMLElement): HTMLElement | null {
@@ -115,6 +160,8 @@ export class ButtonMorphManager implements ButtonMorphContext {
     isPointerHovered = $state(false);
     direction: ButtonMorphDirection = $state("forward");
     exitingValue: string | null = $state(null);
+    surfaceFrom: ButtonMorphSurface | null = $state(null);
+    surfaceTo: ButtonMorphSurface | null = $state(null);
 
     readonly isMeasured = $derived(this.width !== null && this.height !== null);
 
@@ -188,12 +235,28 @@ export class ButtonMorphManager implements ButtonMorphContext {
     };
 
     /**
+     * Whether an item's button is currently stretched to the interpolating shell (`width/height: 100%`).
+     * Measurements taken in this window would return the shell size instead of the button's own size.
+     */
+    #isLockedToShell(itemValue: string): boolean {
+        return this.isTransitioning && (this.value === itemValue || this.exitingValue === itemValue);
+    }
+
+    /**
      * Measures and caches the intrinsic dimensions of a registered item slot.
      * Applies updated dimensions immediately when the measured item is the currently active state.
+     *
+     * While an item is locked to the morphing shell its cached size is returned unchanged, so a
+     * measurement can never be polluted by the interpolated shell geometry (regardless of what
+     * triggered it: attach, `ResizeObserver`, or a reset that flips state and transition in one tick).
      */
     measureItem = (itemValue: string): ButtonMorphDimensions | null => {
         const slotNode = this.#itemNodes[itemValue];
         if (!slotNode) return null;
+
+        if (this.#isLockedToShell(itemValue)) {
+            return this.#itemSizes[itemValue] ?? null;
+        }
 
         const targetEl = findSlotButtonElement(slotNode);
         const dims = readElementDimensions(targetEl);
@@ -346,6 +409,13 @@ export class ButtonMorphManager implements ButtonMorphContext {
         this.#currentValue = nextValue;
         this.direction = this.#resolveDirection(prevValue, nextValue);
 
+        // Snapshot both resting surfaces so the shell can morph one continuous body (color + shadow)
+        // while the individual button surfaces are hidden for the duration of the transition.
+        const fromNode = this.#itemNodes[prevValue];
+        const toNode = this.#itemNodes[nextValue];
+        this.surfaceFrom = fromNode ? readButtonSurface(fromNode) : null;
+        this.surfaceTo = toNode ? readButtonSurface(toNode) : null;
+
         if (nextDims) {
             this.width = nextDims.width;
             this.height = nextDims.height;
@@ -465,42 +535,39 @@ export class ButtonMorphManager implements ButtonMorphContext {
     /**
      * Attachment for individual `<ButtonMorphItem />` slots.
      * Registers the slot in DOM order and observes its intrinsic button size via `ResizeObserver`.
+     *
+     * The body runs untracked: attachments re-run whenever a reactive value read inside them changes.
+     * Without `untrack`, every `value` change would tear down and re-register all slots, and the
+     * re-measure would run against the already shell-locked layout (stale/shell-sized dimensions).
      */
     attachItem =
         (itemValue: string): Attachment<HTMLElement> =>
-        (node: HTMLElement) => {
-            this.#itemNodes[itemValue] = node;
-            if (!this.#itemOrder.includes(itemValue)) {
-                this.#itemOrder.push(itemValue);
-            }
-
-            const targetButton = findSlotButtonElement(node);
-
-            const handleResize = (): void => {
-                // While transitioning, active and exiting buttons are locked to 100% of the shell size.
-                // Ignore intermediate shell dimensions so cached intrinsic button sizes remain pure.
-                const itemState = this.getItemState(itemValue);
-                if (this.isTransitioning && (itemState === "active" || itemState === "exiting")) {
-                    return;
+        (node: HTMLElement) =>
+            untrack(() => {
+                this.#itemNodes[itemValue] = node;
+                if (!this.#itemOrder.includes(itemValue)) {
+                    this.#itemOrder.push(itemValue);
                 }
+
+                const targetButton = findSlotButtonElement(node);
+
+                let resizeObserver: ResizeObserver | null = null;
+                if (typeof ResizeObserver !== "undefined") {
+                    resizeObserver = new ResizeObserver(() => {
+                        this.measureItem(itemValue);
+                    });
+                    resizeObserver.observe(targetButton);
+                }
+
                 this.measureItem(itemValue);
-            };
 
-            let resizeObserver: ResizeObserver | null = null;
-            if (typeof ResizeObserver !== "undefined") {
-                resizeObserver = new ResizeObserver(handleResize);
-                resizeObserver.observe(targetButton);
-            }
-
-            this.measureItem(itemValue);
-
-            return () => {
-                resizeObserver?.disconnect();
-                if (this.#itemNodes[itemValue] === node) {
-                    delete this.#itemNodes[itemValue];
-                }
-                this.#itemOrder = this.#itemOrder.filter((v) => v !== itemValue);
-                delete this.#itemSizes[itemValue];
-            };
-        };
+                return () => {
+                    resizeObserver?.disconnect();
+                    if (this.#itemNodes[itemValue] === node) {
+                        delete this.#itemNodes[itemValue];
+                    }
+                    this.#itemOrder = this.#itemOrder.filter((v) => v !== itemValue);
+                    delete this.#itemSizes[itemValue];
+                };
+            });
 }

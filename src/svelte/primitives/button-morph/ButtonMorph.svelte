@@ -12,6 +12,8 @@ Architectural Notes:
   (hover-paused), outside click (`clickOutside`), or `Escape`.
 -->
 <script lang="ts">
+    import { untrack } from "svelte";
+
     import { clickOutside } from "../click-outside/index.ts";
     import {
         ButtonMorphManager,
@@ -48,10 +50,12 @@ Architectural Notes:
 
     setButtonMorphContext(morph);
 
+    // Only `value` and `resetTimeout` should re-trigger the sync. `syncValue` reads and writes a lot of
+    // manager state (transition flags, timers); tracking those would re-run this effect on every flip.
     $effect(() => {
-        void value;
+        const currentValue = value;
         void resetTimeout;
-        morph.syncValue(value);
+        untrack(() => morph.syncValue(currentValue));
     });
 </script>
 
@@ -69,6 +73,10 @@ Architectural Notes:
     data-guarded={morph.isGuarded ? "" : undefined}
     style:--_morph-width={morph.width !== null ? `${morph.width}px` : undefined}
     style:--_morph-height={morph.height !== null ? `${morph.height}px` : undefined}
+    style:--_morph-from-bg={morph.surfaceFrom?.background}
+    style:--_morph-from-shadow={morph.surfaceFrom?.shadow}
+    style:--_morph-to-bg={morph.surfaceTo?.background}
+    style:--_morph-to-shadow={morph.surfaceTo?.shadow}
 >
     {@render children?.()}
 </div>
@@ -80,12 +88,12 @@ Architectural Notes:
              * DIRECTIONAL CONTENT VECTORS
              * ---------------------------------------------------------
              * Forward transitions (e.g. "idle" -> "confirm") roll incoming
-             * content upward from +6px while outgoing content exits to -6px.
+             * content upward from +3px while outgoing content exits to -3px.
              * Backward transitions (e.g. reset back to "idle") invert the
              * vertical axis so the spatial mental model feels reversible.
              * ========================================================= */
-            --_enter-y: 6px;
-            --_exit-y: -6px;
+            --_enter-y: 3px;
+            --_exit-y: -3px;
 
             isolation: isolate;
             position: relative;
@@ -95,26 +103,79 @@ Architectural Notes:
             flex-shrink: 0;
 
             &[data-direction="backward"] {
-                --_enter-y: -6px;
-                --_exit-y: 6px;
+                --_enter-y: -3px;
+                --_exit-y: 3px;
             }
 
             /* =========================================================
-             * MEASURED SHELL & SPRING INTERPOLATION
+             * MEASURED SHELL & VISCOUS SPRING INTERPOLATION
              * ---------------------------------------------------------
              * Before `ResizeObserver` captures the initial slot dimensions,
              * the container sizes naturally to its active child (SSR-safe).
-             * Once `[data-measured]` is set, explicit pixel dimensions take
-             * over so subsequent state changes interpolate smoothly via
-             * `--cs-spring-snappy` (~4% tactile overshoot) and push/pull
-             * adjacent layout siblings without abrupt jumps.
+             * Once `[data-measured]` is set:
+             * 1. `grid-template-columns/rows: minmax(0, 1fr)` constrains the
+             *    shared `1 / 1` grid cell strictly to `--_morph-width` and
+             *    `--_morph-height`. Without `minmax(0, 1fr)`, a wider incoming
+             *    button's intrinsic `min-content` width would immediately blow
+             *    out the grid track to the right on frame 0.
+             * 2. `--cs-spring-morph` (420ms) provides tactile initial friction
+             *    and a gentle ~1.4% settle so the eye can comfortably track
+             *    the pill morphing and pushing adjacent layout siblings.
              * ========================================================= */
             &[data-measured] {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: minmax(0, 1fr);
                 width: var(--_morph-width);
                 height: var(--_morph-height);
                 transition:
-                    width 320ms var(--cs-spring-snappy),
-                    height 320ms var(--cs-spring-snappy);
+                    width 420ms var(--cs-spring-morph),
+                    height 420ms var(--cs-spring-morph);
+            }
+
+            /* =========================================================
+             * CONTINUOUS MORPH SURFACE (::before)
+             * ---------------------------------------------------------
+             * During a transition the individual button surfaces are hidden
+             * (see ButtonMorphItem) and this single shell surface takes over.
+             * It interpolates directly from the outgoing button's resolved
+             * background and shadow to the incoming one's, so the user sees
+             * one body changing color instead of two translucent layers
+             * stacked on top of each other (which muddies `soft` surfaces).
+             *
+             * - `--cs-radius-full` on a single, symmetric element always yields
+             *   a perfect pill at any interpolated height, so the shape never
+             *   needs to chase the animating size.
+             * - Colors and shadows are read once by the state manager at the
+             *   moment of the switch, which keeps the handoff to and from the
+             *   real button surfaces visually seamless.
+             * ========================================================= */
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: 0;
+                border-radius: var(--cs-radius-full);
+                corner-shape: var(--cs-squircle-smooth);
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            &[data-transitioning]::before {
+                background-color: var(--_morph-to-bg, transparent);
+                box-shadow: var(--_morph-to-shadow, none);
+                opacity: 1;
+                animation: cs-button-morph-surface 300ms var(--cs-ease-quad-in-out) both;
+            }
+        }
+
+        @keyframes cs-button-morph-surface {
+            from {
+                background-color: var(--_morph-from-bg, transparent);
+                box-shadow: var(--_morph-from-shadow, none);
+            }
+            to {
+                background-color: var(--_morph-to-bg, transparent);
+                box-shadow: var(--_morph-to-shadow, none);
             }
         }
     }
