@@ -10,15 +10,26 @@ Architectural Notes:
 - Native Top Layer: Automatically promoted to Top Layer via `{@attach topLayer()}` without z-index collisions.
 - Dismiss Ergonomics: Pairs `pointerdown` and `click` on the backdrop to prevent accidental closures
   when dragging or selecting text inside child elements.
+- Scroll Containment: When `lockScroll` (default `true`) is enabled, traps wheel and touch scroll gestures
+  within scrollable overlay descendants, preventing background scroll chaining without document layout shifts.
 - CSS Hooks: Exposes `data-variant` for zero-specificity styling via `.cs-overlay`.
 -->
 <script lang="ts">
     import type { TransitionConfig } from "svelte/transition";
 
+    import { scrollLock } from "../scroll-lock/index.ts";
     import type { OverlayProps } from "./index.ts";
     import { topLayer } from "./top-layer.attach.ts";
 
-    let { variant, class: className, children, onclick, onpointerdown, ...rest }: OverlayProps = $props();
+    let {
+        variant,
+        lockScroll = true,
+        class: className,
+        children,
+        onclick,
+        onpointerdown,
+        ...rest
+    }: OverlayProps = $props();
 
     /* Delays Svelte DOM unmounting by 120ms so native CSS `allow-discrete`
      * and `overlay` exit transitions can fully play out before element removal. */
@@ -59,6 +70,7 @@ Architectural Notes:
     out:overlayExit
     popover="manual"
     {@attach topLayer()}
+    {@attach scrollLock(lockScroll)}
     onpointerdown={handlePointerDown}
     onclick={handleClick}
     class={["cs-overlay", className]}
@@ -91,6 +103,14 @@ Architectural Notes:
             max-height: none;
             padding: var(--cs-overlay-padding);
             overflow: hidden;
+
+            &[data-scroll-locked] {
+                touch-action: none;
+
+                & > :global(*) {
+                    touch-action: auto;
+                }
+            }
 
             /* =====================================================
              * CLOSED / EXIT TRANSITION (Fast & Accelerating Out)

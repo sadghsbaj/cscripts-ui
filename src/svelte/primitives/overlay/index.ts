@@ -8,4 +8,10 @@ export type OverlayVariant = (typeof OVERLAY_VARIANTS)[number];
 
 export interface OverlayProps extends Omit<HTMLAttributes<HTMLDivElement>, "popover"> {
     variant: OverlayVariant;
+    /**
+     * Whether to prevent background scrolling outside scrollable overlay content.
+     * Intercepts uncontained wheel and touch gestures without causing layout shifts.
+     * @default true
+     */
+    lockScroll?: boolean;
 }
