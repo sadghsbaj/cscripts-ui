@@ -166,7 +166,7 @@ Architectural Notes:
             );
         }
 
-        .cs-overlay[data-variant="opaque"] {
+        .cs-overlay[data-variant="solid"] {
             background-color: var(--cs-color-elevation-0);
         }
 
