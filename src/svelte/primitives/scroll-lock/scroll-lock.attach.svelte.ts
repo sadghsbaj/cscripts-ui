@@ -72,17 +72,46 @@ function isScrollableElement(
 }
 
 /**
+ * Checks whether a scrollable element can consume scroll delta in the requested direction.
+ * If the element is already at its scroll boundary for the direction, returns false to prevent
+ * the browser from chaining the remainder of the scroll gesture to the document background.
+ */
+function canScrollInDirection(element: HTMLElement, deltaY: number, deltaX: number): boolean {
+    if (deltaY !== 0) {
+        if (deltaY < 0 && element.scrollTop > 0) return true;
+        if (deltaY > 0 && Math.ceil(element.scrollTop + element.clientHeight) < element.scrollHeight) return true;
+    }
+
+    if (deltaX !== 0) {
+        if (deltaX < 0 && element.scrollLeft > 0) return true;
+        if (deltaX > 0 && Math.ceil(element.scrollLeft + element.clientWidth) < element.scrollWidth) return true;
+    }
+
+    return false;
+}
+
+/**
  * Traverses upwards from `target` to `boundary` to find any scrollable ancestor element.
  */
 function hasScrollableAncestor(
     target: Element | null,
     boundary: HTMLElement,
+    deltaY: number,
+    deltaX: number,
     customPredicate?: (el: HTMLElement) => boolean | undefined
 ): boolean {
     let current = target;
     while (current && current !== boundary) {
         if (current instanceof HTMLElement && isScrollableElement(current, customPredicate)) {
-            return true;
+            // For directional wheel gestures, verify that the element can absorb the delta
+            // without chaining to ancestor or document layers.
+            if (deltaY !== 0 || deltaX !== 0) {
+                if (canScrollInDirection(current, deltaY, deltaX)) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
         }
         current = current.parentElement;
     }
@@ -164,7 +193,9 @@ export function scrollLock(source?: ScrollLockSource): Attachment<HTMLElement> {
             if (!options.enabled) return;
 
             const target = event.target instanceof Element ? event.target : null;
-            const canScroll = options.allowScrollableChildren && hasScrollableAncestor(target, node, options.isScrollable);
+            const canScroll =
+                options.allowScrollableChildren &&
+                hasScrollableAncestor(target, node, event.deltaY, event.deltaX, options.isScrollable);
 
             if (!canScroll) {
                 event.preventDefault();
@@ -178,24 +209,33 @@ export function scrollLock(source?: ScrollLockSource): Attachment<HTMLElement> {
             if (!options.enabled) return;
 
             const target = event.target instanceof Element ? event.target : null;
-            const canScroll = options.allowScrollableChildren && hasScrollableAncestor(target, node, options.isScrollable);
+            const canScroll =
+                options.allowScrollableChildren &&
+                hasScrollableAncestor(target, node, 0, 0, options.isScrollable);
 
             if (!canScroll) {
                 event.preventDefault();
             }
         }
 
-        const initialOptions = resolveOptions(source);
-        if (initialOptions.enabled && initialOptions.dataAttribute) {
-            node.dataset.scrollLocked = "";
-        }
-
         node.addEventListener("wheel", handleWheel, { passive: false });
         node.addEventListener("touchmove", handleTouchMove, { passive: false });
+
+        const cleanupRoot = $effect.root(() => {
+            $effect(() => {
+                const options = resolveOptions(source);
+                if (options.enabled && options.dataAttribute) {
+                    node.dataset.scrollLocked = "";
+                } else {
+                    delete node.dataset.scrollLocked;
+                }
+            });
+        });
 
         return () => {
             node.removeEventListener("wheel", handleWheel);
             node.removeEventListener("touchmove", handleTouchMove);
+            cleanupRoot();
             delete node.dataset.scrollLocked;
         };
     };

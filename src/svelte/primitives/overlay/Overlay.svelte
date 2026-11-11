@@ -103,6 +103,7 @@ Architectural Notes:
             max-height: none;
             padding: var(--cs-overlay-padding);
             overflow: hidden;
+            overscroll-behavior: contain;
 
             &[data-scroll-locked] {
                 touch-action: none;

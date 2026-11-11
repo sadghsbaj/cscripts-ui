@@ -1,1 +1,1 @@
-export * from "./scroll-lock.attach.ts";
+export * from "./scroll-lock.attach.svelte.ts";
