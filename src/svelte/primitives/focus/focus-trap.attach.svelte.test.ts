@@ -23,7 +23,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
     });
 
     describe("Initialization & Basic Behavior", () => {
-        test("should focus first interactive element by default and set aria-modal", () => {
+        test("should focus first interactive element by default", () => {
             const modal = document.createElement("div");
             const btn1 = document.createElement("button");
             btn1.textContent = "First";
@@ -38,32 +38,11 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             vi.advanceTimersByTime(20);
 
             expect(document.activeElement).toBe(btn1);
-            expect(modal.getAttribute("aria-modal")).toBe("true");
             expect(("focusTrapped" in modal.dataset)).toBe(true);
 
             cleanup?.();
 
             expect(("focusTrapped" in modal.dataset)).toBe(false);
-            expect(modal.hasAttribute("aria-modal")).toBe(false);
-        });
-
-        test("should preserve pre-existing aria-modal attribute on teardown", () => {
-            const modal = document.createElement("div");
-            modal.setAttribute("aria-modal", "false");
-            const btn = document.createElement("button");
-            modal.append(btn);
-            container.append(modal);
-
-            const attach = focusTrap("first-focusable");
-            const cleanup = attach(modal);
-
-            vi.advanceTimersByTime(20);
-
-            expect(modal.getAttribute("aria-modal")).toBe("false");
-
-            cleanup?.();
-
-            expect(modal.getAttribute("aria-modal")).toBe("false");
         });
 
         test("should do nothing when enabled is false via boolean shorthand", () => {
@@ -79,7 +58,6 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
 
             expect(document.activeElement).not.toBe(btn);
             expect(("focusTrapped" in modal.dataset)).toBe(false);
-            expect(modal.hasAttribute("aria-modal")).toBe(false);
 
             cleanup?.();
         });

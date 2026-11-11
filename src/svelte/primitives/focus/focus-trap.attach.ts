@@ -91,13 +91,6 @@ export interface FocusTrapOptions {
     retries?: number;
 
     /**
-     * Automatically sets `aria-modal="true"` on the attached container if not already present.
-     * Restores previous state on teardown.
-     * @default true
-     */
-    setAriaModal?: boolean;
-
-    /**
      * Callback triggered when the Escape key is pressed while the trap is active.
      */
     onEscape?: (event: KeyboardEvent) => void;
@@ -243,7 +236,6 @@ export function focusTrap<T extends HTMLElement = HTMLElement>(
         timing = "raf",
         delay = 0,
         retries = 3,
-        setAriaModal = true,
         onEscape,
         allowOutsideClick = false,
         onActivate,
@@ -265,9 +257,6 @@ export function focusTrap<T extends HTMLElement = HTMLElement>(
         let assignedTabIndexElement: HTMLElement | null = null;
         let lastFocusedElement: HTMLElement | null = null;
 
-        // Snapshot original attributes for non-destructive restoration
-        const originalAriaModal = container.getAttribute("aria-modal");
-
         // Eagerly snapshot active element before any focus shift occurs
         const initialActiveElement: HTMLElement | null =
             restoreFocus === true
@@ -275,11 +264,6 @@ export function focusTrap<T extends HTMLElement = HTMLElement>(
                 : restoreFocus instanceof HTMLElement
                   ? restoreFocus
                   : null;
-
-        // Apply accessibility metadata
-        if (setAriaModal && !container.hasAttribute("aria-modal")) {
-            container.setAttribute("aria-modal", "true");
-        }
 
         const cancelPendingTasks = (): void => {
             if (timerId !== null) {
@@ -581,13 +565,6 @@ export function focusTrap<T extends HTMLElement = HTMLElement>(
             delete container.dataset.focusTrapped;
             delete container.dataset.focusTrapPaused;
             delete container.dataset.focusTrapFailed;
-
-            // Restore ARIA state
-            if (originalAriaModal !== null) {
-                container.setAttribute("aria-modal", originalAriaModal);
-            } else if (setAriaModal) {
-                container.removeAttribute("aria-modal");
-            }
 
             // Cleanup injected tabindex
             if (assignedTabIndexElement?.getAttribute("tabindex") === "-1") {
