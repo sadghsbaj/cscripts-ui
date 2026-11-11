@@ -3,6 +3,7 @@ import type { Linter } from "eslint";
 import { attachmentLayersConfig } from "./attachment-layers.ts";
 import { browserStorageConfig } from "./browser-storage.ts";
 import { buttonGroupConfig } from "./button-group.ts";
+import { buttonMorphConfig } from "./button-morph.ts";
 import { buttonConfig } from "./button.ts";
 import { clipboardConfig } from "./clipboard.ts";
 import { closeButtonConfig } from "./close-button.ts";
@@ -18,6 +19,11 @@ export { attachmentCssParser, attachmentLayerRule, attachmentLayersConfig } from
 export { browserStorageConfig, noNativeStorageRule, requireStoragePrefixRule } from "./browser-storage.ts";
 export { buttonConfig, buttonHitAreaRule, buttonStructureRule, buttonTooltipRule } from "./button.ts";
 export { buttonGroupConfig, buttonGroupNoSolidRule, buttonGroupUniformButtonsRule } from "./button-group.ts";
+export {
+    buttonMorphConfig,
+    buttonMorphRequireButtonChildRule,
+    buttonMorphRequireItemsRule,
+} from "./button-morph.ts";
 export { clipboardConfig, noNativeClipboardRule, preferClipboardIconsRule } from "./clipboard.ts";
 export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
 export { componentCommentRule, componentDocsConfig } from "./component-docs.ts";
@@ -48,6 +54,7 @@ export const customRulesConfigs: Linter.Config[] = [
     browserStorageConfig,
     buttonConfig,
     buttonGroupConfig,
+    buttonMorphConfig,
     clipboardConfig,
     closeButtonConfig,
     toggleButtonConfig,
