@@ -47,7 +47,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
         });
 
         test("should return early no-op cleanup when handler is undefined", () => {
-            const attach = clickOutside({});
+            const attach = clickOutside({} as unknown as { handler: () => void });
             const cleanup = attach(container);
 
             expect("clickOutside" in container.dataset).toBe(false);
@@ -118,7 +118,10 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             // 1. Mouse down inside container (e.g. text selection start)
             child.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
 
-            // 2. Mouse up / click outside container (selection released outside)
+            // 2. Mouse up outside container (e.g. selection drag released outside)
+            outsideElement.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+
+            // 3. Click event outside container (dispatched in the same interaction cycle)
             outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
             expect(handler).not.toHaveBeenCalled();

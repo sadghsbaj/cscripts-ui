@@ -19,7 +19,7 @@ export interface ClickOutsideOptions {
     /**
      * Callback triggered when an interaction occurs outside the element and ignored targets.
      */
-    handler?: ClickOutsideHandler;
+    handler: ClickOutsideHandler;
 
     /**
      * Whether the click-outside detection is currently active.
@@ -236,10 +236,10 @@ function getDeepActiveElement(): Element | null {
  * ```
  */
 export function clickOutside<T extends HTMLElement | SVGElement = HTMLElement>(
-    sourceOrOptions?: ClickOutsideSource
+    source: ClickOutsideSource
 ): Attachment<T> {
     const options: ClickOutsideOptions =
-        typeof sourceOrOptions === "function" ? { handler: sourceOrOptions } : (sourceOrOptions ?? {});
+        typeof source === "function" ? { handler: source } : (source ?? ({} as ClickOutsideOptions));
 
     const {
         handler,
