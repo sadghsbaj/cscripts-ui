@@ -13,10 +13,28 @@ Architectural Notes:
 - CSS Hooks: Exposes `data-variant` for zero-specificity styling via `.cs-overlay`.
 -->
 <script lang="ts">
+    import type { TransitionConfig } from "svelte/transition";
+
     import type { OverlayProps } from "./index.ts";
     import { topLayer } from "./top-layer.attach.ts";
 
     let { variant, class: className, children, onclick, onpointerdown, ...rest }: OverlayProps = $props();
+
+    /* Delays Svelte DOM unmounting by 120ms so native CSS `allow-discrete`
+     * and `overlay` exit transitions can fully play out before element removal. */
+    function overlayExit(node: HTMLElement): TransitionConfig {
+        try {
+            if (node.matches?.(":popover-open")) {
+                node.hidePopover();
+            }
+        } catch {
+            // Ignore InvalidStateError if already closed or detached
+        }
+
+        return {
+            duration: 120,
+        };
+    }
 
     let isBackdropPointerDown = false;
 
@@ -38,6 +56,7 @@ Architectural Notes:
 
 <div
     {...rest}
+    out:overlayExit
     popover="manual"
     {@attach topLayer()}
     onpointerdown={handlePointerDown}
@@ -72,6 +91,39 @@ Architectural Notes:
             max-height: none;
             padding: var(--cs-overlay-padding);
             overflow: hidden;
+
+            /* =====================================================
+             * CLOSED / EXIT TRANSITION (Fast & Accelerating Out)
+             * ===================================================== */
+            opacity: 0;
+            transition:
+                opacity 120ms var(--cs-ease-quad-in),
+                backdrop-filter 120ms var(--cs-ease-quad-in),
+                -webkit-backdrop-filter 120ms var(--cs-ease-quad-in),
+                display 120ms allow-discrete,
+                overlay 120ms allow-discrete;
+        }
+
+        /* =========================================================
+         * OPEN TRANSITION (Decelerating Optical Focus)
+         * ========================================================= */
+        .cs-overlay:popover-open {
+            opacity: 1;
+            transition:
+                opacity 180ms var(--cs-ease-quart-out),
+                backdrop-filter 240ms var(--cs-ease-quart-out),
+                -webkit-backdrop-filter 240ms var(--cs-ease-quart-out),
+                display 240ms allow-discrete,
+                overlay 240ms allow-discrete;
+        }
+
+        /* =========================================================
+         * ENTRY KEYFRAME (Initial state before transition)
+         * ========================================================= */
+        @starting-style {
+            .cs-overlay:popover-open {
+                opacity: 0;
+            }
         }
 
         /* =========================================================
