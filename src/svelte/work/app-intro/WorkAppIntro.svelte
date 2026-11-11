@@ -123,7 +123,6 @@ Architectural Notes:
             transition:
                 opacity 300ms var(--cs-ease-quad-out),
                 scale 300ms var(--cs-ease-expo-out);
-            cursor: pointer;
 
             &[data-phase="curtain"] {
                 opacity: 0;
