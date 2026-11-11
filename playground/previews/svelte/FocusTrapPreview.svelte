@@ -75,7 +75,7 @@
             role="dialog"
             aria-modal="true"
             aria-label="Einstellungen"
-            class="bg-elevation-1 shadow-elevation-2 rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-400px relative"
+            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-400px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isStandardOpen = false),
@@ -84,7 +84,12 @@
         >
             <div class="flex justify-between items-center w-full">
                 <h3 class="title-xl">Einstellungen</h3>
-                <CloseButton variant="soft" size="md" onclick={() => (isStandardOpen = false)}>
+                <CloseButton
+                    variant="soft"
+                    size="sm"
+                    onclick={() => (isStandardOpen = false)}
+                    class="absolute top-6 right-6"
+                >
                     <HitArea size="md" />
                 </CloseButton>
             </div>
@@ -121,7 +126,7 @@
             role="dialog"
             aria-modal="true"
             aria-label="Löschen bestätigen"
-            class="bg-elevation-1 shadow-elevation-2 rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-380px relative"
+            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-380px relative"
             {@attach focusTrap({
                 initialFocus: "#danger-confirm",
                 onEscape: () => (isTargetOpen = false),
@@ -129,7 +134,12 @@
         >
             <div class="flex justify-between items-center w-full">
                 <h3 class="title-xl">Wirklich löschen?</h3>
-                <CloseButton variant="soft" size="md" onclick={() => (isTargetOpen = false)}>
+                <CloseButton
+                    variant="soft"
+                    size="sm"
+                    onclick={() => (isTargetOpen = false)}
+                    class="absolute right-4 top-4"
+                >
                     <HitArea size="md" />
                 </CloseButton>
             </div>
@@ -171,7 +181,12 @@
         >
             <div class="flex justify-between items-center w-full">
                 <h3 class="title-xl">Ebene 1: Haupt-Dialog</h3>
-                <CloseButton variant="soft" size="md" onclick={() => (isParentOpen = false)}>
+                <CloseButton
+                    variant="soft"
+                    size="sm"
+                    onclick={() => (isParentOpen = false)}
+                    class="absolute top-6 right-6"
+                >
                     <HitArea size="md" />
                 </CloseButton>
             </div>
@@ -184,7 +199,7 @@
                 <Button variant="soft" color="accent" size="sm" onclick={() => (isChildOpen = true)}>
                     <ButtonLabel>Ebene 2 öffnen</ButtonLabel>
                 </Button>
-                <Button variant="soft" color="base" size="sm" onclick={() => (isParentOpen = false)}>
+                <Button variant="soft" color="base" size="md" onclick={() => (isParentOpen = false)}>
                     <ButtonLabel>Schließen</ButtonLabel>
                 </Button>
             </div>
@@ -198,7 +213,7 @@
             role="dialog"
             aria-modal="true"
             aria-label="Ebene 2 Sub-Dialog"
-            class="bg-elevation-1 shadow-elevation-2 rounded-3xl squircle p-8 flex flex-col gap-6 w-full max-w-360px relative"
+            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 flex flex-col gap-6 w-full max-w-360px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isChildOpen = false),
@@ -206,8 +221,13 @@
         >
             <div class="flex justify-between items-center w-full">
                 <h3 class="title-xl">Ebene 2: Sub-Dialog</h3>
-                <CloseButton variant="ghost" size="md" onclick={() => (isChildOpen = false)}>
-                    <HitArea size="md" />
+                <CloseButton
+                    variant="ghost"
+                    size="sm"
+                    onclick={() => (isChildOpen = false)}
+                    class="absolute top-6 right-6"
+                >
+                    <HitArea size="sm" />
                 </CloseButton>
             </div>
 

@@ -8,6 +8,7 @@
     import { scrollFade } from "cs/svelte/scroll-fade";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
+    import { tooltip } from "cs/svelte/tooltip";
 
     interface SvelteModule {
         default: Component;
@@ -33,14 +34,19 @@
         };
     });
 
-    let activePreview = $state<Component | undefined>(
-        previews.find((p) => p.id === getLocalStorage(SAVED_PREVIEW_KEY))?.preview
+    const savedId = getLocalStorage(SAVED_PREVIEW_KEY);
+    let selectedId = $state<string | undefined>(
+        previews.some((p) => p.id === savedId) ? (savedId ?? undefined) : previews[0]?.id
     );
 
-    function changeActivePreview(preview: PreviewItem): void {
-        activePreview = preview.preview;
-        setLocalStorage(SAVED_PREVIEW_KEY, preview.id);
-    }
+    let activePreviewItem = $derived(previews.find((p) => p.id === selectedId));
+    let activePreview = $derived(activePreviewItem?.preview);
+
+    $effect(() => {
+        if (selectedId) {
+            setLocalStorage(SAVED_PREVIEW_KEY, selectedId);
+        }
+    });
 
     let sidebarIsOpen = $state(false);
 </script>
@@ -53,6 +59,7 @@
         class="absolute right-8 top-8 z-100"
         aria-label="Sidebar umschalten"
         onclick={() => (sidebarIsOpen = !sidebarIsOpen)}
+        {@attach tooltip("Sidebar umschalten")}
     >
         <ButtonIcon icon={PanelLeftClose} />
         <HitArea size="md" />
@@ -65,11 +72,23 @@
     >
         <h2 class="title-xl">Previews:</h2>
 
-        <ToggleButtonGroup type="single" orientation="vertical" class="gap-1">
-            {#each previews as preview (preview.id)}
-                {@render sidebarOption(preview)}
-            {/each}
-        </ToggleButtonGroup>
+        <ScrollArea size="sm" direction="vertical" class="w-full flex-1 min-h-0">
+            <ScrollAreaContent
+                class="flex flex-col gap-1 py-1"
+                {@attach scrollFade({ size: "md", direction: "vertical", edges: "both" })}
+            >
+                <ToggleButtonGroup
+                    type="single"
+                    orientation="vertical"
+                    class="w-full gap-1"
+                    bind:value={selectedId}
+                >
+                    {#each previews as preview (preview.id)}
+                        {@render sidebarOption(preview)}
+                    {/each}
+                </ToggleButtonGroup>
+            </ScrollAreaContent>
+        </ScrollArea>
     </aside>
 
     <ScrollArea size="lg" direction="vertical" class="size-full">
@@ -78,7 +97,7 @@
             {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
         >
             <div class="flex gap-1 items-center">
-                <h1 class="title-4xl">{previews.find((p) => p.preview === activePreview)?.label}</h1>
+                <h1 class="title-4xl">{activePreviewItem?.label}</h1>
             </div>
 
             {#if activePreview}
@@ -94,8 +113,7 @@
         variant="soft"
         color="accent"
         size="md"
-        pressed={activePreview === preview.preview}
-        onclick={() => changeActivePreview(preview)}
+        value={preview.id}
     >
         <ToggleButtonLabel>
             {preview.label}
