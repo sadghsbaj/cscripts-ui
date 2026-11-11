@@ -217,6 +217,14 @@ function getDeepActiveElement(): Element | null {
  * - Iframe blur detection: catches clicks inside external iframes across Shadow DOM roots.
  * - Polymorphic ignore rules: supports selectors, DOM elements, arrays, refs, and predicate functions.
  *
+ * Architectural Notes:
+ * - Co-located Triggers (Wrapper Pattern): When a trigger control and dismissible surface share
+ *   a common parent container, attaching `clickOutside` to that parent keeps trigger clicks
+ *   inside the boundary, preventing toggle collisions without requiring extra configuration.
+ * - External Triggers (Ignore Pattern): When a trigger lives outside the dismissible element
+ *   (e.g. portals or distinct layout nodes), pass the trigger element, ref, or selector to `ignore`
+ *   so the outside-click dismissal does not conflict with the trigger's toggle logic.
+ *
  * @example
  * ```svelte
  * <!-- Simple handler shortcut -->

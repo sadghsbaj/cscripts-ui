@@ -4,105 +4,96 @@
 </script>
 
 <script lang="ts">
-    import { Check, ShieldAlert, Sparkles } from "@lucide/svelte";
-    import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { clickOutside } from "cs/svelte/click-outside";
+    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
 
-    // Example 1: Standard outside click
     let isBasicOpen = $state(false);
 
-    // Example 2: Ignore specific element reference
     let isIgnoreElementOpen = $state(false);
     let triggerButtonEl = $state<HTMLElement | undefined>();
 
-    // Example 3: Ignore by CSS selector
     let isSelectorOpen = $state(false);
+    let selectorTriggerEl = $state<HTMLElement | undefined>();
 </script>
 
 <div class="flex justify-center">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        <!-- 1. Standard Callback -->
+        <!-- 1. Wrapper Pattern -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-260px flex flex-col justify-between items-start gap-5 relative"
+            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
-            <div class="flex flex-col gap-2 w-full">
-                <h2 class="title-xl">Standard</h2>
-                <span class="description-sm">Schließt beim Klick außerhalb</span>
+            <div class="flex flex-col gap-1 w-full">
+                <h2 class="title-xl">Wrapper</h2>
+                <span class="description-sm whitespace-nowrap">Wraps trigger and content</span>
             </div>
 
-            <div class="w-full flex-center flex-col gap-3 min-h-110px">
+            <div
+                class="w-full flex-center flex-col gap-3 min-h-100px"
+                {@attach clickOutside(() => (isBasicOpen = false))}
+            >
+                <ToggleButton variant="soft" color="accent" size="md" bind:pressed={isBasicOpen}>
+                    <ToggleButtonLabel>{isBasicOpen ? "Close" : "Open"}</ToggleButtonLabel>
+                </ToggleButton>
+
                 {#if isBasicOpen}
                     <div
-                        class="bg-accent-soft text-accent-soft-fg px-4 py-3 rounded-2xl squircle flex items-center gap-2.5 shadow-sm text-sm font-500 w-full justify-between"
-                        {@attach clickOutside(() => (isBasicOpen = false))}
+                        class="w-full h-12 flex-center border border-dashed border-base-300 dark:border-base-700 rounded-2xl squircle label-sm text-strong select-none"
                     >
-                        <div class="flex items-center gap-2">
-                            <Sparkles class="size-4.5" />
-                            <span>Offen</span>
-                        </div>
-                        <span class="text-xs text-weak">Klick daneben</span>
+                        Active
                     </div>
-                {:else}
-                    <Button variant="soft" color="base" size="md" onclick={() => (isBasicOpen = true)}>
-                        <ButtonLabel>Öffnen</ButtonLabel>
-                    </Button>
                 {/if}
             </div>
         </div>
 
-        <!-- 2. Ignore Element Reference -->
+        <!-- 2. Ignore Element -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-260px flex flex-col justify-between items-start gap-5 relative"
+            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
-            <div class="flex flex-col gap-2 w-full">
+            <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Ignore Element</h2>
-                <span class="description-sm">Trigger-Klick schließt nicht versehentlich</span>
+                <span class="description-sm whitespace-nowrap">Trigger is excluded</span>
             </div>
 
-            <div class="w-full flex-center flex-col gap-3 min-h-110px">
+            <div class="w-full flex-center flex-col gap-3 min-h-100px">
                 <div bind:this={triggerButtonEl}>
-                    <Button
-                        variant={isIgnoreElementOpen ? "solid" : "soft"}
-                        color={isIgnoreElementOpen ? "accent" : "base"}
-                        size="md"
-                        onclick={() => (isIgnoreElementOpen = !isIgnoreElementOpen)}
-                    >
-                        <ButtonLabel>{isIgnoreElementOpen ? "Schließen" : "Öffnen"}</ButtonLabel>
-                    </Button>
+                    <ToggleButton variant="soft" color="accent" size="md" bind:pressed={isIgnoreElementOpen}>
+                        <ToggleButtonLabel>{isIgnoreElementOpen ? "Close" : "Open"}</ToggleButtonLabel>
+                    </ToggleButton>
                 </div>
 
                 {#if isIgnoreElementOpen}
                     <div
-                        class="bg-elevation-2 px-4 py-3 rounded-2xl squircle flex items-center gap-2 text-sm text-strong w-full justify-center"
+                        class="w-full h-12 flex-center border border-dashed border-base-300 dark:border-base-700 rounded-2xl squircle label-sm text-strong select-none"
                         {@attach clickOutside({
                             handler: () => (isIgnoreElementOpen = false),
                             ignore: triggerButtonEl,
                         })}
                     >
-                        <Check class="size-4.5 text-accent-soft-fg" />
-                        <span>Aktiv</span>
+                        Protected
                     </div>
                 {/if}
             </div>
         </div>
 
-        <!-- 3. Ignore CSS Selector -->
+        <!-- 3. Ignore Selector -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-260px flex flex-col justify-between items-start gap-5 relative"
+            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
-            <div class="flex flex-col gap-2 w-full">
+            <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Ignore Selector</h2>
-                <span class="description-sm">Klicks auf .safe-zone werden ignoriert</span>
+                <span class="description-sm whitespace-nowrap">Safe zone is excluded</span>
             </div>
 
-            <div class="w-full flex-center flex-col gap-3 min-h-110px">
-                <div class="flex items-center gap-2 w-full justify-center">
-                    <Button variant="soft" color="base" size="md" onclick={() => (isSelectorOpen = !isSelectorOpen)}>
-                        <ButtonLabel>{isSelectorOpen ? "Schließen" : "Öffnen"}</ButtonLabel>
-                    </Button>
+            <div class="w-full flex-center flex-col gap-3 min-h-100px">
+                <div class="flex-center gap-3 w-full">
+                    <div bind:this={selectorTriggerEl}>
+                        <ToggleButton variant="soft" color="accent" size="md" bind:pressed={isSelectorOpen}>
+                            <ToggleButtonLabel>{isSelectorOpen ? "Close" : "Open"}</ToggleButtonLabel>
+                        </ToggleButton>
+                    </div>
 
                     <div
-                        class="safe-zone bg-elevation-2 px-3 py-1.5 rounded-xl squircle text-xs font-500 text-weak select-none cursor-pointer"
+                        class="safe-zone h-9 px-3.5 flex-center border border-dashed border-base-300 dark:border-base-700 rounded-full squircle label-xs text-weak select-none cursor-pointer hover:text-strong transition-colors"
                     >
                         .safe-zone
                     </div>
@@ -110,17 +101,13 @@
 
                 {#if isSelectorOpen}
                     <div
-                        class="bg-elevation-2 px-4 py-3 rounded-2xl squircle flex items-center gap-2 text-sm text-strong w-full justify-between"
+                        class="w-full h-12 flex-center border border-dashed border-base-300 dark:border-base-700 rounded-2xl squircle label-sm text-strong select-none"
                         {@attach clickOutside({
                             handler: () => (isSelectorOpen = false),
-                            ignore: ".safe-zone",
+                            ignore: [selectorTriggerEl, ".safe-zone"],
                         })}
                     >
-                        <div class="flex items-center gap-2">
-                            <ShieldAlert class="size-4.5 text-warning-soft-fg" />
-                            <span>Geschützt</span>
-                        </div>
-                        <span class="text-xs text-weaker">Safe-Zone bleibt aktiv</span>
+                        Protected
                     </div>
                 {/if}
             </div>
