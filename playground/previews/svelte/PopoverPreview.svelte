@@ -29,7 +29,7 @@
                         id={popoverId}
                         {placement}
                         size="content"
-                        class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main"
+                        class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-4 text-xs font-500 text-main"
                     >
                         <div class="flex flex-col gap-1">
                             <span class="font-600">Placement: {placement}</span>
@@ -62,7 +62,7 @@
                         id={popoverId}
                         placement="bottom"
                         {size}
-                        class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main"
+                        class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-4 text-xs font-500 text-main"
                     >
                         <div class="flex flex-col gap-1">
                             <span class="font-600">{size}</span>
@@ -101,7 +101,7 @@
                     placement="top"
                     size="content"
                     offset="24px"
-                    class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main"
+                    class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-4 text-xs font-500 text-main"
                 >
                     <div class="flex flex-col gap-1">
                         <span class="font-600">Offset: 24px</span>
@@ -123,7 +123,7 @@
                     popover="hint"
                     placement="bottom"
                     size="content"
-                    class="bg-elevation-1 shadow-elevation-2 rounded-2xl squircle p-4 text-xs font-500 text-main"
+                    class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-4 text-xs font-500 text-main"
                 >
                     <div class="flex flex-col gap-1">
                         <span class="font-600">Hint Popover</span>
