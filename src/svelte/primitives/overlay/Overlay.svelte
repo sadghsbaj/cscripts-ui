@@ -31,7 +31,7 @@ Architectural Notes:
         ...rest
     }: OverlayProps = $props();
 
-    /* Delays Svelte DOM unmounting by 120ms so native CSS `allow-discrete`
+    /* Delays Svelte DOM unmounting by 160ms so native CSS `allow-discrete`
      * and `overlay` exit transitions can fully play out before element removal. */
     function overlayExit(node: HTMLElement): TransitionConfig {
         try {
@@ -43,7 +43,7 @@ Architectural Notes:
         }
 
         return {
-            duration: 120,
+            duration: 160,
         };
     }
 
@@ -103,6 +103,19 @@ Architectural Notes:
             max-height: none;
             padding: var(--cs-overlay-padding);
             overflow: hidden;
+
+            /* =====================================================
+             * CLOSED / EXIT TRANSITION (Fast & Accelerating Out)
+             * ===================================================== */
+            opacity: 0;
+            backdrop-filter: blur(0px) saturate(100%);
+            -webkit-backdrop-filter: blur(0px) saturate(100%);
+            transition:
+                opacity 160ms var(--cs-ease-cubic-in),
+                backdrop-filter 160ms var(--cs-ease-quad-in),
+                -webkit-backdrop-filter 160ms var(--cs-ease-quad-in),
+                display 160ms allow-discrete,
+                overlay 160ms allow-discrete;
             overscroll-behavior: contain;
 
             &[data-scroll-locked] {
@@ -112,51 +125,34 @@ Architectural Notes:
                     touch-action: auto;
                 }
             }
-
-            /* =====================================================
-             * CLOSED / EXIT TRANSITION (Fast & Accelerating Out)
-             * ===================================================== */
-            opacity: 0;
-            transition:
-                opacity 120ms var(--cs-ease-quad-in),
-                backdrop-filter 120ms var(--cs-ease-quad-in),
-                -webkit-backdrop-filter 120ms var(--cs-ease-quad-in),
-                display 120ms allow-discrete,
-                overlay 120ms allow-discrete;
         }
 
         /* =========================================================
-         * OPEN TRANSITION (Decelerating Optical Focus)
+         * OPEN TRANSITION (Explosive Launch + Viscous Optical Settle)
          * ========================================================= */
         .cs-overlay:popover-open {
             opacity: 1;
             transition:
-                opacity 180ms var(--cs-ease-quart-out),
-                backdrop-filter 240ms var(--cs-ease-quart-out),
-                -webkit-backdrop-filter 240ms var(--cs-ease-quart-out),
-                display 240ms allow-discrete,
-                overlay 240ms allow-discrete;
+                opacity 220ms var(--cs-ease-expo-out),
+                backdrop-filter 420ms var(--cs-spring-morph),
+                -webkit-backdrop-filter 420ms var(--cs-spring-morph),
+                display 420ms allow-discrete,
+                overlay 420ms allow-discrete;
         }
 
         /* =========================================================
-         * ENTRY KEYFRAME (Initial state before transition)
+         * VARIANTS
          * ========================================================= */
-        @starting-style {
-            .cs-overlay:popover-open {
-                opacity: 0;
-            }
-        }
-
-        /* =========================================================
-        * VARIANTS
-        * ========================================================= */
         .cs-overlay[data-variant="blur"] {
             background-color: light-dark(
                 color-mix(in oklch, var(--cs-color-base-950) 12%, transparent),
                 color-mix(in oklch, black 65%, transparent)
             );
-            backdrop-filter: blur(16px) saturate(160%);
-            -webkit-backdrop-filter: blur(16px) saturate(160%);
+
+            &:popover-open {
+                backdrop-filter: blur(16px) saturate(160%);
+                -webkit-backdrop-filter: blur(16px) saturate(160%);
+            }
         }
 
         .cs-overlay[data-variant="dim"] {
@@ -172,6 +168,19 @@ Architectural Notes:
 
         .cs-overlay[data-variant="transparent"] {
             background-color: transparent;
+        }
+
+        /* =========================================================
+         * ENTRY KEYFRAME (Initial state before transition)
+         * Must be placed after variants so cascade order wins.
+         * ========================================================= */
+        @starting-style {
+            .cs-overlay:popover-open,
+            .cs-overlay[data-variant="blur"]:popover-open {
+                opacity: 0;
+                backdrop-filter: blur(0px) saturate(100%);
+                -webkit-backdrop-filter: blur(0px) saturate(100%);
+            }
         }
     }
 </style>
