@@ -62,6 +62,38 @@ describe("ButtonMorphManager (buttonMorphState.svelte.ts)", () => {
         vi.restoreAllMocks();
     });
 
+    function createMorph(guardDelay?: number): {
+        morph: ButtonMorphManager;
+        setValue: (next: string) => void;
+        cleanup: () => void;
+    } {
+        let current = "idle";
+        const morph = new ButtonMorphManager({
+            getValue: () => current,
+            setValue: (next) => {
+                current = next;
+            },
+            getGuardDelay: guardDelay === undefined ? undefined : () => guardDelay,
+        });
+
+        const cleanRoot = morph.attachRoot(rootEl);
+        const cleanIdle = morph.attachItem("idle")(idleSlot);
+        const cleanConfirm = morph.attachItem("confirm")(confirmSlot);
+
+        return {
+            morph,
+            setValue: (next) => {
+                current = next;
+                morph.syncValue();
+            },
+            cleanup: () => {
+                cleanIdle?.();
+                cleanConfirm?.();
+                cleanRoot?.();
+            },
+        };
+    }
+
     describe("Initialization, Measurement & Item States", () => {
         test("should initialize with active value, infer defaultValue, and measure active slot dimensions", () => {
             let current = "idle";
@@ -290,6 +322,58 @@ describe("ButtonMorphManager (buttonMorphState.svelte.ts)", () => {
         });
     });
 
+    describe("Slow Double-Click Protection (multi-click follow-ups)", () => {
+        test("should swallow the 2nd click of a slow double-click after the guard window expired, but not a deliberate later click", () => {
+            const { setValue, cleanup } = createMorph();
+            const onConfirmClick = vi.fn();
+            confirmBtn.addEventListener("click", onConfirmClick);
+
+            setValue("confirm");
+
+            // 400ms later: time guard (250ms) is over, but a real double-click's 2nd click has detail === 2
+            vi.advanceTimersByTime(400);
+            const doubleClickFollowUp = new MouseEvent("click", { bubbles: true, cancelable: true, detail: 2 });
+            confirmBtn.dispatchEvent(doubleClickFollowUp);
+
+            expect(doubleClickFollowUp.defaultPrevented).toBe(true);
+            expect(onConfirmClick).not.toHaveBeenCalled();
+
+            // A deliberate single click (detail === 1) in the same window is a new intent and goes through
+            confirmBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
+            expect(onConfirmClick).toHaveBeenCalledTimes(1);
+
+            cleanup();
+        });
+
+        test("should stop swallowing multi-click follow-ups once the multi-click window is over", () => {
+            const { setValue, cleanup } = createMorph();
+            const onConfirmClick = vi.fn();
+            confirmBtn.addEventListener("click", onConfirmClick);
+
+            setValue("confirm");
+            vi.advanceTimersByTime(900);
+
+            confirmBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 2 }));
+            expect(onConfirmClick).toHaveBeenCalledTimes(1);
+
+            cleanup();
+        });
+
+        test("should not swallow multi-click follow-ups when guardDelay is disabled", () => {
+            const { setValue, cleanup } = createMorph(0);
+            const onConfirmClick = vi.fn();
+            confirmBtn.addEventListener("click", onConfirmClick);
+
+            setValue("confirm");
+            vi.advanceTimersByTime(400);
+
+            confirmBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 2 }));
+            expect(onConfirmClick).toHaveBeenCalledTimes(1);
+
+            cleanup();
+        });
+    });
+
     describe("Keyboard Focus Handoff", () => {
         test("should automatically transfer focus to the newly active button when focus was inside the outgoing slot", () => {
             let current = "idle";
@@ -360,6 +444,8 @@ describe("ButtonMorphManager (buttonMorphState.svelte.ts)", () => {
                     boxShadow: surface?.shadow ?? "",
                     content: pseudo === "::after" ? "none" : '""',
                     opacity: "1",
+                    getPropertyValue: (name: string) =>
+                        name === "corner-shape" ? (element === idleBtn ? "superellipse(1.2)" : "superellipse(1.6)") : "",
                 } as unknown as CSSStyleDeclaration;
             });
 
@@ -381,8 +467,16 @@ describe("ButtonMorphManager (buttonMorphState.svelte.ts)", () => {
             current = "confirm";
             morph.syncValue();
 
-            expect(morph.surfaceFrom).toEqual({ background: "rgb(255 0 0 / 0.1)", shadow: "none" });
-            expect(morph.surfaceTo).toEqual({ background: "rgb(255 0 0)", shadow: "0 1px 2px black" });
+            expect(morph.surfaceFrom).toEqual({
+                background: "rgb(255 0 0 / 0.1)",
+                shadow: "none",
+                corner: 1.2,
+            });
+            expect(morph.surfaceTo).toEqual({
+                background: "rgb(255 0 0)",
+                shadow: "0 1px 2px black",
+                corner: 1.6,
+            });
 
             cleanIdle?.();
             cleanConfirm?.();

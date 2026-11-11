@@ -77,6 +77,8 @@ Architectural Notes:
     style:--_morph-from-shadow={morph.surfaceFrom?.shadow}
     style:--_morph-to-bg={morph.surfaceTo?.background}
     style:--_morph-to-shadow={morph.surfaceTo?.shadow}
+    style:--_morph-from-corner={morph.surfaceFrom?.corner ?? undefined}
+    style:--_morph-to-corner={morph.surfaceTo?.corner ?? undefined}
 >
     {@render children?.()}
 </div>
@@ -145,9 +147,14 @@ Architectural Notes:
              * - `--cs-radius-full` on a single, symmetric element always yields
              *   a perfect pill at any interpolated height, so the shape never
              *   needs to chase the animating size.
-             * - Colors and shadows are read once by the state manager at the
-             *   moment of the switch, which keeps the handoff to and from the
-             *   real button surfaces visually seamless.
+             * - Colors, shadows and the corner exponent are read once by the state
+             *   manager at the moment of the switch, which keeps the handoff to and
+             *   from the real button surfaces visually seamless.
+             * - `corner-shape` is driven by the registered `--_morph-corner` number
+             *   (see `@property` below) instead of being keyframed directly: it is a
+             *   shorthand, and shorthands containing `var()` are not animated inside
+             *   `@keyframes`. The custom property is a plain longhand, so it
+             *   interpolates (e.g. a `CloseButton` at 1.2 into a `Button` at 1.6).
              * ========================================================= */
             &::before {
                 content: "";
@@ -155,7 +162,7 @@ Architectural Notes:
                 inset: 0;
                 z-index: 0;
                 border-radius: var(--cs-radius-full);
-                corner-shape: var(--cs-squircle-smooth);
+                corner-shape: superellipse(var(--_morph-corner));
                 opacity: 0;
                 pointer-events: none;
             }
@@ -168,14 +175,23 @@ Architectural Notes:
             }
         }
 
+        /* Registered so the browser can interpolate it numerically (must stay in sync with `--cs-squircle-smooth`). */
+        @property --_morph-corner {
+            syntax: "<number>";
+            inherits: false;
+            initial-value: 1.6;
+        }
+
         @keyframes cs-button-morph-surface {
             from {
                 background-color: var(--_morph-from-bg, transparent);
                 box-shadow: var(--_morph-from-shadow, none);
+                --_morph-corner: var(--_morph-from-corner, 1.6);
             }
             to {
                 background-color: var(--_morph-to-bg, transparent);
                 box-shadow: var(--_morph-to-shadow, none);
+                --_morph-corner: var(--_morph-to-corner, 1.6);
             }
         }
     }

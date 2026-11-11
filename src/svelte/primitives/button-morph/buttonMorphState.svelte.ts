@@ -15,8 +15,15 @@ import type {
     ButtonMorphResetReason,
 } from "./index.ts";
 
-export const DEFAULT_GUARD_DELAY_MS = 250;
+export const DEFAULT_GUARD_DELAY_MS = 350;
 export const MORPH_TRANSITION_DURATION_MS = 420;
+
+/**
+ * Window after a state change in which multi-click follow-ups (`event.detail > 1`) are still swallowed.
+ * Real double-clicks often land after `guardDelay` (OS double-click intervals are typically 400-500ms),
+ * so the time-based guard alone lets slower double-clicks through to the freshly morphed button.
+ */
+const MULTI_CLICK_WINDOW_MS = 600;
 
 const INTERACTIVE_CHILD_Selector =
     'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
@@ -33,6 +40,30 @@ export interface ButtonMorphDimensions {
 export interface ButtonMorphSurface {
     background: string;
     shadow: string;
+    /** Superellipse exponent of the button's `corner-shape` (e.g. `1.2`); `null` when it cannot be resolved. */
+    corner: number | null;
+}
+
+const CORNER_KEYWORD_EXPONENTS: Readonly<Record<string, number>> = {
+    bevel: 0,
+    round: 1,
+    squircle: 2,
+    scoop: -1,
+};
+
+/**
+ * Converts a computed `corner-shape` value to its superellipse exponent so it can be interpolated
+ * through a registered `<number>` custom property (`corner-shape` itself is a shorthand, and shorthands
+ * containing `var()` are not animated inside `@keyframes`).
+ */
+function parseCornerShape(value: string): number | null {
+    const normalized = value.trim().toLowerCase();
+
+    const keywordExponent = CORNER_KEYWORD_EXPONENTS[normalized];
+    if (keywordExponent !== undefined) return keywordExponent;
+
+    const match = /^superellipse\(\s*(-?\d*\.?\d+)\s*\)$/.exec(normalized);
+    return match?.[1] === undefined ? null : Number(match[1]);
 }
 
 export interface ButtonMorphStateOptions {
@@ -113,9 +144,15 @@ function readButtonSurface(slotNode: HTMLElement): ButtonMorphSurface | null {
         const background = hasPressedFill ? after.backgroundColor : before.backgroundColor;
         if (!background) return null;
 
+        // `corner-shape` lives on the button itself (the pseudo-elements inherit it).
+        const buttonStyle = getComputedStyle(button);
+        const corner =
+            typeof buttonStyle.getPropertyValue === "function" ? buttonStyle.getPropertyValue("corner-shape") : "";
+
         return {
             background,
             shadow: before.boxShadow || "none",
+            corner: parseCornerShape(corner),
         };
     } catch {
         return null;
@@ -174,6 +211,7 @@ export class ButtonMorphManager implements ButtonMorphContext {
     #transitionTimer: ReturnType<typeof setTimeout> | null = null;
     #guardTimer: ReturnType<typeof setTimeout> | null = null;
     #resetTimer: ReturnType<typeof setTimeout> | null = null;
+    #lastChangeAt = -Infinity;
 
     constructor(options: ButtonMorphStateOptions) {
         this.#options = options;
@@ -407,6 +445,7 @@ export class ButtonMorphManager implements ButtonMorphContext {
         const nextDims = this.measureItem(nextValue) ?? this.#itemSizes[nextValue] ?? null;
 
         this.#currentValue = nextValue;
+        this.#lastChangeAt = performance.now();
         this.direction = this.#resolveDirection(prevValue, nextValue);
 
         // Snapshot both resting surfaces so the shell can morph one continuous body (color + shadow)
@@ -473,7 +512,15 @@ export class ButtonMorphManager implements ButtonMorphContext {
         this.#rootEl = node;
 
         const handleCaptureClick = (event: MouseEvent): void => {
-            if (!this.isGuarded) return;
+            // `detail > 1` marks the 2nd+ click of a multi-click sequence. Swallowing those shortly after a
+            // morph covers slow double-clicks that arrive after `guardDelay` has already expired.
+            // A deliberate second click (`detail === 1`) after the guard window still goes through.
+            const isMultiClickFollowUp =
+                this.guardDelay > 0 &&
+                event.detail > 1 &&
+                performance.now() - this.#lastChangeAt < MULTI_CLICK_WINDOW_MS;
+
+            if (!this.isGuarded && !isMultiClickFollowUp) return;
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
