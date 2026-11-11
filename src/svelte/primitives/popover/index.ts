@@ -25,6 +25,7 @@ export type PopoverSize = (typeof POPOVER_SIZES)[number];
 export interface PopoverProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover"> {
     id: string;
     popover?: "" | "auto" | "manual" | "hint";
+    animate?: boolean;
     placement: PopoverPlacement;
     size: PopoverSize;
     offset?: string;
