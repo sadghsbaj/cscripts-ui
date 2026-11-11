@@ -10,8 +10,10 @@ and sizing constraints).
 Architectural Notes:
 - Automatic Anchor Linking: Establishes `--anchor-${id}` automatically from its `id`,
   seamlessly pairing with `popoverTrigger({ target: id })` without manual anchor declarations.
-- Structural Primitive: Handles anchoring and viewport-aware positioning while leaving visual styling
-  and transition animations completely open to consuming components.
+- Centralized Directional Motion: Ships with built-in spring motion (`animate = true` by default)
+  powered by spatial unit vectors (`--popover-dir-x`, `--popover-dir-y`) and `--popover-origin` derived
+  from `placement`. Consuming surfaces (like Tooltip or dropdown menus) can fine-tune motion by overriding
+  `--popover-anim-*` custom properties or disable it entirely via `animate={false}`.
 -->
 
 <script lang="ts">

@@ -8,6 +8,8 @@ Architectural Notes:
   (`tooltip.attach.svelte.ts`) to keep the container minimal and unopinionated.
 - Sizing & Centering: Enforces `block-size: 26px` with zero vertical padding, allowing flexbox
   to vertically align text, icons, and keyboard badges along the optical center axis.
+- Motion Delegation: Delegates directional entry/exit transitions and `@starting-style` spring choreography
+  to underlying `<Popover animate>` (`[data-animate]`), purely tuning micro-surface feel via `--popover-anim-*` token overrides.
 -->
 
 <script lang="ts">

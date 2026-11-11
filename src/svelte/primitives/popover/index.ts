@@ -25,6 +25,7 @@ export type PopoverSize = (typeof POPOVER_SIZES)[number];
 export interface PopoverProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover"> {
     id: string;
     popover?: "" | "auto" | "manual" | "hint";
+    /** Whether to enable built-in directional spring animation. Defaults to `true`. */
     animate?: boolean;
     placement: PopoverPlacement;
     size: PopoverSize;
