@@ -171,7 +171,7 @@ Architectural Notes:
                 background-color: var(--_morph-to-bg, transparent);
                 box-shadow: var(--_morph-to-shadow, none);
                 opacity: 1;
-                animation: cs-button-morph-surface 300ms var(--cs-ease-quad-in-out) both;
+                animation: cs-button-morph-surface 160ms var(--cs-ease-quad-in-out) both;
             }
         }
 

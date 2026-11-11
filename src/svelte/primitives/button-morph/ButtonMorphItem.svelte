@@ -35,8 +35,8 @@ Architectural Notes:
 <style>
     @layer components.composite {
         .cs-button-morph-item {
-            grid-area: 1 / 1;
             display: inline-flex;
+            grid-area: 1 / 1;
             align-items: center;
             justify-content: center;
 
@@ -69,8 +69,8 @@ Architectural Notes:
                 inset: 0 auto auto 0;
                 z-index: 0;
                 width: max-content;
-                visibility: hidden;
                 opacity: 0;
+                visibility: hidden;
                 pointer-events: none;
             }
 
@@ -87,8 +87,8 @@ Architectural Notes:
              * ========================================================= */
             > :global(:is(.cs-button, .cs-toggle-button)[data-icon-only]) > :global(*:not(.cs-hit-area)),
             > :global(.cs-close-button) > :global(.cs-close-button-icon) {
-                width: auto;
                 aspect-ratio: 1 / 1;
+                width: auto;
             }
 
             /* =========================================================
@@ -127,12 +127,12 @@ Architectural Notes:
                 clip-path: inset(0 round var(--cs-radius-full));
 
                 > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button)) {
+                    aspect-ratio: auto;
                     width: 100%;
                     min-width: 0;
                     height: 100%;
                     min-height: 0;
                     padding-inline: 0;
-                    aspect-ratio: auto;
                     border-radius: var(--cs-radius-full);
                 }
 
@@ -173,16 +173,14 @@ Architectural Notes:
              * Icon and label move as one rigid lockup (no child stagger).
              * ========================================================= */
             :global(.cs-button-morph[data-transitioning]) &[data-state="active"] {
-                > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button))
-                    > :global(*:not(.cs-hit-area)) {
-                    animation: cs-button-morph-content-enter 280ms var(--cs-ease-cubic-out) 150ms both;
+                > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button)) > :global(*:not(.cs-hit-area)) {
+                    animation: cs-button-morph-content-enter 180ms var(--cs-ease-cubic-out) 75ms both;
                 }
             }
 
             :global(.cs-button-morph[data-transitioning]) &[data-state="exiting"] {
-                > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button))
-                    > :global(*:not(.cs-hit-area)) {
-                    animation: cs-button-morph-content-exit 130ms var(--cs-ease-quad-in) both;
+                > :global(:is(.cs-button, .cs-toggle-button, .cs-close-button)) > :global(*:not(.cs-hit-area)) {
+                    animation: cs-button-morph-content-exit 75ms var(--cs-ease-quad-in) both;
                 }
             }
         }
