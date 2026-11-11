@@ -50,31 +50,19 @@ Architectural Notes:
             background-color: var(--_dot-color);
             border: none;
             border-radius: var(--cs-radius-full);
-
             transition:
-                background-color 220ms var(--cs-ease-quad-out),
-                scale 500ms var(--cs-spring-release);
+                scale 200ms var(--cs-ease-cubic-out),
+                background-color 200ms var(--cs-ease-quad-out);
             cursor: default;
 
             @media (hover: hover) {
                 &:hover {
-                    scale: 1.12;
-                    transition:
-                        background-color 220ms var(--cs-ease-quad-out),
-                        scale 180ms var(--cs-ease-quart-out);
+                    scale: 1.25;
                 }
             }
 
             &:active {
-                scale: 0.88;
-                transition:
-                    background-color 220ms var(--cs-ease-quad-out),
-                    scale 120ms var(--cs-ease-quad-out);
-            }
-
-            &:focus-visible {
-                outline: 2px solid var(--cs-color-accent-solid);
-                outline-offset: 3px;
+                scale: 0.92;
             }
 
             &[data-status="success"] {
@@ -100,6 +88,7 @@ Architectural Notes:
                 inset: 0;
                 background-color: inherit;
                 border-radius: inherit;
+                transition: background-color 200ms var(--cs-ease-quad-out);
                 pointer-events: none;
             }
 
