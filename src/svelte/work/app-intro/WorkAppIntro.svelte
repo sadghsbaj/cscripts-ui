@@ -93,11 +93,6 @@ Architectural Notes:
 
             <span class="cs-work-app-intro-progress-text"> Initialisiere Anwendung... </span>
         </div>
-
-        <!-- Subtle footer signature -->
-        <div class="cs-work-app-intro-signature">
-            <span class="cs-work-app-intro-signature-text">Entwickelt von Colin Schäfer</span>
-        </div>
     </div>
 {/if}
 
@@ -496,24 +491,6 @@ Architectural Notes:
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: var(--cs-tracking-widest);
-        }
-
-        /* =========================================================
-        * SIGNATURE
-        * ========================================================= */
-        .cs-work-app-intro-signature {
-            position: absolute;
-            bottom: 20px;
-            inset-inline: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-        }
-
-        .cs-work-app-intro-signature-text {
-            color: var(--cs-color-text-weaker);
-            font-size: var(--cs-text-xs);
         }
     }
 </style>
