@@ -10,6 +10,9 @@ Architectural Notes:
   to vertically align text, icons, and keyboard badges along the optical center axis.
 - Motion Delegation: Delegates directional entry/exit transitions and `@starting-style` spring choreography
   to underlying `<Popover animate>` (`[data-animate]`), purely tuning micro-surface feel via `--popover-anim-*` token overrides.
+- Warmup Acceleration: Benefits from the global `:root[data-hint-warm]` acceleration window (300ms)
+  managed by `popoverTrigger({ mode: "hint" })`. Once any tooltip is active or recently closed,
+  subsequent tooltips open immediately (0ms delay) for frictionless toolbar scrubbing.
 -->
 
 <script lang="ts">

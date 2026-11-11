@@ -88,7 +88,7 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
         activeCleanups.length = 0;
         trigger.remove();
         popover.remove();
-        delete document.documentElement.dataset.csHintWarm;
+        delete document.documentElement.dataset.hintWarm;
         vi.useRealTimers();
     });
 
@@ -458,7 +458,7 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
                 popover.setAttribute("popover", "hint");
                 popover.dispatchEvent(openEvent);
 
-                expect("csHintWarm" in document.documentElement.dataset).toBe(true);
+                expect("hintWarm" in document.documentElement.dataset).toBe(true);
             });
 
             test("keeps global warm active and clears it after warmup window passes", () => {
@@ -473,10 +473,10 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
                 Object.assign(closeEvent, { newState: "closed" });
                 popover.dispatchEvent(closeEvent);
 
-                expect("csHintWarm" in document.documentElement.dataset).toBe(true);
+                expect("hintWarm" in document.documentElement.dataset).toBe(true);
 
                 vi.advanceTimersByTime(301);
-                expect("csHintWarm" in document.documentElement.dataset).toBe(false);
+                expect("hintWarm" in document.documentElement.dataset).toBe(false);
             });
 
             test("pointerleave on an open trigger arms warmup and cools down after 300ms", () => {
@@ -484,10 +484,10 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
                 popover.setOpen(true);
 
                 trigger.dispatchEvent(new Event("pointerleave"));
-                expect("csHintWarm" in document.documentElement.dataset).toBe(true);
+                expect("hintWarm" in document.documentElement.dataset).toBe(true);
 
                 vi.advanceTimersByTime(301);
-                expect("csHintWarm" in document.documentElement.dataset).toBe(false);
+                expect("hintWarm" in document.documentElement.dataset).toBe(false);
             });
 
             test("dismissing the trigger clears warmup immediately", () => {
@@ -495,10 +495,10 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
                 popover.setOpen(true);
 
                 trigger.dispatchEvent(new Event("pointerleave"));
-                expect("csHintWarm" in document.documentElement.dataset).toBe(true);
+                expect("hintWarm" in document.documentElement.dataset).toBe(true);
 
                 pointerDown(trigger);
-                expect("csHintWarm" in document.documentElement.dataset).toBe(false);
+                expect("hintWarm" in document.documentElement.dataset).toBe(false);
             });
         });
     });

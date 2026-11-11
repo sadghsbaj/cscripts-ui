@@ -67,21 +67,21 @@ let hintWarmTimer: ReturnType<typeof setTimeout> | undefined;
 function markHintWarm(): void {
     if (typeof document === "undefined") return;
     clearTimeout(hintWarmTimer);
-    document.documentElement.dataset.csHintWarm = "";
+    document.documentElement.dataset.hintWarm = "";
 }
 
 function scheduleHintCooldown(): void {
     if (typeof document === "undefined") return;
     clearTimeout(hintWarmTimer);
     hintWarmTimer = setTimeout(() => {
-        delete document.documentElement.dataset.csHintWarm;
+        delete document.documentElement.dataset.hintWarm;
     }, HINT_WARMUP_WINDOW_MS);
 }
 
 function clearHintWarm(): void {
     if (typeof document === "undefined") return;
     clearTimeout(hintWarmTimer);
-    delete document.documentElement.dataset.csHintWarm;
+    delete document.documentElement.dataset.hintWarm;
 }
 
 function handleGlobalToggle(event: Event): void {

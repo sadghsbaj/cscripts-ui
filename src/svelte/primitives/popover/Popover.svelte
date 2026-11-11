@@ -14,6 +14,9 @@ Architectural Notes:
   powered by spatial unit vectors (`--popover-dir-x`, `--popover-dir-y`) and `--popover-origin` derived
   from `placement`. Consuming surfaces (like Tooltip or dropdown menus) can fine-tune motion by overriding
   `--popover-anim-*` custom properties or disable it entirely via `animate={false}`.
+- Hint Warmup Acceleration: Applies an author stylesheet rule `:global(:root[data-hint-warm] [interestfor])`
+  with `!important` to force `interest-delay: 0ms` during active hint sessions or within the 300ms cooldown window.
+  This allows Chromium's hit-testing engine to immediately show subsequent tooltips without re-triggering the 400ms delay.
 -->
 
 <script lang="ts">
@@ -71,7 +74,7 @@ Architectural Notes:
         * Eliminates open-delay across adjacent hint triggers while
         * a hint popover is open or during the 300ms warmup window.
         * ========================================================= */
-        :global(:root[data-cs-hint-warm] [interestfor]) {
+        :global(:root[data-hint-warm] [interestfor]) {
             interest-delay: 0ms var(--_hint-close-delay, 150ms) !important;
         }
 

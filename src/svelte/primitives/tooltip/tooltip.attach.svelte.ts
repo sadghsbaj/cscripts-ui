@@ -10,6 +10,8 @@
  * - Accessibility: Manages `aria-describedby` without manual attribute wiring.
  * - Centralized Configuration: Drives positioning (`data-placement`) and `--popover-offset` directly
  *   on the target element, ensuring all settings live in the attachment rather than component props.
+ * - Warmup Acceleration: Seamlessly inherits the global `:root[data-hint-warm]` acceleration window (300ms)
+ *   from `popoverTrigger`, eliminating hover delays during continuous browsing between adjacent triggers.
  */
 
 import { mount, unmount } from "svelte";
