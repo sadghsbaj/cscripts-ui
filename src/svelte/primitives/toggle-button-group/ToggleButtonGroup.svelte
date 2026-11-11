@@ -55,6 +55,7 @@ Architectural Notes:
     class={["cs-toggle-button-group", className]}
     data-type={type}
     data-orientation={orientation}
+    data-fixed-selection={type === "single" && !allowDeselect ? "" : undefined}
 >
     {@render children?.()}
 </div>
@@ -72,6 +73,13 @@ Architectural Notes:
                 --_active-squash: 0.97;
                 --_active-focus-scale: 0.97;
                 border-radius: var(--_inner-radius);
+            }
+
+            /* In fixed single-selection mode (segmented control), clicking the already-active
+             * item is a no-op. Neutralizing press squash prevents confusing interactivity cues. */
+            &[data-fixed-selection] > :global(.cs-toggle-button[aria-pressed="true"]) {
+                --_active-squash: 1;
+                --_active-focus-scale: 1;
             }
 
             /* =========================================================
