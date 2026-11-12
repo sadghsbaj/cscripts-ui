@@ -65,7 +65,7 @@
         1
     );
 
-    /* 3. Viscous Morph Spring (~1.4% cushion settle, responsive start):
+    /* 3. Viscous Morph Spring (~1.8% cushion settle, responsive start):
        Provides an immediate, perceptible lift in the first ~30ms, transitions
        smoothly across the primary travel, and preserves the gentle ~1.4%
        cushion settle at the end without a jarring whip-snap. */
