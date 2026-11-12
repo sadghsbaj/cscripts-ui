@@ -23,6 +23,7 @@ describe("scrollFade Svelte 5 Element Attachment", () => {
             const cleanup = attach(div);
 
             expect(div.classList.contains("cs-scroll-fade")).toBe(true);
+            expect("forceAnimate" in div.dataset).toBe(true);
             expect(div.dataset.scrollFadeSize).toBe("md");
             expect(div.dataset.scrollFadeDirection).toBe("vertical");
             expect(div.dataset.scrollFadeEdges).toBe("both");
@@ -38,6 +39,7 @@ describe("scrollFade Svelte 5 Element Attachment", () => {
             const cleanup = attach(div);
 
             expect(div.classList.contains("cs-scroll-fade")).toBe(false);
+            expect("forceAnimate" in div.dataset).toBe(false);
             expect(div.dataset.scrollFadeSize).toBeUndefined();
             expect(div.dataset.scrollFadeDirection).toBeUndefined();
             expect(div.dataset.scrollFadeEdges).toBeUndefined();
@@ -100,6 +102,7 @@ describe("scrollFade Svelte 5 Element Attachment", () => {
             const cleanup = attach(div);
 
             expect(div.classList.contains("cs-scroll-fade")).toBe(true);
+            expect("forceAnimate" in div.dataset).toBe(true);
             expect(div.dataset.scrollFadeSize).toBe("lg");
             expect(div.dataset.scrollFadeDirection).toBe("both");
             expect(div.dataset.scrollFadeEdges).toBe("both");
@@ -107,6 +110,7 @@ describe("scrollFade Svelte 5 Element Attachment", () => {
             cleanup?.();
 
             expect(div.classList.contains("cs-scroll-fade")).toBe(false);
+            expect("forceAnimate" in div.dataset).toBe(false);
             expect(div.dataset.scrollFadeSize).toBeUndefined();
             expect(div.dataset.scrollFadeDirection).toBeUndefined();
             expect(div.dataset.scrollFadeEdges).toBeUndefined();

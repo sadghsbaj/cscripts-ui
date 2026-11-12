@@ -69,12 +69,14 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
         }
 
         node.classList.add("cs-scroll-fade");
+        node.dataset.forceAnimate = "";
         node.dataset.scrollFadeSize = options.size;
         node.dataset.scrollFadeDirection = options.direction;
         node.dataset.scrollFadeEdges = options.edges;
 
         return (): void => {
             node.classList.remove("cs-scroll-fade");
+            delete node.dataset.forceAnimate;
             delete node.dataset.scrollFadeSize;
             delete node.dataset.scrollFadeDirection;
             delete node.dataset.scrollFadeEdges;
