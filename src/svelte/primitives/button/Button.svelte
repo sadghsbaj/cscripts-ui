@@ -201,7 +201,7 @@ Architectural Notes:
                 --_solid-bg: var(--cs-color-base-solid);
                 --_solid-bg-hover: var(--cs-color-base-solid-hover);
                 --_solid-fg: var(--cs-color-base-solid-fg);
-                --_solid-shadow: light-dark(rgb(255 255 255 / 0.18), rgb(255 255 255 / 0.08));
+                --_solid-shadow: light-dark(rgb(255 255 255 / 0.26), rgb(255 255 255 / 0.12));
 
                 --_soft-bg: var(--cs-color-base-soft);
                 --_soft-bg-hover: var(--cs-color-base-soft-hover);
@@ -226,7 +226,7 @@ Architectural Notes:
                 --_bg: var(--_solid-bg);
                 --_bg-hover: var(--_solid-bg-hover);
                 --_fg: var(--_solid-fg);
-                --_shadow: inset 0 1px 0 0 var(--_solid-shadow, rgb(255 255 255 / 0.26)), 0 1px 2px 0 rgb(0 0 0 / 0.08);
+                --_shadow: inset 0 1px 0 0 var(--_solid-shadow, rgb(255 255 255 / 0.26)), 0 1px 2px 0 rgb(0 0 0 / 0.12);
                 --_shadow-active: inset 0 1px 0 0 var(--_solid-shadow, rgb(255 255 255 / 0.26));
             }
 
