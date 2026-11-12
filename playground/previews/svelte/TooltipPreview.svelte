@@ -79,7 +79,7 @@
                         value="bold"
                         iconOnly
                         aria-label="Fett"
-                        {@attach tooltip({ text: "Fett", shortcut: "Ctrl + B", placement: "bottom-start" })}
+                        {@attach tooltip({ text: "Fett", shortcut: "Ctrl + B", placement: "top" })}
                     >
                         <ToggleButtonIcon icon={Bold} />
                         <HitArea size="md" />
@@ -94,7 +94,7 @@
                         value="italic"
                         iconOnly
                         aria-label="Kursiv"
-                        {@attach tooltip({ text: "Kursiv", shortcut: "Ctrl + I", placement: "bottom" })}
+                        {@attach tooltip({ text: "Kursiv", shortcut: "Ctrl + I", placement: "top" })}
                     >
                         <ToggleButtonIcon icon={Italic} />
                         <HitArea size="md" />
@@ -109,7 +109,7 @@
                         value="underline"
                         iconOnly
                         aria-label="Unterstrichen"
-                        {@attach tooltip({ text: "Unterstrichen", shortcut: "Ctrl + U", placement: "bottom-end" })}
+                        {@attach tooltip({ text: "Unterstrichen", shortcut: "Ctrl + U", placement: "top" })}
                     >
                         <ToggleButtonIcon icon={Underline} />
                         <HitArea size="md" />
