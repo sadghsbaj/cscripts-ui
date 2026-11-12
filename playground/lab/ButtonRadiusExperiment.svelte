@@ -2,9 +2,12 @@
     import { Plus, Sparkles } from "@lucide/svelte";
     import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
+    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { tooltip } from "cs/svelte/tooltip";
 
     import LabCompare, { type LabVariant } from "./LabCompare.svelte";
+
+    let disableCornerShape = $state(false);
 
     const rows = [
         { size: "sm", radiusLabel: "10px" },
@@ -53,16 +56,24 @@
 {/snippet}
 
 {#snippet pillButtons()}
-    {@render buttonExamples()}
-{/snippet}
-
-{#snippet pxRadiusButtons()}
-    <div class="lab-squircle-radius w-full">
+    <div class={["w-full", disableCornerShape && "lab-no-corner-shape"]}>
         {@render buttonExamples()}
     </div>
 {/snippet}
 
-<LabCompare {variants} />
+{#snippet pxRadiusButtons()}
+    <div class={["lab-squircle-radius w-full", disableCornerShape && "lab-no-corner-shape"]}>
+        {@render buttonExamples()}
+    </div>
+{/snippet}
+
+<div class="w-full flex flex-col items-center gap-4">
+    <ToggleButton variant="soft" color="accent" size="sm" bind:pressed={disableCornerShape}>
+        <ToggleButtonLabel>Corner-Shape aus (Fallback)</ToggleButtonLabel>
+    </ToggleButton>
+
+    <LabCompare {variants} />
+</div>
 
 <style>
     .lab-squircle-radius :global(.cs-button[data-size="sm"]) {
@@ -79,5 +90,9 @@
 
     .lab-squircle-radius :global(.cs-button[data-size="xl"]) {
         border-radius: 16px;
+    }
+
+    .lab-no-corner-shape :global(.cs-button) {
+        corner-shape: round !important;
     }
 </style>

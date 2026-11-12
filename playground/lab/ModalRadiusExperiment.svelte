@@ -3,10 +3,12 @@
     import { CloseButton } from "cs/svelte/close-button";
     import { HitArea } from "cs/svelte/hit-area";
     import { Overlay } from "cs/svelte/overlay";
+    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
 
     import LabCompare, { type LabVariant } from "./LabCompare.svelte";
 
     let openMode = $state<"pill" | "squircle-px" | null>(null);
+    let disableCornerShape = $state(false);
 
     const variants: readonly LabVariant[] = [
         { id: "pill", label: "Normale Rundung (Pill)", content: pillModalPreview },
@@ -22,6 +24,7 @@
         class={[
             "bg-elevation-1 shadow-elevation-1 rounded-3xl squircle w-full max-w-420px relative flex flex-col gap-4 p-6",
             mode === "squircle-px" && "lab-squircle-radius",
+            disableCornerShape && "lab-no-corner-shape",
         ]}
     >
         <div class="flex items-start justify-between gap-4">
@@ -89,7 +92,13 @@
     </div>
 {/snippet}
 
-<LabCompare {variants} />
+<div class="w-full flex flex-col items-center gap-4">
+    <ToggleButton variant="soft" color="accent" size="sm" bind:pressed={disableCornerShape}>
+        <ToggleButtonLabel>Corner-Shape aus (Fallback)</ToggleButtonLabel>
+    </ToggleButton>
+
+    <LabCompare {variants} />
+</div>
 
 {#if openMode}
     <Overlay
@@ -122,5 +131,11 @@
 
     .lab-squircle-radius :global(.cs-button[data-size="xl"]) {
         border-radius: 16px;
+    }
+
+    :global(.lab-no-corner-shape),
+    .lab-no-corner-shape :global(.cs-button),
+    .lab-no-corner-shape :global(.cs-close-button) {
+        corner-shape: round !important;
     }
 </style>
