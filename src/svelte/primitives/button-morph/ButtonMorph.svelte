@@ -7,9 +7,12 @@ Architectural Notes:
 - Shared Morph Shell: Synchronizes outer dimensions (`--_morph-width`, `--_morph-height`) and
   locks active/exiting button surfaces during transitions so `::before` backgrounds and
   `:focus-visible` outlines morph as a single cohesive body.
+  See `../../explanations/elastic-surfaces.md`
 - Interaction Safety & Auto-Reset: Includes capture-phase accidental double-click protection
   (`guardDelay`), automatic keyboard focus handoff, and configurable auto-reset via timeout
   (hover-paused), outside click (`clickOutside`), or `Escape`.
+- Defaults & Resets: Requires explicit configuration and relies on global foundation focus/outline behaviors.
+  See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
     import { untrack } from "svelte";
@@ -137,6 +140,8 @@ Architectural Notes:
             /* =========================================================
              * CONTINUOUS MORPH SURFACE (::before)
              * ---------------------------------------------------------
+             * See ../../explanations/elastic-surfaces.md
+             *
              * During a transition the individual button surfaces are hidden
              * (see ButtonMorphItem) and this single shell surface takes over.
              * It interpolates directly from the outgoing button's resolved

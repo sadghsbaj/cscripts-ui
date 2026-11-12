@@ -23,6 +23,10 @@ Architectural Notes:
   Uses pure `box-shadow` instead of CSS `border` to guarantee that inset hairline shadows on elevated
   dark-mode surfaces align directly with the outer squircle contour. The error state seamlessly transitions
   into an inset danger ring, leaving native `outline` completely unconstrained for `:focus-visible`.
+- Defaults & Resets: Requires explicit `variant`, `size`, and `color` props with no implicit fallbacks.
+  See `../../explanations/component-defaults-and-globals.md`
+- Elevated Hover Physics (Light vs. Dark):
+  Follows `../../explanations/elevated-hover-physics.md` (shadow lift in light mode, surface luminance step-up in dark mode).
 -->
 
 <script lang="ts">
@@ -67,8 +71,8 @@ Architectural Notes:
     stroke-linecap="round"
     stroke-linejoin="round"
 >
-    <path class="cs-checkbox-dash" d="M5 12h14" pathLength="1" />
     <path class="cs-checkbox-check" d="M4 12l5 5L20 6" pathLength="1" />
+    <path class="cs-checkbox-dash" d="M5 12h14" pathLength="1" />
 </svg>
 
 <style>
@@ -133,6 +137,7 @@ Architectural Notes:
                 --_bg-hover: var(--cs-color-base-soft-hover);
             }
 
+            /* Hover Physics (Light vs. Dark): See ../../explanations/elevated-hover-physics.md */
             &[data-variant="elevated"] {
                 --_bg: var(--cs-color-elevation-1);
                 --_bg-hover: light-dark(var(--_bg), var(--cs-color-elevation-2));

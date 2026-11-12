@@ -7,6 +7,8 @@ Architectural Notes:
 - Selection Mode: Requires explicit `type` (`"single" | "multiple"`). Coordinates child `<ToggleButton value="...">` state via `bind:value` / `value` (`string | undefined` for `"single"`, `string[]` for `"multiple"`). In `"single"` mode, `allowDeselect` controls whether clicking the active button can clear `value` back to `undefined`.
 - Layout & Flow: Supports horizontal and vertical orientations via `orientation` (`"horizontal" | "vertical"`).
 - Filtered Radii: Uses `:nth-child(1 of .cs-toggle-button)` to strictly target true toggle buttons and flatten inner radii.
+- Defaults: Requires explicit `type` prop (`"single" | "multiple"`).
+  See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
     import { setToggleButtonGroupContext, type ToggleButtonGroupProps } from "./index.ts";

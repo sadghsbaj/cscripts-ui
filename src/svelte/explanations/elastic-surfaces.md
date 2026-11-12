@@ -1,14 +1,15 @@
-# Elastic Surfaces & Active State Physics
+# Elastic Surfaces & Dynamic Surface Physics
 
-This architectural guide explains how tactile press-in and spring-release interactions are implemented across interactive `cs` components.
+This architectural guide explains how tactile press-in, spring-release interactions, and continuous surface morphing are implemented across interactive `cs` components.
 
 ---
 
 ## 1. Decoupled Visual Surface (`::before`)
 
-Interactive controls (such as buttons and icon triggers) decouple their visual background from child text and icons by placing background, border, and shadow on `::before`:
+Interactive controls and state-morphing containers (such as buttons, icon triggers, and `<ButtonMorph />`) decouple their visual background from child text, icons, and outer layout by placing backgrounds, borders, and shadows on a dedicated `::before` surface:
 
-- **Distortion-Free Physics:** Placing transforms on `::before` allows non-uniform squash-and-stretch scaling (`scale: X Y`) using `linear()` spring physics without warping, squishing, or distorting text glyphs or SVG icons.
+- **Distortion-Free Physics (Squash & Stretch):** Placing transforms on `::before` allows non-uniform squash-and-stretch scaling (`scale: X Y`) using `linear()` spring physics without warping, squishing, or distorting text glyphs or SVG icons.
+- **Continuous Surface Morphing (State Interpolation):** In composite containers (such as `<ButtonMorph />`), placing the transitional shell on `::before` allows geometry (`width`, `height`), backgrounds, shadows, and superellipse corner exponents (`corner-shape: superellipse(--_morph-corner)`) to interpolate as a single cohesive physical body, avoiding ghosting or muddy double-layer translucency artifacts during handoff.
 - **Inherited Geometry:** The pseudo-element inherits `border-radius: inherit` and `corner-shape: inherit` directly from the host element, ensuring the visual surface remains perfectly aligned with the host's geometry and focus rings.
 
 ---

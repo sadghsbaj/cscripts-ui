@@ -11,6 +11,8 @@ Architectural Notes:
 - GPU Thumb Physics: Scrollbar thumbs use independent `translate` (for 0ms scroll tracking)
   and `scale` (for smooth 4px -> 8px cross-axis expansion on hover/drag) properties so thumb
   width transitions never lag behind native scroll positions.
+- Defaults & Resets: Requires explicit `size` and `direction` props with no implicit fallbacks.
+  See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
     import { setScrollAreaContext, type ScrollAreaProps } from "./index.ts";

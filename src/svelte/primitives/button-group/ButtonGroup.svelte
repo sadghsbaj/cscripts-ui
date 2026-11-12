@@ -7,6 +7,8 @@ Architectural Notes:
 - Layout & Flow: Supports horizontal and vertical orientations via `orientation` (`"horizontal" | "vertical"`).
 - Filtered Radii: Uses `:nth-child(1 of .cs-button)` to strictly target true buttons and flatten inner radii.
 - Design System: Disallows `variant="solid"` (enforced via ESLint rule `button-group/no-solid-variant`).
+- Defaults & Resets: Delegates interactive styling to child buttons and adheres to global foundation behaviors.
+  See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
     import type { ButtonGroupProps } from "./index.ts";
