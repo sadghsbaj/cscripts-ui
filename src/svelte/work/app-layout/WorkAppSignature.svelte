@@ -25,7 +25,7 @@ Architectural Notes:
     type="button"
     aria-label={text}
     class={["cs-work-app-signature", className]}
-    {@attach tooltip({ text, placement: "top-end" })}
+    {@attach tooltip({ text, placement: "left" })}
 >
     <Info aria-hidden="true" class="cs-work-app-signature-icon" />
     <HitArea size="md" />
