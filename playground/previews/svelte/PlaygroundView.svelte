@@ -4,39 +4,30 @@
 </script>
 
 <script lang="ts">
-    import { Button, ButtonLabel } from "cs/svelte/button";
-    import { Popover, popoverTrigger } from "cs/svelte/popover";
-    import { Tooltip, tooltip } from "cs/svelte/tooltip";
-
-    const popoverId = "playground-popover";
-    const richTooltipId = "playground-rich-tooltip";
+    import { CHECKBOX_COLORS, CHECKBOX_SIZES } from "../../../src/svelte/primitives/checkbox";
+    import Checkbox from "../../../src/svelte/primitives/checkbox/Checkbox.svelte";
 </script>
 
-<div class="size-full flex-center">
-    <div
-        class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px min-w-300px flex-center flex-col gap-3"
-    >
-        <Button variant="soft" color="base" size="md" {@attach popoverTrigger({ target: popoverId })}>
-            <ButtonLabel>Click me!</ButtonLabel>
-        </Button>
+<div class="size-full flex-center flex flex-col gap-4">
+    <div class="flex gap-4">
+        {#each CHECKBOX_COLORS as color (color)}
+            <div
+                class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px min-w-300px flex-center flex-col gap-3"
+            >
+                {#each CHECKBOX_SIZES as size (size)}
+                    <Checkbox variant="soft" {color} {size} />
+                {/each}
+            </div>
+        {/each}
+    </div>
 
-        <Button
-            variant="soft"
-            color="base"
-            size="md"
-            {@attach tooltip({ text: "Schneller Tooltip!", placement: "right" })}
-        >
-            <ButtonLabel>Hover me!</ButtonLabel>
-        </Button>
-
-        <Button variant="soft" color="base" size="md" {@attach tooltip({ target: richTooltipId, placement: "bottom" })}>
-            <ButtonLabel>Rich Tooltip</ButtonLabel>
-        </Button>
+    <div class="flex gap-4">
+        {#each CHECKBOX_COLORS as color (color)}
+            <div class="p-8 min-h-200px min-w-300px flex-center flex-col gap-3">
+                {#each CHECKBOX_SIZES as size (size)}
+                    <Checkbox variant="elevated" {color} {size} invalid />
+                {/each}
+            </div>
+        {/each}
     </div>
 </div>
-
-<Popover id={popoverId} class="bg-red-500" size="content" placement="top">TEST</Popover>
-
-<Tooltip id={richTooltipId}>
-    <span>Speichern</span> <kbd>⌘S</kbd>
-</Tooltip>
