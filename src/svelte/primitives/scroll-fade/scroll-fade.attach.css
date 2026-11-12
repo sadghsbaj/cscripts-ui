@@ -1,3 +1,27 @@
+@property --_fade-top {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --_fade-bottom {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --_fade-left {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --_fade-right {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
 @layer attachments {
     .cs-scroll-fade {
         mask-repeat: no-repeat;
@@ -19,48 +43,168 @@
         }
 
         /* =========================================================
-        * DIRECTIONS
+        * EDGES (Internal Multipliers: 0 | 1)
+        * ========================================================= */
+        &[data-scroll-fade-edges="both"] {
+            --_fade-start-mult: 1;
+            --_fade-end-mult: 1;
+        }
+
+        &[data-scroll-fade-edges="start"] {
+            --_fade-start-mult: 1;
+            --_fade-end-mult: 0;
+        }
+
+        &[data-scroll-fade-edges="end"] {
+            --_fade-start-mult: 0;
+            --_fade-end-mult: 1;
+        }
+
+        /* =========================================================
+        * DIRECTIONS & SCROLL TIMELINES
         * ---------------------------------------------------------
-        * Omit `in oklch` on alpha masks: mask-image only evaluates the
-        * alpha channel (0 -> 1, identical across color spaces), and
-        * default sRGB interpolation keeps Firefox WebRender on its
-        * native GPU gradient fast-path instead of CPU blob rasterization.
+        * Uses native CSS Scroll-Driven Animations:
+        * - Timeline: `scroll(self block)` or `scroll(self inline)`.
+        * - Inactive Timeline: When content fits inside the container,
+        *   the timeline is inactive and properties remain at initial 0px.
+        * - 6-Step Cubic S-Curve: Eliminates hard linear gradient creases.
+        * - Classic sRGB Alpha: Preserves Firefox WebRender GPU fast-path.
         * ========================================================= */
         &[data-scroll-fade-direction="vertical"] {
+            animation:
+                cs-scroll-fade-top 1s linear both,
+                cs-scroll-fade-bottom 1s linear both;
+            animation-timeline: scroll(self block), scroll(self block);
+            animation-range:
+                0px var(--cs-scroll-fade-size),
+                calc(100% - var(--cs-scroll-fade-size)) 100%;
             mask-image: linear-gradient(
                 to bottom,
                 transparent 0px,
-                black var(--cs-scroll-fade-top, 0px),
-                black calc(100% - var(--cs-scroll-fade-bottom, 0px)),
+                rgba(0, 0, 0, 0.08) calc(var(--_fade-top) * 0.18),
+                rgba(0, 0, 0, 0.33) calc(var(--_fade-top) * 0.4),
+                rgba(0, 0, 0, 0.67) calc(var(--_fade-top) * 0.6),
+                rgba(0, 0, 0, 0.92) calc(var(--_fade-top) * 0.82),
+                black var(--_fade-top),
+                black calc(100% - var(--_fade-bottom)),
+                rgba(0, 0, 0, 0.92) calc(100% - var(--_fade-bottom) * 0.82),
+                rgba(0, 0, 0, 0.67) calc(100% - var(--_fade-bottom) * 0.6),
+                rgba(0, 0, 0, 0.33) calc(100% - var(--_fade-bottom) * 0.4),
+                rgba(0, 0, 0, 0.08) calc(100% - var(--_fade-bottom) * 0.18),
                 transparent 100%
             );
         }
+
         &[data-scroll-fade-direction="horizontal"] {
+            animation:
+                cs-scroll-fade-left 1s linear both,
+                cs-scroll-fade-right 1s linear both;
+            animation-timeline: scroll(self inline), scroll(self inline);
+            animation-range:
+                0px var(--cs-scroll-fade-size),
+                calc(100% - var(--cs-scroll-fade-size)) 100%;
             mask-image: linear-gradient(
                 to right,
                 transparent 0px,
-                black var(--cs-scroll-fade-left, 0px),
-                black calc(100% - var(--cs-scroll-fade-right, 0px)),
+                rgba(0, 0, 0, 0.08) calc(var(--_fade-left) * 0.18),
+                rgba(0, 0, 0, 0.33) calc(var(--_fade-left) * 0.4),
+                rgba(0, 0, 0, 0.67) calc(var(--_fade-left) * 0.6),
+                rgba(0, 0, 0, 0.92) calc(var(--_fade-left) * 0.82),
+                black var(--_fade-left),
+                black calc(100% - var(--_fade-right)),
+                rgba(0, 0, 0, 0.92) calc(100% - var(--_fade-right) * 0.82),
+                rgba(0, 0, 0, 0.67) calc(100% - var(--_fade-right) * 0.6),
+                rgba(0, 0, 0, 0.33) calc(100% - var(--_fade-right) * 0.4),
+                rgba(0, 0, 0, 0.08) calc(100% - var(--_fade-right) * 0.18),
                 transparent 100%
             );
         }
+
         &[data-scroll-fade-direction="both"] {
+            animation:
+                cs-scroll-fade-top 1s linear both,
+                cs-scroll-fade-bottom 1s linear both,
+                cs-scroll-fade-left 1s linear both,
+                cs-scroll-fade-right 1s linear both;
+            animation-timeline: scroll(self block), scroll(self block), scroll(self inline), scroll(self inline);
+            animation-range:
+                0px var(--cs-scroll-fade-size),
+                calc(100% - var(--cs-scroll-fade-size)) 100%,
+                0px var(--cs-scroll-fade-size),
+                calc(100% - var(--cs-scroll-fade-size)) 100%;
             mask-image:
                 linear-gradient(
                     to bottom,
                     transparent 0px,
-                    black var(--cs-scroll-fade-top, 0px),
-                    black calc(100% - var(--cs-scroll-fade-bottom, 0px)),
+                    rgba(0, 0, 0, 0.08) calc(var(--_fade-top) * 0.18),
+                    rgba(0, 0, 0, 0.33) calc(var(--_fade-top) * 0.4),
+                    rgba(0, 0, 0, 0.67) calc(var(--_fade-top) * 0.6),
+                    rgba(0, 0, 0, 0.92) calc(var(--_fade-top) * 0.82),
+                    black var(--_fade-top),
+                    black calc(100% - var(--_fade-bottom)),
+                    rgba(0, 0, 0, 0.92) calc(100% - var(--_fade-bottom) * 0.82),
+                    rgba(0, 0, 0, 0.67) calc(100% - var(--_fade-bottom) * 0.6),
+                    rgba(0, 0, 0, 0.33) calc(100% - var(--_fade-bottom) * 0.4),
+                    rgba(0, 0, 0, 0.08) calc(100% - var(--_fade-bottom) * 0.18),
                     transparent 100%
                 ),
                 linear-gradient(
                     to right,
                     transparent 0px,
-                    black var(--cs-scroll-fade-left, 0px),
-                    black calc(100% - var(--cs-scroll-fade-right, 0px)),
+                    rgba(0, 0, 0, 0.08) calc(var(--_fade-left) * 0.18),
+                    rgba(0, 0, 0, 0.33) calc(var(--_fade-left) * 0.4),
+                    rgba(0, 0, 0, 0.67) calc(var(--_fade-left) * 0.6),
+                    rgba(0, 0, 0, 0.92) calc(var(--_fade-left) * 0.82),
+                    black var(--_fade-left),
+                    black calc(100% - var(--_fade-right)),
+                    rgba(0, 0, 0, 0.92) calc(100% - var(--_fade-right) * 0.82),
+                    rgba(0, 0, 0, 0.67) calc(100% - var(--_fade-right) * 0.6),
+                    rgba(0, 0, 0, 0.33) calc(100% - var(--_fade-right) * 0.4),
+                    rgba(0, 0, 0, 0.08) calc(100% - var(--_fade-right) * 0.18),
                     transparent 100%
                 );
             mask-composite: intersect;
+        }
+    }
+
+    /* =========================================================
+    * KEYFRAMES
+    * ---------------------------------------------------------
+    * Animated via @property lengths and scroll-driven timelines.
+    * ========================================================= */
+    @keyframes cs-scroll-fade-top {
+        from {
+            --_fade-top: 0px;
+        }
+        to {
+            --_fade-top: calc(var(--cs-scroll-fade-size) * var(--_fade-start-mult, 1));
+        }
+    }
+
+    @keyframes cs-scroll-fade-bottom {
+        from {
+            --_fade-bottom: calc(var(--cs-scroll-fade-size) * var(--_fade-end-mult, 1));
+        }
+        to {
+            --_fade-bottom: 0px;
+        }
+    }
+
+    @keyframes cs-scroll-fade-left {
+        from {
+            --_fade-left: 0px;
+        }
+        to {
+            --_fade-left: calc(var(--cs-scroll-fade-size) * var(--_fade-start-mult, 1));
+        }
+    }
+
+    @keyframes cs-scroll-fade-right {
+        from {
+            --_fade-right: calc(var(--cs-scroll-fade-size) * var(--_fade-end-mult, 1));
+        }
+        to {
+            --_fade-right: 0px;
         }
     }
 }
