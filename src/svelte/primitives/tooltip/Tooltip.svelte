@@ -12,7 +12,8 @@ Architectural Notes:
   to underlying `<Popover animate>` (`[data-animate]`), purely tuning micro-surface feel via `--popover-anim-*` token overrides.
 - Warmup Acceleration: Benefits from the global `:root[data-hint-warm]` acceleration window (300ms)
   managed by `popoverTrigger({ mode: "hint" })`. Once any tooltip is active or recently closed,
-  subsequent tooltips open immediately (0ms delay) for frictionless toolbar scrubbing.
+  subsequent tooltips open immediately (0ms delay) and render without transitions (`[data-warm]`),
+  instantly cutting away preceding tooltips (`[data-instant]`) for frictionless toolbar scrubbing.
 -->
 
 <script lang="ts">

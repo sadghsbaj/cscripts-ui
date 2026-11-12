@@ -500,6 +500,91 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
                 pointerDown(trigger);
                 expect("hintWarm" in document.documentElement.dataset).toBe(false);
             });
+
+            test("cold open does not set data-warm on the opening popover", () => {
+                popoverTrigger({ target: "pop", mode: "hint" })(trigger);
+                popover.setAttribute("popover", "hint");
+
+                const beforeEvent = new Event("beforetoggle");
+                Object.assign(beforeEvent, { newState: "open" });
+                popover.dispatchEvent(beforeEvent);
+
+                const openEvent = new Event("toggle");
+                Object.assign(openEvent, { newState: "open" });
+                popover.dispatchEvent(openEvent);
+
+                expect("warm" in popover.dataset).toBe(false);
+                expect("hintWarm" in document.documentElement.dataset).toBe(true);
+            });
+
+            test("opening subsequent hint popover while warm sets data-warm and marks previous popover instant", () => {
+                popoverTrigger({ target: "pop", mode: "hint" })(trigger);
+                popover.setAttribute("popover", "hint");
+                popover.setOpen(true);
+
+                // Popover 1 opens cold
+                const openEvent1 = new Event("toggle");
+                Object.assign(openEvent1, { newState: "open" });
+                popover.dispatchEvent(openEvent1);
+                expect("hintWarm" in document.documentElement.dataset).toBe(true);
+
+                // Popover 2 opens while warm
+                const trigger2 = document.createElement("button");
+                document.body.append(trigger2);
+                const popover2 = createPopover("pop2");
+                popover2.setAttribute("popover", "hint");
+                popoverTrigger({ target: "pop2", mode: "hint" })(trigger2);
+
+                const beforeEvent2 = new Event("beforetoggle");
+                Object.assign(beforeEvent2, { newState: "open" });
+                popover2.dispatchEvent(beforeEvent2);
+
+                expect("warm" in popover2.dataset).toBe(true);
+                expect("instant" in popover.dataset).toBe(true);
+
+                // Popover 1 closes
+                const closeEvent1 = new Event("toggle");
+                Object.assign(closeEvent1, { newState: "closed" });
+                popover.dispatchEvent(closeEvent1);
+                expect("instant" in popover.dataset).toBe(false);
+
+                trigger2.remove();
+                popover2.remove();
+            });
+
+            test("closing a warm popover cleans up data-warm and data-instant", () => {
+                popoverTrigger({ target: "pop", mode: "hint" })(trigger);
+                popover.setAttribute("popover", "hint");
+                document.documentElement.dataset.hintWarm = "";
+
+                const beforeEvent = new Event("beforetoggle");
+                Object.assign(beforeEvent, { newState: "open" });
+                popover.dispatchEvent(beforeEvent);
+                expect("warm" in popover.dataset).toBe(true);
+
+                const closeEvent = new Event("toggle");
+                Object.assign(closeEvent, { newState: "closed" });
+                popover.dispatchEvent(closeEvent);
+
+                expect("warm" in popover.dataset).toBe(false);
+                expect("instant" in popover.dataset).toBe(false);
+            });
+
+            test("dismissing trigger clears warmup and popover data attributes immediately", () => {
+                popoverTrigger({ target: "pop", mode: "hint" })(trigger);
+                popover.setAttribute("popover", "hint");
+                popover.setOpen(true);
+                document.documentElement.dataset.hintWarm = "";
+
+                const beforeEvent = new Event("beforetoggle");
+                Object.assign(beforeEvent, { newState: "open" });
+                popover.dispatchEvent(beforeEvent);
+                expect("warm" in popover.dataset).toBe(true);
+
+                pointerDown(trigger);
+                expect("hintWarm" in document.documentElement.dataset).toBe(false);
+                expect("warm" in popover.dataset).toBe(false);
+            });
         });
     });
 });

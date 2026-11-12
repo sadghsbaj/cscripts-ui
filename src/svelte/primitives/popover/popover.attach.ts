@@ -63,6 +63,7 @@ const disarmedTriggers = new WeakSet<HTMLElement>();
 
 let registeredHintTriggers = 0;
 let hintWarmTimer: ReturnType<typeof setTimeout> | undefined;
+let activeHintPopover: HTMLElement | null = null;
 
 function markHintWarm(): void {
     if (typeof document === "undefined") return;
@@ -82,16 +83,66 @@ function clearHintWarm(): void {
     if (typeof document === "undefined") return;
     clearTimeout(hintWarmTimer);
     delete document.documentElement.dataset.hintWarm;
+    if (activeHintPopover) {
+        delete activeHintPopover.dataset.warm;
+        delete activeHintPopover.dataset.instant;
+        activeHintPopover = null;
+    }
+}
+
+function markOpenHintPopoversInstant(except: HTMLElement): void {
+    if (activeHintPopover && activeHintPopover !== except && isPopoverOpen(activeHintPopover)) {
+        activeHintPopover.dataset.instant = "";
+    }
+    if (typeof document !== "undefined") {
+        for (const el of document.querySelectorAll<HTMLElement>('[popover="hint"]')) {
+            if (el !== except && isPopoverOpen(el)) {
+                el.dataset.instant = "";
+            }
+        }
+    }
+}
+
+function handleGlobalBeforeToggle(event: Event): void {
+    if (!(event.target instanceof HTMLElement)) return;
+    if (event.target.getAttribute("popover") !== "hint") return;
+
+    const target = event.target;
+    const newState = (event as { newState?: string }).newState;
+
+    if (newState === "open") {
+        const isWarm = "hintWarm" in document.documentElement.dataset;
+        if (isWarm) {
+            target.dataset.warm = "";
+            markOpenHintPopoversInstant(target);
+        } else {
+            delete target.dataset.warm;
+        }
+        activeHintPopover = target;
+    }
 }
 
 function handleGlobalToggle(event: Event): void {
     if (!(event.target instanceof HTMLElement)) return;
     if (event.target.getAttribute("popover") !== "hint") return;
 
+    const target = event.target;
     const newState = (event as { newState?: string }).newState;
+
     if (newState === "open") {
+        const isWarm = "hintWarm" in document.documentElement.dataset;
+        if (isWarm) {
+            target.dataset.warm = "";
+            markOpenHintPopoversInstant(target);
+        }
+        activeHintPopover = target;
         markHintWarm();
     } else if (newState === "closed") {
+        delete target.dataset.warm;
+        delete target.dataset.instant;
+        if (activeHintPopover === target) {
+            activeHintPopover = null;
+        }
         scheduleHintCooldown();
     }
 }
@@ -100,6 +151,7 @@ function registerHintWarmup(): () => void {
     if (typeof document === "undefined") return (): void => {};
 
     if (registeredHintTriggers === 0) {
+        document.addEventListener("beforetoggle", handleGlobalBeforeToggle, { capture: true });
         document.addEventListener("toggle", handleGlobalToggle, { capture: true });
     }
     registeredHintTriggers++;
@@ -107,6 +159,7 @@ function registerHintWarmup(): () => void {
     return (): void => {
         registeredHintTriggers = Math.max(0, registeredHintTriggers - 1);
         if (registeredHintTriggers === 0) {
+            document.removeEventListener("beforetoggle", handleGlobalBeforeToggle, { capture: true });
             document.removeEventListener("toggle", handleGlobalToggle, { capture: true });
             clearHintWarm();
         }
@@ -124,6 +177,10 @@ function isPopoverOpen(element: HTMLElement | null): boolean {
     }
 }
 
+type PopoverElement = HTMLElement & {
+    togglePopover: (options?: boolean | { source?: HTMLElement; force?: boolean }) => boolean;
+};
+
 function bindToggle(node: HTMLElement, target: string, triggerOn: "pointerdown" | "click"): () => void {
     node.setAttribute("popovertarget", target);
 
@@ -139,7 +196,7 @@ function bindToggle(node: HTMLElement, target: string, triggerOn: "pointerdown" 
 
         if (node.hasAttribute("disabled") || node.getAttribute("aria-disabled") === "true") return;
 
-        const popoverEl = document.getElementById(target);
+        const popoverEl = document.getElementById(target) as PopoverElement | null;
         if (!popoverEl || typeof popoverEl.togglePopover !== "function") return;
 
         popoverEl.togglePopover({ source: node });

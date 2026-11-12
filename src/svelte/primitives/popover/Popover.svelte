@@ -16,7 +16,8 @@ Architectural Notes:
   `--popover-anim-*` custom properties or disable it entirely via `animate={false}`.
 - Hint Warmup Acceleration: Applies an author stylesheet rule `:global(:root[data-hint-warm] [interestfor])`
   with `!important` to force `interest-delay: 0ms` during active hint sessions or within the 300ms cooldown window.
-  This allows Chromium's hit-testing engine to immediately show subsequent tooltips without re-triggering the 400ms delay.
+  Subsequent hint popovers opened while warm inherit `[data-warm]` (suppressing entrance transition) and force
+  active hint popovers into `[data-instant]` (suppressing exit transition) for instant, seamless toolbar scrubbing.
 -->
 
 <script lang="ts">
@@ -267,6 +268,15 @@ Architectural Notes:
                 translate var(--_dur-in) var(--cs-spring-snappy),
                 display var(--_dur-in) allow-discrete,
                 overlay var(--_dur-in) allow-discrete;
+        }
+
+        .cs-popover[data-animate][data-warm]:popover-open,
+        .cs-popover[data-animate][data-instant] {
+            --_dur-in: 0s;
+            --_dur-fade-in: 0s;
+            --_dur-blur-in: 0s;
+            --_dur-out: 0s;
+            transition: none !important;
         }
 
         @starting-style {
