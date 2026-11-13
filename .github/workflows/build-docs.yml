@@ -1,0 +1,50 @@
+name: Build Docs Bundle
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "src/**"
+            - "playground/**"
+            - "vite.docs.config.ts"
+            - "package.json"
+            - "bun.lock"
+            - "!src/vite/docs.html"
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+concurrency:
+    group: build-docs-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    build-docs:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Build single-file docs bundle
+              run: bun run build:docs
+
+            - name: Commit and push updated docs bundle
+              run: |
+                  if [ -n "$(git status --porcelain src/vite/docs.html)" ]; then
+                      git config user.name "github-actions[bot]"
+                      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                      git add src/vite/docs.html
+                      git commit -m "chore: rebuild docs bundle [skip ci]"
+                      git push
+                  else
+                      echo "src/vite/docs.html is already up to date."
+                  fi
