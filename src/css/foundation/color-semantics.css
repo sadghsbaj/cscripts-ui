@@ -1,0 +1,190 @@
+:root {
+    --cs-color-work-logo-base: light-dark(#134094, #1956c7);
+    --cs-color-work-logo-accent: light-dark(#00a870, #00e196);
+
+    --cs-color-canvas: light-dark(var(--cs-color-base-100), var(--cs-color-base-950));
+    --cs-color-elevated: light-dark(white, var(--cs-color-base-900));
+    --cs-color-elevated-hover: light-dark(white, var(--cs-color-base-800));
+    --cs-color-sunken: light-dark(var(--cs-color-base-100), var(--cs-color-base-950));
+
+    --cs-color-text-strong: light-dark(var(--cs-color-base-900), var(--cs-color-base-100));
+    --cs-color-text-main: light-dark(var(--cs-color-base-700), var(--cs-color-base-300));
+    --cs-color-text-weak: light-dark(var(--cs-color-base-500), var(--cs-color-base-400));
+    --cs-color-text-weaker: light-dark(var(--cs-color-base-400), var(--cs-color-base-600));
+
+    /* Base Soft & Solid (Neutral Tints & Surfaces) */
+    --cs-color-base-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-base-900) 5%, transparent),
+        color-mix(in oklch, var(--cs-color-base-100) 11%, transparent)
+    );
+    --cs-color-base-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-base-900) 9%, transparent),
+        color-mix(in oklch, var(--cs-color-base-100) 17%, transparent)
+    );
+    --cs-color-base-soft-fg: var(--cs-color-text-main);
+    --cs-color-base-soft-fg-hover: var(--cs-color-text-strong);
+    --cs-color-base-solid: light-dark(var(--cs-color-base-800), var(--cs-color-base-200));
+    --cs-color-base-solid-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-base-solid) 90%, white),
+        var(--cs-color-base-100)
+    );
+    --cs-color-base-solid-fg: light-dark(var(--cs-color-base-50), var(--cs-color-base-950));
+
+    /* Accent Soft & Solid */
+    --cs-color-accent-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-accent-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-accent-500) 16%, transparent)
+    );
+    --cs-color-accent-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-accent-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-accent-500) 24%, transparent)
+    );
+    --cs-color-accent-soft-fg: light-dark(var(--cs-color-accent-600), var(--cs-color-accent-400));
+    --cs-color-accent-solid: light-dark(
+        color-mix(in oklch, var(--cs-color-accent-500) 50%, var(--cs-color-accent-600)),
+        var(--cs-color-accent-500)
+    );
+    --cs-color-accent-solid-hover: color-mix(in oklch, var(--cs-color-accent-solid) 90%, white);
+    --cs-color-accent-solid-fg: white;
+
+    /* Success Soft & Solid */
+    --cs-color-success-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-success-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-success-500) 16%, transparent)
+    );
+    --cs-color-success-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-success-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-success-500) 24%, transparent)
+    );
+    --cs-color-success-soft-fg: light-dark(var(--cs-color-success-600), var(--cs-color-success-400));
+    --cs-color-success-solid: light-dark(
+        color-mix(in oklch, var(--cs-color-success-500) 50%, var(--cs-color-success-600)),
+        var(--cs-color-success-500)
+    );
+    --cs-color-success-solid-hover: color-mix(in oklch, var(--cs-color-success-solid) 90%, white);
+    --cs-color-success-solid-fg: white;
+
+    /* Warning Soft & Solid */
+    --cs-color-warning-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-warning-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-warning-500) 16%, transparent)
+    );
+    --cs-color-warning-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-warning-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-warning-500) 24%, transparent)
+    );
+    --cs-color-warning-soft-fg: light-dark(var(--cs-color-warning-600), var(--cs-color-warning-400));
+    --cs-color-warning-solid: light-dark(
+        color-mix(in oklch, var(--cs-color-warning-500) 50%, var(--cs-color-warning-600)),
+        var(--cs-color-warning-500)
+    );
+    --cs-color-warning-solid-hover: color-mix(in oklch, var(--cs-color-warning-solid) 90%, white);
+    --cs-color-warning-solid-fg: white;
+
+    /* Danger Soft & Solid */
+    --cs-color-danger-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-danger-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-danger-500) 16%, transparent)
+    );
+    --cs-color-danger-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-danger-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-danger-500) 24%, transparent)
+    );
+    --cs-color-danger-soft-fg: light-dark(var(--cs-color-danger-600), var(--cs-color-danger-400));
+    --cs-color-danger-solid: light-dark(
+        color-mix(in oklch, var(--cs-color-danger-500) 50%, var(--cs-color-danger-600)),
+        var(--cs-color-danger-500)
+    );
+    --cs-color-danger-solid-hover: color-mix(in oklch, var(--cs-color-danger-solid) 90%, white);
+    --cs-color-danger-solid-fg: white;
+
+    /* Info Soft & Solid */
+    --cs-color-info-soft: light-dark(
+        color-mix(in oklch, var(--cs-color-info-500) 10%, transparent),
+        color-mix(in oklch, var(--cs-color-info-500) 16%, transparent)
+    );
+    --cs-color-info-soft-hover: light-dark(
+        color-mix(in oklch, var(--cs-color-info-500) 16%, transparent),
+        color-mix(in oklch, var(--cs-color-info-500) 24%, transparent)
+    );
+    --cs-color-info-soft-fg: light-dark(var(--cs-color-info-600), var(--cs-color-info-400));
+    --cs-color-info-solid: light-dark(
+        color-mix(in oklch, var(--cs-color-info-500) 50%, var(--cs-color-info-600)),
+        var(--cs-color-info-500)
+    );
+    --cs-color-info-solid-hover: color-mix(in oklch, var(--cs-color-info-solid) 90%, white);
+    --cs-color-info-solid-fg: white;
+
+    --cs-color-accent-50: var(--cs-color-blue-50);
+    --cs-color-accent-100: var(--cs-color-blue-100);
+    --cs-color-accent-200: var(--cs-color-blue-200);
+    --cs-color-accent-300: var(--cs-color-blue-300);
+    --cs-color-accent-400: var(--cs-color-blue-400);
+    --cs-color-accent-500: var(--cs-color-blue-500);
+    --cs-color-accent-600: var(--cs-color-blue-600);
+    --cs-color-accent-700: var(--cs-color-blue-700);
+    --cs-color-accent-800: var(--cs-color-blue-800);
+    --cs-color-accent-900: var(--cs-color-blue-900);
+    --cs-color-accent-950: var(--cs-color-blue-950);
+
+    --cs-color-success-50: color-mix(in oklch, var(--cs-color-green-50) 50%, var(--cs-color-emerald-50));
+    --cs-color-success-100: color-mix(in oklch, var(--cs-color-green-100) 50%, var(--cs-color-emerald-100));
+    --cs-color-success-200: color-mix(in oklch, var(--cs-color-green-200) 50%, var(--cs-color-emerald-200));
+    --cs-color-success-300: color-mix(in oklch, var(--cs-color-green-300) 50%, var(--cs-color-emerald-300));
+    --cs-color-success-400: color-mix(in oklch, var(--cs-color-green-400) 50%, var(--cs-color-emerald-400));
+    --cs-color-success-500: color-mix(in oklch, var(--cs-color-green-500) 50%, var(--cs-color-emerald-500));
+    --cs-color-success-600: color-mix(in oklch, var(--cs-color-green-600) 50%, var(--cs-color-emerald-600));
+    --cs-color-success-700: color-mix(in oklch, var(--cs-color-green-700) 50%, var(--cs-color-emerald-700));
+    --cs-color-success-800: color-mix(in oklch, var(--cs-color-green-800) 50%, var(--cs-color-emerald-800));
+    --cs-color-success-900: color-mix(in oklch, var(--cs-color-green-900) 50%, var(--cs-color-emerald-900));
+    --cs-color-success-950: color-mix(in oklch, var(--cs-color-green-950) 50%, var(--cs-color-emerald-950));
+
+    --cs-color-warning-50: color-mix(in oklch, var(--cs-color-orange-50) 50%, var(--cs-color-amber-50));
+    --cs-color-warning-100: color-mix(in oklch, var(--cs-color-orange-100) 50%, var(--cs-color-amber-100));
+    --cs-color-warning-200: color-mix(in oklch, var(--cs-color-orange-200) 50%, var(--cs-color-amber-200));
+    --cs-color-warning-300: color-mix(in oklch, var(--cs-color-orange-300) 50%, var(--cs-color-amber-300));
+    --cs-color-warning-400: color-mix(in oklch, var(--cs-color-orange-400) 50%, var(--cs-color-amber-400));
+    --cs-color-warning-500: color-mix(in oklch, var(--cs-color-orange-500) 50%, var(--cs-color-amber-500));
+    --cs-color-warning-600: color-mix(in oklch, var(--cs-color-orange-600) 50%, var(--cs-color-amber-600));
+    --cs-color-warning-700: color-mix(in oklch, var(--cs-color-orange-700) 50%, var(--cs-color-amber-700));
+    --cs-color-warning-800: color-mix(in oklch, var(--cs-color-orange-800) 50%, var(--cs-color-amber-800));
+    --cs-color-warning-900: color-mix(in oklch, var(--cs-color-orange-900) 50%, var(--cs-color-amber-900));
+    --cs-color-warning-950: color-mix(in oklch, var(--cs-color-orange-950) 50%, var(--cs-color-amber-950));
+
+    --cs-color-danger-50: color-mix(in oklch, var(--cs-color-red-50) 70%, var(--cs-color-rose-50));
+    --cs-color-danger-100: color-mix(in oklch, var(--cs-color-red-100) 70%, var(--cs-color-rose-100));
+    --cs-color-danger-200: color-mix(in oklch, var(--cs-color-red-200) 70%, var(--cs-color-rose-200));
+    --cs-color-danger-300: color-mix(in oklch, var(--cs-color-red-300) 70%, var(--cs-color-rose-300));
+    --cs-color-danger-400: color-mix(in oklch, var(--cs-color-red-400) 70%, var(--cs-color-rose-400));
+    --cs-color-danger-500: color-mix(in oklch, var(--cs-color-red-500) 70%, var(--cs-color-rose-500));
+    --cs-color-danger-600: color-mix(in oklch, var(--cs-color-red-600) 70%, var(--cs-color-rose-600));
+    --cs-color-danger-700: color-mix(in oklch, var(--cs-color-red-700) 70%, var(--cs-color-rose-700));
+    --cs-color-danger-800: color-mix(in oklch, var(--cs-color-red-800) 70%, var(--cs-color-rose-800));
+    --cs-color-danger-900: color-mix(in oklch, var(--cs-color-red-900) 70%, var(--cs-color-rose-900));
+    --cs-color-danger-950: color-mix(in oklch, var(--cs-color-red-950) 70%, var(--cs-color-rose-950));
+
+    --cs-color-info-50: var(--cs-color-sky-50);
+    --cs-color-info-100: var(--cs-color-sky-100);
+    --cs-color-info-200: var(--cs-color-sky-200);
+    --cs-color-info-300: var(--cs-color-sky-300);
+    --cs-color-info-400: var(--cs-color-sky-400);
+    --cs-color-info-500: var(--cs-color-sky-500);
+    --cs-color-info-600: var(--cs-color-sky-600);
+    --cs-color-info-700: var(--cs-color-sky-700);
+    --cs-color-info-800: var(--cs-color-sky-800);
+    --cs-color-info-900: var(--cs-color-sky-900);
+    --cs-color-info-950: var(--cs-color-sky-950);
+
+    --cs-color-base-50: var(--cs-color-zinc-50);
+    --cs-color-base-100: var(--cs-color-zinc-100);
+    --cs-color-base-200: var(--cs-color-zinc-200);
+    --cs-color-base-300: var(--cs-color-zinc-300);
+    --cs-color-base-400: var(--cs-color-zinc-400);
+    --cs-color-base-500: var(--cs-color-zinc-500);
+    --cs-color-base-600: var(--cs-color-zinc-600);
+    --cs-color-base-700: var(--cs-color-zinc-700);
+    --cs-color-base-800: var(--cs-color-zinc-800);
+    --cs-color-base-900: var(--cs-color-zinc-900);
+    --cs-color-base-950: var(--cs-color-zinc-950);
+
+}

@@ -1,7 +1,8 @@
 @layer reset, base;
 
 @import "./reset.css" layer(reset);
-@import "./colors.css" layer(base);
+@import "./color-primitives.css" layer(base);
+@import "./color-semantics.css" layer(base);
 @import "./container.css" layer(base);
 @import "./easings.css" layer(base);
 @import "./shapes.css" layer(base);
