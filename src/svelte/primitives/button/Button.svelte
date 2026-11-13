@@ -245,6 +245,31 @@ Architectural Notes:
                 --_shadow-hover: var(--cs-shadow-elevated-hover);
                 --_shadow-active: var(--cs-shadow-elevated);
             }
+
+            /* =========================================================
+             * DISABLED
+             * ========================================================= */
+            &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+                --cs-disabled-opacity: 1;
+                --_fg: var(--cs-color-disabled-fg);
+                --_shadow: none;
+
+                &[data-variant="primary"],
+                &[data-variant="secondary"],
+                &[data-variant="tertiary"] {
+                    --_bg: var(--cs-color-disabled-bg);
+                }
+
+                &[data-variant="ghost"] {
+                    --_bg: transparent;
+                    --_fg: var(--cs-color-disabled-fg);
+                }
+
+                &[data-variant="elevated"] {
+                    --_bg: var(--cs-color-disabled-bg-elevated);
+                    --_shadow: 0 0 0 1px var(--cs-color-disabled-border);
+                }
+            }
         }
     }
 </style>

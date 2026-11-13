@@ -84,10 +84,19 @@ ${closeScript}
 </Button>`;
 
     const disabledCode = `<Button variant="primary" size="md" disabled>
-    <ButtonLabel>Disabled</ButtonLabel>
+    <ButtonLabel>Primary</ButtonLabel>
 </Button>
 <Button variant="secondary" size="md" disabled>
-    <ButtonLabel>Disabled</ButtonLabel>
+    <ButtonLabel>Secondary</ButtonLabel>
+</Button>
+<Button variant="tertiary" size="md" disabled>
+    <ButtonLabel>Tertiary</ButtonLabel>
+</Button>
+<Button variant="ghost" size="md" disabled>
+    <ButtonLabel>Ghost</ButtonLabel>
+</Button>
+<Button variant="elevated" size="md" disabled>
+    <ButtonLabel>Elevated</ButtonLabel>
 </Button>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 </script>
@@ -175,10 +184,19 @@ ${closeScript}
 
     <PreviewSection title="Disabled" code={disabledCode}>
         <Button variant="primary" size="md" disabled>
-            <ButtonLabel>Disabled</ButtonLabel>
+            <ButtonLabel>Primary</ButtonLabel>
         </Button>
         <Button variant="secondary" size="md" disabled>
-            <ButtonLabel>Disabled</ButtonLabel>
+            <ButtonLabel>Secondary</ButtonLabel>
+        </Button>
+        <Button variant="tertiary" size="md" disabled>
+            <ButtonLabel>Tertiary</ButtonLabel>
+        </Button>
+        <Button variant="ghost" size="md" disabled>
+            <ButtonLabel>Ghost</ButtonLabel>
+        </Button>
+        <Button variant="elevated" size="md" disabled>
+            <ButtonLabel>Elevated</ButtonLabel>
         </Button>
     </PreviewSection>
 </div>
