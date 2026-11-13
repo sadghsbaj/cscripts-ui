@@ -202,8 +202,8 @@ Architectural Notes:
                 --_bg: var(--_solid-bg);
                 --_bg-hover: var(--_solid-bg-hover);
                 --_fg: var(--_solid-fg);
-                --_shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.26), 0 1px 2px 0 rgb(0 0 0 / 0.12);
-                --_shadow-active: inset 0 1px 0 0 rgb(255 255 255 / 0.26);
+                --_shadow: var(--cs-shadow-solid);
+                --_shadow-active: var(--cs-shadow-solid-active);
             }
 
             &[data-variant="secondary"] {

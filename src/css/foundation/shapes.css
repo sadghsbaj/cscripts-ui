@@ -28,6 +28,9 @@
 
     --cs-shadow-elevation-1: var(--cs-shadow-sm);
     --cs-shadow-elevation-1-hover: var(--cs-shadow-md);
+
+    --cs-shadow-solid-active: inset 0 1px 0 0 rgb(255 255 255 / 0.26);
+    --cs-shadow-solid: var(--cs-shadow-solid-active), 0 1px 3px 0 rgb(0 0 0 / 0.08);
 }
 
 [data-theme="dark"] {

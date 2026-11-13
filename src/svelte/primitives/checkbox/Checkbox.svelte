@@ -165,7 +165,7 @@ Architectural Notes:
             &:is(:checked, :indeterminate) {
                 --_bg: var(--_bg-checked);
                 --_bg-hover: var(--_bg-checked-hover);
-                --_shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.26), 0 1px 2px 0 rgb(0 0 0 / 0.12);
+                --_shadow: var(--cs-shadow-solid);
                 --_shadow-hover: var(--_shadow);
             }
 
