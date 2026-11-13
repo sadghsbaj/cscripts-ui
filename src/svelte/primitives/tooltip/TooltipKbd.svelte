@@ -37,7 +37,7 @@ Architectural Notes:
             text-box-trim: trim-both;
             text-box-edge: cap alphabetic;
             text-box: trim-both cap alphabetic;
-            background-color: var(--cs-color-elevation-2);
+            background-color: var(--cs-color-base-soft);
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-smooth);
         }

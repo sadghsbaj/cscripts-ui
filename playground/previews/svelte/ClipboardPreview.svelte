@@ -16,7 +16,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
         <!-- 1. Copy Icon-Only Sizes -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Copy Sizes</h2>
             <div class="flex flex-wrap gap-3 items-center">
@@ -38,7 +38,7 @@
 
         <!-- 2. Copy Variants with Label -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Copy Variants</h2>
             <div class="flex flex-wrap gap-3 items-center">
@@ -61,7 +61,7 @@
 
         <!-- 3. Copy Error Feedback -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Copy Error</h2>
             <div class="flex flex-wrap gap-3 items-center">
@@ -91,7 +91,7 @@
 
         <!-- 4. Paste Icon-Only Sizes -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Paste Sizes</h2>
             <div class="flex flex-wrap gap-3 items-center">
@@ -115,7 +115,7 @@
 
         <!-- 5. Paste into Input -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Paste Input</h2>
             <div class="flex flex-col gap-3 w-full">
@@ -169,7 +169,7 @@
 
         <!-- 6. Paste Error & Static States -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Paste States</h2>
             <div class="flex flex-wrap gap-3 items-center">

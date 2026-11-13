@@ -21,8 +21,8 @@
     {#each FADE_MASK_STRENGTHS as strength (strength)}
         <div
             class="{!isElevated
-                ? 'bg-elevation-1 shadow-elevation-1'
-                : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+                ? 'bg-elevated shadow-elevated'
+                : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">
                 {variant[0]?.toUpperCase() + variant.slice(1)} ({strength})

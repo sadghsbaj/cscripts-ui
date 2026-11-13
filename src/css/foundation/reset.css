@@ -16,7 +16,7 @@ html {
     interpolate-size: allow-keywords;
     height: 100dvh;
     overflow: hidden;
-    background-color: var(--cs-color-elevation-0);
+    background-color: var(--cs-color-canvas);
 }
 
 html,

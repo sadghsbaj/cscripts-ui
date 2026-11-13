@@ -83,10 +83,10 @@ Architectural Notes:
             max-inline-size: min(320px, 80vw);
             block-size: 26px;
             padding-inline: 8px;
-            background-color: var(--cs-color-elevation-1);
+            background-color: var(--cs-color-elevated);
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-soft);
-            box-shadow: var(--cs-shadow-elevation-1);
+            box-shadow: var(--cs-shadow-elevated);
         }
 
         :global(.cs-tooltip:popover-open) {

@@ -6,7 +6,8 @@ export const shapeRules: Rule[] = [
         ([, type]) => ({ "corner-shape": `var(--cs-squircle${type ? `-${type}` : ""})` }),
     ],
     [
-        /^shadow-elevation-1(?:-(hover))?$/,
-        ([, hover]) => ({ "box-shadow": `var(--cs-shadow-elevation-1${hover ? `-${hover}` : ""})` }),
+        /^shadow-elevated(?:-(hover))?$/,
+        ([, hover]) => ({ "box-shadow": `var(--cs-shadow-elevated${hover ? `-${hover}` : ""})` }),
     ],
+    [/^shadow-sunken$/, () => ({ "box-shadow": "var(--cs-shadow-sunken)" })],
 ];

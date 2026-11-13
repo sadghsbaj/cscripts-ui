@@ -20,7 +20,7 @@
 
 <div class="flex flex-col items-center gap-8 size-full py-12">
     <div
-        class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 flex flex-col items-center gap-6 min-w-340px"
+        class="bg-elevated shadow-elevated rounded-3xl squircle p-8 flex flex-col items-center gap-6 min-w-340px"
     >
         <div class="flex flex-col items-center gap-1">
             <h2 class="title-xl">Overlay</h2>
@@ -54,9 +54,9 @@
     {#if isLongContent}
         <div class="h-1400px w-full max-w-600px flex flex-col gap-4 items-center justify-between py-8 opacity-40">
             <span class="caption">Hintergrund-Scrollbereich Anfang</span>
-            <div class="h-200px w-full rounded-3xl squircle bg-elevation-1"></div>
-            <div class="h-200px w-full rounded-3xl squircle bg-elevation-1"></div>
-            <div class="h-200px w-full rounded-3xl squircle bg-elevation-1"></div>
+            <div class="h-200px w-full rounded-3xl squircle bg-elevated"></div>
+            <div class="h-200px w-full rounded-3xl squircle bg-elevated"></div>
+            <div class="h-200px w-full rounded-3xl squircle bg-elevated"></div>
             <span class="caption">Hintergrund-Scrollbereich Ende</span>
         </div>
     {/if}
@@ -74,7 +74,7 @@
         </CloseButton>
 
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-6 flex flex-col gap-4 w-360px h-320px relative"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-4 w-360px h-320px relative"
         >
             <ScrollArea size="sm" direction="vertical" class="size-full">
                 <ScrollAreaContent
@@ -82,7 +82,7 @@
                     {@attach scrollFade({ size: "sm", direction: "vertical", edges: "both" })}
                 >
                     {#each Array.from({ length: 8 }) as _, i (i)}
-                        <div class="bg-elevation-2 rounded-3xl squircle h-16 w-full shrink-0"></div>
+                        <div class="bg-sunken rounded-3xl squircle h-16 w-full shrink-0"></div>
                     {/each}
                 </ScrollAreaContent>
             </ScrollArea>

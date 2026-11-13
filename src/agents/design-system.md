@@ -11,7 +11,7 @@ Aim for an ultra-clean, Apple-inspired monochrome aesthetic with intentional spa
 
 ### Strict Anti-Patterns (BANNED)
 
-- **Restraint with Borders & Hairlines:** Keep the UI strictly borderless—visual separation is achieved purely through surface elevation (`shadow-elevation-1`), background contrast, and whitespace. In Dark Mode, where drop shadows are physically invisible, edge definition is achieved via an Apple-style top-lit inset hairline inside `shadow-elevation-1` instead of CSS borders. Nested elements (`elevation-2`), inner wells, or segmented controls rely purely on surface background contrast (`bg-elevation-2`) without borders. NEVER use `divide-*` or `<hr>` dividing lines.
+- **Restraint with Borders & Hairlines:** Keep the UI strictly borderless—visual separation is achieved purely through surface elevation (`shadow-elevated`), background contrast, and whitespace. In Dark Mode, where drop shadows are physically invisible, edge definition is achieved via an Apple-style top-lit inset hairline inside `shadow-elevated` instead of CSS borders. Nested elements (`sunken`), inner wells, or segmented controls rely purely on surface background contrast (`bg-sunken` or `bg-base-soft`) without borders. NEVER use `divide-*` or `<hr>` dividing lines.
 - **No Hyphens or Text Dashes as Separators:** Never use `-`, `—`, or unicode dots in UI labels/metadata. Use layout gaps or `<span class="dot-md"></span>`.
 - **No Fake "AI App Headers":** Do NOT invent a top navbar with a random Lucide icon and a made-up app title unless explicitly requested. Start directly with functional workspace islands.
 - **No Cliché "AI Feature Cards":** NEVER build cards with a tinted square/circle icon in the top-left corner followed by a title and description underneath.
@@ -24,11 +24,11 @@ Aim for an ultra-clean, Apple-inspired monochrome aesthetic with intentional spa
 
 Instead of monolithic full-screen panels divided by borders, structure layouts as **floating modular islands** over the canvas.
 
-### Surface Stacking (`0 -> 1 -> 2`)
+### Surface Stacking (`canvas` -> `elevated` -> `sunken`)
 
-- **Canvas (`bg-elevation-0`):** The app background.
-- **Primary Islands (`bg-elevation-1` + `shadow-elevation-1`):** Group distinct functional areas into separate floating cards/islands rather than one giant toolbar. Pair `bg-elevation-1` with `shadow-elevation-1`. Through `light-dark()`, cards stay 100% borderless in Light Mode with a soft drop shadow, while automatically gaining a physical top-lit inset hairline in Dark Mode without manual `border` classes.
-- **Nested Elements (`bg-elevation-2`, Flat):** Elements inside an `elevation-1` island (inputs, inner wells, secondary blocks, segmented control tracks) use `bg-elevation-2` **without shadows or borders**—relying purely on background contrast, even in Dark Mode. Avoid cluttering nested layouts with redundant borders.
+- **Canvas (`bg-canvas`):** The app background.
+- **Primary Islands (`bg-elevated` + `shadow-elevated`):** Group distinct functional areas into separate floating cards/islands rather than one giant toolbar. Pair `bg-elevated` with `shadow-elevated`. Through `light-dark()`, cards stay 100% borderless in Light Mode with a soft drop shadow, while automatically gaining a physical top-lit inset hairline in Dark Mode without manual `border` classes.
+- **Nested / Recessed Elements (`bg-sunken`, optional `shadow-sunken`):** Elements inside an `elevated` island (inputs, inner wells, secondary blocks) use `bg-sunken` (optionally paired with `shadow-sunken` for subtle recessed inputs/wells). For segmented controls and tracks that may sit on any surface, prefer `bg-base-soft` translucency. Avoid cluttering nested layouts with redundant borders.
 
 ---
 
@@ -60,7 +60,7 @@ Maintain a calm, monochrome-first UI hierarchy using the `base` (Zinc) palette a
 - **Semantic Status Colors (`danger`, `warning`, `success`, `info`):** Reserve strictly for their true semantic meaning in UI controls and feedback (e.g., `danger` boolean on `<Button variant="primary" | "secondary" | "ghost">` for destructive delete actions, `warning` for alerts, `success` for confirmations). Never use them for decorative variety.
 - **Data Visualization & Charts (Use Primitive Palettes):** Do NOT force charts or multi-series graphs into a monochrome palette, and do not limit them to the 4 semantic status colors. For data visualization (e.g., a chart with 6 distinct lines or categories), freely use the full range of primitive palettes (`emerald`, `indigo`, `violet`, `amber`, `cyan`, `rose`, etc. via `--cs-color-<name>-<shade>` or UnoCSS utilities) so series are visually distinct and vibrant.
 - **Hover Brightening (with Light-Mode Surface Exception):** Interactive `-solid` and `-soft` surfaces should subtly **brighten** on hover (already handled by `--cs-color-*-hover` tokens and `cs/svelte/<primitive>`) rather than darkening.
-    - **Exception for `bg-elevation-1` Interactive Surfaces:** When an interactive element or card uses `bg-elevation-1` (which is pure `white` in Light Mode sitting on a `base-100` canvas), it cannot brighten further in Light Mode—and darkening it to `base-50` or `base-100` on hover looks muddy and makes it blend into the `elevation-0` background. Instead, keep the surface color pure `bg-elevation-1` and indicate hover through **text/icon color brightening** (e.g., `text-weak` -> `text-strong`), subtle shadow elevation (`shadow-sm` -> `shadow-md`), or micro-scale physics.
+    - **Exception for `bg-elevated` Interactive Surfaces:** When an interactive element or card uses `bg-elevated` (which is pure `white` in Light Mode sitting on a `base-100` canvas), it cannot brighten further in Light Mode—and darkening it to `base-50` or `base-100` on hover looks muddy and makes it blend into the `canvas` background. Instead, keep the surface color pure `bg-elevated` and indicate hover through **text/icon color brightening** (e.g., `text-weak` -> `text-strong`), subtle shadow elevation (`shadow-sm` -> `shadow-md`), or micro-scale physics.
 
 ---
 

@@ -24,7 +24,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
         <!-- 1. Inline Delete Confirm (Soft -> Solid + Auto-Reset) -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Inline Delete</h2>
@@ -52,7 +52,7 @@
 
         <!-- 2. Icon-Only to Text Pill + Layout Sibling Glide -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Icon to Pill</h2>
@@ -90,7 +90,7 @@
         </div>
 
         <!-- 3. Cross-Size & Variant Morph (Elevated lg <-> Soft Accent sm) -->
-        <div class="bg-elevation-0 p-8 min-h-220px flex flex-col justify-between items-start gap-6">
+        <div class="bg-canvas p-8 min-h-220px flex flex-col justify-between items-start gap-6">
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Size & Surface</h2>
                 <span class="description-sm whitespace-nowrap">Elevated lg to Soft Accent sm</span>
@@ -117,7 +117,7 @@
 
         <!-- 4. Multi-Step Flow (3 States: Idle -> Confirm -> Done) -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Multi-Step Flow</h2>
@@ -152,7 +152,7 @@
 
         <!-- 5. CloseButton to Discard Confirmation -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Close to Discard</h2>
@@ -178,7 +178,7 @@
 
         <!-- 6. ToggleButton to Action Button -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-220px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Toggle to Action</h2>

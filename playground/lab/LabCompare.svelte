@@ -78,7 +78,7 @@
             style:grid-template-columns="repeat(auto-fit, minmax(280px, 1fr))"
         >
             {#each variants as variant (variant.id)}
-                <section class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 flex flex-col gap-5">
+                <section class="bg-elevated shadow-elevated rounded-3xl squircle p-8 flex flex-col gap-5">
                     <h2 class="title-lg text-weak">{variant.label}</h2>
                     <div class="flex-1 flex-center">
                         {@render variant.content()}
@@ -87,7 +87,7 @@
             {/each}
         </div>
     {:else if activeVariant}
-        <section class="w-full max-w-2xl bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 flex flex-col gap-5">
+        <section class="w-full max-w-2xl bg-elevated shadow-elevated rounded-3xl squircle p-8 flex flex-col gap-5">
             <h2 class="title-lg text-weak">{activeVariant.label}</h2>
             <div class="flex-center min-h-40">
                 {@render activeVariant.content()}

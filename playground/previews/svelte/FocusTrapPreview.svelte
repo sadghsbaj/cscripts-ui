@@ -20,7 +20,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
         <!-- 1. Standard Dialog Trap -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Standard Modal</h2>
@@ -36,7 +36,7 @@
 
         <!-- 2. Targeted Initial Focus -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Targeted Initial Focus</h2>
@@ -52,7 +52,7 @@
 
         <!-- 3. Nested Trap Stack -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Nested Traps</h2>
@@ -75,7 +75,7 @@
             role="dialog"
             aria-modal="true"
             aria-label="Einstellungen"
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-400px relative"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-400px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isStandardOpen = false),
@@ -98,12 +98,12 @@
                 <input
                     type="text"
                     placeholder="Benutzername"
-                    class="bg-elevation-2 rounded-full squircle-smooth px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
+                    class="bg-sunken shadow-sunken rounded-full squircle-smooth px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
                 />
                 <input
                     type="password"
                     placeholder="Passwort"
-                    class="bg-elevation-2 rounded-full squircle-smooth px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
+                    class="bg-sunken shadow-sunken rounded-full squircle-smooth px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
                 />
             </div>
 
@@ -126,7 +126,7 @@
             role="dialog"
             aria-modal="true"
             aria-label="Löschen bestätigen"
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-380px relative"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-380px relative"
             {@attach focusTrap({
                 initialFocus: "#danger-confirm",
                 onEscape: () => (isTargetOpen = false),
@@ -173,7 +173,7 @@
             role="dialog"
             aria-modal="true"
             aria-label="Ebene 1 Modal"
-            class="bg-elevation-1 shadow-elevation-2 rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-440px relative"
+            class="bg-elevated shadow-sunken rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-440px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isParentOpen = false),
@@ -213,7 +213,7 @@
             role="dialog"
             aria-modal="true"
             aria-label="Ebene 2 Sub-Dialog"
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 flex flex-col gap-6 w-full max-w-360px relative"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 flex flex-col gap-6 w-full max-w-360px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isChildOpen = false),

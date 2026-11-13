@@ -25,8 +25,8 @@
 {#snippet verticalCard(isElevated: boolean, size: ScrollAreaSize)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-elevation-1'
-            : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+            ? 'bg-elevated shadow-elevated'
+            : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">
             Vertical ({size})
@@ -37,7 +37,7 @@
                 {@attach scrollFade({ size, direction: "vertical", edges: "both" })}
             >
                 {#each items as item (item)}
-                    <div class="bg-elevation-2 rounded-xl px-4 py-2 text-sm shrink-0">
+                    <div class="bg-sunken rounded-xl px-4 py-2 text-sm shrink-0">
                         {item}
                     </div>
                 {/each}
@@ -49,8 +49,8 @@
 {#snippet horizontalCard(isElevated: boolean)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-elevation-1'
-            : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+            ? 'bg-elevated shadow-elevated'
+            : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">Horizontal</h2>
         <ScrollArea size="md" direction="horizontal" class="w-full">
@@ -59,7 +59,7 @@
                 {@attach scrollFade({ size: "md", direction: "horizontal", edges: "both" })}
             >
                 {#each items as item (item)}
-                    <div class="bg-elevation-2 rounded-xl px-4 py-6 text-sm shrink-0">
+                    <div class="bg-sunken rounded-xl px-4 py-6 text-sm shrink-0">
                         {item}
                     </div>
                 {/each}
@@ -71,15 +71,15 @@
 {#snippet bothCard(isElevated: boolean)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-elevation-1'
-            : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+            ? 'bg-elevated shadow-elevated'
+            : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">Both</h2>
         <ScrollArea size="md" direction="both" class="w-full max-h-40">
             <ScrollAreaContent {@attach scrollFade({ size: "md", direction: "both", edges: "both" })}>
                 <div class="grid grid-cols-4 gap-2 min-w-500px min-h-300px">
                     {#each items as item (item)}
-                        <div class="bg-elevation-2 rounded-xl px-4 py-4 text-sm">
+                        <div class="bg-sunken rounded-xl px-4 py-4 text-sm">
                             {item}
                         </div>
                     {/each}
@@ -92,8 +92,8 @@
 {#snippet customSizeCard(isElevated: boolean)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-elevation-1'
-            : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+            ? 'bg-elevated shadow-elevated'
+            : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">Custom</h2>
         <ScrollArea size="md" direction="vertical" scrollbar="always" class="w-full max-h-40">
@@ -103,7 +103,7 @@
                 {@attach scrollFade({ size: "md", direction: "vertical", edges: "both" })}
             >
                 {#each items as item (item)}
-                    <div class="bg-elevation-2 rounded-xl px-4 py-2 text-sm shrink-0">
+                    <div class="bg-sunken rounded-xl px-4 py-2 text-sm shrink-0">
                         {item}
                     </div>
                 {/each}

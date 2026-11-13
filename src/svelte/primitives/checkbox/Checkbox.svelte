@@ -134,10 +134,10 @@ Architectural Notes:
 
             /* Hover Physics (Light vs. Dark): See ../../explanations/elevated-hover-physics.md */
             &[data-variant="elevated"] {
-                --_bg: var(--cs-color-elevation-1);
-                --_bg-hover: light-dark(var(--_bg), var(--cs-color-elevation-2));
-                --_shadow: var(--cs-shadow-elevation-1);
-                --_shadow-hover: var(--cs-shadow-elevation-1-hover);
+                --_bg: var(--cs-color-elevated);
+                --_bg-hover: var(--cs-color-elevated-hover);
+                --_shadow: var(--cs-shadow-elevated);
+                --_shadow-hover: var(--cs-shadow-elevated-hover);
             }
 
             &::before {

@@ -15,7 +15,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
         <!-- Placements -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Placements</h2>
             <div class="flex flex-wrap gap-3">
@@ -29,7 +29,7 @@
                         id={popoverId}
                         {placement}
                         size="content"
-                        class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-4 text-xs font-500 text-main"
+                        class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
                     >
                         <div class="flex flex-col gap-1">
                             <span class="font-600">Placement: {placement}</span>
@@ -42,7 +42,7 @@
 
         <!-- Sizes -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Sizes</h2>
             <div class="flex flex-col gap-3 w-full">
@@ -61,7 +61,7 @@
                         id={popoverId}
                         placement="bottom"
                         {size}
-                        class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-4 text-xs font-500 text-main"
+                        class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
                     >
                         <div class="flex flex-col gap-1">
                             <span class="font-600">{size}</span>
@@ -82,7 +82,7 @@
 
         <!-- Offsets & Modes -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Offset & Modes</h2>
             <div class="flex flex-wrap gap-3">
@@ -99,7 +99,7 @@
                     placement="top"
                     size="content"
                     offset="24px"
-                    class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-4 text-xs font-500 text-main"
+                    class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
                 >
                     <div class="flex flex-col gap-1">
                         <span class="font-600">Offset: 24px</span>
@@ -120,7 +120,7 @@
                     popover="hint"
                     placement="bottom"
                     size="content"
-                    class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-4 text-xs font-500 text-main"
+                    class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
                 >
                     <div class="flex flex-col gap-1">
                         <span class="font-600">Hint Popover</span>

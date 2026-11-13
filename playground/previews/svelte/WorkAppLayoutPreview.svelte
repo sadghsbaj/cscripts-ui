@@ -43,12 +43,12 @@
                         </WorkAppHeaderSegment>
                     </WorkAppHeader>
                     <WorkAppMain>
-                        <div class="bg-elevation-1 shadow-elevation-1 rounded-2xl squircle p-6 flex flex-col gap-4">
+                        <div class="bg-elevated shadow-elevated rounded-2xl squircle p-6 flex flex-col gap-4">
                             <h2 class="title-lg">{activeTab}</h2>
                             <p class="text-weak">Work application shell with segmented header controls.</p>
                         </div>
 
-                        <div class="min-h-300dvh bg-elevation-1 shadow-elevation-1 rounded-2xl squircle"></div>
+                        <div class="min-h-300dvh bg-elevated shadow-elevated rounded-2xl squircle"></div>
                     </WorkAppMain>
                 </WorkAppFrame>
             </ScrollAreaContent>

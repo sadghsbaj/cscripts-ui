@@ -27,8 +27,8 @@
 {#snippet previewCard(isElevated: boolean, variant: Exclude<ButtonVariant, "elevated">)}
     <div
         class="{!isElevated
-            ? 'bg-elevation-1 shadow-elevation-1'
-            : 'bg-elevation-0'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+            ? 'bg-elevated shadow-elevated'
+            : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
     >
         <h2 class="title-2xl">
             {#if !isElevated}

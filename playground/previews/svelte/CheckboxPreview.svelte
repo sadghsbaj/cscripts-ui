@@ -59,7 +59,7 @@
 
     <!-- Single interactive test checkbox connected to ToggleButtonGroup -->
     <div
-        class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-120px min-w-300px flex-center flex-col gap-2"
+        class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-120px min-w-300px flex-center flex-col gap-2"
     >
         <Checkbox
             variant="soft"
@@ -74,7 +74,7 @@
     <!-- Overview cards with static/independent checkboxes -->
     <div class="flex gap-4">
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px min-w-300px flex-center flex-col gap-3"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px min-w-300px flex-center flex-col gap-3"
         >
             {#each CHECKBOX_SIZES as size (size)}
                 <Checkbox variant="soft" {size} />

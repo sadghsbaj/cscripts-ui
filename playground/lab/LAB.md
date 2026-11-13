@@ -9,7 +9,7 @@ Du arbeitest ausschließlich in `playground/lab/` (erreichbar unter `/lab`).
 - **Saubere Isolation:** Lege größere Experimente als eigene `.svelte`- oder `.ts`-Datei in `playground/lab/` an und binde sie in `LabView.svelte` ein. So lässt sich jedes Experiment rückstandslos wieder entfernen.
 
 ## 2. Design & Technik (Konsistent mit `cs`)
-- **Primitives & Tokens nutzen:** Verwende bestehende `cs/svelte/*`-Komponenten (`Button`, `ToggleButton`, `ToggleButtonGroup`, `Checkbox`, `ScrollArea`, `HitArea`, `tooltip`, etc.), UnoCSS-Utilities (`bg-elevation-0`, `bg-elevation-1`, `shadow-elevation-1`, `squircle`, `title-*`, `text-*`) und CSS-Tokens (`--cs-color-*`, `--cs-ease-*`, `--cs-spring-*`) statt fremder Styles.
+- **Primitives & Tokens nutzen:** Verwende bestehende `cs/svelte/*`-Komponenten (`Button`, `ToggleButton`, `ToggleButtonGroup`, `Checkbox`, `ScrollArea`, `HitArea`, `tooltip`, etc.), UnoCSS-Utilities (`bg-canvas`, `bg-elevated`, `shadow-elevated`, `squircle`, `title-*`, `text-*`) und CSS-Tokens (`--cs-color-*`, `--cs-ease-*`, `--cs-spring-*`) statt fremder Styles.
 - **Light & Dark Mode:** Alle eigenen Styles müssen mit `light-dark()` / `--cs-color-*` in beiden Modi sauber funktionieren.
 - **Kein UI-Ballast:**
   - Keine überladenen Dashboards, keine Marketing-Texte, keine langen Erklärungen im UI.

@@ -17,7 +17,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
         <!-- 1. Select All on Mount -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Select All</h2>
@@ -29,7 +29,7 @@
                     <input
                         type="text"
                         value="https://cscripts.dev/components"
-                        class="bg-elevation-2 rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main focus-visible:ring-2 focus-visible:ring-accent-500"
+                        class="bg-sunken rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main focus-visible:ring-2 focus-visible:ring-accent-500"
                         {@attach autoFocus({ select: "all" })}
                     />
                 {:else}
@@ -51,7 +51,7 @@
 
         <!-- 2. Container Target (First Interactive Child) -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Container Target</h2>
@@ -70,18 +70,18 @@
 
                 {#if showContainerForm}
                     <div
-                        class="bg-elevation-2 rounded-2xl squircle p-4 flex flex-col gap-3 w-full"
+                        class="bg-sunken rounded-2xl squircle p-4 flex flex-col gap-3 w-full"
                         {@attach autoFocus("first-focusable")}
                     >
                         <input
                             type="text"
                             placeholder="Vorname (fokussiert)"
-                            class="bg-elevation-1 rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
+                            class="bg-elevated rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
                         />
                         <input
                             type="text"
                             placeholder="Nachname"
-                            class="bg-elevation-1 rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
+                            class="bg-elevated rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
                         />
                     </div>
                 {/if}
@@ -90,7 +90,7 @@
 
         <!-- 3. Cursor End & Restore Focus -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Cursor at End</h2>
@@ -111,7 +111,7 @@
                     <input
                         type="text"
                         value="#todo: "
-                        class="bg-elevation-2 rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main focus-visible:ring-2 focus-visible:ring-accent-500"
+                        class="bg-sunken rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main focus-visible:ring-2 focus-visible:ring-accent-500"
                         {@attach autoFocus({ select: "end", restoreFocus: true })}
                     />
                 {/if}

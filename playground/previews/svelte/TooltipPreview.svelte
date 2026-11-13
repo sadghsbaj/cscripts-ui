@@ -18,7 +18,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
         <!-- Icon Buttons (Default Top Tooltips) -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Icon Buttons</h2>
             <div class="flex flex-wrap gap-3 items-center">
@@ -64,7 +64,7 @@
 
         <!-- ToggleButtonGroup with Placements -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Toggle Group</h2>
             <div class="flex items-center">
@@ -117,7 +117,7 @@
 
         <!-- Custom / Compound Tooltip -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
         >
             <h2 class="title-2xl">Compound Tooltip</h2>
             <div class="flex flex-wrap gap-3 items-center">

@@ -20,7 +20,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
     - ALWAYS use `<ButtonMorph bind:value={state}>` with `<ButtonMorphItem value="...">` slots instead of manual `{#if}` swaps or ad-hoc CSS transitions.
     - `<ButtonMorph>` natively handles intrinsic dimension pre-caching (`ResizeObserver`), continuous surface and superellipse corner-shape interpolation (`--_morph-corner`), capture-phase accidental double-click protection (`guardDelay`), keyboard focus handoff, and hover-aware auto-reset timers (`resetTimeout`, `resetOnOutsideClick`, `resetOnEscape`).
     - **CRITICAL DISTINCTION — Standard Toggles vs. ButtonMorph:** Do NOT use `<ButtonMorph>` for standard toggle buttons! For normal pressed/unpressed formatting or tool toggles (e.g. Bold, Italic, Underline, active tool modes), always use native `<ToggleButton>` or `<ToggleButtonGroup>` with `pressed={...}`. `<ButtonMorph>` is strictly for morphing between distinct button instances/actions.
-- **Static Layout & Surface Containers:** Do NOT wrap simple static layout containers (islands, cards, flex/grid wrappers) into redundant `.svelte` components when native HTML elements styled with UnoCSS utilities and semantic surface tokens (`bg-elevation-1`, `squircle`, etc.) suffice.
+- **Static Layout & Surface Containers:** Do NOT wrap simple static layout containers (islands, cards, flex/grid wrappers) into redundant `.svelte` components when native HTML elements styled with UnoCSS utilities and semantic surface tokens (`bg-elevated`, `squircle`, etc.) suffice.
 
 ## 2. Modern Svelte 5 Features (MANDATORY — DO NOT USE LEGACY PATTERNS)
 

@@ -20,7 +20,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
         <!-- 1. Wrapper Pattern -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Wrapper</h2>
@@ -47,7 +47,7 @@
 
         <!-- 2. Ignore Element -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Ignore Element</h2>
@@ -77,7 +77,7 @@
 
         <!-- 3. Ignore Selector -->
         <div
-            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
         >
             <div class="flex flex-col gap-1 w-full">
                 <h2 class="title-xl">Ignore Selector</h2>
