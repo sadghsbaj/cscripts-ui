@@ -62,7 +62,7 @@
         </Button>
     </div>
 
-    <div class="cs-playground-code-scroll overflow-x-auto px-5 py-4 pr-14">
+    <div class="cs-playground-code-scroll overflow-x-auto px-5 py-4">
         {#if highlightedHtml}
             <!-- eslint-disable-next-line svelte/no-at-html-tags -- Shiki produces trusted static syntax HTML -->
             {@html highlightedHtml}
@@ -88,10 +88,13 @@
     }
 
     .cs-playground-code-scroll :global(pre.shiki) {
+        display: inline-block;
+        min-width: 100%;
         margin: 0;
+        padding-right: 2.5rem;
         background-color: transparent !important;
         font-family: var(--cs-font-mono);
-        font-size: 0.8125rem;
+        font-size: 0.78125rem;
         line-height: 1.65;
         white-space: pre;
         tab-size: 4;
