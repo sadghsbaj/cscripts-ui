@@ -174,8 +174,8 @@ Architectural Notes:
 
                 /* Error ring & soft tint apply only when inactive so checked states inherit the top-lit solid highlight */
                 &:not(:checked, :indeterminate) {
-                    --_shadow: inset 0 0 0 1px var(--cs-color-danger-solid);
-                    --_shadow-hover: inset 0 0 0 1px var(--cs-color-danger-solid-hover);
+                    --_shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-danger-solid) 45%, transparent);
+                    --_shadow-hover: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-danger-solid) 65%, transparent);
                     --_bg: var(--cs-color-danger-soft);
                     --_bg-hover: var(--cs-color-danger-soft-hover);
                 }
