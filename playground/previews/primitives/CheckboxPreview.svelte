@@ -49,6 +49,11 @@ ${closeScript}
 <Checkbox variant="soft" size="md" checked />
 <Checkbox variant="soft" size="lg" checked />
 <Checkbox variant="soft" size="xl" checked />`;
+
+    const disabledCode = `<Checkbox variant="soft" size="md" disabled />
+<Checkbox variant="soft" size="md" checked disabled />
+<Checkbox variant="soft" size="md" indeterminate disabled />
+<Checkbox variant="elevated" size="md" disabled />`;
 </script>
 
 <div class="flex flex-col gap-10">
@@ -128,6 +133,32 @@ ${closeScript}
             {#each CHECKBOX_SIZES as size (size)}
                 <Checkbox variant="soft" {size} checked aria-label="Checkbox size {size}" />
             {/each}
+        </div>
+    </PreviewSection>
+
+    <PreviewSection title="Disabled" code={disabledCode}>
+        <div class="flex flex-wrap items-center gap-6">
+            <label class="flex items-center gap-2.5 text-sm text-weak select-none">
+                <Checkbox variant="soft" size="md" disabled />
+                <span>Unchecked</span>
+            </label>
+
+            <label class="flex items-center gap-2.5 text-sm text-weak select-none">
+                <Checkbox variant="soft" size="md" checked disabled />
+                <span>Checked</span>
+            </label>
+
+            <label class="flex items-center gap-2.5 text-sm text-weak select-none">
+                <Checkbox variant="soft" size="md" indeterminate disabled />
+                <span>Indeterminate</span>
+            </label>
+
+            <SunkenWell>
+                <label class="flex items-center gap-2.5 text-sm text-weak select-none">
+                    <Checkbox variant="elevated" size="md" disabled />
+                    <span>Elevated</span>
+                </label>
+            </SunkenWell>
         </div>
     </PreviewSection>
 </div>

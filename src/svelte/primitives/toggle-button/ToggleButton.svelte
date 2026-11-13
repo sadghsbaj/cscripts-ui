@@ -320,6 +320,27 @@ Architectural Notes:
                     transform: scale(1);
                 }
             }
+
+            /* =========================================================
+            * DISABLED
+            * ========================================================= */
+            &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+                --cs-disabled-opacity: 1;
+                --_fg: var(--cs-color-disabled-fg);
+
+                &[data-variant="soft"] {
+                    --_bg: var(--cs-color-disabled-bg);
+                }
+
+                &[data-variant="ghost"] {
+                    --_bg: transparent;
+                }
+
+                &[aria-pressed="true"] {
+                    --_fg: var(--cs-color-disabled-fg-active);
+                    --_fill-bg: var(--cs-color-disabled-bg-active);
+                }
+            }
         }
     }
 </style>

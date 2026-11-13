@@ -80,6 +80,19 @@ ${closeScript}
     <ToggleButtonIcon icon={Bookmark} />
     <HitArea size="md" />
 </ToggleButton>`;
+
+    const disabledCode = `<ToggleButton variant="soft" color="accent" size="md" disabled>
+    <ToggleButtonLabel>Soft</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="soft" color="accent" size="md" pressed disabled>
+    <ToggleButtonLabel>Soft (Pressed)</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="ghost" color="accent" size="md" disabled>
+    <ToggleButtonLabel>Ghost</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="ghost" color="accent" size="md" pressed disabled>
+    <ToggleButtonLabel>Ghost (Pressed)</ToggleButtonLabel>
+</ToggleButton>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 
     const sizeLabels: Record<(typeof TOGGLE_BUTTON_SIZES)[number], string> = {
@@ -171,6 +184,21 @@ ${closeScript}
         >
             <ToggleButtonIcon icon={Bookmark} />
             <HitArea size="md" />
+        </ToggleButton>
+    </PreviewSection>
+
+    <PreviewSection title="Disabled" code={disabledCode}>
+        <ToggleButton variant="soft" color="accent" size="md" disabled>
+            <ToggleButtonLabel>Soft</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="soft" color="accent" size="md" pressed disabled>
+            <ToggleButtonLabel>Soft (Pressed)</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="ghost" color="accent" size="md" disabled>
+            <ToggleButtonLabel>Ghost</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="ghost" color="accent" size="md" pressed disabled>
+            <ToggleButtonLabel>Ghost (Pressed)</ToggleButtonLabel>
         </ToggleButton>
     </PreviewSection>
 </div>

@@ -32,6 +32,16 @@ ${closeScript}
     const sizesCode = `<CloseButton variant="soft" size="sm"><HitArea size="md" /></CloseButton>
 <CloseButton variant="soft" size="md"><HitArea size="md" /></CloseButton>
 <CloseButton variant="soft" size="lg"><HitArea size="md" /></CloseButton>`;
+
+    const disabledCode = `<CloseButton variant="soft" size="md" disabled>
+    <HitArea size="md" />
+</CloseButton>
+<CloseButton variant="ghost" size="md" disabled>
+    <HitArea size="md" />
+</CloseButton>
+<CloseButton variant="elevated" size="md" disabled>
+    <HitArea size="md" />
+</CloseButton>`;
 </script>
 
 <div class="flex flex-col gap-10">
@@ -75,6 +85,24 @@ ${closeScript}
                     <HitArea size="md" />
                 </CloseButton>
             {/each}
+        </div>
+    </PreviewSection>
+
+    <PreviewSection title="Disabled" code={disabledCode}>
+        <div class="flex items-center gap-6">
+            <CloseButton variant="soft" size="md" disabled>
+                <HitArea size="md" />
+            </CloseButton>
+
+            <CloseButton variant="ghost" size="md" disabled>
+                <HitArea size="md" />
+            </CloseButton>
+
+            <SunkenWell>
+                <CloseButton variant="elevated" size="md" disabled>
+                    <HitArea size="md" />
+                </CloseButton>
+            </SunkenWell>
         </div>
     </PreviewSection>
 </div>

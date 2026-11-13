@@ -180,6 +180,30 @@ Architectural Notes:
                     --_bg-hover: var(--cs-color-danger-soft-hover);
                 }
             }
+
+            /* =========================================================
+             * DISABLED
+             * ========================================================= */
+            &:disabled {
+                --cs-disabled-opacity: 1;
+                --_bg: var(--cs-color-disabled-bg);
+                --_shadow: none;
+
+                &[data-variant="elevated"] {
+                    --_bg: var(--cs-color-disabled-bg-elevated);
+                    --_shadow: 0 0 0 1px var(--cs-color-disabled-border);
+                }
+
+                &[aria-invalid="true"]:not(:checked, :indeterminate) {
+                    --_bg: var(--cs-color-disabled-bg);
+                    --_shadow: none;
+                }
+
+                &:is(:checked, :indeterminate) {
+                    --_bg: var(--cs-color-disabled-bg-strong);
+                    --_shadow: none;
+                }
+            }
         }
 
         .cs-checkbox-icon {
