@@ -49,6 +49,7 @@
         "prettier": "^3.9.10",
         "prettier-plugin-css-order": "^2.2.0",
         "prettier-plugin-svelte": "^4.1.1",
+        "shiki": "^4.6.0",
         "svelte": "^5.57.2",
         "typescript": "~6.0.2",
         "unocss": "^66.11.0",
