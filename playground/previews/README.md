@@ -10,7 +10,7 @@ Previews are organized by folder; `PreviewView.svelte` automatically derives eac
 
 - `playground/previews/primitives/` — Core UI primitives (`Button`, `Checkbox`, `Tooltip`, ...)
 - `playground/previews/attachments/` — Svelte attachments & behaviors (`clickOutside`, `focusTrap`, `scrollFade`, ...)
-- `playground/previews/work/` — Work-specific application components (`WorkAppIntro`, ...)
+- `playground/previews/work/` — Work-specific application components (`WorkAppLayout`, `WorkLocation`, ...)
 
 Each preview file only needs to export `id` and `label` in `<script module>`:
 
@@ -27,7 +27,7 @@ Each preview file only needs to export `id` and `label` in `<script module>`:
 
 Every standard preview should compose the shared UI helpers from `../../components/index.ts`:
 
-- **`PreviewHeader`:** Compact page header (`title` + optional one-sentence `description`). Omit `PreviewHeader` for full-bleed layout/app previews (e.g. `WorkAppIntroPreview`) where a title header would look out of place.
+- **`PreviewHeader`:** Compact page header (`title` + optional one-sentence `description`). Omit `PreviewHeader` for full-bleed layout/app previews (e.g. `WorkAppLayoutPreview`) where a title header would look out of place.
 - **`PreviewSection`:** Vertical showcase block (`title`, optional `description`, `bg-elevated` stage, and an optional embedded `CodeBlock` below).
 - **`CodeBlock`:** Standalone or embedded Shiki-highlighted code block with one-click copy (`CopyIcon` + `copyOnClick`).
 
