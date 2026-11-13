@@ -259,41 +259,32 @@ Architectural Notes:
             * COLORS
             * ========================================================= */
             &[data-color="accent"] {
-                --_fill-hue: var(--cs-color-accent-500);
+                --_fill-bg: var(--cs-color-accent-soft);
+                --_fill-bg-hover: var(--cs-color-accent-soft-hover);
                 --_soft-fg: var(--cs-color-accent-soft-fg);
             }
 
             &[data-color="success"] {
-                --_fill-hue: var(--cs-color-success-500);
+                --_fill-bg: var(--cs-color-success-soft);
+                --_fill-bg-hover: var(--cs-color-success-soft-hover);
                 --_soft-fg: var(--cs-color-success-soft-fg);
             }
 
             &[data-color="warning"] {
-                --_fill-hue: var(--cs-color-warning-500);
+                --_fill-bg: var(--cs-color-warning-soft);
+                --_fill-bg-hover: var(--cs-color-warning-soft-hover);
                 --_soft-fg: var(--cs-color-warning-soft-fg);
             }
 
             &[data-color="danger"] {
-                --_fill-hue: var(--cs-color-danger-500);
+                --_fill-bg: var(--cs-color-danger-soft);
+                --_fill-bg-hover: var(--cs-color-danger-soft-hover);
                 --_soft-fg: var(--cs-color-danger-soft-fg);
             }
 
             /* =========================================================
             * VARIANTS
-            * ---------------------------------------------------------
-            * Both variants share the same opaque pressed fill so
-            * active toggles keep consistent color strength regardless
-            * of the underlying surface.
             * ========================================================= */
-            --_fill-bg: light-dark(
-                color-mix(in oklab, var(--_fill-hue) 12%, white),
-                color-mix(in oklab, var(--_fill-hue) 24%, var(--cs-color-base-950))
-            );
-            --_fill-bg-hover: light-dark(
-                color-mix(in oklab, var(--_fill-hue) 18%, white),
-                color-mix(in oklab, var(--_fill-hue) 32%, var(--cs-color-base-950))
-            );
-
             &[data-variant="soft"] {
                 --_bg: var(--cs-color-base-soft);
                 --_bg-hover: var(--cs-color-base-soft-hover);

@@ -32,12 +32,12 @@
 
     /* Accent Soft & Solid */
     --cs-color-accent-soft: light-dark(
-        color-mix(in oklch, var(--cs-color-accent-500) 10%, transparent),
-        color-mix(in oklch, var(--cs-color-accent-500) 16%, transparent)
+        color-mix(in oklab, var(--cs-color-accent-500) 12%, white),
+        color-mix(in oklab, var(--cs-color-accent-500) 24%, var(--cs-color-base-950))
     );
     --cs-color-accent-soft-hover: light-dark(
-        color-mix(in oklch, var(--cs-color-accent-500) 16%, transparent),
-        color-mix(in oklch, var(--cs-color-accent-500) 24%, transparent)
+        color-mix(in oklab, var(--cs-color-accent-500) 18%, white),
+        color-mix(in oklab, var(--cs-color-accent-500) 32%, var(--cs-color-base-950))
     );
     --cs-color-accent-soft-fg: light-dark(var(--cs-color-accent-600), var(--cs-color-accent-400));
     --cs-color-accent-solid: light-dark(
@@ -49,12 +49,12 @@
 
     /* Success Soft & Solid */
     --cs-color-success-soft: light-dark(
-        color-mix(in oklch, var(--cs-color-success-500) 10%, transparent),
-        color-mix(in oklch, var(--cs-color-success-500) 16%, transparent)
+        color-mix(in oklab, var(--cs-color-success-500) 12%, white),
+        color-mix(in oklab, var(--cs-color-success-500) 24%, var(--cs-color-base-950))
     );
     --cs-color-success-soft-hover: light-dark(
-        color-mix(in oklch, var(--cs-color-success-500) 16%, transparent),
-        color-mix(in oklch, var(--cs-color-success-500) 24%, transparent)
+        color-mix(in oklab, var(--cs-color-success-500) 18%, white),
+        color-mix(in oklab, var(--cs-color-success-500) 32%, var(--cs-color-base-950))
     );
     --cs-color-success-soft-fg: light-dark(var(--cs-color-success-600), var(--cs-color-success-400));
     --cs-color-success-solid: light-dark(
@@ -66,12 +66,12 @@
 
     /* Warning Soft & Solid */
     --cs-color-warning-soft: light-dark(
-        color-mix(in oklch, var(--cs-color-warning-500) 10%, transparent),
-        color-mix(in oklch, var(--cs-color-warning-500) 16%, transparent)
+        color-mix(in oklab, var(--cs-color-warning-500) 12%, white),
+        color-mix(in oklab, var(--cs-color-warning-500) 24%, var(--cs-color-base-950))
     );
     --cs-color-warning-soft-hover: light-dark(
-        color-mix(in oklch, var(--cs-color-warning-500) 16%, transparent),
-        color-mix(in oklch, var(--cs-color-warning-500) 24%, transparent)
+        color-mix(in oklab, var(--cs-color-warning-500) 18%, white),
+        color-mix(in oklab, var(--cs-color-warning-500) 32%, var(--cs-color-base-950))
     );
     --cs-color-warning-soft-fg: light-dark(var(--cs-color-warning-600), var(--cs-color-warning-400));
     --cs-color-warning-solid: light-dark(
@@ -83,12 +83,12 @@
 
     /* Danger Soft & Solid */
     --cs-color-danger-soft: light-dark(
-        color-mix(in oklch, var(--cs-color-danger-500) 10%, transparent),
-        color-mix(in oklch, var(--cs-color-danger-500) 16%, transparent)
+        color-mix(in oklab, var(--cs-color-danger-500) 12%, white),
+        color-mix(in oklab, var(--cs-color-danger-500) 24%, var(--cs-color-base-950))
     );
     --cs-color-danger-soft-hover: light-dark(
-        color-mix(in oklch, var(--cs-color-danger-500) 16%, transparent),
-        color-mix(in oklch, var(--cs-color-danger-500) 24%, transparent)
+        color-mix(in oklab, var(--cs-color-danger-500) 18%, white),
+        color-mix(in oklab, var(--cs-color-danger-500) 32%, var(--cs-color-base-950))
     );
     --cs-color-danger-soft-fg: light-dark(var(--cs-color-danger-600), var(--cs-color-danger-400));
     --cs-color-danger-solid: light-dark(
@@ -100,12 +100,12 @@
 
     /* Info Soft & Solid */
     --cs-color-info-soft: light-dark(
-        color-mix(in oklch, var(--cs-color-info-500) 10%, transparent),
-        color-mix(in oklch, var(--cs-color-info-500) 16%, transparent)
+        color-mix(in oklab, var(--cs-color-info-500) 12%, white),
+        color-mix(in oklab, var(--cs-color-info-500) 24%, var(--cs-color-base-950))
     );
     --cs-color-info-soft-hover: light-dark(
-        color-mix(in oklch, var(--cs-color-info-500) 16%, transparent),
-        color-mix(in oklch, var(--cs-color-info-500) 24%, transparent)
+        color-mix(in oklab, var(--cs-color-info-500) 18%, white),
+        color-mix(in oklab, var(--cs-color-info-500) 32%, var(--cs-color-base-950))
     );
     --cs-color-info-soft-fg: light-dark(var(--cs-color-info-600), var(--cs-color-info-400));
     --cs-color-info-solid: light-dark(
