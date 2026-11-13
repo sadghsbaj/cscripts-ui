@@ -6,13 +6,19 @@
     import { HitArea } from "cs/svelte/hit-area";
     import { ScrollArea, ScrollAreaContent } from "cs/svelte/scroll-area";
     import { scrollFade } from "cs/svelte/scroll-fade";
-    import { GERMAN_THEME_LABELS, theme, THEME_ICONS } from "cs/svelte/theme";
+    import { theme, THEME_ICONS, type ThemeMode } from "cs/svelte/theme";
     import { tooltip } from "cs/svelte/tooltip";
     import {
         PREVIEW_CATEGORIES,
         PREVIEW_CATEGORY_LABELS,
         type PreviewCategory,
     } from "../components/index.ts";
+
+    const THEME_LABELS: Record<ThemeMode, string> = {
+        system: "System",
+        light: "Light",
+        dark: "Dark",
+    };
 
     interface SvelteModule {
         default: Component;
@@ -47,7 +53,7 @@
             category: module.category,
             preview: module.default,
         }))
-        .toSorted((a, b) => a.label.localeCompare(b.label, "de"));
+        .toSorted((a, b) => a.label.localeCompare(b.label, "en"));
 
     const hasExplicitCategories = previews.some((item) => item.category !== undefined);
 
@@ -72,7 +78,7 @@
         if (uncategorized.length > 0) {
             groups.push({
                 id: "other",
-                label: "Weitere",
+                label: "Other",
                 items: uncategorized,
             });
         }
@@ -146,9 +152,9 @@
             size="md"
             variant="elevated"
             iconOnly
-            aria-label="Theme umschalten ({GERMAN_THEME_LABELS[theme.mode]})"
+            aria-label="Switch theme ({THEME_LABELS[theme.mode]})"
             onclick={() => theme.cycle()}
-            {@attach tooltip(`Theme: ${GERMAN_THEME_LABELS[theme.mode]}`)}
+            {@attach tooltip(`Theme: ${THEME_LABELS[theme.mode]}`)}
         >
             <ButtonIcon icon={THEME_ICONS[theme.mode]} />
             <HitArea size="md" />
@@ -158,9 +164,9 @@
             size="md"
             variant="elevated"
             iconOnly
-            aria-label={sidebarIsOpen ? "Sidebar schließen" : "Sidebar öffnen"}
+            aria-label={sidebarIsOpen ? "Close sidebar" : "Open sidebar"}
             onclick={() => (sidebarIsOpen = !sidebarIsOpen)}
-            {@attach tooltip(sidebarIsOpen ? "Sidebar schließen" : "Sidebar öffnen")}
+            {@attach tooltip(sidebarIsOpen ? "Close sidebar" : "Open sidebar")}
         >
             <ButtonIcon icon={sidebarIsOpen ? PanelLeftClose : PanelLeftOpen} />
             <HitArea size="md" />

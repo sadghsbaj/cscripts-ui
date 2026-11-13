@@ -11,9 +11,12 @@
     import { tooltip } from "cs/svelte/tooltip";
     import { PreviewHeader, PreviewSection } from "../../components/index.ts";
 
+    const closeScript = ["</", "script>"].join("");
+
+    /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
     const basicCode = `<script lang="ts">
     import { Button, ButtonLabel } from "cs/svelte/button";
-<\/script>
+${closeScript}
 
 <Button variant="primary" size="md">
     <ButtonLabel>Save changes</ButtonLabel>
@@ -86,6 +89,7 @@
 <Button variant="secondary" size="md" disabled>
     <ButtonLabel>Disabled</ButtonLabel>
 </Button>`;
+    /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 </script>
 
 <div class="flex flex-col gap-10">

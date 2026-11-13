@@ -26,7 +26,10 @@ export const noTitleAttributeRule: Rule.RuleModule = {
 
         return {
             SvelteAttribute(rawNode: Rule.Node): void {
-                const node = rawNode as unknown as AST.SvelteAttribute;
+                const node = rawNode as unknown as AST.SvelteAttribute & {
+                    parent?: AST.SvelteStartTag & { parent?: AST.SvelteElement };
+                };
+                if (node.parent?.parent?.kind === "component") return;
                 if (node.key?.name === "title") {
                     context.report({
                         node: rawNode,

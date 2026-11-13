@@ -189,11 +189,14 @@ describe("utils AST helpers", () => {
             `);
 
             const [b1, b2, b3, b4, b5] = parsed.elements;
-            expect(hasTooltipAttachment(b1!)).toBe(true);
-            expect(hasTooltipAttachment(b2!)).toBe(true);
-            expect(hasTooltipAttachment(b3!)).toBe(true);
-            expect(hasTooltipAttachment(b4!)).toBe(true);
-            expect(hasTooltipAttachment(b5!)).toBe(false);
+            if (!b1 || !b2 || !b3 || !b4 || !b5) {
+                throw new Error("Expected 5 parsed button elements");
+            }
+            expect(hasTooltipAttachment(b1)).toBe(true);
+            expect(hasTooltipAttachment(b2)).toBe(true);
+            expect(hasTooltipAttachment(b3)).toBe(true);
+            expect(hasTooltipAttachment(b4)).toBe(true);
+            expect(hasTooltipAttachment(b5)).toBe(false);
         });
     });
 });

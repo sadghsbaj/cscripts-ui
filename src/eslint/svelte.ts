@@ -28,6 +28,12 @@ export const svelteConfig: Linter.Config[] = [
         },
     },
     {
+        files: ["**/*.html"],
+        rules: {
+            "svelte/no-raw-special-elements": "off",
+        },
+    },
+    {
         files: ["**/*.svelte"],
         rules: {
             "prefer-const": "off",

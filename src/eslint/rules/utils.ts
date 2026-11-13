@@ -215,22 +215,22 @@ export function hasTooltipAttachment(node: AST.SvelteElement): boolean {
     }
 
     for (const attr of node.startTag.attributes) {
-        if (attr.type === "SvelteAttachTag") {
-            const expr = attr.expression;
-            if (expr.type === "CallExpression") {
-                if (expr.callee.type === "Identifier" && expr.callee.name.toLowerCase().includes("tooltip")) {
-                    return true;
-                }
-                if (
-                    expr.callee.type === "MemberExpression" &&
-                    expr.callee.property.type === "Identifier" &&
-                    expr.callee.property.name.toLowerCase().includes("tooltip")
-                ) {
-                    return true;
-                }
-            } else if (expr.type === "Identifier" && expr.name.toLowerCase().includes("tooltip")) {
+        if (attr.type !== "SvelteAttachTag") continue;
+
+        const expr = attr.expression;
+        if (expr.type === "CallExpression") {
+            if (expr.callee.type === "Identifier" && expr.callee.name.toLowerCase().includes("tooltip")) {
                 return true;
             }
+            if (
+                expr.callee.type === "MemberExpression" &&
+                expr.callee.property.type === "Identifier" &&
+                expr.callee.property.name.toLowerCase().includes("tooltip")
+            ) {
+                return true;
+            }
+        } else if (expr.type === "Identifier" && expr.name.toLowerCase().includes("tooltip")) {
+            return true;
         }
     }
 

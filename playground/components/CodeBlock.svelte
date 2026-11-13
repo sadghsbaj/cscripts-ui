@@ -53,9 +53,9 @@
             variant="ghost"
             size="xs"
             iconOnly
-            aria-label="Code kopieren"
+            aria-label="Copy code"
             {@attach copyOnClick(trimmedCode)}
-            {@attach tooltip("Code kopieren")}
+            {@attach tooltip("Copy code")}
         >
             <CopyIcon />
             <HitArea size="md" />
