@@ -5,33 +5,55 @@
 
 <script lang="ts">
     import { BackgroundPattern } from "cs/svelte/background-pattern";
-    import { FADE_MASK_STRENGTHS, FADE_MASK_VARIANTS, fadeMask, type FadeMaskVariant } from "cs/svelte/fade-mask";
+    import { FADE_MASK_STRENGTHS, FADE_MASK_VARIANTS, fadeMask } from "cs/svelte/fade-mask";
+    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+
+    const closeScript = ["</", "script>"].join("");
+
+    const basicCode = `<script lang="ts">
+    import { BackgroundPattern } from "cs/svelte/background-pattern";
+    import { fadeMask } from "cs/svelte/fade-mask";
+${closeScript}
+
+<div class="relative isolate overflow-hidden h-44 w-full rounded-2xl border border-base-soft bg-canvas">
+    <BackgroundPattern variant="grid" size="md" {@attach fadeMask({ variant: "radial", strength: "md" })} />
+</div>`;
+
+    const variantsCode = `<BackgroundPattern variant="grid" size="md" {@attach fadeMask({ variant: "radial", strength: "sm" })} />
+<BackgroundPattern variant="grid" size="md" {@attach fadeMask({ variant: "radial", strength: "lg" })} />
+<BackgroundPattern variant="grid" size="md" {@attach fadeMask({ variant: "linear", strength: "md" })} />`;
 </script>
 
-<div class="flex justify-center">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        {#each FADE_MASK_VARIANTS as variant (variant)}
-            {@render previewCard(false, variant)}
-            {@render previewCard(true, variant)}
-        {/each}
-    </div>
-</div>
+<div class="flex flex-col gap-10">
+    <PreviewHeader
+        title="fadeMask"
+        description="Applies soft radial or linear CSS alpha masks to fade edges into the surrounding surface."
+    />
 
-{#snippet previewCard(isElevated: boolean, variant: FadeMaskVariant)}
-    {#each FADE_MASK_STRENGTHS as strength (strength)}
-        <div
-            class="{!isElevated
-                ? 'bg-elevated shadow-elevated'
-                : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
-        >
-            <h2 class="title-2xl">
-                {variant[0]?.toUpperCase() + variant.slice(1)} ({strength})
-            </h2>
-            <div class="w-full h-full flex flex-col gap-2">
-                <div class="flex gap-3 justify-between h-full">
-                    <BackgroundPattern variant="grid" size="md" {@attach fadeMask({ variant, strength })} />
-                </div>
-            </div>
+    <PreviewSection title="Basic" code={basicCode}>
+        <div class="relative isolate overflow-hidden h-44 w-full max-w-md rounded-2xl border border-base-soft bg-canvas">
+            <BackgroundPattern
+                variant="grid"
+                size="md"
+                {@attach fadeMask({ variant: "radial", strength: "md" })}
+            />
         </div>
-    {/each}
-{/snippet}
+    </PreviewSection>
+
+    <PreviewSection title="Variants & Strengths" code={variantsCode}>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+            {#each FADE_MASK_VARIANTS as variant (variant)}
+                {#each FADE_MASK_STRENGTHS as strength (strength)}
+                    <div
+                        class="relative isolate overflow-hidden h-36 rounded-2xl border border-base-soft bg-canvas flex items-end p-3"
+                    >
+                        <BackgroundPattern variant="grid" size="md" {@attach fadeMask({ variant, strength })} />
+                        <span class="relative z-10 text-xs font-medium text-weak capitalize">
+                            {variant} ({strength})
+                        </span>
+                    </div>
+                {/each}
+            {/each}
+        </div>
+    </PreviewSection>
+</div>

@@ -7,115 +7,121 @@
     import { Button, ButtonLabel } from "cs/svelte/button";
     import { autoFocus } from "cs/svelte/focus";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
+    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
 
     let showSelectAll = $state(true);
     let showContainerForm = $state(false);
     let showCursorEnd = $state(false);
+
+    const closeScript = ["</", "script>"].join("");
+
+    const selectAllCode = `<script lang="ts">
+    import { autoFocus } from "cs/svelte/focus";
+${closeScript}
+
+<input
+    type="text"
+    value="https://cscripts.dev/components"
+    {@attach autoFocus({ select: "all" })}
+/>`;
+
+    const containerCode = `<div {@attach autoFocus("first-focusable")}>
+    <input type="text" placeholder="First name (focused)" />
+    <input type="text" placeholder="Last name" />
+</div>`;
+
+    const cursorEndCode = `<input
+    type="text"
+    value="#todo: "
+    {@attach autoFocus({ select: "end", restoreFocus: true })}
+/>`;
 </script>
 
-<div class="flex justify-center">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        <!-- 1. Select All on Mount -->
-        <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
-        >
-            <div class="flex flex-col gap-1 w-full">
-                <h2 class="title-xl">Select All</h2>
-                <span class="description-sm whitespace-nowrap">Text direkt vollständig markiert</span>
-            </div>
+<div class="flex flex-col gap-10">
+    <PreviewHeader
+        title="autoFocus"
+        description="Focuses an element or its first focusable descendant on mount with optional text selection and focus restoration."
+    />
 
-            <div class="w-full flex flex-col gap-3 min-h-100px justify-center">
-                {#if showSelectAll}
+    <PreviewSection
+        title="Select All on Mount"
+        description="Focuses the input and selects its full value when mounted."
+        code={selectAllCode}
+    >
+        <div class="flex flex-col gap-3 w-full max-w-sm">
+            {#if showSelectAll}
+                <input
+                    type="text"
+                    value="https://cscripts.dev/components"
+                    class="bg-sunken shadow-sunken rounded-xl squircle-soft px-3.5 h-36px w-full text-sm outline-none text-main"
+                    {@attach autoFocus({ select: "all" })}
+                />
+            {:else}
+                <div class="h-36px flex items-center text-weak text-sm">Unmounted</div>
+            {/if}
+
+            <Button
+                variant="secondary"
+                size="sm"
+                class="self-start"
+                onclick={() => {
+                    showSelectAll = false;
+                    setTimeout(() => (showSelectAll = true), 50);
+                }}
+            >
+                <ButtonLabel>Remount</ButtonLabel>
+            </Button>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Container Target"
+        description="Attach to a wrapper to automatically focus the first interactive child."
+        code={containerCode}
+    >
+        <div class="flex flex-col gap-3 w-full max-w-sm">
+            <ToggleButton variant="soft" color="accent" size="sm" class="self-start" bind:pressed={showContainerForm}>
+                <ToggleButtonLabel>{showContainerForm ? "Close form" : "Open form"}</ToggleButtonLabel>
+            </ToggleButton>
+
+            {#if showContainerForm}
+                <div
+                    class="bg-sunken shadow-sunken rounded-2xl squircle-soft p-4 flex flex-col gap-3 w-full"
+                    {@attach autoFocus("first-focusable")}
+                >
                     <input
                         type="text"
-                        value="https://cscripts.dev/components"
-                        class="bg-sunken rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main focus-visible:ring-2 focus-visible:ring-accent-500"
-                        {@attach autoFocus({ select: "all" })}
+                        placeholder="First name (focused)"
+                        class="bg-elevated rounded-xl squircle-soft px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
                     />
-                {:else}
-                    <div class="h-36px flex items-center text-weak text-sm">Unmounted</div>
-                {/if}
-
-                <Button
-                    variant="secondary"
-                    size="sm"
-                    onclick={() => {
-                        showSelectAll = false;
-                        setTimeout(() => (showSelectAll = true), 50);
-                    }}
-                >
-                    <ButtonLabel>Remount</ButtonLabel>
-                </Button>
-            </div>
-        </div>
-
-        <!-- 2. Container Target (First Interactive Child) -->
-        <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
-        >
-            <div class="flex flex-col gap-1 w-full">
-                <h2 class="title-xl">Container Target</h2>
-                <span class="description-sm whitespace-nowrap">Fokussiert erstes Kind im Formular</span>
-            </div>
-
-            <div class="w-full flex flex-col gap-3 min-h-100px justify-center">
-                <ToggleButton
-                    variant="soft"
-                    color="accent"
-                    size="sm"
-                    bind:pressed={showContainerForm}
-                >
-                    <ToggleButtonLabel>{showContainerForm ? "Formular schließen" : "Formular öffnen"}</ToggleButtonLabel>
-                </ToggleButton>
-
-                {#if showContainerForm}
-                    <div
-                        class="bg-sunken rounded-2xl squircle p-4 flex flex-col gap-3 w-full"
-                        {@attach autoFocus("first-focusable")}
-                    >
-                        <input
-                            type="text"
-                            placeholder="Vorname (fokussiert)"
-                            class="bg-elevated rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Nachname"
-                            class="bg-elevated rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
-                        />
-                    </div>
-                {/if}
-            </div>
-        </div>
-
-        <!-- 3. Cursor End & Restore Focus -->
-        <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
-        >
-            <div class="flex flex-col gap-1 w-full">
-                <h2 class="title-xl">Cursor at End</h2>
-                <span class="description-sm whitespace-nowrap">Cursor am Ende & Restore Fokus</span>
-            </div>
-
-            <div class="w-full flex flex-col gap-3 min-h-100px justify-center">
-                <ToggleButton
-                    variant="soft"
-                    color="accent"
-                    size="sm"
-                    bind:pressed={showCursorEnd}
-                >
-                    <ToggleButtonLabel>{showCursorEnd ? "Notiz schließen" : "Notiz öffnen"}</ToggleButtonLabel>
-                </ToggleButton>
-
-                {#if showCursorEnd}
                     <input
                         type="text"
-                        value="#todo: "
-                        class="bg-sunken rounded-xl squircle px-3.5 h-36px w-full text-sm outline-none text-main focus-visible:ring-2 focus-visible:ring-accent-500"
-                        {@attach autoFocus({ select: "end", restoreFocus: true })}
+                        placeholder="Last name"
+                        class="bg-elevated rounded-xl squircle-soft px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
                     />
-                {/if}
-            </div>
+                </div>
+            {/if}
         </div>
-    </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Cursor at End & Restore Focus"
+        description="Places the caret at the end of the text and restores focus to the trigger on unmount."
+        code={cursorEndCode}
+    >
+        <div class="flex flex-col gap-3 w-full max-w-sm">
+            <ToggleButton variant="soft" color="accent" size="sm" class="self-start" bind:pressed={showCursorEnd}>
+                <ToggleButtonLabel>{showCursorEnd ? "Close note" : "Open note"}</ToggleButtonLabel>
+            </ToggleButton>
+
+            {#if showCursorEnd}
+                <input
+                    type="text"
+                    value="#todo: "
+                    class="bg-sunken shadow-sunken rounded-xl squircle-soft px-3.5 h-36px w-full text-sm outline-none text-main"
+                    {@attach autoFocus({ select: "end", restoreFocus: true })}
+                />
+            {/if}
+        </div>
+    </PreviewSection>
 </div>

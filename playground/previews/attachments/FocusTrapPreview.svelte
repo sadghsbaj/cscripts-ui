@@ -9,72 +9,102 @@
     import { focusTrap } from "cs/svelte/focus";
     import { HitArea } from "cs/svelte/hit-area";
     import { Overlay } from "cs/svelte/overlay";
+    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
 
     let isStandardOpen = $state(false);
     let isTargetOpen = $state(false);
     let isParentOpen = $state(false);
     let isChildOpen = $state(false);
-</script>
 
-<div class="flex justify-center">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        <!-- 1. Standard Dialog Trap -->
+    const closeScript = ["</", "script>"].join("");
+
+    const standardCode = `<script lang="ts">
+    import { focusTrap } from "cs/svelte/focus";
+    import { Overlay } from "cs/svelte/overlay";
+
+    let isOpen = $state(false);
+${closeScript}
+
+{#if isOpen}
+    <Overlay variant="blur" onclick={() => (isOpen = false)}>
         <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
+            role="dialog"
+            aria-modal="true"
+            {@attach focusTrap({
+                initialFocus: "first-focusable",
+                onEscape: () => (isOpen = false),
+                allowOutsideClick: true,
+            })}
         >
-            <div class="flex flex-col gap-1 w-full">
-                <h2 class="title-xl">Standard Modal</h2>
-                <span class="description-sm whitespace-nowrap">Tab-Zyklus & Escape-Handler</span>
-            </div>
-
-            <div class="w-full flex-center min-h-100px">
-                <Button variant="primary" size="md" onclick={() => (isStandardOpen = true)}>
-                    <ButtonLabel>Modal öffnen</ButtonLabel>
-                </Button>
-            </div>
+            <!-- Dialog content -->
         </div>
+    </Overlay>
+{/if}`;
 
-        <!-- 2. Targeted Initial Focus -->
-        <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
-        >
-            <div class="flex flex-col gap-1 w-full">
-                <h2 class="title-xl">Targeted Initial Focus</h2>
-                <span class="description-sm whitespace-nowrap">initialFocus: "#danger-confirm"</span>
-            </div>
+    const targetCode = `<div
+    role="dialog"
+    aria-modal="true"
+    {@attach focusTrap({
+        initialFocus: "#danger-confirm",
+        onEscape: () => (isOpen = false),
+    })}
+>
+    <button id="danger-confirm">Delete</button>
+</div>`;
 
-            <div class="w-full flex-center min-h-100px">
-                <Button variant="secondary" danger size="md" onclick={() => (isTargetOpen = true)}>
-                    <ButtonLabel>Löschen bestätigen</ButtonLabel>
-                </Button>
-            </div>
-        </div>
-
-        <!-- 3. Nested Trap Stack -->
-        <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-240px flex flex-col justify-between items-start gap-6"
-        >
-            <div class="flex flex-col gap-1 w-full">
-                <h2 class="title-xl">Nested Traps</h2>
-                <span class="description-sm whitespace-nowrap">Automatischer Trap-Stack</span>
-            </div>
-
-            <div class="w-full flex-center min-h-100px">
-                <Button variant="tertiary" size="md" onclick={() => (isParentOpen = true)}>
-                    <ButtonLabel>Multi-Level öffnen</ButtonLabel>
-                </Button>
-            </div>
-        </div>
-    </div>
+    const nestedCode = `<!-- Stacked focus traps pause parent traps automatically -->
+<div {@attach focusTrap({ initialFocus: "first-focusable", onEscape: () => (isParentOpen = false) })}>
+    ...
 </div>
 
-<!-- 1. Standard Modal Overlay -->
+<div {@attach focusTrap({ initialFocus: "first-focusable", onEscape: () => (isChildOpen = false) })}>
+    ...
+</div>`;
+</script>
+
+<div class="flex flex-col gap-10">
+    <PreviewHeader
+        title="focusTrap"
+        description="Confines keyboard Tab navigation inside modals and supports Escape handling and nested trap stacks."
+    />
+
+    <PreviewSection
+        title="Standard Dialog Trap"
+        description="Cycles Tab focus within the dialog and closes on Escape or backdrop click."
+        code={standardCode}
+    >
+        <Button variant="primary" size="md" onclick={() => (isStandardOpen = true)}>
+            <ButtonLabel>Open modal</ButtonLabel>
+        </Button>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Targeted Initial Focus"
+        description="Pass a CSS selector to initialFocus to focus a specific control when mounted."
+        code={targetCode}
+    >
+        <Button variant="secondary" danger size="md" onclick={() => (isTargetOpen = true)}>
+            <ButtonLabel>Confirm deletion</ButtonLabel>
+        </Button>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Nested Trap Stack"
+        description="Opening a child dialog pauses the parent trap and restores it when closed."
+        code={nestedCode}
+    >
+        <Button variant="tertiary" size="md" onclick={() => (isParentOpen = true)}>
+            <ButtonLabel>Open multi-level</ButtonLabel>
+        </Button>
+    </PreviewSection>
+</div>
+
 {#if isStandardOpen}
     <Overlay variant="blur" onclick={() => (isStandardOpen = false)}>
         <div
             role="dialog"
             aria-modal="true"
-            aria-label="Einstellungen"
+            aria-label="Settings"
             class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-400px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
@@ -83,7 +113,7 @@
             })}
         >
             <div class="flex justify-between items-center w-full">
-                <h3 class="title-xl">Einstellungen</h3>
+                <h3 class="title-xl text-strong">Settings</h3>
                 <CloseButton
                     variant="soft"
                     size="sm"
@@ -97,35 +127,34 @@
             <div class="flex flex-col gap-3">
                 <input
                     type="text"
-                    placeholder="Benutzername"
+                    placeholder="Username"
                     class="bg-sunken shadow-sunken rounded-full squircle-smooth px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
                 />
                 <input
                     type="password"
-                    placeholder="Passwort"
+                    placeholder="Password"
                     class="bg-sunken shadow-sunken rounded-full squircle-smooth px-3.5 h-36px w-full text-sm outline-none text-main placeholder:text-weaker"
                 />
             </div>
 
             <div class="flex justify-end gap-3 w-full">
                 <Button variant="tertiary" size="md" onclick={() => (isStandardOpen = false)}>
-                    <ButtonLabel>Abbrechen</ButtonLabel>
+                    <ButtonLabel>Cancel</ButtonLabel>
                 </Button>
                 <Button variant="primary" size="md" onclick={() => (isStandardOpen = false)}>
-                    <ButtonLabel>Speichern</ButtonLabel>
+                    <ButtonLabel>Save</ButtonLabel>
                 </Button>
             </div>
         </div>
     </Overlay>
 {/if}
 
-<!-- 2. Targeted Initial Focus Overlay -->
 {#if isTargetOpen}
     <Overlay variant="dim" onclick={() => (isTargetOpen = false)}>
         <div
             role="dialog"
             aria-modal="true"
-            aria-label="Löschen bestätigen"
+            aria-label="Confirm deletion"
             class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-380px relative"
             {@attach focusTrap({
                 initialFocus: "#danger-confirm",
@@ -133,7 +162,7 @@
             })}
         >
             <div class="flex justify-between items-center w-full">
-                <h3 class="title-xl">Wirklich löschen?</h3>
+                <h3 class="title-xl text-strong">Delete this item?</h3>
                 <CloseButton
                     variant="soft"
                     size="sm"
@@ -144,13 +173,13 @@
                 </CloseButton>
             </div>
 
-            <p class="description-sm">
-                Dieser Eintrag wird unwiderruflich gelöscht. Der Fokus liegt initial direkt auf dem roten Button.
+            <p class="text-sm text-weak">
+                This action cannot be undone. Initial focus is placed directly on the destructive action.
             </p>
 
             <div class="flex justify-end gap-3 w-full">
                 <Button variant="tertiary" size="md" onclick={() => (isTargetOpen = false)}>
-                    <ButtonLabel>Abbrechen</ButtonLabel>
+                    <ButtonLabel>Cancel</ButtonLabel>
                 </Button>
                 <Button
                     id="danger-confirm"
@@ -159,28 +188,27 @@
                     size="md"
                     onclick={() => (isTargetOpen = false)}
                 >
-                    <ButtonLabel>Löschen</ButtonLabel>
+                    <ButtonLabel>Delete</ButtonLabel>
                 </Button>
             </div>
         </div>
     </Overlay>
 {/if}
 
-<!-- 3. Nested Trap Overlays -->
 {#if isParentOpen}
     <Overlay variant="dim" onclick={() => (isParentOpen = false)}>
         <div
             role="dialog"
             aria-modal="true"
-            aria-label="Ebene 1 Modal"
-            class="bg-elevated shadow-sunken rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-440px relative"
+            aria-label="Level 1 dialog"
+            class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-440px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isParentOpen = false),
             })}
         >
             <div class="flex justify-between items-center w-full">
-                <h3 class="title-xl">Ebene 1: Haupt-Dialog</h3>
+                <h3 class="title-xl text-strong">Level 1: Main Dialog</h3>
                 <CloseButton
                     variant="soft"
                     size="sm"
@@ -191,16 +219,16 @@
                 </CloseButton>
             </div>
 
-            <p class="description-sm">
-                Wenn du den Sub-Dialog öffnest, pausiert Ebene 1 automatisch und reaktiviert sich beim Schließen.
+            <p class="text-sm text-weak">
+                Opening the child dialog automatically pauses this trap and resumes it once the child closes.
             </p>
 
             <div class="flex justify-between items-center w-full">
                 <Button variant="secondary" size="sm" onclick={() => (isChildOpen = true)}>
-                    <ButtonLabel>Ebene 2 öffnen</ButtonLabel>
+                    <ButtonLabel>Open level 2</ButtonLabel>
                 </Button>
                 <Button variant="tertiary" size="md" onclick={() => (isParentOpen = false)}>
-                    <ButtonLabel>Schließen</ButtonLabel>
+                    <ButtonLabel>Close</ButtonLabel>
                 </Button>
             </div>
         </div>
@@ -212,7 +240,7 @@
         <div
             role="dialog"
             aria-modal="true"
-            aria-label="Ebene 2 Sub-Dialog"
+            aria-label="Level 2 sub-dialog"
             class="bg-elevated shadow-elevated rounded-3xl squircle p-8 flex flex-col gap-6 w-full max-w-360px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
@@ -220,7 +248,7 @@
             })}
         >
             <div class="flex justify-between items-center w-full">
-                <h3 class="title-xl">Ebene 2: Sub-Dialog</h3>
+                <h3 class="title-xl text-strong">Level 2: Sub-Dialog</h3>
                 <CloseButton
                     variant="ghost"
                     size="sm"
@@ -231,11 +259,11 @@
                 </CloseButton>
             </div>
 
-            <p class="description-sm">Fokus ist jetzt hier gefangen. Escape schließt nur diesen Sub-Dialog.</p>
+            <p class="text-sm text-weak">Focus is trapped here. Pressing Escape closes only this sub-dialog.</p>
 
             <div class="flex justify-end gap-3 w-full">
                 <Button variant="primary" size="sm" onclick={() => (isChildOpen = false)}>
-                    <ButtonLabel>Fertig</ButtonLabel>
+                    <ButtonLabel>Done</ButtonLabel>
                 </Button>
             </div>
         </div>
