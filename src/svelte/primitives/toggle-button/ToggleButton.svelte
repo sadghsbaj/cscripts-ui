@@ -88,7 +88,7 @@ Architectural Notes:
             font-weight: 600;
             white-space: nowrap;
             border-radius: var(--_pill-radius);
-            corner-shape: var(--cs-squircle-smooth);
+            corner-shape: var(--cs-squircle-soft);
             transition:
                 color 200ms var(--cs-ease-quad-out),
                 scale 200ms var(--cs-ease-expo-out);
@@ -253,7 +253,6 @@ Architectural Notes:
                 --_active-squash: var(--cs-squash-default);
                 aspect-ratio: 1;
                 padding-inline: 0;
-                corner-shape: var(--cs-squircle-soft);
             }
 
             /* =========================================================

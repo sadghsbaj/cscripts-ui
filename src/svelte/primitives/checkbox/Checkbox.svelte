@@ -81,7 +81,7 @@ Architectural Notes:
             height: var(--_size);
             appearance: none;
             background-color: var(--_bg);
-            border-radius: 40%;
+            border-radius: var(--_radius);
             corner-shape: var(--cs-squircle-soft);
             box-shadow: var(--_shadow, none);
 
@@ -95,22 +95,27 @@ Architectural Notes:
             * ========================================================= */
             &[data-size="xs"] {
                 --_size: 12px;
+                --_radius: 4px;
             }
 
             &[data-size="sm"] {
                 --_size: 16px;
+                --_radius: 5px;
             }
 
             &[data-size="md"] {
                 --_size: 20px;
+                --_radius: 6px;
             }
 
             &[data-size="lg"] {
                 --_size: 24px;
+                --_radius: 7px;
             }
 
             &[data-size="xl"] {
                 --_size: 28px;
+                --_radius: 8px;
             }
 
             /* =========================================================

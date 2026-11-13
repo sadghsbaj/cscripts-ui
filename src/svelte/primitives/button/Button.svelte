@@ -46,7 +46,7 @@ Architectural Notes:
             font-weight: 600;
             white-space: nowrap;
             border-radius: var(--_pill-radius);
-            corner-shape: var(--cs-squircle-smooth);
+            corner-shape: var(--cs-squircle-soft);
             transition:
                 color 200ms var(--cs-ease-quad-out),
                 scale 200ms var(--cs-ease-expo-out);
@@ -85,6 +85,17 @@ Architectural Notes:
                     }
                 }
             }
+
+            /* =========================================================
+             * INTENT TOKENS (Accent by default, overridden by [data-danger])
+             * ---------------------------------------------------------
+             * Uses `*-soft-fg` (600 light / 400 dark) for chromatic text on
+             * neutral `base-soft` / transparent surfaces to guarantee contrast.
+             * ========================================================= */
+            --_solid-bg: var(--cs-color-accent-solid);
+            --_solid-bg-hover: var(--cs-color-accent-solid-hover);
+            --_solid-fg: var(--cs-color-accent-solid-fg);
+            --_accent-fg: var(--cs-color-accent-soft-fg);
 
             /* =========================================================
              * ACTIVE STATES (Pointer vs. Keyboard)
@@ -175,19 +186,7 @@ Architectural Notes:
                 --_active-squash: var(--cs-squash-default);
                 aspect-ratio: 1;
                 padding-inline: 0;
-                corner-shape: var(--cs-squircle-soft);
             }
-
-            /* =========================================================
-             * INTENT TOKENS (Accent by default, overridden by [data-danger])
-             * ---------------------------------------------------------
-             * Uses `*-soft-fg` (600 light / 400 dark) for chromatic text on
-             * neutral `base-soft` / transparent surfaces to guarantee contrast.
-             * ========================================================= */
-            --_solid-bg: var(--cs-color-accent-solid);
-            --_solid-bg-hover: var(--cs-color-accent-solid-hover);
-            --_solid-fg: var(--cs-color-accent-solid-fg);
-            --_accent-fg: var(--cs-color-accent-soft-fg);
 
             &[data-danger] {
                 --_solid-bg: var(--cs-color-danger-solid);

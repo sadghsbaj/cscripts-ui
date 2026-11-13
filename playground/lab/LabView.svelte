@@ -8,11 +8,12 @@
     import { tooltip } from "cs/svelte/tooltip";
 
     import ButtonRadiusExperiment from "./ButtonRadiusExperiment.svelte";
-    import ButtonSoftExperiment from "./ButtonSoftExperiment.svelte";
     import ModalRadiusExperiment from "./ModalRadiusExperiment.svelte";
+    import RadiusSystemExperiment from "./RadiusSystemExperiment.svelte";
     import ToggleRadiusExperiment from "./ToggleRadiusExperiment.svelte";
+    import TooltipShapeExperiment from "./TooltipShapeExperiment.svelte";
 
-    let activeExperiment = $state<"soft" | "radius" | "modal" | "toggle-radius">("toggle-radius");
+    let activeExperiment = $state<"system" | "radius" | "modal" | "toggle-radius" | "tooltip-shape">("tooltip-shape");
 </script>
 
 <div class="size-full relative bg-elevation-0">
@@ -33,8 +34,8 @@
     <ScrollArea size="lg" direction="vertical" class="size-full">
         <ScrollAreaContent class="min-h-full flex items-center flex-col gap-8 p-8 lg:p-16">
             <ToggleButtonGroup type="single" orientation="horizontal" bind:value={activeExperiment}>
-                <ToggleButton value="soft" variant="soft" color="accent" size="sm">
-                    <ToggleButtonLabel>Soft: Farbig vs. Neutral-Base</ToggleButtonLabel>
+                <ToggleButton value="system" variant="soft" color="accent" size="sm">
+                    <ToggleButtonLabel>System: Pill vs. Erwachsen</ToggleButtonLabel>
                 </ToggleButton>
                 <ToggleButtonGroupSeparator />
                 <ToggleButton value="radius" variant="soft" color="accent" size="sm">
@@ -48,16 +49,22 @@
                 <ToggleButton value="toggle-radius" variant="soft" color="accent" size="sm">
                     <ToggleButtonLabel>Toggle: Pill vs. 10/12/14px</ToggleButtonLabel>
                 </ToggleButton>
+                <ToggleButtonGroupSeparator />
+                <ToggleButton value="tooltip-shape" variant="soft" color="accent" size="sm">
+                    <ToggleButtonLabel>Tooltip: Smooth vs. Soft</ToggleButtonLabel>
+                </ToggleButton>
             </ToggleButtonGroup>
 
-            {#if activeExperiment === "soft"}
-                <ButtonSoftExperiment />
+            {#if activeExperiment === "system"}
+                <RadiusSystemExperiment />
             {:else if activeExperiment === "radius"}
                 <ButtonRadiusExperiment />
             {:else if activeExperiment === "modal"}
                 <ModalRadiusExperiment />
-            {:else}
+            {:else if activeExperiment === "toggle-radius"}
                 <ToggleRadiusExperiment />
+            {:else}
+                <TooltipShapeExperiment />
             {/if}
         </ScrollAreaContent>
     </ScrollArea>

@@ -85,7 +85,7 @@ Architectural Notes:
             padding-inline: 8px;
             background-color: var(--cs-color-elevation-1);
             border-radius: var(--cs-radius-full);
-            corner-shape: var(--cs-squircle-smooth);
+            corner-shape: var(--cs-squircle-soft);
             box-shadow: var(--cs-shadow-elevation-1);
         }
 
