@@ -1,5 +1,9 @@
 import { createCssVariablesTheme, createHighlighterCore, type HighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import bash from "shiki/langs/bash.mjs";
+import css from "shiki/langs/css.mjs";
+import svelte from "shiki/langs/svelte.mjs";
+import typescript from "shiki/langs/typescript.mjs";
 
 export type HighlightLanguage = "svelte" | "typescript" | "css" | "bash";
 
@@ -16,12 +20,7 @@ function getHighlighter(): Promise<HighlighterCore> {
     if (!highlighterPromise) {
         highlighterPromise = createHighlighterCore({
             themes: [monoTheme],
-            langs: [
-                import("shiki/langs/svelte.mjs"),
-                import("shiki/langs/typescript.mjs"),
-                import("shiki/langs/css.mjs"),
-                import("shiki/langs/bash.mjs"),
-            ],
+            langs: [svelte, typescript, css, bash],
             engine: createJavaScriptRegexEngine(),
         });
     }
