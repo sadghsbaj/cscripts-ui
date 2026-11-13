@@ -30,7 +30,7 @@ html,
     -webkit-font-smoothing: antialiased;
     line-height: var(--cs-leading-normal);
     tab-size: 4;
-    caret-color: light-dark(var(--cs-color-accent-600), var(--cs-color-accent-500));
+    caret-color: var(--cs-color-accent-solid);
 }
 
 body {
