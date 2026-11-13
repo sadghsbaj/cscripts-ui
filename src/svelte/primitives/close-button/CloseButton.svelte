@@ -72,12 +72,17 @@ Architectural Notes:
             }
 
             @media (hover: hover) {
-                &:hover {
+                &:hover,
+                &[data-morph-hover] {
                     color: var(--_fg-hover, var(--_fg));
                     &::before {
                         background-color: var(--_bg-hover);
                         box-shadow: var(--_shadow-hover, var(--_shadow, none));
                     }
+                }
+
+                &[data-morph-hover]::before {
+                    transition: none;
                 }
             }
 

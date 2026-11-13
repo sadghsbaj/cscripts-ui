@@ -141,7 +141,8 @@ Architectural Notes:
             }
 
             @media (hover: hover) {
-                &:hover {
+                &:hover,
+                &[data-morph-hover] {
                     color: var(--_fg-hover, var(--_fg));
 
                     &::before {
@@ -152,6 +153,11 @@ Architectural Notes:
                     &::after {
                         background-color: var(--_fill-bg-hover);
                     }
+                }
+
+                &[data-morph-hover]::before,
+                &[data-morph-hover]::after {
+                    transition: none;
                 }
             }
 

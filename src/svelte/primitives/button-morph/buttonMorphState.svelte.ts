@@ -126,10 +126,18 @@ function findSlotButtonElement(slotNode: HTMLElement): HTMLElement {
  * (`light-dark()`, `color-mix()`), which lets the shell interpolate them without knowing any variant.
  * Returns `null` when styles cannot be resolved (e.g. virtual DOM environments).
  */
-function readButtonSurface(slotNode: HTMLElement): ButtonMorphSurface | null {
+function readButtonSurface(slotNode: HTMLElement, hovered = false): ButtonMorphSurface | null {
     if (typeof getComputedStyle !== "function") return null;
 
     const button = findSlotButtonElement(slotNode);
+    const shouldProbeHover =
+        hovered &&
+        typeof button.matches === "function" &&
+        !button.matches(':disabled, [aria-disabled="true"], [data-disabled]');
+
+    if (shouldProbeHover) {
+        button.dataset.morphHover = "";
+    }
 
     try {
         const before = getComputedStyle(button, "::before");
@@ -156,6 +164,10 @@ function readButtonSurface(slotNode: HTMLElement): ButtonMorphSurface | null {
         };
     } catch {
         return null;
+    } finally {
+        if (shouldProbeHover) {
+            delete button.dataset.morphHover;
+        }
     }
 }
 
@@ -452,8 +464,9 @@ export class ButtonMorphManager implements ButtonMorphContext {
         // while the individual button surfaces are hidden for the duration of the transition.
         const fromNode = this.#itemNodes[prevValue];
         const toNode = this.#itemNodes[nextValue];
+        const isHovered = this.isPointerHovered || Boolean(this.#rootEl?.matches?.(":hover"));
         this.surfaceFrom = fromNode ? readButtonSurface(fromNode) : null;
-        this.surfaceTo = toNode ? readButtonSurface(toNode) : null;
+        this.surfaceTo = toNode ? readButtonSurface(toNode, isHovered) : null;
 
         if (nextDims) {
             this.width = nextDims.width;
