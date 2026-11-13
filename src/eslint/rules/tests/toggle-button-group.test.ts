@@ -13,7 +13,7 @@ const ruleTester = new RuleTester({
 
 describe("toggle-button-group ESLint rules", () => {
     describe("toggle-button-group/no-regular-button", () => {
-        it("forbids <Button> inside <ToggleButtonGroup> and <ToggleButton> inside <ButtonGroup>", () => {
+        it("forbids <Button> inside <ToggleButtonGroup>", () => {
             ruleTester.run("toggle-button-group/no-regular-button", toggleButtonGroupNoRegularButtonRule, {
                 valid: [
                     {
@@ -27,37 +27,17 @@ describe("toggle-button-group ESLint rules", () => {
                         `,
                         filename: "src/Component.svelte",
                     },
-                    {
-                        // Clean ButtonGroup
-                        code: `
-                        <ButtonGroup>
-                            <Button variant="soft" color="accent" size="md"><ButtonLabel>One</ButtonLabel></Button>
-                            <Button variant="soft" color="accent" size="md"><ButtonLabel>Two</ButtonLabel></Button>
-                        </ButtonGroup>
-                        `,
-                        filename: "src/Component.svelte",
-                    },
                 ],
                 invalid: [
                     {
                         // Button inside ToggleButtonGroup
                         code: `
                         <ToggleButtonGroup>
-                            <Button variant="soft" color="accent" size="md"><ButtonLabel>Invalid</ButtonLabel></Button>
+                            <Button variant="secondary" size="md"><ButtonLabel>Invalid</ButtonLabel></Button>
                         </ToggleButtonGroup>
                         `,
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "noRegularButtonInToggleButtonGroup" }],
-                    },
-                    {
-                        // ToggleButton inside ButtonGroup
-                        code: `
-                        <ButtonGroup>
-                            <ToggleButton variant="soft" color="accent" size="md"><ToggleButtonLabel>Invalid</ToggleButtonLabel></ToggleButton>
-                        </ButtonGroup>
-                        `,
-                        filename: "src/Component.svelte",
-                        errors: [{ messageId: "noToggleButtonInButtonGroup" }],
                     },
                     {
                         // Nested Button inside ToggleButtonGroup

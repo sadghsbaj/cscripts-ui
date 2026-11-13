@@ -1,7 +1,7 @@
 /**
  * Enforces design system constraints on <ToggleButtonGroup> components:
- * - `no-regular-button`: Disallows using <Button> inside <ToggleButtonGroup> (and <ToggleButton> inside <ButtonGroup>).
- *   Group containers must use their respective button primitives.
+ * - `no-regular-button`: Disallows using <Button> inside <ToggleButtonGroup>.
+ *   ToggleButtonGroup containers must use <ToggleButton> primitives.
  * - `uniform-buttons`: Enforces that all <ToggleButton> children within a <ToggleButtonGroup> share
  *   identical visual props (`size`, `variant`, `color`).
  */
@@ -15,13 +15,11 @@ export const toggleButtonGroupNoRegularButtonRule: Rule.RuleModule = {
     meta: {
         type: "problem",
         docs: {
-            description: "Disallow mixing <Button> and <ToggleButton> across group containers",
+            description: "Disallow using <Button> inside <ToggleButtonGroup>",
         },
         messages: {
             noRegularButtonInToggleButtonGroup:
                 "<Button> is not permitted inside <ToggleButtonGroup>. Use <ToggleButton> for toggle button groups.",
-            noToggleButtonInButtonGroup:
-                "<ToggleButton> is not permitted inside <ButtonGroup>. Use <Button> for standard button groups.",
         },
         schema: [],
     },
@@ -32,32 +30,18 @@ export const toggleButtonGroupNoRegularButtonRule: Rule.RuleModule = {
         return {
             SvelteElement(rawNode: Rule.Node): void {
                 const node = rawNode as unknown as AST.SvelteElement;
-                const name = getElementName(node);
+                if (getElementName(node) !== "Button") return;
 
-                if (name === "Button") {
-                    let current = (node as unknown as { parent?: AST.SvelteElement }).parent;
-                    while (current) {
-                        if (current.type === "SvelteElement" && getElementName(current) === "ToggleButtonGroup") {
-                            context.report({
-                                node: node.startTag as unknown as Rule.Node,
-                                messageId: "noRegularButtonInToggleButtonGroup",
-                            });
-                            return;
-                        }
-                        current = (current as unknown as { parent?: AST.SvelteElement }).parent;
+                let current = (node as unknown as { parent?: AST.SvelteElement }).parent;
+                while (current) {
+                    if (current.type === "SvelteElement" && getElementName(current) === "ToggleButtonGroup") {
+                        context.report({
+                            node: node.startTag as unknown as Rule.Node,
+                            messageId: "noRegularButtonInToggleButtonGroup",
+                        });
+                        return;
                     }
-                } else if (name === "ToggleButton") {
-                    let current = (node as unknown as { parent?: AST.SvelteElement }).parent;
-                    while (current) {
-                        if (current.type === "SvelteElement" && getElementName(current) === "ButtonGroup") {
-                            context.report({
-                                node: node.startTag as unknown as Rule.Node,
-                                messageId: "noToggleButtonInButtonGroup",
-                            });
-                            return;
-                        }
-                        current = (current as unknown as { parent?: AST.SvelteElement }).parent;
-                    }
+                    current = (current as unknown as { parent?: AST.SvelteElement }).parent;
                 }
             },
         };
