@@ -37,8 +37,7 @@
                 {/if}
 
                 <Button
-                    variant="soft"
-                    color="accent"
+                    variant="secondary"
                     size="sm"
                     onclick={() => {
                         showSelectAll = false;

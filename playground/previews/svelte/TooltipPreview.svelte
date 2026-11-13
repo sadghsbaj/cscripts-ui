@@ -23,8 +23,7 @@
             <h2 class="title-2xl">Icon Buttons</h2>
             <div class="flex flex-wrap gap-3 items-center">
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     iconOnly
                     aria-label="Hinzufügen"
@@ -35,8 +34,7 @@
                 </Button>
 
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     iconOnly
                     aria-label="Löschen"
@@ -47,8 +45,7 @@
                 </Button>
 
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     iconOnly
                     aria-label="Einstellungen"
@@ -58,7 +55,7 @@
                     <HitArea size="md" />
                 </Button>
 
-                <Button variant="soft" color="base" size="md" iconOnly aria-label="Teilen" {@attach tooltip("Teilen")}>
+                <Button variant="tertiary" size="md" iconOnly aria-label="Teilen" {@attach tooltip("Teilen")}>
                     <ButtonIcon icon={Share2} />
                     <HitArea size="md" />
                 </Button>
@@ -125,8 +122,7 @@
             <h2 class="title-2xl">Compound Tooltip</h2>
             <div class="flex flex-wrap gap-3 items-center">
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     {@attach tooltip({ target: "preview-rich-tooltip", placement: "top" })}
                 >
@@ -135,8 +131,7 @@
                 <Tooltip id="preview-rich-tooltip" text="Speichern" icon={Info} shortcut="Ctrl + S" />
 
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     {@attach tooltip({ target: "preview-compound-tooltip", placement: "top" })}
                 >

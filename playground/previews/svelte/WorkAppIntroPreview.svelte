@@ -70,7 +70,7 @@
 
                 <div class="bg-elevation-2 rounded-full squircle-smooth p-1 flex flex-wrap items-center gap-1">
                     {#each ["Alle Werke", "Neumarkt", "Baruth", "Gütersloh", "Arnsberg", "Leutkirch"] as filterOption (filterOption)}
-                        <Button size="xs" variant="soft" color="base">
+                        <Button size="xs" variant="tertiary">
                             <ButtonLabel>{filterOption}</ButtonLabel>
                         </Button>
                     {/each}

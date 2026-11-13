@@ -50,8 +50,7 @@
         <div class="flex items-center justify-end gap-2 pt-2">
             <Button
                 size="md"
-                variant="soft"
-                color="accent"
+                variant="secondary"
                 class="lab-base-accent-btn"
                 onclick={() => {
                     if (inOverlay) openMode = null;
@@ -62,8 +61,7 @@
 
             <Button
                 size="md"
-                variant="solid"
-                color="accent"
+                variant="primary"
                 onclick={() => {
                     if (inOverlay) openMode = null;
                 }}

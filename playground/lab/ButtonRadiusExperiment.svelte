@@ -27,11 +27,11 @@
         {#each rows as row (row.size)}
             <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                    <Button size={row.size} variant="solid" color="accent">
+                    <Button size={row.size} variant="primary">
                         <ButtonIcon icon={Sparkles} />
                         <ButtonLabel>Speichern ({row.size})</ButtonLabel>
                     </Button>
-                    <Button size={row.size} variant="soft" color="base">
+                    <Button size={row.size} variant="tertiary">
                         <ButtonLabel>Abbrechen</ButtonLabel>
                     </Button>
                     <Button size={row.size} variant="elevated">
@@ -41,8 +41,7 @@
 
                 <Button
                     size={row.size}
-                    variant="soft"
-                    color="accent"
+                    variant="secondary"
                     iconOnly
                     aria-label="Hinzufügen"
                     {@attach tooltip(`${row.size} (${row.radiusLabel})`)}

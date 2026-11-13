@@ -22,8 +22,7 @@
             <div class="flex flex-wrap gap-3 items-center">
                 {#each BUTTON_SIZES as size (size)}
                     <Button
-                        variant="soft"
-                        color="base"
+                        variant="tertiary"
                         {size}
                         iconOnly
                         aria-label="Kopieren"
@@ -43,19 +42,19 @@
         >
             <h2 class="title-2xl">Copy Variants</h2>
             <div class="flex flex-wrap gap-3 items-center">
-                <Button variant="soft" color="base" size="md" {@attach copyOnClick("bun add cs")}>
+                <Button variant="tertiary" size="md" {@attach copyOnClick("bun add cs")}>
                     <CopyIcon />
-                    <ButtonLabel>Soft</ButtonLabel>
+                    <ButtonLabel>Tertiary</ButtonLabel>
                 </Button>
 
-                <Button variant="ghost" color="base" size="md" {@attach copyOnClick("bun add cs")}>
+                <Button variant="ghost" size="md" {@attach copyOnClick("bun add cs")}>
                     <CopyIcon />
                     <ButtonLabel>Ghost</ButtonLabel>
                 </Button>
 
-                <Button variant="solid" color="accent" size="md" {@attach copyOnClick("bun add cs")}>
+                <Button variant="primary" size="md" {@attach copyOnClick("bun add cs")}>
                     <CopyIcon />
-                    <ButtonLabel>Solid</ButtonLabel>
+                    <ButtonLabel>Primary</ButtonLabel>
                 </Button>
             </div>
         </div>
@@ -67,8 +66,7 @@
             <h2 class="title-2xl">Copy Error</h2>
             <div class="flex flex-wrap gap-3 items-center">
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     iconOnly
                     aria-label="Fehler simulieren"
@@ -80,8 +78,8 @@
                 </Button>
 
                 <Button
-                    variant="soft"
-                    color="danger"
+                    variant="secondary"
+                    danger
                     size="md"
                     {@attach copyOnClick(() => Promise.reject(new Error("Simulated failure")))}
                 >
@@ -99,8 +97,7 @@
             <div class="flex flex-wrap gap-3 items-center">
                 {#each BUTTON_SIZES as size (size)}
                     <Button
-                        variant="soft"
-                        color="base"
+                        variant="tertiary"
                         {size}
                         iconOnly
                         aria-label="Einfügen"
@@ -129,8 +126,7 @@
                         class="bg-base-soft rounded-xl px-3 h-36px w-full text-sm outline-none"
                     />
                     <Button
-                        variant="soft"
-                        color="base"
+                        variant="tertiary"
                         size="md"
                         iconOnly
                         aria-label="Einfügen"
@@ -149,8 +145,7 @@
 
                 <div class="flex flex-wrap gap-2 items-center">
                     <Button
-                        variant="soft"
-                        color="base"
+                        variant="tertiary"
                         size="sm"
                         {@attach copyOnClick("")}
                     >
@@ -159,8 +154,7 @@
                     </Button>
 
                     <Button
-                        variant="solid"
-                        color="accent"
+                        variant="primary"
                         size="sm"
                         {@attach pasteOnClick((e) => {
                             pasteValue = e.text;
@@ -180,8 +174,7 @@
             <h2 class="title-2xl">Paste States</h2>
             <div class="flex flex-wrap gap-3 items-center">
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     iconOnly
                     aria-label="Paste Error simulieren"
@@ -193,8 +186,8 @@
                 </Button>
 
                 <Button
-                    variant="soft"
-                    color="danger"
+                    variant="secondary"
+                    danger
                     size="md"
                     {@attach pasteOnClick(() => null)}
                 >

@@ -34,14 +34,14 @@
             <div class="w-full flex-center min-h-80px">
                 <ButtonMorph bind:value={deleteMode} resetTimeout={3000} resetOnOutsideClick resetOnEscape>
                     <ButtonMorphItem value="idle">
-                        <Button variant="soft" color="danger" size="md" onclick={() => (deleteMode = "confirm")}>
+                        <Button variant="secondary" danger size="md" onclick={() => (deleteMode = "confirm")}>
                             <ButtonIcon icon={Trash2} />
                             <ButtonLabel>Löschen</ButtonLabel>
                         </Button>
                     </ButtonMorphItem>
 
                     <ButtonMorphItem value="confirm">
-                        <Button variant="solid" color="danger" size="md" onclick={() => (deleteMode = "idle")}>
+                        <Button variant="primary" danger size="md" onclick={() => (deleteMode = "idle")}>
                             <ButtonIcon icon={TriangleAlert} />
                             <ButtonLabel>Wirklich löschen?</ButtonLabel>
                         </Button>
@@ -60,7 +60,7 @@
             </div>
 
             <div class="w-full flex-center gap-2 min-h-80px">
-                <Button variant="soft" color="base" size="sm">
+                <Button variant="tertiary" size="sm">
                     <ButtonLabel>Bearbeiten</ButtonLabel>
                 </Button>
 
@@ -68,7 +68,6 @@
                     <ButtonMorphItem value="icon">
                         <Button
                             variant="ghost"
-                            color="base"
                             size="sm"
                             iconOnly
                             aria-label="Eintrag löschen"
@@ -81,7 +80,7 @@
                     </ButtonMorphItem>
 
                     <ButtonMorphItem value="confirm">
-                        <Button variant="solid" color="danger" size="sm" onclick={() => (iconMorphMode = "icon")}>
+                        <Button variant="primary" danger size="sm" onclick={() => (iconMorphMode = "icon")}>
                             <ButtonIcon icon={Trash2} />
                             <ButtonLabel>Löschen?</ButtonLabel>
                         </Button>
@@ -107,7 +106,7 @@
                     </ButtonMorphItem>
 
                     <ButtonMorphItem value="active">
-                        <Button variant="soft" color="accent" size="sm" onclick={() => (sizeMorphMode = "elevated")}>
+                        <Button variant="secondary" size="sm" onclick={() => (sizeMorphMode = "elevated")}>
                             <ButtonIcon icon={Check} />
                             <ButtonLabel>3 Filter aktiv</ButtonLabel>
                         </Button>
@@ -128,21 +127,21 @@
             <div class="w-full flex-center min-h-80px">
                 <ButtonMorph bind:value={publishStep} resetTimeout={3500} resetOnOutsideClick resetOnEscape>
                     <ButtonMorphItem value="idle">
-                        <Button variant="soft" color="base" size="md" onclick={() => (publishStep = "confirm")}>
+                        <Button variant="tertiary" size="md" onclick={() => (publishStep = "confirm")}>
                             <ButtonIcon icon={Send} />
                             <ButtonLabel>Veröffentlichen</ButtonLabel>
                         </Button>
                     </ButtonMorphItem>
 
                     <ButtonMorphItem value="confirm">
-                        <Button variant="solid" color="accent" size="md" onclick={() => (publishStep = "done")}>
+                        <Button variant="primary" size="md" onclick={() => (publishStep = "done")}>
                             <ButtonIcon icon={Sparkles} />
                             <ButtonLabel>Jetzt freigeben?</ButtonLabel>
                         </Button>
                     </ButtonMorphItem>
 
                     <ButtonMorphItem value="done">
-                        <Button variant="soft" color="accent" size="md" onclick={() => (publishStep = "idle")}>
+                        <Button variant="secondary" size="md" onclick={() => (publishStep = "idle")}>
                             <ButtonIcon icon={Check} />
                             <ButtonLabel>Veröffentlicht</ButtonLabel>
                         </Button>
@@ -169,7 +168,7 @@
                     </ButtonMorphItem>
 
                     <ButtonMorphItem value="discard">
-                        <Button variant="solid" color="danger" size="sm" onclick={() => (closeMorphMode = "close")}>
+                        <Button variant="primary" danger size="sm" onclick={() => (closeMorphMode = "close")}>
                             <ButtonLabel>Verwerfen?</ButtonLabel>
                         </Button>
                     </ButtonMorphItem>
@@ -202,7 +201,7 @@
                     </ButtonMorphItem>
 
                     <ButtonMorphItem value="ready">
-                        <Button variant="solid" color="accent" size="md" onclick={() => (toggleMorphMode = "draft")}>
+                        <Button variant="primary" size="md" onclick={() => (toggleMorphMode = "draft")}>
                             <ButtonIcon icon={Check} />
                             <ButtonLabel>Aktiv</ButtonLabel>
                         </Button>

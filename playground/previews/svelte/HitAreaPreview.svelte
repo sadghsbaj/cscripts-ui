@@ -35,7 +35,7 @@
     <div class="flex justify-center">
         <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl px-2 lg:px-8">
             {#each previewButtons as button (button)}
-                <Button size={button.size} variant="soft" color="base" iconOnly aria-label="Hinzufügen">
+                <Button size={button.size} variant="tertiary" iconOnly aria-label="Hinzufügen">
                     <ButtonIcon icon={Plus} />
                     <HitArea
                         size={button.size}
@@ -45,7 +45,7 @@
                 </Button>
             {/each}
 
-            <Button size="md" variant="soft" color="base" iconOnly aria-label="Hinzufügen">
+            <Button size="md" variant="tertiary" iconOnly aria-label="Hinzufügen">
                 <ButtonIcon icon={Plus} />
                 <HitArea
                     size="md"

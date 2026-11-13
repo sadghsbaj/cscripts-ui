@@ -28,7 +28,7 @@
             </div>
 
             <div class="w-full flex-center min-h-100px">
-                <Button variant="solid" color="accent" size="md" onclick={() => (isStandardOpen = true)}>
+                <Button variant="primary" size="md" onclick={() => (isStandardOpen = true)}>
                     <ButtonLabel>Modal öffnen</ButtonLabel>
                 </Button>
             </div>
@@ -44,7 +44,7 @@
             </div>
 
             <div class="w-full flex-center min-h-100px">
-                <Button variant="soft" color="danger" size="md" onclick={() => (isTargetOpen = true)}>
+                <Button variant="secondary" danger size="md" onclick={() => (isTargetOpen = true)}>
                     <ButtonLabel>Löschen bestätigen</ButtonLabel>
                 </Button>
             </div>
@@ -60,7 +60,7 @@
             </div>
 
             <div class="w-full flex-center min-h-100px">
-                <Button variant="soft" color="base" size="md" onclick={() => (isParentOpen = true)}>
+                <Button variant="tertiary" size="md" onclick={() => (isParentOpen = true)}>
                     <ButtonLabel>Multi-Level öffnen</ButtonLabel>
                 </Button>
             </div>
@@ -108,10 +108,10 @@
             </div>
 
             <div class="flex justify-end gap-3 w-full">
-                <Button variant="soft" color="base" size="md" onclick={() => (isStandardOpen = false)}>
+                <Button variant="tertiary" size="md" onclick={() => (isStandardOpen = false)}>
                     <ButtonLabel>Abbrechen</ButtonLabel>
                 </Button>
-                <Button variant="solid" color="accent" size="md" onclick={() => (isStandardOpen = false)}>
+                <Button variant="primary" size="md" onclick={() => (isStandardOpen = false)}>
                     <ButtonLabel>Speichern</ButtonLabel>
                 </Button>
             </div>
@@ -149,13 +149,13 @@
             </p>
 
             <div class="flex justify-end gap-3 w-full">
-                <Button variant="soft" color="base" size="md" onclick={() => (isTargetOpen = false)}>
+                <Button variant="tertiary" size="md" onclick={() => (isTargetOpen = false)}>
                     <ButtonLabel>Abbrechen</ButtonLabel>
                 </Button>
                 <Button
                     id="danger-confirm"
-                    variant="solid"
-                    color="danger"
+                    variant="primary"
+                    danger
                     size="md"
                     onclick={() => (isTargetOpen = false)}
                 >
@@ -196,10 +196,10 @@
             </p>
 
             <div class="flex justify-between items-center w-full">
-                <Button variant="soft" color="accent" size="sm" onclick={() => (isChildOpen = true)}>
+                <Button variant="secondary" size="sm" onclick={() => (isChildOpen = true)}>
                     <ButtonLabel>Ebene 2 öffnen</ButtonLabel>
                 </Button>
-                <Button variant="soft" color="base" size="md" onclick={() => (isParentOpen = false)}>
+                <Button variant="tertiary" size="md" onclick={() => (isParentOpen = false)}>
                     <ButtonLabel>Schließen</ButtonLabel>
                 </Button>
             </div>
@@ -234,7 +234,7 @@
             <p class="description-sm">Fokus ist jetzt hier gefangen. Escape schließt nur diesen Sub-Dialog.</p>
 
             <div class="flex justify-end gap-3 w-full">
-                <Button variant="solid" color="accent" size="sm" onclick={() => (isChildOpen = false)}>
+                <Button variant="primary" size="sm" onclick={() => (isChildOpen = false)}>
                     <ButtonLabel>Fertig</ButtonLabel>
                 </Button>
             </div>

@@ -45,7 +45,7 @@
                 <ToggleButtonLabel>Hintergrund scrollbar</ToggleButtonLabel>
             </ToggleButton>
 
-            <Button variant="solid" color="accent" size="md" onclick={() => (isOpen = true)}>
+            <Button variant="primary" size="md" onclick={() => (isOpen = true)}>
                 <ButtonLabel>Open</ButtonLabel>
             </Button>
         </div>

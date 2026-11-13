@@ -20,13 +20,12 @@
             <span class="text-xs text-weak">Accent</span>
             {#each sizes as size (size)}
                 <div class="flex items-center justify-between gap-3">
-                    <Button {size} variant="soft" color="accent">
+                    <Button {size} variant="secondary">
                         <ButtonLabel>Speichern</ButtonLabel>
                     </Button>
                     <Button
                         {size}
-                        variant="soft"
-                        color="accent"
+                        variant="secondary"
                         iconOnly
                         aria-label="Hinzufügen"
                         {@attach tooltip("Hinzufügen")}
@@ -42,13 +41,13 @@
             <span class="text-xs text-weak">Danger</span>
             {#each sizes as size (size)}
                 <div class="flex items-center justify-between gap-3">
-                    <Button {size} variant="soft" color="danger">
+                    <Button {size} variant="secondary" danger>
                         <ButtonLabel>Löschen</ButtonLabel>
                     </Button>
                     <Button
                         {size}
-                        variant="soft"
-                        color="danger"
+                        variant="secondary"
+                        danger
                         iconOnly
                         aria-label="Löschen"
                         {@attach tooltip("Löschen")}

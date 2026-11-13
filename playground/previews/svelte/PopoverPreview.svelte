@@ -21,7 +21,7 @@
             <div class="flex flex-wrap gap-3">
                 {#each placements as placement (placement)}
                     {const popoverId = `popover-placement-${placement}`}
-                    <Button variant="soft" color="base" size="md" {@attach popoverTrigger({ target: popoverId })}>
+                    <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: popoverId })}>
                         <ButtonLabel>{placement[0]?.toUpperCase() + placement.slice(1)}</ButtonLabel>
                     </Button>
 
@@ -49,8 +49,7 @@
                 {#each sizes as size (size)}
                     {const popoverId = `popover-size-${size}`}
                     <Button
-                        variant="soft"
-                        color="base"
+                        variant="tertiary"
                         size="md"
                         class="w-full"
                         {@attach popoverTrigger({ target: popoverId })}
@@ -89,8 +88,7 @@
             <div class="flex flex-wrap gap-3">
                 <!-- Large Offset -->
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     {@attach popoverTrigger({ target: "popover-offset-demo" })}
                 >
@@ -111,8 +109,7 @@
 
                 <!-- Hint / Hover Mode -->
                 <Button
-                    variant="soft"
-                    color="base"
+                    variant="tertiary"
                     size="md"
                     {@attach popoverTrigger({ target: "popover-hint-demo", mode: "hint" })}
                 >
