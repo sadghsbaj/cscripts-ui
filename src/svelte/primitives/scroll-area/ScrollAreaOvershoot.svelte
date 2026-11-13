@@ -20,8 +20,8 @@ GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered ins
     @layer components.composite {
         .cs-scroll-area-overshoot {
             --_overshoot-tint: light-dark(
-                color-mix(in oklch, var(--cs-color-base-800) 78%, var(--cs-color-accent-600)),
-                color-mix(in oklch, var(--cs-color-base-100) 82%, var(--cs-color-accent-400))
+                color-mix(in oklab, var(--cs-color-base-800) 78%, var(--cs-color-accent-600)),
+                color-mix(in oklab, var(--cs-color-base-100) 82%, var(--cs-color-accent-400))
             );
             --_overshoot-core-color: light-dark(
                 color-mix(in oklch, var(--_overshoot-tint) 24%, transparent),
