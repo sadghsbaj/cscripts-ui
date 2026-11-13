@@ -9,3 +9,7 @@ This project uses the `cs` library for UI, CSS foundation, UnoCSS, and ESLint.
 
 2. **Continuous Verification (Do Not Rely on Memory):**
    Across longer conversations or multiple tasks, NEVER guess `cs` class names, UnoCSS shortcuts, CSS variables, or component APIs. Regularly re-check `./node_modules/cs/src/agents/index.md` and inspect the linked source files in `./node_modules/cs/src/` whenever you touch a new UI area or get a lint/type error.
+
+## Isolated `/lab` Sandbox
+
+- For isolated UI experiments or prototypes under `/lab`, read `src/lab/LAB.md` before making changes and keep all edits strictly inside `src/lab/`.

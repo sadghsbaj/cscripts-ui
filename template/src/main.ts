@@ -7,8 +7,6 @@ import { configureStoragePrefix } from "cs/svelte/browser-storage";
 
 import "virtual:uno.css";
 
-import App from "./App.svelte";
-
 // Local `file://` HTML apps in Chromium/Edge share a single browser storage bucket;
 // set a unique non-empty prefix per app (e.g. "holzanalysen") so keys never collide across local tools.
 configureStoragePrefix("");
@@ -16,6 +14,9 @@ configureStoragePrefix("");
 const target = document.getElementById("app");
 if (!target) throw new Error("Missing #app mount target");
 
-const app = mount(App, { target });
+const isLab = import.meta.env.DEV && window.location.pathname.startsWith("/lab");
+const Root = isLab ? (await import("./lab/LabView.svelte")).default : (await import("./App.svelte")).default;
+
+const app = mount(Root, { target });
 
 export default app;
