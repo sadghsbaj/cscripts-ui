@@ -54,7 +54,7 @@ Maintain a calm, monochrome-first UI hierarchy using the `base` (Zinc) palette a
 - **No Chromatic Soft Backgrounds on `<Button>`:** Buttons intentionally NEVER use tinted `-soft` backgrounds (chromatic soft fills on buttons look playful/childish). Instead:
     - `variant="secondary"` pairs a neutral `base-soft` pill with chromatic `accent` (or `danger`) text.
     - `variant="tertiary"` pairs a neutral `base-soft` pill with neutral `base-soft-fg` text (for secondary neutral actions like *Cancel* inside cards).
-    - `variant="ghost"` uses a transparent resting surface, neutral `base-soft` on hover, and chromatic `accent` (or `danger`) text.
+    - `variant="ghost"` uses a transparent resting surface, neutral `base-soft` on hover, and neutral `base-soft-fg` text (switching to `danger` text when `danger` is set).
     - `variant="elevated"` provides a neutral floating surface on `canvas`.
 - **Prefer `-soft` for Non-Button Active/Toggled States & Badges:** Never place multiple `-solid` colored elements side by side (avoid "color vomiting"). Chromatic `-soft` backgrounds (`accent-soft`, `success-soft`, etc.) remain appropriate for non-button elements such as active `<ToggleButton>` states, selected filters, badges, or tags.
 - **Semantic Status Colors (`danger`, `warning`, `success`, `info`):** Reserve strictly for their true semantic meaning in UI controls and feedback (e.g., `danger` boolean on `<Button variant="primary" | "secondary" | "ghost">` for destructive delete actions, `warning` for alerts, `success` for confirmations). Never use them for decorative variety.

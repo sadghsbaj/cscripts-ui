@@ -222,7 +222,13 @@ Architectural Notes:
             &[data-variant="ghost"] {
                 --_bg: transparent;
                 --_bg-hover: var(--cs-color-base-soft);
-                --_fg: var(--_accent-fg);
+                --_fg: var(--cs-color-base-soft-fg);
+                --_fg-hover: var(--cs-color-base-soft-fg-hover);
+
+                &[data-danger] {
+                    --_fg: var(--_accent-fg);
+                    --_fg-hover: var(--_accent-fg);
+                }
             }
 
             /* =========================================================

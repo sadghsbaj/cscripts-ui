@@ -221,10 +221,6 @@
             {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
         >
             <div class="w-full max-w-4xl mx-auto flex flex-col gap-10">
-                <header class="flex items-center justify-between gap-4 pr-24">
-                    <h1 class="title-4xl text-strong">{activePreviewItem?.label}</h1>
-                </header>
-
                 {#if activePreview}
                     {const PreviewComponent = activePreview}
                     <PreviewComponent />

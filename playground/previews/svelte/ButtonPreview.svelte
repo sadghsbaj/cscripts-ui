@@ -1,74 +1,184 @@
 <script module>
     export const id = "button";
     export const label = "Button";
+    export const category = "primitives" as const;
 </script>
 
 <script lang="ts">
-    import { Plus } from "@lucide/svelte";
-    import { Button, BUTTON_SIZES, ButtonIcon, ButtonLabel, type ButtonVariant } from "cs/svelte/button";
+    import { ArrowRight, Plus, Settings } from "@lucide/svelte";
+    import { Button, BUTTON_SIZES, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
+    import { tooltip } from "cs/svelte/tooltip";
+    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
 
-    const variants = ["primary", "secondary", "tertiary", "ghost"] as const satisfies readonly Exclude<
-        ButtonVariant,
-        "elevated"
-    >[];
+    const basicCode = `<script lang="ts">
+    import { Button, ButtonLabel } from "cs/svelte/button";
+<\/script>
+
+<Button variant="primary" size="md">
+    <ButtonLabel>Save changes</ButtonLabel>
+</Button>`;
+
+    const variantsCode = `<Button variant="primary" size="md">
+    <ButtonLabel>Primary</ButtonLabel>
+</Button>
+<Button variant="secondary" size="md">
+    <ButtonLabel>Secondary</ButtonLabel>
+</Button>
+<Button variant="tertiary" size="md">
+    <ButtonLabel>Tertiary</ButtonLabel>
+</Button>
+<Button variant="ghost" size="md">
+    <ButtonLabel>Ghost</ButtonLabel>
+</Button>
+<Button variant="elevated" size="md">
+    <ButtonLabel>Elevated</ButtonLabel>
+</Button>`;
+
+    const dangerCode = `<Button variant="primary" size="md" danger>
+    <ButtonLabel>Delete item</ButtonLabel>
+</Button>
+<Button variant="secondary" size="md" danger>
+    <ButtonLabel>Delete item</ButtonLabel>
+</Button>
+<Button variant="ghost" size="md" danger>
+    <ButtonLabel>Delete item</ButtonLabel>
+</Button>`;
+
+    const sizeLabels = {
+        xs: "xSmall",
+        sm: "Small",
+        md: "Medium",
+        lg: "Large",
+        xl: "xLarge",
+    } as const;
+
+    const sizesCode = `<Button variant="primary" size="xs"><ButtonLabel>xSmall</ButtonLabel></Button>
+<Button variant="primary" size="sm"><ButtonLabel>Small</ButtonLabel></Button>
+<Button variant="primary" size="md"><ButtonLabel>Medium</ButtonLabel></Button>
+<Button variant="primary" size="lg"><ButtonLabel>Large</ButtonLabel></Button>
+<Button variant="primary" size="xl"><ButtonLabel>xLarge</ButtonLabel></Button>`;
+
+    const iconsCode = `<Button variant="primary" size="md">
+    <ButtonIcon icon={Plus} />
+    <ButtonLabel>New item</ButtonLabel>
+</Button>
+
+<Button variant="secondary" size="md">
+    <ButtonLabel>Continue</ButtonLabel>
+    <ButtonIcon icon={ArrowRight} />
+</Button>
+
+<Button
+    variant="tertiary"
+    size="md"
+    iconOnly
+    aria-label="Settings"
+    {@attach tooltip("Settings")}
+>
+    <ButtonIcon icon={Settings} />
+    <HitArea size="md" />
+</Button>`;
+
+    const disabledCode = `<Button variant="primary" size="md" disabled>
+    <ButtonLabel>Disabled</ButtonLabel>
+</Button>
+<Button variant="secondary" size="md" disabled>
+    <ButtonLabel>Disabled</ButtonLabel>
+</Button>`;
 </script>
 
-<div class="flex justify-center">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        {#each variants as variant (variant)}
-            {@render previewCard(false, variant)}
-        {/each}
+<div class="flex flex-col gap-10">
+    <PreviewHeader
+        title="Button"
+        description="A clickable button primitive with semantic variants, sizes, and icon support."
+    />
 
-        {@render previewCard(true, "primary")}
-    </div>
-</div>
+    <PreviewSection title="Basic" code={basicCode}>
+        <Button variant="primary" size="md">
+            <ButtonLabel>Save changes</ButtonLabel>
+        </Button>
+    </PreviewSection>
 
-{#snippet previewCard(isElevated: boolean, variant: Exclude<ButtonVariant, "elevated">)}
-    <div
-        class="{!isElevated
-            ? 'bg-elevated shadow-elevated'
-            : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+    <PreviewSection
+        title="Variants"
+        description="Five hierarchy levels from primary solid actions to subtle ghost and elevated controls."
+        code={variantsCode}
     >
-        <h2 class="title-2xl">
-            {#if !isElevated}
-                {variant[0]?.toUpperCase() + variant.slice(1)}
-            {:else}
-                Elevated
-            {/if}
-        </h2>
-        <div class="w-full h-full flex flex-col gap-2">
-            {#each BUTTON_SIZES as size (size)}
-                <div class="flex gap-3 justify-between">
-                    {#if !isElevated}
-                        {#if variant === "tertiary"}
-                            <Button {size} variant="tertiary">
-                                <ButtonLabel>Click me!</ButtonLabel>
-                            </Button>
-                            <Button {size} variant="tertiary" iconOnly aria-label="Hinzufügen">
-                                <ButtonIcon icon={Plus} />
-                                <HitArea size="md" />
-                            </Button>
-                        {:else}
-                            <Button {size} {variant}>
-                                <ButtonLabel>Click me!</ButtonLabel>
-                            </Button>
-                            <Button {size} {variant} iconOnly aria-label="Hinzufügen">
-                                <ButtonIcon icon={Plus} />
-                                <HitArea size="md" />
-                            </Button>
-                        {/if}
-                    {:else}
-                        <Button {size} variant="elevated">
-                            <ButtonLabel>Click me!</ButtonLabel>
-                        </Button>
-                        <Button {size} variant="elevated" iconOnly aria-label="Hinzufügen">
-                            <ButtonIcon icon={Plus} />
-                            <HitArea size="md" />
-                        </Button>
-                    {/if}
-                </div>
-            {/each}
-        </div>
-    </div>
-{/snippet}
+        <Button variant="primary" size="md">
+            <ButtonLabel>Primary</ButtonLabel>
+        </Button>
+        <Button variant="secondary" size="md">
+            <ButtonLabel>Secondary</ButtonLabel>
+        </Button>
+        <Button variant="tertiary" size="md">
+            <ButtonLabel>Tertiary</ButtonLabel>
+        </Button>
+        <Button variant="ghost" size="md">
+            <ButtonLabel>Ghost</ButtonLabel>
+        </Button>
+        <Button variant="elevated" size="md">
+            <ButtonLabel>Elevated</ButtonLabel>
+        </Button>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Danger"
+        description="Destructive intent is supported on primary, secondary, and ghost variants."
+        code={dangerCode}
+    >
+        <Button variant="primary" size="md" danger>
+            <ButtonLabel>Delete item</ButtonLabel>
+        </Button>
+        <Button variant="secondary" size="md" danger>
+            <ButtonLabel>Delete item</ButtonLabel>
+        </Button>
+        <Button variant="ghost" size="md" danger>
+            <ButtonLabel>Delete item</ButtonLabel>
+        </Button>
+    </PreviewSection>
+
+    <PreviewSection title="Sizes" code={sizesCode}>
+        {#each BUTTON_SIZES as size (size)}
+            <Button variant="primary" {size}>
+                <ButtonLabel>{sizeLabels[size]}</ButtonLabel>
+            </Button>
+        {/each}
+    </PreviewSection>
+
+    <PreviewSection
+        title="Icons & Icon-Only"
+        description="Combine icons with labels or render compact icon-only actions with a HitArea and tooltip."
+        code={iconsCode}
+    >
+        <Button variant="primary" size="md">
+            <ButtonIcon icon={Plus} />
+            <ButtonLabel>New item</ButtonLabel>
+        </Button>
+
+        <Button variant="secondary" size="md">
+            <ButtonLabel>Continue</ButtonLabel>
+            <ButtonIcon icon={ArrowRight} />
+        </Button>
+
+        <Button
+            variant="tertiary"
+            size="md"
+            iconOnly
+            aria-label="Settings"
+            {@attach tooltip("Settings")}
+        >
+            <ButtonIcon icon={Settings} />
+            <HitArea size="md" />
+        </Button>
+    </PreviewSection>
+
+    <PreviewSection title="Disabled" code={disabledCode}>
+        <Button variant="primary" size="md" disabled>
+            <ButtonLabel>Disabled</ButtonLabel>
+        </Button>
+        <Button variant="secondary" size="md" disabled>
+            <ButtonLabel>Disabled</ButtonLabel>
+        </Button>
+    </PreviewSection>
+</div>
