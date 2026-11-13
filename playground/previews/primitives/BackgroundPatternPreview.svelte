@@ -8,34 +8,51 @@
         BACKGROUND_PATTERN_SIZES,
         BACKGROUND_PATTERN_VARIANTS,
         BackgroundPattern,
-        type BackgroundPatternVariant,
     } from "cs/svelte/background-pattern";
+    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+
+    const closeScript = ["</", "script>"].join("");
+
+    const basicCode = `<script lang="ts">
+    import { BackgroundPattern } from "cs/svelte/background-pattern";
+${closeScript}
+
+<div class="relative isolate overflow-hidden h-44 w-full rounded-2xl border border-base-soft bg-canvas">
+    <BackgroundPattern variant="dots" size="md" />
+</div>`;
+
+    const variantsCode = `<BackgroundPattern variant="dots" size="sm" />
+<BackgroundPattern variant="dots" size="md" />
+<BackgroundPattern variant="dots" size="lg" />
+<BackgroundPattern variant="grid" size="md" />`;
 </script>
 
-<div class="flex justify-center">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        {#each BACKGROUND_PATTERN_VARIANTS as variant (variant)}
-            {@render previewCard(false, variant)}
-            {@render previewCard(true, variant)}
-        {/each}
-    </div>
-</div>
+<div class="flex flex-col gap-10">
+    <PreviewHeader
+        title="BackgroundPattern"
+        description="Subtle decorative dot and grid patterns rendered inside a positioned surface container."
+    />
 
-{#snippet previewCard(isElevated: boolean, variant: BackgroundPatternVariant)}
-    {#each BACKGROUND_PATTERN_SIZES as size (size)}
-        <div
-            class="{!isElevated
-                ? 'bg-elevated shadow-elevated'
-                : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
-        >
-            <h2 class="title-2xl">
-                {variant[0]?.toUpperCase() + variant.slice(1)}
-            </h2>
-            <div class="w-full h-full flex flex-col gap-2">
-                <div class="flex gap-3 justify-between h-full">
-                    <BackgroundPattern {variant} {size} />
-                </div>
-            </div>
+    <PreviewSection title="Basic" code={basicCode}>
+        <div class="relative isolate overflow-hidden h-44 w-full max-w-md rounded-2xl border border-base-soft bg-canvas">
+            <BackgroundPattern variant="dots" size="md" />
         </div>
-    {/each}
-{/snippet}
+    </PreviewSection>
+
+    <PreviewSection title="Variants & Sizes" code={variantsCode}>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+            {#each BACKGROUND_PATTERN_VARIANTS as variant (variant)}
+                {#each BACKGROUND_PATTERN_SIZES as size (size)}
+                    <div
+                        class="relative isolate overflow-hidden h-36 rounded-2xl border border-base-soft bg-canvas flex items-end p-3"
+                    >
+                        <BackgroundPattern {variant} {size} />
+                        <span class="relative z-10 text-xs font-medium text-weak capitalize">
+                            {variant} ({size})
+                        </span>
+                    </div>
+                {/each}
+            {/each}
+        </div>
+    </PreviewSection>
+</div>

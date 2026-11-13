@@ -81,6 +81,7 @@
     let isHoveringControls = $state(false);
     let isFocusedControls = $state(false);
     let controlsVisible = $derived(!controlsIdleHidden || isHoveringControls || isFocusedControls);
+    let mainScrollContainer = $state<HTMLDivElement>();
 
     let activePreviewItem = $derived(previews.find((p) => p.id === selectedId));
     let ActivePreview = $derived(activePreviewItem?.preview);
@@ -88,6 +89,11 @@
     $effect(() => {
         if (selectedId) {
             setLocalStorage(SAVED_PREVIEW_KEY, selectedId);
+        }
+
+        const viewport = mainScrollContainer?.querySelector<HTMLElement>(".cs-scroll-area-content");
+        if (viewport) {
+            viewport.scrollTop = 0;
         }
     });
 
@@ -204,18 +210,20 @@
     </aside>
 
     <!-- Main Preview Stage -->
-    <ScrollArea size="lg" direction="vertical" class="flex-1 min-w-0 h-full">
-        <ScrollAreaContent
-            class="px-6 py-10 md:px-12 md:py-14"
-            {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
-        >
-            <div class="w-full max-w-4xl mx-auto flex flex-col gap-10">
-                {#if ActivePreview}
-                    <ActivePreview />
-                {/if}
-            </div>
-        </ScrollAreaContent>
-    </ScrollArea>
+    <div bind:this={mainScrollContainer} class="flex-1 min-w-0 h-full">
+        <ScrollArea size="lg" direction="vertical" class="size-full">
+            <ScrollAreaContent
+                class="px-6 py-10 md:px-12 md:py-14"
+                {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
+            >
+                <div class="w-full max-w-4xl mx-auto flex flex-col gap-10">
+                    {#if ActivePreview}
+                        <ActivePreview />
+                    {/if}
+                </div>
+            </ScrollAreaContent>
+        </ScrollArea>
+    </div>
 </div>
 
 <style>

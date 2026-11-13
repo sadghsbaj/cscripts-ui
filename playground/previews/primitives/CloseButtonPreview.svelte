@@ -4,35 +4,77 @@
 </script>
 
 <script lang="ts">
-    import { CLOSE_BUTTON_SIZES, CloseButton, type CloseButtonVariant } from "cs/svelte/close-button";
+    import { CLOSE_BUTTON_SIZES, CloseButton } from "cs/svelte/close-button";
     import { HitArea } from "cs/svelte/hit-area";
+    import { PreviewHeader, PreviewSection, SunkenWell } from "../../components/index.ts";
+
+    const closeScript = ["</", "script>"].join("");
+
+    const basicCode = `<script lang="ts">
+    import { CloseButton } from "cs/svelte/close-button";
+    import { HitArea } from "cs/svelte/hit-area";
+${closeScript}
+
+<CloseButton variant="soft" size="md">
+    <HitArea size="md" />
+</CloseButton>`;
+
+    const variantsCode = `<CloseButton variant="soft" size="md">
+    <HitArea size="md" />
+</CloseButton>
+<CloseButton variant="ghost" size="md">
+    <HitArea size="md" />
+</CloseButton>
+<CloseButton variant="elevated" size="md">
+    <HitArea size="md" />
+</CloseButton>`;
+
+    const sizesCode = `<CloseButton variant="soft" size="sm"><HitArea size="md" /></CloseButton>
+<CloseButton variant="soft" size="md"><HitArea size="md" /></CloseButton>
+<CloseButton variant="soft" size="lg"><HitArea size="md" /></CloseButton>`;
 </script>
 
-<div class="flex justify-center">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        {@render previewCard(false, "soft")}
-        {@render previewCard(false, "ghost")}
-        {@render previewCard(true, "elevated")}
-    </div>
-</div>
+<div class="flex flex-col gap-10">
+    <PreviewHeader
+        title="CloseButton"
+        description="A dedicated dismiss button with soft, ghost, and elevated variants."
+    />
 
-{#snippet previewCard(isElevated: boolean, variant: CloseButtonVariant)}
-    <div
-        class="{!isElevated
-            ? 'bg-elevated shadow-elevated'
-            : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+    <PreviewSection title="Basic" code={basicCode}>
+        <CloseButton variant="soft" size="md">
+            <HitArea size="md" />
+        </CloseButton>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Variants"
+        description="Use soft or ghost inside cards and elevated directly on canvas or sunken surfaces."
+        code={variantsCode}
     >
-        <h2 class="title-2xl">
-            {variant[0]?.toUpperCase() + variant.slice(1)}
-        </h2>
-        <div class="w-full h-full flex flex-col gap-2">
+        <div class="flex items-center gap-6">
+            <CloseButton variant="soft" size="md">
+                <HitArea size="md" />
+            </CloseButton>
+
+            <CloseButton variant="ghost" size="md">
+                <HitArea size="md" />
+            </CloseButton>
+
+            <SunkenWell>
+                <CloseButton variant="elevated" size="md">
+                    <HitArea size="md" />
+                </CloseButton>
+            </SunkenWell>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection title="Sizes" code={sizesCode}>
+        <div class="flex items-center gap-5">
             {#each CLOSE_BUTTON_SIZES as size (size)}
-                <div class="flex gap-3 justify-between">
-                    <CloseButton {variant} {size}>
-                        <HitArea size="md" />
-                    </CloseButton>
-                </div>
+                <CloseButton variant="soft" {size}>
+                    <HitArea size="md" />
+                </CloseButton>
             {/each}
         </div>
-    </div>
-{/snippet}
+    </PreviewSection>
+</div>

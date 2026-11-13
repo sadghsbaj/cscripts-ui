@@ -4,57 +4,173 @@
 </script>
 
 <script lang="ts">
-    import { Plus } from "@lucide/svelte";
+    import { Bookmark, Pin } from "@lucide/svelte";
     import { HitArea } from "cs/svelte/hit-area";
     import {
         TOGGLE_BUTTON_COLORS,
         TOGGLE_BUTTON_SIZES,
-        TOGGLE_BUTTON_VARIANTS,
         ToggleButton,
         ToggleButtonIcon,
         ToggleButtonLabel,
-        type ToggleButtonColor,
-        type ToggleButtonVariant,
     } from "cs/svelte/toggle-button";
+    import { tooltip } from "cs/svelte/tooltip";
+    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+
+    let basicPressed = $state(false);
+    let softVariantPressed = $state(true);
+    let ghostVariantPressed = $state(true);
+    let accentPressed = $state(true);
+    let successPressed = $state(true);
+    let warningPressed = $state(true);
+    let dangerPressed = $state(true);
+    let iconPressed = $state(true);
+
+    const closeScript = ["</", "script>"].join("");
+
+    /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
+    const basicCode = `<script lang="ts">
+    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
+
+    let pressed = $state(false);
+${closeScript}
+
+<ToggleButton variant="soft" color="accent" size="md" bind:pressed>
+    <ToggleButtonLabel>Pin item</ToggleButtonLabel>
+</ToggleButton>`;
+
+    const variantsCode = `<ToggleButton variant="soft" color="accent" size="md" bind:pressed={softPressed}>
+    <ToggleButtonLabel>Soft</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="ghost" color="accent" size="md" bind:pressed={ghostPressed}>
+    <ToggleButtonLabel>Ghost</ToggleButtonLabel>
+</ToggleButton>`;
+
+    const colorsCode = `<ToggleButton variant="soft" color="accent" size="md" bind:pressed>
+    <ToggleButtonLabel>Accent</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="soft" color="success" size="md" bind:pressed>
+    <ToggleButtonLabel>Success</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="soft" color="warning" size="md" bind:pressed>
+    <ToggleButtonLabel>Warning</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="soft" color="danger" size="md" bind:pressed>
+    <ToggleButtonLabel>Danger</ToggleButtonLabel>
+</ToggleButton>`;
+
+    const sizesCode = `<ToggleButton variant="soft" color="accent" size="xs"><ToggleButtonLabel>xSmall</ToggleButtonLabel></ToggleButton>
+<ToggleButton variant="soft" color="accent" size="sm"><ToggleButtonLabel>Small</ToggleButtonLabel></ToggleButton>
+<ToggleButton variant="soft" color="accent" size="md"><ToggleButtonLabel>Medium</ToggleButtonLabel></ToggleButton>
+<ToggleButton variant="soft" color="accent" size="lg"><ToggleButtonLabel>Large</ToggleButtonLabel></ToggleButton>
+<ToggleButton variant="soft" color="accent" size="xl"><ToggleButtonLabel>xLarge</ToggleButtonLabel></ToggleButton>`;
+
+    const iconCode = `<ToggleButton variant="soft" color="accent" size="md">
+    <ToggleButtonIcon icon={Pin} />
+    <ToggleButtonLabel>Pin</ToggleButtonLabel>
+</ToggleButton>
+
+<ToggleButton
+    variant="soft"
+    color="accent"
+    size="md"
+    iconOnly
+    aria-label="Toggle bookmark"
+    {@attach tooltip("Toggle bookmark")}
+>
+    <ToggleButtonIcon icon={Bookmark} />
+    <HitArea size="md" />
+</ToggleButton>`;
+    /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
+
+    const sizeLabels: Record<(typeof TOGGLE_BUTTON_SIZES)[number], string> = {
+        xs: "xSmall",
+        sm: "Small",
+        md: "Medium",
+        lg: "Large",
+        xl: "xLarge",
+    };
+
+    const colorLabels: Record<(typeof TOGGLE_BUTTON_COLORS)[number], string> = {
+        accent: "Accent",
+        success: "Success",
+        warning: "Warning",
+        danger: "Danger",
+    };
 </script>
 
-<div class="flex justify-center">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        {#each TOGGLE_BUTTON_VARIANTS as variant (variant)}
-            {#each TOGGLE_BUTTON_COLORS as color (color)}
-                {@render previewCard(false, variant, color)}
-            {/each}
-        {/each}
-    </div>
-</div>
+<div class="flex flex-col gap-10">
+    <PreviewHeader
+        title="ToggleButton"
+        description="A pressable two-state button supporting soft and ghost variants with semantic colors."
+    />
 
-{#snippet previewCard(isElevated: boolean, variant: Exclude<ToggleButtonVariant, "elevated">, color: ToggleButtonColor)}
-    <div
-        class="{!isElevated
-            ? 'bg-elevated shadow-elevated'
-            : 'bg-canvas'} rounded-3xl squircle p-8 flex-center min-h-200px min-w-300px flex flex-col justify-start items-start gap-5"
+    <PreviewSection title="Basic" code={basicCode}>
+        <ToggleButton variant="soft" color="accent" size="md" bind:pressed={basicPressed}>
+            <ToggleButtonLabel>Pin item</ToggleButtonLabel>
+        </ToggleButton>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Variants"
+        description="Compare soft and ghost toggle surfaces interactively."
+        code={variantsCode}
     >
-        <h2 class="title-2xl">
-            {#if !isElevated}
-                {variant[0]?.toUpperCase() + variant.slice(1)}
-                +
-                {color[0]?.toUpperCase() + color.slice(1)}
-            {:else}
-                Elevated
-            {/if}
-        </h2>
-        <div class="w-full h-full flex flex-col gap-2">
-            {#each TOGGLE_BUTTON_SIZES as size (size)}
-                <div class="flex gap-3 justify-between">
-                    <ToggleButton {size} {variant} {color}>
-                        <ToggleButtonLabel>Click me!</ToggleButtonLabel>
-                    </ToggleButton>
-                    <ToggleButton {size} {variant} {color} iconOnly aria-label="Hinzufügen">
-                        <ToggleButtonIcon icon={Plus} />
-                        <HitArea size="md" />
-                    </ToggleButton>
-                </div>
-            {/each}
-        </div>
-    </div>
-{/snippet}
+        <ToggleButton variant="soft" color="accent" size="md" bind:pressed={softVariantPressed}>
+            <ToggleButtonLabel>Soft</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="ghost" color="accent" size="md" bind:pressed={ghostVariantPressed}>
+            <ToggleButtonLabel>Ghost</ToggleButtonLabel>
+        </ToggleButton>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Colors"
+        description="Semantic tint options for active toggle states."
+        code={colorsCode}
+    >
+        <ToggleButton variant="soft" color="accent" size="md" bind:pressed={accentPressed}>
+            <ToggleButtonLabel>{colorLabels.accent}</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="soft" color="success" size="md" bind:pressed={successPressed}>
+            <ToggleButtonLabel>{colorLabels.success}</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="soft" color="warning" size="md" bind:pressed={warningPressed}>
+            <ToggleButtonLabel>{colorLabels.warning}</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="soft" color="danger" size="md" bind:pressed={dangerPressed}>
+            <ToggleButtonLabel>{colorLabels.danger}</ToggleButtonLabel>
+        </ToggleButton>
+    </PreviewSection>
+
+    <PreviewSection title="Sizes" code={sizesCode}>
+        {#each TOGGLE_BUTTON_SIZES as size (size)}
+            <ToggleButton variant="soft" color="accent" {size}>
+                <ToggleButtonLabel>{sizeLabels[size]}</ToggleButtonLabel>
+            </ToggleButton>
+        {/each}
+    </PreviewSection>
+
+    <PreviewSection
+        title="Icons & Icon-Only"
+        description="Pair icons with labels or render icon-only toggles with a HitArea and tooltip."
+        code={iconCode}
+    >
+        <ToggleButton variant="soft" color="accent" size="md">
+            <ToggleButtonIcon icon={Pin} />
+            <ToggleButtonLabel>Pin</ToggleButtonLabel>
+        </ToggleButton>
+
+        <ToggleButton
+            variant="soft"
+            color="accent"
+            size="md"
+            iconOnly
+            bind:pressed={iconPressed}
+            aria-label="Toggle bookmark"
+            {@attach tooltip("Toggle bookmark")}
+        >
+            <ToggleButtonIcon icon={Bookmark} />
+            <HitArea size="md" />
+        </ToggleButton>
+    </PreviewSection>
+</div>

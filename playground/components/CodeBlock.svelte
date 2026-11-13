@@ -93,10 +93,12 @@
         font-family: var(--cs-font-mono);
         font-size: 0.8125rem;
         line-height: 1.65;
+        white-space: pre;
         tab-size: 4;
     }
 
     .cs-playground-code-scroll :global(code) {
         font-family: inherit;
+        white-space: pre;
     }
 </style>

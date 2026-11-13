@@ -10,141 +10,202 @@
     import { ToggleButton, ToggleButtonIcon } from "cs/svelte/toggle-button";
     import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
     import { Tooltip, tooltip, TooltipIcon, TooltipKbd, TooltipText } from "cs/svelte/tooltip";
+    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
 
     let activeFormatting = $state<string[]>(["bold"]);
+
+    const closeScript = ["</", "script>"].join("");
+
+    /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
+    const basicCode = `<script lang="ts">
+    import { Plus } from "@lucide/svelte";
+    import { Button, ButtonIcon } from "cs/svelte/button";
+    import { HitArea } from "cs/svelte/hit-area";
+    import { tooltip } from "cs/svelte/tooltip";
+${closeScript}
+
+<Button
+    variant="tertiary"
+    size="md"
+    iconOnly
+    aria-label="Add item"
+    {@attach tooltip("Add item")}
+>
+    <ButtonIcon icon={Plus} />
+    <HitArea size="md" />
+</Button>`;
+
+    const shortcutsCode = `<ToggleButton
+    variant="soft"
+    color="accent"
+    size="md"
+    value="bold"
+    iconOnly
+    aria-label="Bold"
+    {@attach tooltip({ text: "Bold", shortcut: "Ctrl + B", placement: "top" })}
+>
+    <ToggleButtonIcon icon={Bold} />
+    <HitArea size="md" />
+</ToggleButton>`;
+
+    const compoundCode = `<Button
+    variant="tertiary"
+    size="md"
+    {@attach tooltip({ target: "save-tooltip", placement: "top" })}
+>
+    <ButtonLabel>Compound</ButtonLabel>
+</Button>
+
+<Tooltip id="save-tooltip">
+    <div class="flex items-start gap-2.5">
+        <TooltipIcon icon={Info} class="mt-0.5" />
+        <div class="flex flex-col gap-0.5">
+            <TooltipText>Save changes</TooltipText>
+            <span class="text-xs text-weak">Syncs your current workspace</span>
+        </div>
+        <span class="cs-tooltip-shortcuts">
+            <TooltipKbd>Ctrl + S</TooltipKbd>
+        </span>
+    </div>
+</Tooltip>`;
+    /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 </script>
 
-<div class="flex justify-center">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
-        <!-- Icon Buttons (Default Top Tooltips) -->
-        <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+<div class="flex flex-col gap-10">
+    <PreviewHeader
+        title="Tooltip"
+        description="Anchor-positioned hint popovers with optional icons and keyboard shortcuts."
+    />
+
+    <PreviewSection title="Basic" code={basicCode}>
+        <Button
+            variant="tertiary"
+            size="md"
+            iconOnly
+            aria-label="Add item"
+            {@attach tooltip("Add item")}
         >
-            <h2 class="title-2xl">Icon Buttons</h2>
-            <div class="flex flex-wrap gap-3 items-center">
-                <Button
-                    variant="tertiary"
-                    size="md"
-                    iconOnly
-                    aria-label="Hinzufügen"
-                    {@attach tooltip("Hinzufügen")}
-                >
-                    <ButtonIcon icon={Plus} />
-                    <HitArea size="md" />
-                </Button>
+            <ButtonIcon icon={Plus} />
+            <HitArea size="md" />
+        </Button>
 
-                <Button
-                    variant="tertiary"
-                    size="md"
-                    iconOnly
-                    aria-label="Löschen"
-                    {@attach tooltip("Löschen")}
-                >
-                    <ButtonIcon icon={Trash2} />
-                    <HitArea size="md" />
-                </Button>
-
-                <Button
-                    variant="tertiary"
-                    size="md"
-                    iconOnly
-                    aria-label="Einstellungen"
-                    {@attach tooltip("Einstellungen")}
-                >
-                    <ButtonIcon icon={Settings} />
-                    <HitArea size="md" />
-                </Button>
-
-                <Button variant="tertiary" size="md" iconOnly aria-label="Teilen" {@attach tooltip("Teilen")}>
-                    <ButtonIcon icon={Share2} />
-                    <HitArea size="md" />
-                </Button>
-            </div>
-        </div>
-
-        <!-- ToggleButtonGroup with Placements -->
-        <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+        <Button
+            variant="tertiary"
+            size="md"
+            iconOnly
+            aria-label="Delete"
+            {@attach tooltip("Delete")}
         >
-            <h2 class="title-2xl">Toggle Group</h2>
-            <div class="flex items-center">
-                <ToggleButtonGroup type="multiple" orientation="horizontal" bind:value={activeFormatting}>
-                    <ToggleButton
-                        variant="soft"
-                        color="accent"
-                        size="md"
-                        value="bold"
-                        iconOnly
-                        aria-label="Fett"
-                        {@attach tooltip({ text: "Fett", shortcut: "Ctrl + B", placement: "top" })}
-                    >
-                        <ToggleButtonIcon icon={Bold} />
-                        <HitArea size="md" />
-                    </ToggleButton>
+            <ButtonIcon icon={Trash2} />
+            <HitArea size="md" />
+        </Button>
 
-                    <ToggleButtonGroupSeparator />
-
-                    <ToggleButton
-                        variant="soft"
-                        color="accent"
-                        size="md"
-                        value="italic"
-                        iconOnly
-                        aria-label="Kursiv"
-                        {@attach tooltip({ text: "Kursiv", shortcut: "Ctrl + I", placement: "top" })}
-                    >
-                        <ToggleButtonIcon icon={Italic} />
-                        <HitArea size="md" />
-                    </ToggleButton>
-
-                    <ToggleButtonGroupSeparator />
-
-                    <ToggleButton
-                        variant="soft"
-                        color="accent"
-                        size="md"
-                        value="underline"
-                        iconOnly
-                        aria-label="Unterstrichen"
-                        {@attach tooltip({ text: "Unterstrichen", shortcut: "Ctrl + U", placement: "top" })}
-                    >
-                        <ToggleButtonIcon icon={Underline} />
-                        <HitArea size="md" />
-                    </ToggleButton>
-                </ToggleButtonGroup>
-            </div>
-        </div>
-
-        <!-- Custom / Compound Tooltip -->
-        <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 min-h-200px flex flex-col justify-start items-start gap-5"
+        <Button
+            variant="tertiary"
+            size="md"
+            iconOnly
+            aria-label="Settings"
+            {@attach tooltip("Settings")}
         >
-            <h2 class="title-2xl">Compound Tooltip</h2>
-            <div class="flex flex-wrap gap-3 items-center">
-                <Button
-                    variant="tertiary"
-                    size="md"
-                    {@attach tooltip({ target: "preview-rich-tooltip", placement: "top" })}
-                >
-                    <ButtonLabel>Props</ButtonLabel>
-                </Button>
-                <Tooltip id="preview-rich-tooltip" text="Speichern" icon={Info} shortcut="Ctrl + S" />
+            <ButtonIcon icon={Settings} />
+            <HitArea size="md" />
+        </Button>
 
-                <Button
-                    variant="tertiary"
-                    size="md"
-                    {@attach tooltip({ target: "preview-compound-tooltip", placement: "top" })}
-                >
-                    <ButtonLabel>Compound</ButtonLabel>
-                </Button>
-                <Tooltip id="preview-compound-tooltip">
-                    <TooltipIcon icon={Info} />
-                    <TooltipText>Speichern</TooltipText>
-                    <span class="cs-tooltip-shortcuts">
-                        <TooltipKbd>Ctrl + S</TooltipKbd>
-                    </span>
-                </Tooltip>
+        <Button
+            variant="tertiary"
+            size="md"
+            iconOnly
+            aria-label="Share"
+            {@attach tooltip("Share")}
+        >
+            <ButtonIcon icon={Share2} />
+            <HitArea size="md" />
+        </Button>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Shortcuts & Warm Scrubbing"
+        description="Move between grouped controls to preview instant tooltip transitions with keyboard shortcuts."
+        code={shortcutsCode}
+    >
+        <ToggleButtonGroup type="multiple" orientation="horizontal" bind:value={activeFormatting}>
+            <ToggleButton
+                variant="soft"
+                color="accent"
+                size="md"
+                value="bold"
+                iconOnly
+                aria-label="Bold"
+                {@attach tooltip({ text: "Bold", shortcut: "Ctrl + B", placement: "top" })}
+            >
+                <ToggleButtonIcon icon={Bold} />
+                <HitArea size="md" />
+            </ToggleButton>
+
+            <ToggleButtonGroupSeparator />
+
+            <ToggleButton
+                variant="soft"
+                color="accent"
+                size="md"
+                value="italic"
+                iconOnly
+                aria-label="Italic"
+                {@attach tooltip({ text: "Italic", shortcut: "Ctrl + I", placement: "top" })}
+            >
+                <ToggleButtonIcon icon={Italic} />
+                <HitArea size="md" />
+            </ToggleButton>
+
+            <ToggleButtonGroupSeparator />
+
+            <ToggleButton
+                variant="soft"
+                color="accent"
+                size="md"
+                value="underline"
+                iconOnly
+                aria-label="Underline"
+                {@attach tooltip({ text: "Underline", shortcut: "Ctrl + U", placement: "top" })}
+            >
+                <ToggleButtonIcon icon={Underline} />
+                <HitArea size="md" />
+            </ToggleButton>
+        </ToggleButtonGroup>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Props & Compound"
+        description="Render rich tooltips using shorthand props or explicit Tooltip subcomponents."
+        code={compoundCode}
+    >
+        <Button
+            variant="tertiary"
+            size="md"
+            {@attach tooltip({ target: "preview-rich-tooltip", placement: "top" })}
+        >
+            <ButtonLabel>Props</ButtonLabel>
+        </Button>
+        <Tooltip id="preview-rich-tooltip" text="Save changes" icon={Info} shortcut="Ctrl + S" />
+
+        <Button
+            variant="tertiary"
+            size="md"
+            {@attach tooltip({ target: "preview-compound-tooltip", placement: "top" })}
+        >
+            <ButtonLabel>Compound</ButtonLabel>
+        </Button>
+        <Tooltip id="preview-compound-tooltip">
+            <div class="flex items-start gap-2.5">
+                <TooltipIcon icon={Info} class="mt-0.5" />
+                <div class="flex flex-col gap-0.5">
+                    <TooltipText>Save changes</TooltipText>
+                    <span class="text-xs text-weak">Syncs your current workspace</span>
+                </div>
+                <span class="cs-tooltip-shortcuts">
+                    <TooltipKbd>Ctrl + S</TooltipKbd>
+                </span>
             </div>
-        </div>
-    </div>
+        </Tooltip>
+    </PreviewSection>
 </div>

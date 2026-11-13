@@ -76,6 +76,11 @@ Architectural Notes:
 <style>
     @layer components.primitive {
         .cs-checkbox {
+            /* =========================================================
+            * CHECKED INTENT (Accent by default, overridden by [aria-invalid])
+            * ========================================================= */
+            --_bg-checked: var(--cs-color-accent-solid);
+            --_bg-checked-hover: var(--cs-color-accent-solid-hover);
             position: relative;
             width: var(--_size);
             height: var(--_size);
@@ -117,12 +122,6 @@ Architectural Notes:
                 --_size: 28px;
                 --_radius: 8px;
             }
-
-            /* =========================================================
-            * CHECKED INTENT (Accent by default, overridden by [aria-invalid])
-            * ========================================================= */
-            --_bg-checked: var(--cs-color-accent-solid);
-            --_bg-checked-hover: var(--cs-color-accent-solid-hover);
 
             /* =========================================================
             * VARIANTS
