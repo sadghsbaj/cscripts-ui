@@ -26,10 +26,10 @@ Architectural Notes:
             align-items: center;
             height: 100%;
             padding-inline: 20px;
-            background-color: var(--cs-color-elevation-1);
+            background-color: var(--cs-color-elevated);
             border-radius: var(--cs-radius-full);
-            corner-shape: var(--cs-squircle-smooth);
-            box-shadow: var(--cs-shadow-elevation-1);
+            corner-shape: var(--cs-squircle-soft);
+            box-shadow: var(--cs-shadow-elevated);
             user-select: none;
             pointer-events: none;
         }

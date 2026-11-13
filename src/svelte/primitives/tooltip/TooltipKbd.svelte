@@ -5,7 +5,7 @@ Keyboard shortcut keycap badge (`<TooltipKbd />`) for `<Tooltip />` overlays.
 Architectural Notes:
 - Optical Trimming: Applies `text-box: trim-both cap alphabetic` with `line-height: var(--cs-leading-none)`
   for pixel-perfect optical vertical centering of key symbols.
-- Styling: Renders an elevated surface squircle pill (`bg-elevation-2`, `radius-full`).
+- Styling: Renders an elevated surface squircle pill (`bg-sunken`, `radius-full`).
 -->
 <script lang="ts">
     import type { TooltipKbdProps } from "./index.ts";

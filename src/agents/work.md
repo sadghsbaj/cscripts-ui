@@ -73,7 +73,7 @@ Every work application follows this top-level structure:
     - `align="center"`: Mathematically centered to the 1280px (`--cs-container-7xl`) header container. Keep central controls concise (1-word labels, `whitespace-nowrap`).
     - `align="end"`: Placed on the right directly before the Pfleiderer brand badge (ideal for theme switcher buttons, quick actions).
     - `align="after"`: Placed on the outer right edge after the Pfleiderer brand badge.
-    - `renderIsland={true}`: Wraps the segment in an elevated pill (`bg-elevation-1 rounded-full squircle`) matching the tool title and brand badge geometry. `renderIsland={false}` (default) provides a transparent flex wrapper.
+    - `renderIsland={true}`: Wraps the segment in an elevated pill (`bg-elevated rounded-full squircle`) matching the tool title and brand badge geometry. `renderIsland={false}` (default) provides a transparent flex wrapper.
 - **Header Controls (`../svelte/work/app-controls/`):** Dedicated header widgets matching the 48px header pill geometry:
     - **Theme Toggle (`WorkAppThemeButton`):** NEVER build custom theme buttons for work headers. Always use `<WorkAppThemeButton />` (exported from `cs/svelte/work`), which is already pre-configured to 48px height (`variant="elevated"`), automatically calls `theme.cycle()` on click, and renders the active theme icon with accessible aria-label.
     - **Documentation & Help Trigger (`WorkAppHelpButton` / `WorkAppDocsButton`):** Use `<WorkAppHelpButton onclick={...} />` for in-app manuals, help dialogs, or wiki links (pre-configured 48px `variant="elevated"` button, default `BookOpen` icon, customizable `icon` and `aria-label`).

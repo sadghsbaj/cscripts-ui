@@ -47,10 +47,10 @@ Architectural Notes:
 
             &[data-island] {
                 padding-inline: 14px;
-                background-color: var(--cs-color-elevation-1);
+                background-color: var(--cs-color-elevated);
                 border-radius: var(--cs-radius-full);
-                corner-shape: var(--cs-squircle-smooth);
-                box-shadow: var(--cs-shadow-elevation-1);
+                corner-shape: var(--cs-squircle-soft);
+                box-shadow: var(--cs-shadow-elevated);
             }
         }
     }

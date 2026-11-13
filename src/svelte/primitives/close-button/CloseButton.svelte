@@ -158,10 +158,10 @@ Architectural Notes:
             * ---------------------------------------------------------
             * Variant Hierarchy & Surface Pairing:
             * - soft (Primary Workhorse): The default choice for almost all
-            *   UI surfaces, including floating islands (elevation-1 modals,
+            *   UI surfaces, including floating islands (elevated modals,
             *   drawers, popovers) and compact elements (toasts, cards) to
             *   provide a calm, grounded, tactile tint.
-            * - elevated (Canvas Pairing): Best for elevation-0 surfaces
+            * - elevated (Canvas Pairing): Best for canvas surfaces
             *   (fullscreen media lightboxes, raw canvas) for crisp lift.
             * - ghost (Niche Fallback): Strictly reserved for rare edge cases
             *   where even a soft tinted surface plate would visually clash.

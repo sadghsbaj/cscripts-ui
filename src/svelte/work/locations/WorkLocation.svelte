@@ -34,7 +34,7 @@ SVG map primitive (`<WorkLocation />`) for rendering company plant regions (`arn
             --cs-work-location-stroke-width: 8px;
 
             --cs-work-location-marker-fill: var(--cs-work-location-stroke);
-            --cs-work-location-marker-stroke: var(--cs-color-elevation-1);
+            --cs-work-location-marker-stroke: var(--cs-color-elevated);
             --cs-work-location-marker-stroke-width: 9px;
             --cs-work-location-marker-radius: 30px;
             --cs-work-location-marker-scale: 1;

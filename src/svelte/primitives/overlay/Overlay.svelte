@@ -163,7 +163,7 @@ Architectural Notes:
         }
 
         .cs-overlay[data-variant="solid"] {
-            background-color: var(--cs-color-elevation-0);
+            background-color: var(--cs-color-canvas);
         }
 
         .cs-overlay[data-variant="transparent"] {

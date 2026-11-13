@@ -7,7 +7,7 @@ Architectural Notes:
     padding via `max()`, keeping a single flex/scroll container where external utility classes
     (e.g. `gap-*`, `overflow-*`) apply directly while the scrollbar stays anchored to the viewport edge.
 - Pure Layout Primitive: Intentionally omits `background-color` so the root canvas surface
-    (`--cs-color-elevation-0` defined on `html` in `reset.css`) or underlying background patterns shine through.
+    (`--cs-color-canvas` defined on `html` in `reset.css`) or underlying background patterns shine through.
 - Built-In Signature: Automatically renders `<WorkAppSignature />` unless `showSignature={false}` is passed.
 -->
 <script lang="ts">

@@ -113,7 +113,7 @@ Architectural Notes:
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background-color: var(--cs-color-elevation-0);
+            background-color: var(--cs-color-canvas);
             user-select: none;
             transition:
                 opacity 300ms var(--cs-ease-quad-out),
