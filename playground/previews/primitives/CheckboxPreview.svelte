@@ -18,7 +18,6 @@
 
     const closeScript = ["</", "script>"].join("");
 
-    /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {checked} bindings */
     const basicCode = `<script lang="ts">
     import { Checkbox } from "cs/svelte/checkbox";
 
@@ -41,7 +40,6 @@ ${closeScript}
 <Checkbox variant="soft" size="md" checked />
 <Checkbox variant="soft" size="lg" checked />
 <Checkbox variant="soft" size="xl" checked />`;
-    /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 </script>
 
 <div class="flex flex-col gap-10">

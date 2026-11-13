@@ -8,6 +8,7 @@
     import { Button, BUTTON_SIZES, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
     import { tooltip } from "cs/svelte/tooltip";
+
     import { PreviewHeader, PreviewSection } from "../../components/index.ts";
 
     const closeScript = ["</", "script>"].join("");
@@ -18,7 +19,7 @@
 ${closeScript}
 
 <Button variant="primary" size="md">
-    <ButtonLabel>Save changes</ButtonLabel>
+    <ButtonLabel>Click me</ButtonLabel>
 </Button>`;
 
     const variantsCode = `<Button variant="primary" size="md">
@@ -99,7 +100,7 @@ ${closeScript}
 
     <PreviewSection title="Basic" code={basicCode}>
         <Button variant="primary" size="md">
-            <ButtonLabel>Save changes</ButtonLabel>
+            <ButtonLabel>Click me</ButtonLabel>
         </Button>
     </PreviewSection>
 
@@ -164,13 +165,7 @@ ${closeScript}
             <ButtonIcon icon={ArrowRight} />
         </Button>
 
-        <Button
-            variant="tertiary"
-            size="md"
-            iconOnly
-            aria-label="Settings"
-            {@attach tooltip("Settings")}
-        >
+        <Button variant="tertiary" size="md" iconOnly aria-label="Settings" {@attach tooltip("Settings")}>
             <ButtonIcon icon={Settings} />
             <HitArea size="md" />
         </Button>
