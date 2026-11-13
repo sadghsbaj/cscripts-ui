@@ -24,19 +24,18 @@
         default: Component;
         id: string;
         label: string;
-        category?: PreviewCategory;
     }
 
     interface PreviewItem {
         id: string;
         label: string;
-        category?: PreviewCategory;
+        category: PreviewCategory;
         preview: Component;
     }
 
     interface PreviewGroup {
-        id: string;
-        label?: string;
+        id: PreviewCategory;
+        label: string;
         items: PreviewItem[];
     }
 
@@ -44,47 +43,31 @@
     const SAVED_SIDEBAR_KEY = "saved-sidebar-open";
     const CONTROLS_IDLE_MS = 2200;
 
-    const modules = import.meta.glob<SvelteModule>("./svelte/*.svelte", { eager: true });
+    const modules = import.meta.glob<SvelteModule>(
+        ["./primitives/*.svelte", "./attachments/*.svelte", "./work/*.svelte"],
+        { eager: true }
+    );
 
-    const previews: PreviewItem[] = Object.values(modules)
-        .map((module) => ({
+    function categoryFromPath(path: string): PreviewCategory {
+        const folder = path.split("/", 2)[1];
+        if (folder === "attachments" || folder === "work") return folder;
+        return "primitives";
+    }
+
+    const previews: PreviewItem[] = Object.entries(modules)
+        .map(([path, module]) => ({
             id: module.id,
             label: module.label,
-            category: module.category,
+            category: categoryFromPath(path),
             preview: module.default,
         }))
         .toSorted((a, b) => a.label.localeCompare(b.label, "en"));
 
-    const hasExplicitCategories = previews.some((item) => item.category !== undefined);
-
-    const previewGroups: PreviewGroup[] = (() => {
-        if (!hasExplicitCategories) {
-            return [{ id: "all", items: previews }];
-        }
-
-        const groups: PreviewGroup[] = [];
-        for (const cat of PREVIEW_CATEGORIES) {
-            const items = previews.filter((item) => item.category === cat);
-            if (items.length > 0) {
-                groups.push({
-                    id: cat,
-                    label: PREVIEW_CATEGORY_LABELS[cat],
-                    items,
-                });
-            }
-        }
-
-        const uncategorized = previews.filter((item) => !item.category);
-        if (uncategorized.length > 0) {
-            groups.push({
-                id: "other",
-                label: "Other",
-                items: uncategorized,
-            });
-        }
-
-        return groups;
-    })();
+    const previewGroups: PreviewGroup[] = PREVIEW_CATEGORIES.map((category) => ({
+        id: category,
+        label: PREVIEW_CATEGORY_LABELS[category],
+        items: previews.filter((item) => item.category === category),
+    })).filter((group) => group.items.length > 0);
 
     const savedId = getLocalStorage(SAVED_PREVIEW_KEY);
     let selectedId = $state<string | undefined>(
@@ -204,7 +187,7 @@
                                 {const isActive = preview.id === selectedId}
                                 <button
                                     type="button"
-                                    class="cs-sidebar-item w-full text-left px-3 py-2 rounded-xl squircle-soft text-sm transition-colors duration-150 cursor-pointer {isActive
+                                    class="cs-sidebar-item w-full text-left px-3 py-2 rounded-xl squircle-soft text-sm transition-colors duration-150 {isActive
                                         ? 'bg-base-soft-hover text-strong font-medium'
                                         : 'text-main hover:bg-base-soft hover:text-strong'}"
                                     aria-current={isActive ? "page" : undefined}

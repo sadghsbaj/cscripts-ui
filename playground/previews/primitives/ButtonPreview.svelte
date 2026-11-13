@@ -1,7 +1,6 @@
 <script module>
     export const id = "button";
     export const label = "Button";
-    export const category = "primitives" as const;
 </script>
 
 <script lang="ts">
