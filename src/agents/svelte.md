@@ -4,7 +4,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 
 ## 1. Component Architecture Philosophy
 
-- **UI Components & Interactive Primitives (`../svelte/primitives/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte/<primitive>`. Primitives use a clean compound architecture with colocated CSS and require explicit prop configuration (`variant`, `size`, `color`) without implicit fallback defaults:
+- **UI Components & Interactive Primitives (`../svelte/primitives/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte/<primitive>`. Primitives use a clean compound architecture with colocated CSS and require explicit prop configuration (`variant`, `size`, and `color` where applicable) without implicit fallback defaults:
     1. **Discover available primitives:** Check `../svelte/primitives/<name>/index.ts` to see exported components, attachments, and types.
     2. **Inspect implementation & conventions:** Read the specific `../svelte/primitives/<name>/` files and architectural guides in `../svelte/explanations/` before using or building primitives.
 - **Floating UI, Triggers & Motion (`cs/svelte/popover`, `cs/svelte/tooltip`):** All anchored floating surfaces (tooltips, dropdown menus, context menus, custom popovers) MUST build upon `<Popover>`, wired to their trigger via `{@attach popoverTrigger({ target })}`. NEVER hand-roll `popovertarget`, `interestfor`, `anchor-name`, hover timers, or open/close listeners.

@@ -9,7 +9,7 @@ This architectural guide explains the baseline conventions and automated foundat
 Components in `cs` deliberately **require explicit configuration** via required props mapped to data attributes (such as `variant` -> `[data-variant]`, `size` -> `[data-size]`, and `color` -> `[data-color]` where applicable):
 
 - **Preventing Accidental Defaults:** There are no implicit fallback sizes or variants in component props or CSS. Omitting a required prop is caught immediately rather than guessing an unintended look.
-- **Type-Enforced:** Strict TypeScript prop definitions on each Svelte component validate required props, allowed value unions, and variant constraints (such as omitting `color` on `elevated` variants) directly in your IDE.
+- **Type-Enforced:** Strict TypeScript prop definitions on each Svelte component validate required props, allowed value unions, and variant constraints (such as disallowing `danger` on `tertiary` / `elevated` `<Button>` variants) directly in your IDE.
 
 ---
 
