@@ -78,12 +78,12 @@
         --cs-shiki-background: transparent;
         --cs-shiki-token-comment: var(--cs-color-text-weaker);
         --cs-shiki-token-punctuation: var(--cs-color-text-weak);
-        --cs-shiki-token-string: var(--cs-color-text-strong);
-        --cs-shiki-token-string-expression: var(--cs-color-text-strong);
-        --cs-shiki-token-keyword: var(--cs-color-accent-soft-fg);
-        --cs-shiki-token-function: var(--cs-color-text-strong);
-        --cs-shiki-token-constant: var(--cs-color-text-main);
-        --cs-shiki-token-parameter: var(--cs-color-text-main);
+        --cs-shiki-token-string: light-dark(var(--cs-color-emerald-600), var(--cs-color-emerald-400));
+        --cs-shiki-token-string-expression: light-dark(var(--cs-color-sky-600), var(--cs-color-sky-400));
+        --cs-shiki-token-keyword: light-dark(var(--cs-color-violet-600), var(--cs-color-violet-400));
+        --cs-shiki-token-function: light-dark(var(--cs-color-indigo-600), var(--cs-color-indigo-300));
+        --cs-shiki-token-constant: light-dark(var(--cs-color-amber-600), var(--cs-color-amber-300));
+        --cs-shiki-token-parameter: light-dark(var(--cs-color-rose-600), var(--cs-color-rose-400));
         --cs-shiki-token-link: var(--cs-color-accent-soft-fg);
     }
 
