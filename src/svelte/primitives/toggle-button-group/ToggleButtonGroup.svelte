@@ -69,7 +69,7 @@ Architectural Notes:
 
             display: inline-flex;
             border-radius: var(--cs-radius-full);
-            corner-shape: var(--cs-squircle-smooth);
+            corner-shape: var(--cs-squircle-soft);
 
             > :global(.cs-toggle-button) {
                 --_active-squash: 0.97;
