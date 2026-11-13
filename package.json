@@ -8,6 +8,7 @@
     ],
     "scripts": {
         "dev": "bunx --bun vite",
+        "build:docs": "bunx --bun vite build --config vite.docs.config.ts",
         "typecheck": "tsc --noEmit",
         "test": "bunx --bun vitest run",
         "test:watch": "bunx --bun vitest",

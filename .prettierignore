@@ -4,3 +4,4 @@ dist
 coverage
 .git
 .DS_Store
+src/vite/docs.html
