@@ -30,6 +30,15 @@
     );
     --cs-color-base-solid-fg: light-dark(var(--cs-color-base-50), var(--cs-color-base-950));
 
+    /* Disabled Surfaces & Foreground */
+    --cs-color-disabled-bg: var(--cs-color-base-soft);
+    --cs-color-disabled-bg-active: var(--cs-color-base-soft-hover);
+    --cs-color-disabled-bg-strong: light-dark(var(--cs-color-base-300), var(--cs-color-base-700));
+    --cs-color-disabled-bg-elevated: light-dark(var(--cs-color-base-50), var(--cs-color-base-800));
+    --cs-color-disabled-border: var(--cs-color-base-soft);
+    --cs-color-disabled-fg: var(--cs-color-text-weaker);
+    --cs-color-disabled-fg-active: var(--cs-color-text-weak);
+
     /* Accent Soft & Solid */
     --cs-color-accent-soft: light-dark(
         color-mix(in oklab, var(--cs-color-accent-500) 12%, white),

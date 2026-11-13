@@ -4,7 +4,7 @@
     import { ScrollArea, ScrollAreaContent } from "cs/svelte/scroll-area";
     import { theme } from "cs/svelte/theme";
     import { tooltip } from "cs/svelte/tooltip";
-    import ToggleButtonSoftCompare from "./ToggleButtonSoftCompare.svelte";
+    import DisabledCompare from "./DisabledCompare.svelte";
 </script>
 
 <div class="size-full relative bg-canvas">
@@ -24,7 +24,7 @@
 
     <ScrollArea size="lg" direction="vertical" class="size-full">
         <ScrollAreaContent class="min-h-full flex-center flex-col gap-8 p-8 lg:p-16">
-            <ToggleButtonSoftCompare />
+            <DisabledCompare />
         </ScrollAreaContent>
     </ScrollArea>
 </div>

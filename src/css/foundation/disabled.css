@@ -12,6 +12,12 @@
  *    - Prevents accidental click/tap events on non-native elements like links.
  *    - Note: Because `pointer-events: none` prevents cursor rendering, `cursor: not-allowed`
  *      would have no effect here and is intentionally omitted in favor of clean state suppression.
+ *
+ * 3. Opt-out & Token-Based Styling (`--cs-disabled-opacity`):
+ *    - Defaults to `opacity: 0.5` as a safe fallback for native elements and unstyled controls.
+ *    - Primitives with dedicated disabled states should opt out by setting
+ *      `--cs-disabled-opacity: 1` and styling their surfaces/foregrounds with the
+ *      `--cs-color-disabled-*` tokens defined in `color-semantics.css`.
  */
 :disabled,
 :disabled::before,
@@ -28,6 +34,6 @@
 :disabled,
 [aria-disabled="true"],
 [data-disabled] {
-    opacity: 0.5;
+    opacity: var(--cs-disabled-opacity, 0.5);
     user-select: none;
 }
