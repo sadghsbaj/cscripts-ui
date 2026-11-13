@@ -37,8 +37,8 @@ Instead of monolithic full-screen panels divided by borders, structure layouts a
 Everything rounded must look organically smooth. Combine generous border radii with CSS `corner-shape` squircles (progressive enhancement: renders true superellipses in Chromium and gracefully falls back to standard border-radius elsewhere).
 
 - **Rule of Thumb:** Higher superellipse values (`squircle` = `2`) pull corners inward more strongly; on small elements, this can look overly boxy. Scale the squircle intensity with element size:
-    - **`squircle-soft` (`superellipse(1.2)`):** Small elements, icon-only buttons, compact chips, checkboxes.
-    - **`squircle-smooth` (`superellipse(1.6)`):** The default workhorse. Use on standard buttons, inputs, tooltips, badges, dropdown menus, and medium elements (often paired with `rounded-full`, `rounded-lg`, or `rounded-xl`).
+    - **`squircle-soft` (`superellipse(1.2)`):** Interactive controls (`Button`, `ToggleButton`, `ToggleButtonGroup`, `CloseButton`, `Tooltip`), compact chips, and `Checkbox` (with `4px–8px` pixel radii).
+    - **`squircle-smooth` (`superellipse(1.6)`):** Inputs, badges, dropdown menus, and medium elements (often paired with `rounded-lg` or `rounded-xl`).
     - **`squircle` (`superellipse(2)`):** Large containers, floating islands, cards, and modals (paired with `rounded-2xl` or `rounded-3xl`).
 
 ---
@@ -49,6 +49,7 @@ Maintain a calm, monochrome-first UI hierarchy using the `base` (Zinc) palette a
 
 - **Accent-First Interactive Controls (No Neutral-Only Controls):** Interactive state controls (`<Checkbox>`, `<ToggleButton>`, switches) and primary/secondary actions consistently use the `accent` palette rather than offering a neutral `base` color toggle—do not mix neutral and chromatic controls in the same UI.
 - **Light/Dark Solid Calibration (`550` Light / `500` Dark):** Semantic `--cs-color-*-solid` tokens (`accent`, `success`, `warning`, `danger`, `info`) use a richer `550` mix (`50% 500 + 50% 600` in `oklch`) in Light Mode and `500` in Dark Mode, automatically shared across buttons, checkboxes, and future solid controls.
+- **Solid Surface Highlight (`--cs-shadow-solid`):** Interactive chromatic `-solid` surfaces (such as `<Button variant="primary">`, checked/indeterminate `<Checkbox>`, and future switches/radios) MUST apply `--cs-shadow-solid` (top-lit inset highlight + soft micro-drop-shadow) and `--cs-shadow-solid-active` on active press—never duplicate raw `inset 0 1px 0 0 ...` shadows inline, and keep flat `-soft` / `tertiary` / `ghost` surfaces shadowless.
 - **Single High-Emphasis Call-to-Action:** At most **ONE** `<Button variant="primary">` (i.e. `accent-solid`) element should be visible in a view at a time.
 - **No Chromatic Soft Backgrounds on `<Button>`:** Buttons intentionally NEVER use tinted `-soft` backgrounds (chromatic soft fills on buttons look playful/childish). Instead:
     - `variant="secondary"` pairs a neutral `base-soft` pill with chromatic `accent` (or `danger`) text.
