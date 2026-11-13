@@ -8,7 +8,7 @@
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
 
-    import { Checkbox, CHECKBOX_COLORS, CHECKBOX_SIZES } from "../../../src/svelte/primitives/checkbox";
+    import { Checkbox, CHECKBOX_SIZES } from "../../../src/svelte/primitives/checkbox";
 
     const STATES = [
         { id: "unchecked", label: "Unchecked" },
@@ -63,7 +63,6 @@
     >
         <Checkbox
             variant="soft"
-            color="accent"
             size="lg"
             bind:checked={singleChecked}
             bind:indeterminate={singleIndeterminate}
@@ -73,26 +72,18 @@
     </div>
 
     <!-- Overview cards with static/independent checkboxes -->
-    <div class="flex flex-col gap-4">
-        <div class="flex gap-4">
-            {#each CHECKBOX_COLORS as color (color)}
-                <div
-                    class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px min-w-300px flex-center flex-col gap-3"
-                >
-                    {#each CHECKBOX_SIZES as size (size)}
-                        <Checkbox variant="soft" {color} {size} />
-                    {/each}
-                </div>
+    <div class="flex gap-4">
+        <div
+            class="bg-elevation-1 shadow-elevation-1 rounded-3xl squircle p-8 min-h-200px min-w-300px flex-center flex-col gap-3"
+        >
+            {#each CHECKBOX_SIZES as size (size)}
+                <Checkbox variant="soft" {size} />
             {/each}
         </div>
 
-        <div class="flex gap-4">
-            {#each CHECKBOX_COLORS as color (color)}
-                <div class="p-8 min-h-200px min-w-300px flex-center flex-col gap-3">
-                    {#each CHECKBOX_SIZES as size (size)}
-                        <Checkbox variant="elevated" {color} {size} />
-                    {/each}
-                </div>
+        <div class="p-8 min-h-200px min-w-300px flex-center flex-col gap-3">
+            {#each CHECKBOX_SIZES as size (size)}
+                <Checkbox variant="elevated" {size} />
             {/each}
         </div>
     </div>

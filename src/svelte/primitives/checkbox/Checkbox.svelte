@@ -23,7 +23,7 @@ Architectural Notes:
   Uses pure `box-shadow` instead of CSS `border` to guarantee that inset hairline shadows on elevated
   dark-mode surfaces align directly with the outer squircle contour. The error state seamlessly transitions
   into an inset danger ring, leaving native `outline` completely unconstrained for `:focus-visible`.
-- Defaults & Resets: Requires explicit `variant`, `size`, and `color` props with no implicit fallbacks.
+- Defaults & Resets: Requires explicit `variant` and `size` props with no implicit fallbacks.
   See `../../explanations/component-defaults-and-globals.md`
 - Elevated Hover Physics (Light vs. Dark):
   Follows `../../explanations/elevated-hover-physics.md` (shadow lift in light mode, surface luminance step-up in dark mode).
@@ -34,7 +34,6 @@ Architectural Notes:
 
     let {
         variant,
-        color,
         size,
         checked = $bindable(),
         indeterminate = $bindable(),
@@ -55,7 +54,6 @@ Architectural Notes:
     aria-invalid={invalid ? "true" : undefined}
     class={["cs-checkbox", className]}
     data-variant={variant}
-    data-color={color}
     data-size={size}
     style:anchor-name={anchorName}
 />
@@ -116,18 +114,10 @@ Architectural Notes:
             }
 
             /* =========================================================
-            * COLORS
+            * CHECKED INTENT (Accent by default, overridden by [aria-invalid])
             * ========================================================= */
-            &[data-color="accent"] {
-                --_bg-checked: var(--cs-color-accent-solid);
-                --_bg-checked-hover: var(--cs-color-accent-solid-hover);
-            }
-
-            &[data-color="base"] {
-                --_bg-checked: var(--cs-color-base-solid);
-                --_bg-checked-hover: var(--cs-color-base-solid-hover);
-                --_solid-shadow: light-dark(rgb(255 255 255 / 0.26), rgb(255 255 255 / 0.12));
-            }
+            --_bg-checked: var(--cs-color-accent-solid);
+            --_bg-checked-hover: var(--cs-color-accent-solid-hover);
 
             /* =========================================================
             * VARIANTS
@@ -170,7 +160,7 @@ Architectural Notes:
             &:is(:checked, :indeterminate) {
                 --_bg: var(--_bg-checked);
                 --_bg-hover: var(--_bg-checked-hover);
-                --_shadow: inset 0 1px 0 0 var(--_solid-shadow, rgb(255 255 255 / 0.26)), 0 1px 2px 0 rgb(0 0 0 / 0.12);
+                --_shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.26), 0 1px 2px 0 rgb(0 0 0 / 0.12);
                 --_shadow-hover: var(--_shadow);
             }
 
@@ -230,13 +220,6 @@ Architectural Notes:
             opacity: 1;
             scale: 1;
             transition: none;
-        }
-
-        /* =========================================================
-         * HIGH-CONTRAST FOREGROUND (Base Palette Inversion)
-         * ========================================================= */
-        .cs-checkbox[data-color="base"]:not([aria-invalid="true"]) + .cs-checkbox-icon {
-            color: var(--cs-color-base-solid-fg);
         }
 
         /* Mirrors global disabled state (disabled.css only targets the input host, not its anchor sibling) */
