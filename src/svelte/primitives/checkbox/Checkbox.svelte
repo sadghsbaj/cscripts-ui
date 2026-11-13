@@ -147,13 +147,13 @@ Architectural Notes:
             }
 
             @media (hover: hover) {
-                &:hover {
+                &:hover:not(:disabled) {
                     background-color: var(--_bg-hover);
                     box-shadow: var(--_shadow-hover, none);
                 }
             }
 
-            &:active {
+            &:active:not(:disabled) {
                 scale: 0.9;
 
                 &::before {

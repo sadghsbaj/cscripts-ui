@@ -5,16 +5,25 @@
 
 <script lang="ts">
     import { Checkbox, CHECKBOX_SIZES } from "cs/svelte/checkbox";
-    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection, SunkenWell } from "../../components/index.ts";
 
     let basicChecked = $state(false);
-    let softChecked = $state(true);
+    let softChecked = $state(false);
     let elevatedChecked = $state(false);
 
     let uncheckedState = $state(false);
     let checkedState = $state(true);
-    let indeterminateState = $state(true);
     let invalidState = $state(false);
+
+    let triStep = $state(0);
+    let indeterminateChecked = $state(false);
+    let indeterminateActive = $state(true);
+
+    function handleTriStateChange(): void {
+        triStep = (triStep + 1) % 3;
+        indeterminateChecked = triStep === 1;
+        indeterminateActive = triStep === 0;
+    }
 
     const closeScript = ["</", "script>"].join("");
 
@@ -66,10 +75,12 @@ ${closeScript}
                 <span>Soft</span>
             </label>
 
-            <label class="flex items-center gap-2.5 text-sm text-main select-none">
-                <Checkbox variant="elevated" size="md" bind:checked={elevatedChecked} />
-                <span>Elevated</span>
-            </label>
+            <SunkenWell>
+                <label class="flex items-center gap-2.5 text-sm text-main select-none">
+                    <Checkbox variant="elevated" size="md" bind:checked={elevatedChecked} />
+                    <span>Elevated</span>
+                </label>
+            </SunkenWell>
         </div>
     </PreviewSection>
 
@@ -90,7 +101,13 @@ ${closeScript}
             </label>
 
             <label class="flex items-center gap-2.5 text-sm text-main select-none">
-                <Checkbox variant="soft" size="md" bind:indeterminate={indeterminateState} />
+                <Checkbox
+                    variant="soft"
+                    size="md"
+                    bind:checked={indeterminateChecked}
+                    bind:indeterminate={indeterminateActive}
+                    onchange={handleTriStateChange}
+                />
                 <span>Indeterminate</span>
             </label>
 

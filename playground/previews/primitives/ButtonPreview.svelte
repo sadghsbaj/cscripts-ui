@@ -9,7 +9,7 @@
     import { HitArea } from "cs/svelte/hit-area";
     import { tooltip } from "cs/svelte/tooltip";
 
-    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection, SunkenWell } from "../../components/index.ts";
 
     const closeScript = ["</", "script>"].join("");
 
@@ -121,9 +121,11 @@ ${closeScript}
         <Button variant="ghost" size="md">
             <ButtonLabel>Ghost</ButtonLabel>
         </Button>
-        <Button variant="elevated" size="md">
-            <ButtonLabel>Elevated</ButtonLabel>
-        </Button>
+        <SunkenWell>
+            <Button variant="elevated" size="md">
+                <ButtonLabel>Elevated</ButtonLabel>
+            </Button>
+        </SunkenWell>
     </PreviewSection>
 
     <PreviewSection

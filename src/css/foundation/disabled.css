@@ -14,9 +14,20 @@
  *      would have no effect here and is intentionally omitted in favor of clean state suppression.
  */
 :disabled,
+:disabled::before,
+:disabled::after,
+[aria-disabled="true"],
+[aria-disabled="true"]::before,
+[aria-disabled="true"]::after,
+[data-disabled],
+[data-disabled]::before,
+[data-disabled]::after {
+    pointer-events: none;
+}
+
+:disabled,
 [aria-disabled="true"],
 [data-disabled] {
     opacity: 0.5;
     user-select: none;
-    pointer-events: none;
 }

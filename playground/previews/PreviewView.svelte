@@ -83,7 +83,7 @@
     let controlsVisible = $derived(!controlsIdleHidden || isHoveringControls || isFocusedControls);
 
     let activePreviewItem = $derived(previews.find((p) => p.id === selectedId));
-    let activePreview = $derived(activePreviewItem?.preview);
+    let ActivePreview = $derived(activePreviewItem?.preview);
 
     $effect(() => {
         if (selectedId) {
@@ -184,13 +184,13 @@
                             {/if}
 
                             {#each group.items as preview (preview.id)}
-                                {const isActive = preview.id === selectedId}
                                 <button
                                     type="button"
-                                    class="cs-sidebar-item w-full text-left px-3 py-2 rounded-xl squircle-soft text-sm transition-colors duration-150 {isActive
+                                    class="cs-sidebar-item w-full text-left px-3 py-2 rounded-xl squircle-soft text-sm transition-colors duration-150 {preview.id ===
+                                    selectedId
                                         ? 'bg-base-soft-hover text-strong font-medium'
                                         : 'text-main hover:bg-base-soft hover:text-strong'}"
-                                    aria-current={isActive ? "page" : undefined}
+                                    aria-current={preview.id === selectedId ? "page" : undefined}
                                     onclick={() => (selectedId = preview.id)}
                                 >
                                     {preview.label}
@@ -210,9 +210,8 @@
             {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
         >
             <div class="w-full max-w-4xl mx-auto flex flex-col gap-10">
-                {#if activePreview}
-                    {const PreviewComponent = activePreview}
-                    <PreviewComponent />
+                {#if ActivePreview}
+                    <ActivePreview />
                 {/if}
             </div>
         </ScrollAreaContent>
