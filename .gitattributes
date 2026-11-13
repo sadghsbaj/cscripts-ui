@@ -1,0 +1,2 @@
+# Prebuilt single-file docs bundle (managed by CI)
+src/vite/docs.html binary linguist-generated=true merge=ours
