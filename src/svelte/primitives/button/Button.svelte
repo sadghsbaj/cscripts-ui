@@ -4,13 +4,13 @@ Primary interactive button primitive (`<Button />`) supporting polymorphic rende
 (`as="button" | "a" | "label"`), semantic variants, and spring-physics press feedback.
 
 Architectural Notes:
-- Defaults & Resets: Requires explicit `variant`, `size`, and `color` (except `elevated`) props.
+- Defaults & Resets: Requires explicit `variant` and `size` props (`danger` optional on `primary`, `secondary`, `ghost`).
   See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
     import type { ButtonProps } from "./index.ts";
 
-    let { variant, color, size, as = "button", iconOnly, class: className, children, ...rest }: ButtonProps = $props();
+    let { variant, danger, size, as = "button", iconOnly, class: className, children, ...rest }: ButtonProps = $props();
 </script>
 
 <svelte:element
@@ -19,7 +19,7 @@ Architectural Notes:
     {...rest}
     class={["cs-button", className]}
     data-variant={variant}
-    data-color={color}
+    data-danger={danger ? "" : undefined}
     data-size={size}
     data-icon-only={iconOnly ? "" : undefined}
 >
@@ -179,75 +179,57 @@ Architectural Notes:
             }
 
             /* =========================================================
-            * COLORS
-            * ---------------------------------------------------------
-            * Only `base` defines `--_soft-fg-hover` (shifting from muted
-            * `text-main` to high-contrast `text-strong` on interaction).
-            * Chromatic intents (`accent`, `danger`) intentionally omit it so
-            * their foreground stays locked at peak saturation without washing
-            * out into pastel tints in dark mode.
-            * ========================================================= */
-            &[data-color="accent"] {
-                --_solid-bg: var(--cs-color-accent-solid);
-                --_solid-bg-hover: var(--cs-color-accent-solid-hover);
-                --_solid-fg: var(--cs-color-accent-solid-fg);
+             * INTENT TOKENS (Accent by default, overridden by [data-danger])
+             * ---------------------------------------------------------
+             * Uses `*-soft-fg` (600 light / 400 dark) for chromatic text on
+             * neutral `base-soft` / transparent surfaces to guarantee contrast.
+             * ========================================================= */
+            --_solid-bg: var(--cs-color-accent-solid);
+            --_solid-bg-hover: var(--cs-color-accent-solid-hover);
+            --_solid-fg: var(--cs-color-accent-solid-fg);
+            --_accent-fg: var(--cs-color-accent-soft-fg);
 
-                --_soft-bg: var(--cs-color-accent-soft);
-                --_soft-bg-hover: var(--cs-color-accent-soft-hover);
-                --_soft-fg: var(--cs-color-accent-soft-fg);
-            }
-
-            &[data-color="base"] {
-                --_solid-bg: var(--cs-color-base-solid);
-                --_solid-bg-hover: var(--cs-color-base-solid-hover);
-                --_solid-fg: var(--cs-color-base-solid-fg);
-                --_solid-shadow: light-dark(rgb(255 255 255 / 0.26), rgb(255 255 255 / 0.12));
-
-                --_soft-bg: var(--cs-color-base-soft);
-                --_soft-bg-hover: var(--cs-color-base-soft-hover);
-                --_soft-fg: var(--cs-color-base-soft-fg);
-                --_soft-fg-hover: var(--cs-color-base-soft-fg-hover);
-            }
-
-            &[data-color="danger"] {
+            &[data-danger] {
                 --_solid-bg: var(--cs-color-danger-solid);
                 --_solid-bg-hover: var(--cs-color-danger-solid-hover);
                 --_solid-fg: var(--cs-color-danger-solid-fg);
-
-                --_soft-bg: var(--cs-color-danger-soft);
-                --_soft-bg-hover: var(--cs-color-danger-soft-hover);
-                --_soft-fg: var(--cs-color-danger-soft-fg);
+                --_accent-fg: var(--cs-color-danger-soft-fg);
             }
 
             /* =========================================================
-            * VARIANTS
-            * ========================================================= */
-            &[data-variant="solid"] {
+             * VARIANTS
+             * ========================================================= */
+            &[data-variant="primary"] {
                 --_bg: var(--_solid-bg);
                 --_bg-hover: var(--_solid-bg-hover);
                 --_fg: var(--_solid-fg);
-                --_shadow: inset 0 1px 0 0 var(--_solid-shadow, rgb(255 255 255 / 0.26)), 0 1px 2px 0 rgb(0 0 0 / 0.12);
-                --_shadow-active: inset 0 1px 0 0 var(--_solid-shadow, rgb(255 255 255 / 0.26));
+                --_shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.26), 0 1px 2px 0 rgb(0 0 0 / 0.12);
+                --_shadow-active: inset 0 1px 0 0 rgb(255 255 255 / 0.26);
             }
 
-            &[data-variant="soft"] {
-                --_bg: var(--_soft-bg);
-                --_bg-hover: var(--_soft-bg-hover);
-                --_fg: var(--_soft-fg);
-                --_fg-hover: var(--_soft-fg-hover, var(--_soft-fg));
+            &[data-variant="secondary"] {
+                --_bg: var(--cs-color-base-soft);
+                --_bg-hover: var(--cs-color-base-soft-hover);
+                --_fg: var(--_accent-fg);
+            }
+
+            &[data-variant="tertiary"] {
+                --_bg: var(--cs-color-base-soft);
+                --_bg-hover: var(--cs-color-base-soft-hover);
+                --_fg: var(--cs-color-base-soft-fg);
+                --_fg-hover: var(--cs-color-base-soft-fg-hover);
             }
 
             &[data-variant="ghost"] {
                 --_bg: transparent;
-                --_bg-hover: var(--_soft-bg);
-                --_fg: var(--_soft-fg);
-                --_fg-hover: var(--_soft-fg-hover, var(--_soft-fg));
+                --_bg-hover: var(--cs-color-base-soft);
+                --_fg: var(--_accent-fg);
             }
 
             /* =========================================================
              * ELEVATED VARIANT
              * ---------------------------------------------------------
-             * Neutral floating surface (no data-color required).
+             * Neutral floating surface.
              * Hover Physics (Light vs. Dark): See ../../explanations/elevated-hover-physics.md
              * ========================================================= */
             &[data-variant="elevated"] {

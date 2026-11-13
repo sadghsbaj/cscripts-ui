@@ -16,46 +16,46 @@ describe("button ESLint rules", () => {
             ruleTester.run("button/require-structure", buttonStructureRule, {
                 valid: [
                     {
-                        code: '<Button variant="soft" color="accent" size="md"><ButtonLabel>Click me</ButtonLabel></Button>',
+                        code: '<Button variant="secondary" size="md"><ButtonLabel>Click me</ButtonLabel></Button>',
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close"><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close"><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-labelledby="heading-id"><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-labelledby="heading-id"><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                     },
                 ],
                 invalid: [
                     {
                         // Missing both iconOnly and ButtonLabel
-                        code: '<Button variant="soft" color="accent" size="md">Just text</Button>',
+                        code: '<Button variant="secondary" size="md">Just text</Button>',
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "missingLabelOrIconOnly" }],
                     },
                     {
                         // iconOnly without aria-label
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "missingIconOnlyAriaLabel" }],
                     },
                     {
                         // iconOnly without ButtonIcon
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Action"></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Action"></Button>',
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "missingIconInIconOnly" }],
                     },
                     {
                         // iconOnly containing ButtonLabel
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Action"><ButtonLabel>Text</ButtonLabel><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Action"><ButtonLabel>Text</ButtonLabel><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "unexpectedLabelInIconOnly" }],
                     },
                     {
                         // Raw SVG inside Button
-                        code: '<Button variant="soft" color="accent" size="md"><ButtonLabel>Text</ButtonLabel><svg></svg></Button>',
+                        code: '<Button variant="secondary" size="md"><ButtonLabel>Text</ButtonLabel><svg></svg></Button>',
                         filename: "src/Component.svelte",
                         errors: [
                             {
@@ -74,17 +74,17 @@ describe("button ESLint rules", () => {
             ruleTester.run("button/require-hit-area", buttonHitAreaRule, {
                 valid: [
                     {
-                        code: '<Button variant="soft" color="accent" size="md"><ButtonLabel>Normal</ButtonLabel></Button>',
+                        code: '<Button variant="secondary" size="md"><ButtonLabel>Normal</ButtonLabel></Button>',
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close"><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close"><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                     },
                 ],
                 invalid: [
                     {
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close"><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close"><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "missingHitArea" }],
                     },
@@ -98,21 +98,21 @@ describe("button ESLint rules", () => {
             ruleTester.run("button/require-tooltip", buttonTooltipRule, {
                 valid: [
                     {
-                        code: '<Button variant="soft" color="accent" size="md"><ButtonLabel>Normal</ButtonLabel></Button>',
+                        code: '<Button variant="secondary" size="md"><ButtonLabel>Normal</ButtonLabel></Button>',
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close" {@attach tooltip("Close")}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close" {@attach tooltip("Close")}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close" {@attach tooltip({ text: "Close" })}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close" {@attach tooltip({ text: "Close" })}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                     },
                 ],
                 invalid: [
                     {
-                        code: '<Button variant="soft" color="accent" size="md" iconOnly aria-label="Close"><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close"><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "missingTooltip" }],
                     },

@@ -5,33 +5,26 @@
 
 <script lang="ts">
     import { Plus } from "@lucide/svelte";
-    import {
-        Button,
-        BUTTON_COLORS,
-        BUTTON_SIZES,
-        ButtonIcon,
-        ButtonLabel,
-        type ButtonColor,
-        type ButtonVariant,
-    } from "cs/svelte/button";
+    import { Button, BUTTON_SIZES, ButtonIcon, ButtonLabel, type ButtonVariant } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
 
-    const variants = ["solid", "soft", "ghost"] as const satisfies readonly Exclude<ButtonVariant, "elevated">[];
+    const variants = ["primary", "secondary", "tertiary", "ghost"] as const satisfies readonly Exclude<
+        ButtonVariant,
+        "elevated"
+    >[];
 </script>
 
 <div class="flex justify-center">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-2 lg:px-8">
         {#each variants as variant (variant)}
-            {#each BUTTON_COLORS as color (color)}
-                {@render previewCard(false, variant, color)}
-            {/each}
+            {@render previewCard(false, variant)}
         {/each}
 
-        {@render previewCard(true, "solid", "accent")}
+        {@render previewCard(true, "primary")}
     </div>
 </div>
 
-{#snippet previewCard(isElevated: boolean, variant: Exclude<ButtonVariant, "elevated">, color: ButtonColor)}
+{#snippet previewCard(isElevated: boolean, variant: Exclude<ButtonVariant, "elevated">)}
     <div
         class="{!isElevated
             ? 'bg-elevation-1 shadow-elevation-1'
@@ -40,8 +33,6 @@
         <h2 class="title-2xl">
             {#if !isElevated}
                 {variant[0]?.toUpperCase() + variant.slice(1)}
-                +
-                {color[0]?.toUpperCase() + color.slice(1)}
             {:else}
                 Elevated
             {/if}
@@ -50,13 +41,23 @@
             {#each BUTTON_SIZES as size (size)}
                 <div class="flex gap-3 justify-between">
                     {#if !isElevated}
-                        <Button {size} {variant} {color}>
-                            <ButtonLabel>Click me!</ButtonLabel>
-                        </Button>
-                        <Button {size} {variant} {color} iconOnly aria-label="Hinzufügen">
-                            <ButtonIcon icon={Plus} />
-                            <HitArea size="md" />
-                        </Button>
+                        {#if variant === "tertiary"}
+                            <Button {size} variant="tertiary">
+                                <ButtonLabel>Click me!</ButtonLabel>
+                            </Button>
+                            <Button {size} variant="tertiary" iconOnly aria-label="Hinzufügen">
+                                <ButtonIcon icon={Plus} />
+                                <HitArea size="md" />
+                            </Button>
+                        {:else}
+                            <Button {size} {variant}>
+                                <ButtonLabel>Click me!</ButtonLabel>
+                            </Button>
+                            <Button {size} {variant} iconOnly aria-label="Hinzufügen">
+                                <ButtonIcon icon={Plus} />
+                                <HitArea size="md" />
+                            </Button>
+                        {/if}
                     {:else}
                         <Button {size} variant="elevated">
                             <ButtonLabel>Click me!</ButtonLabel>
