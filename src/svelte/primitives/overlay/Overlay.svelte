@@ -108,8 +108,8 @@ Architectural Notes:
              * CLOSED / EXIT TRANSITION (Fast & Accelerating Out)
              * ===================================================== */
             opacity: 0;
-            backdrop-filter: blur(0px) saturate(100%);
             -webkit-backdrop-filter: blur(0px) saturate(100%);
+            backdrop-filter: blur(0px) saturate(100%);
             transition:
                 opacity 160ms var(--cs-ease-cubic-in),
                 backdrop-filter 160ms var(--cs-ease-quad-in),
@@ -150,8 +150,8 @@ Architectural Notes:
             );
 
             &:popover-open {
-                backdrop-filter: blur(16px) saturate(160%);
                 -webkit-backdrop-filter: blur(16px) saturate(160%);
+                backdrop-filter: blur(16px) saturate(160%);
             }
         }
 
@@ -178,8 +178,8 @@ Architectural Notes:
             .cs-overlay:popover-open,
             .cs-overlay[data-variant="blur"]:popover-open {
                 opacity: 0;
-                backdrop-filter: blur(0px) saturate(100%);
                 -webkit-backdrop-filter: blur(0px) saturate(100%);
+                backdrop-filter: blur(0px) saturate(100%);
             }
         }
     }
