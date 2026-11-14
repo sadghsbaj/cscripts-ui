@@ -1,41 +1,37 @@
 # 04 – Cleanup, Duplikate & Altlasten
 
-Status: **In Abstimmung**
+Status: **Abgeschlossen** (Prioritäten & Richtung stehen)
 
 ---
 
 ## A. Konkrete Bugs & API-Altlasten
-1. **`Checkbox`: `hitAreaSize`-Prop leakt ins DOM**
-   - `CheckboxProps` definiert `hitAreaSize`, `Checkbox.svelte` destructured es nicht → landet als `hitareasize="..."` auf `<input>`.
-   - *Vorschlag:* Sauber entfernen (Checkbox hat bereits die `::before` Counter-Scale-Hit-Area) oder explizit abbilden.
-2. **`ToggleButton`: `value` ohne `ToggleButtonGroup` unbrauchbar**
-   - `ToggleButtonStateProps` verbietet `pressed`, sobald `value` gesetzt ist.
-   - *Vorschlag:* Entweder `ToggleButtonGroupItem` als dünne Komponente trennen oder `pressed` außerhalb einer Group erlauben.
-3. **`ToggleButton` / `CloseButton`: `type="button"`-Reihenfolge**
-   - Steht nach `{...rest}` statt davor (wie bei `Button`).
-   - *Vorschlag:* `type="button"` vor `{...rest}` setzen; `as`-Polymorphie nur ergänzen, wo wirklich nötig.
+1. ~~`Checkbox`: `hitAreaSize`-Prop~~ — **Erledigt** (vom User bereits entfernt).
+2. ~~`ToggleButton` / `CloseButton`: `type="button"` nach `{...rest}`~~ — **Kein Bug, sondern gewollt** (`type` ist in Props omitted; `{...rest}` davor verhindert versehentliches Überschreiben auf `"submit"`).
+3. **`ToggleButton` API & Logik:** Eigenes Detail-Thema bei der Umsetzung (Optik passt, aber State-/Group-API komplett sauber neu durchdenken).
 4. **`Popover.size` → `Popover.width`** (aus Thema 1).
-5. **`README.md` veraltet:** Zeigt noch `cs/svelte/components` & `cs/svelte/attachments` → aktualisieren.
+5. **`README.md` veraltet:** Import-Beispiele auf `cs/svelte/<module>` aktualisieren.
 
 ---
 
-## B. Duplizierungen & Drift
-1. **`ButtonIcon` / `ToggleButtonIcon` & `ButtonLabel` / `ToggleButtonLabel`**
-   - Praktisch 1:1 kopiert.
-   - *Vorschlag:* Gemeinsame CSS-Basis oder shared `.internal.`-Helper nutzen.
-2. **`ButtonGroup` vs. `ToggleButtonGroup`**
-   - Laufen auseinander (`ghost` `--_inner-radius: 4px` und `color-mix()`-Separator fehlen bei `ToggleButtonGroup`).
-   - *Vorschlag:* Gemeinsame Group-CSS-Basis für Radius-, Separator- und HitArea-Logik.
-3. **`CopyIcon` & `PasteIcon`**
-   - Identisches Sparkle-Markup & CSS.
-   - *Vorschlag:* In eine gemeinsame `sparkle.internal.svelte` (im `clipboard`-Modul) extrahieren.
+## B. Duplizierungen & Drift (saubere Architektur-Lösung)
+1. **`ButtonIcon` / `ToggleButtonIcon`, `ButtonLabel` / `ToggleButtonLabel` & `ButtonGroup` / `ToggleButtonGroup`:**
+   - **Kein** gegenseitiges Importieren zwischen `button/` und `toggle-button/`, **kein** Copy-Paste.
+   - **Lösung:** Gemeinsame CSS-Basis in **`src/css/shared/`** (z. B. für Group-Radius/Separator-Logik und Icon-/Label-Slots), die beide Module nutzen, während modul-spezifisches CSS co-located bleibt.
+2. **`CopyIcon` & `PasteIcon`:**
+   - Liegen im selben Modul (`clipboard/`) → direkt co-located in **`sparkle.internal.svelte`** (oder shared CSS) auslagern.
 
 ---
 
-## C. Strukturelle Umstellungen (aus Thema 1–3)
+## C. `/docs`-Route, `dist/` & Git-Workflow
+- **`/docs` in konsumierenden Apps behalten:** `./dist/` (gebaut über `bun run build:docs` / `vite.docs.config.ts`) bleibt als Feature erhalten.
+- **GitHub-Actions-Workflow & `.gitattributes` (`merge=ours`) entfernen:** Keine automatischen `chore: rebuild docs bundle`-Commits mehr in der Git-History; stattdessen baut der `docs-maintainer` (oder manuelles `bun run build:docs`) `dist/` bei Bedarf lokal neu.
+
+---
+
+## D. Strukturelle Umstellungen (aus Thema 1–3)
 1. **Ordner & Suffixe:** `src/svelte/primitives/` → `src/svelte/modules/` (`package.json` anpassen); interne Dateien mit `.internal.` markieren.
 2. **Doku & ESLint:** `<!-- @component -->` aus `.svelte` auslagern in `*.docs.md`; `src/eslint/rules/component-docs.ts` entsprechend umbauen.
-3. **Previews & Docs-Bundle:** `playground/previews/` als `*.preview.svelte` co-located in die Module ziehen; prüfen, ob `dist/` + GitHub-Workflow entfallen können.
-4. **Tokens & Vars:** Statusfarben auf `positive / caution / negative` (ohne `info`); `--_` schrittweise durch `--cs-<module>-*` ersetzen; `ref = $bindable()` bei Root-Components ergänzen.
+3. **Previews:** `playground/previews/` als `*.preview.svelte` co-located in die Module ziehen (`import.meta.glob`).
+4. **Tokens & Vars:** Statusfarben auf `positive / caution / negative` (ohne `info`); `--_` durch `--cs-<module>-*` ersetzen; `ref = $bindable()` bei Root-Components ergänzen.
 5. **Attachments:** Signaturen einzeln durchgehen (`enabled?: boolean | (() => boolean)` via `resolveGetter`).
-6. **Basis-Doku & Regeln:** `src/agents/` verschlanken, `.agents/rules/` + `AGENTS.md` + Sub-Agents anlegen, `Scratch.md` & `planning/` nach Umsetzung aufräumen.
+6. **Agents & MCP:** `src/agents/` verschlanken, `.agents/rules/` + `AGENTS.md` + Sub-Agents (`docs-maintainer`, `consistency-reviewer`, `preview-builder`, optional `mcp-maintainer`) + `src/mcp/` aufbauen.
