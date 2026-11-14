@@ -14,7 +14,7 @@ import {
     readStorageJson,
     writeStorageItem,
     writeStorageJson,
-} from "./storage-core.ts";
+} from "./storage-core.internal.ts";
 
 /**
  * Reads a raw string value from `localStorage` (automatically namespaced with the app prefix by default).

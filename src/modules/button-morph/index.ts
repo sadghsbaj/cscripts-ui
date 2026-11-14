@@ -4,14 +4,6 @@ import type { HTMLAttributes } from "svelte/elements";
 
 export { default as ButtonMorph } from "./ButtonMorph.svelte";
 export { default as ButtonMorphItem } from "./ButtonMorphItem.svelte";
-export {
-    ButtonMorphManager,
-    DEFAULT_GUARD_DELAY_MS,
-    MORPH_TRANSITION_DURATION_MS,
-    type ButtonMorphDimensions,
-    type ButtonMorphStateOptions,
-    type ButtonMorphSurface,
-} from "./buttonMorphState.svelte.ts";
 
 export const BUTTON_MORPH_DIRECTIONS = ["forward", "backward"] as const;
 export const BUTTON_MORPH_ITEM_STATES = ["active", "exiting", "inactive"] as const;

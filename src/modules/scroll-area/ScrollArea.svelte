@@ -15,8 +15,8 @@ Architectural Notes:
 -->
 <script lang="ts">
     import { setScrollAreaContext, type ScrollAreaProps } from "./index.ts";
-    import ScrollAreaOvershoot from "./ScrollAreaOvershoot.svelte";
-    import { ScrollAreaManager } from "./scrollAreaState.svelte.ts";
+    import ScrollAreaOvershoot from "./ScrollAreaOvershoot.internal.svelte";
+    import { ScrollAreaManager } from "./scroll-area-state.internal.svelte.ts";
 
     let {
         size,

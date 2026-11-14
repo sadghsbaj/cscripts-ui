@@ -4,8 +4,8 @@ import {
     ButtonMorphManager,
     DEFAULT_GUARD_DELAY_MS,
     MORPH_TRANSITION_DURATION_MS,
-    type ButtonMorphResetReason,
-} from "./index.ts";
+} from "./button-morph-state.internal.svelte.ts";
+import { type ButtonMorphResetReason } from "./index.ts";
 
 function setElementDimensions(element: HTMLElement, width: number, height: number): void {
     Object.defineProperties(element, {
@@ -20,7 +20,7 @@ function setElementDimensions(element: HTMLElement, width: number, height: numbe
     });
 }
 
-describe("ButtonMorphManager (buttonMorphState.svelte.ts)", () => {
+describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
     let rootEl: HTMLDivElement;
     let idleSlot: HTMLDivElement;
     let idleBtn: HTMLButtonElement;

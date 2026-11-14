@@ -16,12 +16,8 @@ Architectural Notes:
     import { untrack } from "svelte";
 
     import { clickOutside } from "../click-outside/index.ts";
-    import {
-        ButtonMorphManager,
-        DEFAULT_GUARD_DELAY_MS,
-        setButtonMorphContext,
-        type ButtonMorphProps,
-    } from "./index.ts";
+    import { ButtonMorphManager, DEFAULT_GUARD_DELAY_MS } from "./button-morph-state.internal.svelte.ts";
+    import { setButtonMorphContext, type ButtonMorphProps } from "./index.ts";
 
     let {
         value = $bindable(),

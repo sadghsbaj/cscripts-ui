@@ -2,7 +2,6 @@ import { createContext } from "svelte";
 import type { HTMLAttributes } from "svelte/elements";
 
 export { default as WorkAppIntro } from "./WorkAppIntro.svelte";
-export * from "./workAppIntroState.svelte";
 
 export interface WorkAppIntroProps extends HTMLAttributes<HTMLDivElement> {
     /** High-level department or domain label displayed above the tool title. */

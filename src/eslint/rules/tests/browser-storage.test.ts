@@ -32,7 +32,7 @@ describe("browser-storage ESLint rules", () => {
                     {
                         // Allowed inside browser-storage primitive implementation itself
                         code: 'window.localStorage.setItem("k", "v"); window.sessionStorage.getItem("k");',
-                        filename: "src/modules/browser-storage/storage-core.ts",
+                        filename: "src/modules/browser-storage/storage-core.internal.ts",
                     },
                 ],
                 invalid: [

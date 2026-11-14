@@ -16,7 +16,7 @@ Architectural Notes:
     import WorkLocation from "../locations/WorkLocation.svelte";
     import WorkLogo from "../logo/WorkLogo.svelte";
     import { setWorkAppIdentity, type WorkAppIntroProps } from "./index.ts";
-    import { BOOT_SEQUENCE, workAppIntroState } from "./workAppIntroState.svelte";
+    import { BOOT_SEQUENCE, workAppIntroState } from "./work-app-intro-state.internal.svelte.ts";
 
     let { toolCategory, toolName, persist = true, children, ...rest }: WorkAppIntroProps = $props();
 

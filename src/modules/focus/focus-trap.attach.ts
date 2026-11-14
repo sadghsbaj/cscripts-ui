@@ -6,7 +6,7 @@ import {
     isCandidateFocusable,
     isElementDisabledOrInert,
     isElementVisible,
-} from "./focus.utils";
+} from "./focus-utils.internal.ts";
 
 export type FocusTrapTarget =
     | "first-focusable"

@@ -7,7 +7,7 @@ import {
     isElementDisabledOrInert,
     isElementVisible,
     isNativelyFocusable,
-} from "./focus.utils";
+} from "./focus-utils.internal.ts";
 
 export type AutoFocusTarget =
     "self" | "first-focusable" | "last-focusable" | (string & {}) | ((container: HTMLElement) => HTMLElement | null);

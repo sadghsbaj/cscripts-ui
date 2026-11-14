@@ -1,7 +1,6 @@
 import type { SVGAttributes } from "svelte/elements";
 
 export { default as BackgroundPattern } from "./BackgroundPattern.svelte";
-export { default as BackgroundPatternVariants } from "./BackgroundPatternVariants.svelte";
 
 export const BACKGROUND_PATTERN_VARIANTS = ["dots", "grid", "lines", "crosses", "hexagons", "topography"] as const;
 export const BACKGROUND_PATTERN_SIZES = ["sm", "md", "lg"] as const;

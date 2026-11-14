@@ -1,7 +1,7 @@
 import { createContext } from "svelte";
 import type { HTMLAttributes } from "svelte/elements";
 
-import type { ScrollAreaManager } from "./scrollAreaState.svelte.ts";
+import type { ScrollAreaManager } from "./scroll-area-state.internal.svelte.ts";
 
 export { default as ScrollArea } from "./ScrollArea.svelte";
 export { default as ScrollAreaContent } from "./ScrollAreaContent.svelte";
