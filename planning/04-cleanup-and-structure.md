@@ -1,37 +1,37 @@
-# 04 – Cleanup, Duplikate & Altlasten
+# 04 – Offene Refactor-Todos
 
-Status: **Abgeschlossen** (Prioritäten & Richtung stehen)
-
----
-
-## A. Konkrete Bugs & API-Altlasten
-1. ~~`Checkbox`: `hitAreaSize`-Prop~~ — **Erledigt** (vom User bereits entfernt).
-2. ~~`ToggleButton` / `CloseButton`: `type="button"` nach `{...rest}`~~ — **Kein Bug, sondern gewollt** (`type` ist in Props omitted; `{...rest}` davor verhindert versehentliches Überschreiben auf `"submit"`).
-3. **`ToggleButton` API & Logik:** Eigenes Detail-Thema bei der Umsetzung (Optik passt, aber State-/Group-API komplett sauber neu durchdenken).
-4. **`Popover.size` → `Popover.width`** (aus Thema 1).
-5. **`README.md` veraltet:** Import-Beispiele auf `cs/svelte/<module>` aktualisieren.
+Übersicht aller aktuell noch offenen Aufräum- und Refactoring-Aufgaben (bereits erledigte Punkte wie Statusfarben, `src/modules/`-Umstrukturierung, co-located `*.preview.svelte`, Removal von `explanations/` sowie `.agents/rules/` & Subagents sind entfernt).
 
 ---
 
-## B. Duplizierungen & Drift (saubere Architektur-Lösung)
-1. **`ButtonIcon` / `ToggleButtonIcon`, `ButtonLabel` / `ToggleButtonLabel` & `ButtonGroup` / `ToggleButtonGroup`:**
-   - **Kein** gegenseitiges Importieren zwischen `button/` und `toggle-button/`, **kein** Copy-Paste.
-   - **Lösung:** Gemeinsame CSS-Basis in **`src/css/shared/`** (z. B. für Group-Radius/Separator-Logik und Icon-/Label-Slots), die beide Module nutzen, während modul-spezifisches CSS co-located bleibt.
-2. **`CopyIcon` & `PasteIcon`:**
-   - Liegen im selben Modul (`clipboard/`) → direkt co-located in **`sparkle.internal.svelte`** (oder shared CSS) auslagern.
+## A. API-Fixes & Doku-Basis
+1. **`ToggleButton` API & Logik:** State- und Group-API (`pressed`, `ToggleButtonGroup`) sauber neu durchdenken und vereinheitlichen.
+2. **`README.md` aktualisieren:** Veraltete `cs/svelte/...`-Import-Beispiele auf `cs/modules/<module>` / `cs/work` anpassen.
 
 ---
 
-## C. `/docs`-Route, `dist/` & Git-Workflow
-- **`/docs` in konsumierenden Apps behalten:** `./dist/` (gebaut über `bun run build:docs` / `vite.docs.config.ts`) bleibt als Feature erhalten.
-- **GitHub-Actions-Workflow & `.gitattributes` (`merge=ours`) entfernen:** Keine automatischen `chore: rebuild docs bundle`-Commits mehr in der Git-History; stattdessen baut der `docs-maintainer` (oder manuelles `bun run build:docs`) `dist/` bei Bedarf lokal neu.
+## B. Duplizierungen & Shared CSS
+1. **`Button` & `ToggleButton` (`Icon`, `Label`, `Group`):**
+   - Gemeinsame CSS-Basis in `src/css/shared/` anlegen (Group-Radius/Separator-Logik, Icon-/Label-Slots); kein gegenseitiges Importieren, kein Copy-Paste.
+2. **`CopyIcon` & `PasteIcon` (`src/modules/clipboard/`):**
+   - Gemeinsame Sparkle-/Animation-Logik co-located in `sparkle.internal.svelte` (oder shared CSS) auslagern.
 
 ---
 
-## D. Strukturelle Umstellungen (aus Thema 1–3)
-1. **Ordner & Suffixe:** `src/svelte/primitives/` → `src/svelte/modules/` (`package.json` anpassen); interne Dateien mit `.internal.` markieren; `src/svelte/explanations/` (inkl. `package.json`-Export) entfernen.
-2. **Doku & ESLint:** `<!-- @component -->` aus `.svelte` auslagern in `*.docs.md`; `src/eslint/rules/component-docs.ts` entsprechend umbauen.
-3. **Previews:** `playground/previews/` als `*.preview.svelte` co-located in die Module ziehen (`import.meta.glob`).
-4. **Tokens & Vars:** ~~Statusfarben auf `positive / caution / negative` (ohne `info`)~~ *(erledigt)*; `--_` durch `--cs-<module>-*` ersetzen; `ref = $bindable()` bei Root-Components ergänzen.
-5. **Attachments:** Signaturen einzeln durchgehen (`enabled?: boolean | (() => boolean)` via `resolveGetter`).
-6. **Agents & MCP:** `src/agents/` verschlanken, `.agents/rules/` + `AGENTS.md` + Sub-Agents (`docs-maintainer`, `consistency-reviewer`, `preview-builder`, optional `mcp-maintainer`) + `src/mcp/` aufbauen.
+## C. Module-Standards, Tokens & Attachments
+1. **`.internal.`-Suffix:** Interne Hilfsdateien in Modulen konsequent mit `.internal.` markieren und nicht über `index.ts` re-exportieren.
+2. **Private CSS-Vars (`--_`):** Alle verbliebenen `--_*`-Variablen durch `--cs-<module>-*` (bzw. `--cs-work-*`) ersetzen.
+3. **`ref = $bindable()`:** Bei Root-Components durchgängig ergänzen.
+4. **Attachments:** Signaturen einzeln prüfen und auf `enabled?: boolean | (() => boolean)` via `resolveGetter` vereinheitlichen.
+
+---
+
+## D. Co-located Docs & ESLint
+1. **`*.docs.md`:** `<!-- @component -->`-Kommentare aus `.svelte` in co-located `*.docs.md` auslagern.
+2. **ESLint-Regel:** `src/eslint/rules/component-docs.ts` (und zugehörige Tests) auf `*.docs.md` umstellen.
+
+---
+
+## E. `src/agents/` & MCP
+1. **`src/agents/` verschlanken:** App-seitige Agent-Regeln auf das Nötigste reduzieren und an die aktuelle Modulstruktur anpassen.
+2. **`src/mcp/` (optional):** MCP-Server für konsumierende Apps aufbauen.
