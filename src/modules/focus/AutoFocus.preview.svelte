@@ -7,7 +7,7 @@
     import { Button, ButtonLabel } from "cs/svelte/button";
     import { autoFocus } from "cs/svelte/focus";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let showSelectAll = $state(true);
     let showContainerForm = $state(false);

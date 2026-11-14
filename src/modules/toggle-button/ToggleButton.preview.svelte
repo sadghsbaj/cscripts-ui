@@ -14,7 +14,7 @@
         ToggleButtonLabel,
     } from "cs/svelte/toggle-button";
     import { tooltip } from "cs/svelte/tooltip";
-    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let basicPressed = $state(false);
     let softVariantPressed = $state(true);

@@ -8,7 +8,7 @@
     import { CopyIcon, copyOnClick, PasteIcon, pasteOnClick } from "cs/svelte/clipboard";
     import { HitArea } from "cs/svelte/hit-area";
     import { tooltip } from "cs/svelte/tooltip";
-    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let pasteValue = $state("");
 

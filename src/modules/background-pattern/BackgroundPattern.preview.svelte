@@ -9,7 +9,7 @@
         BACKGROUND_PATTERN_VARIANTS,
         BackgroundPattern,
     } from "cs/svelte/background-pattern";
-    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     const closeScript = ["</", "script>"].join("");
 

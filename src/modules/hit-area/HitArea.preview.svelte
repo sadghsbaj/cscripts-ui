@@ -9,7 +9,7 @@
     import { HitArea, type HitAreaSize } from "cs/svelte/hit-area";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { tooltip } from "cs/svelte/tooltip";
-    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let showHitArea = $state(true);
 

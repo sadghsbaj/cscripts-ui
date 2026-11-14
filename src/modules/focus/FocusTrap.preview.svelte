@@ -9,7 +9,7 @@
     import { focusTrap } from "cs/svelte/focus";
     import { HitArea } from "cs/svelte/hit-area";
     import { Overlay } from "cs/svelte/overlay";
-    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let isStandardOpen = $state(false);
     let isTargetOpen = $state(false);

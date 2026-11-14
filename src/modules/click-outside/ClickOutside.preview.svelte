@@ -6,7 +6,7 @@
 <script lang="ts">
     import { clickOutside } from "cs/svelte/click-outside";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let isBasicOpen = $state(false);
 

@@ -5,7 +5,7 @@
 
 <script lang="ts">
     import { SCROLL_FADE_SIZES, scrollFade } from "cs/svelte/scroll-fade";
-    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     const items = Array.from({ length: 12 }, (_, i) => `Item ${i + 1}`);
 

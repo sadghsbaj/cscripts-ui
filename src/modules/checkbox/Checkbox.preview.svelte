@@ -5,7 +5,7 @@
 
 <script lang="ts">
     import { Checkbox, CHECKBOX_SIZES } from "cs/svelte/checkbox";
-    import { PreviewHeader, PreviewSection, SunkenWell } from "../../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection, SunkenWell } from "../../../playground/components/index.ts";
 
     let basicChecked = $state(false);
     let softChecked = $state(false);
