@@ -22,7 +22,7 @@ Architectural Notes:
 - Borderless Surface Depth & High-Contrast Invalid States:
   Uses pure `box-shadow` instead of CSS `border` to guarantee that inset hairline shadows on elevated
   dark-mode surfaces align directly with the outer squircle contour. The error state seamlessly transitions
-  into an inset danger ring, leaving native `outline` completely unconstrained for `:focus-visible`.
+  into an inset negative ring, leaving native `outline` completely unconstrained for `:focus-visible`.
 - Defaults & Resets: Requires explicit `variant` and `size` props with no implicit fallbacks.
   See `../../explanations/component-defaults-and-globals.md`
 - Elevated Hover Physics (Light vs. Dark):
@@ -169,15 +169,15 @@ Architectural Notes:
             }
 
             &[aria-invalid="true"] {
-                --_bg-checked: var(--cs-color-danger-solid);
-                --_bg-checked-hover: var(--cs-color-danger-solid-hover);
+                --_bg-checked: var(--cs-color-negative-solid);
+                --_bg-checked-hover: var(--cs-color-negative-solid-hover);
 
                 /* Error ring & soft tint apply only when inactive so checked states inherit the top-lit solid highlight */
                 &:not(:checked, :indeterminate) {
-                    --_shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-danger-solid) 45%, transparent);
-                    --_shadow-hover: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-danger-solid) 65%, transparent);
-                    --_bg: var(--cs-color-danger-soft);
-                    --_bg-hover: var(--cs-color-danger-soft-hover);
+                    --_shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 45%, transparent);
+                    --_shadow-hover: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 65%, transparent);
+                    --_bg: var(--cs-color-negative-soft);
+                    --_bg-hover: var(--cs-color-negative-soft-hover);
                 }
             }
 

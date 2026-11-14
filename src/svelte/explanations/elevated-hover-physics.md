@@ -8,7 +8,7 @@ This architectural guide explains why `elevated` surfaces use different physical
 
 The `elevated` variant provides a neutral floating surface intended for overlays, controls, cards, and triggers placed above content:
 
-- **No Chromatic Colors:** Unlike chromatic variants (`primary`, `secondary`, `ghost`, or `soft` on toggle controls), `elevated` controls provide a fixed neutral floating surface and accept no `color` or `danger` props.
+- **No Chromatic Colors:** Unlike chromatic variants (`primary`, `secondary`, `ghost`, or `soft` on toggle controls), `elevated` controls provide a fixed neutral floating surface and accept no `color` or `negative` props.
 - **Surface Elevation:** Uses `--cs-color-elevated` as its base background, paired with `--cs-shadow-elevated` (soft drop shadow in Light Mode, top-lit inset hairline in Dark Mode).
 
 ---

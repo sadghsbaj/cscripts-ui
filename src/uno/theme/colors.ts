@@ -25,8 +25,7 @@ export function semanticColor(name: string): Record<string, string> {
 export const colors = {
     base: semanticColor("base"),
     accent: semanticColor("accent"),
-    success: semanticColor("success"),
-    warning: semanticColor("warning"),
-    danger: semanticColor("danger"),
-    info: semanticColor("info"),
+    positive: semanticColor("positive"),
+    caution: semanticColor("caution"),
+    negative: semanticColor("negative"),
 };

@@ -30,7 +30,7 @@
                     <WorkAppHeader>
                         <WorkAppHeaderSegment align="before" renderIsland>
                             <WorkAppStatusDot
-                                status="success"
+                                status="positive"
                                 onclick={() => alert("Dateisystem-Verbindung ausgewählt")}
                             >
                                 <HitArea size="md" />

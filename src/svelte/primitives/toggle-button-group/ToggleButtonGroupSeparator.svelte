@@ -64,21 +64,21 @@ Automatically fades out when adjacent toggle buttons are active (`aria-pressed="
             --_separator-alpha: 18%;
         }
 
-        :global(.cs-toggle-button[aria-pressed="true"][data-color="success"])
+        :global(.cs-toggle-button[aria-pressed="true"][data-color="positive"])
             + .cs-toggle-button-group-separator:has(+ :global(.cs-toggle-button[aria-pressed="true"])) {
-            --_separator-fg: var(--cs-color-success-soft-fg);
+            --_separator-fg: var(--cs-color-positive-soft-fg);
             --_separator-alpha: 18%;
         }
 
-        :global(.cs-toggle-button[aria-pressed="true"][data-color="warning"])
+        :global(.cs-toggle-button[aria-pressed="true"][data-color="caution"])
             + .cs-toggle-button-group-separator:has(+ :global(.cs-toggle-button[aria-pressed="true"])) {
-            --_separator-fg: var(--cs-color-warning-soft-fg);
+            --_separator-fg: var(--cs-color-caution-soft-fg);
             --_separator-alpha: 18%;
         }
 
-        :global(.cs-toggle-button[aria-pressed="true"][data-color="danger"])
+        :global(.cs-toggle-button[aria-pressed="true"][data-color="negative"])
             + .cs-toggle-button-group-separator:has(+ :global(.cs-toggle-button[aria-pressed="true"])) {
-            --_separator-fg: var(--cs-color-danger-soft-fg);
+            --_separator-fg: var(--cs-color-negative-soft-fg);
             --_separator-alpha: 18%;
         }
 

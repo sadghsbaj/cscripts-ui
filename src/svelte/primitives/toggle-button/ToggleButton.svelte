@@ -270,22 +270,22 @@ Architectural Notes:
                 --_soft-fg: var(--cs-color-accent-soft-fg);
             }
 
-            &[data-color="success"] {
-                --_fill-bg: var(--cs-color-success-soft);
-                --_fill-bg-hover: var(--cs-color-success-soft-hover);
-                --_soft-fg: var(--cs-color-success-soft-fg);
+            &[data-color="positive"] {
+                --_fill-bg: var(--cs-color-positive-soft);
+                --_fill-bg-hover: var(--cs-color-positive-soft-hover);
+                --_soft-fg: var(--cs-color-positive-soft-fg);
             }
 
-            &[data-color="warning"] {
-                --_fill-bg: var(--cs-color-warning-soft);
-                --_fill-bg-hover: var(--cs-color-warning-soft-hover);
-                --_soft-fg: var(--cs-color-warning-soft-fg);
+            &[data-color="caution"] {
+                --_fill-bg: var(--cs-color-caution-soft);
+                --_fill-bg-hover: var(--cs-color-caution-soft-hover);
+                --_soft-fg: var(--cs-color-caution-soft-fg);
             }
 
-            &[data-color="danger"] {
-                --_fill-bg: var(--cs-color-danger-soft);
-                --_fill-bg-hover: var(--cs-color-danger-soft-hover);
-                --_soft-fg: var(--cs-color-danger-soft-fg);
+            &[data-color="negative"] {
+                --_fill-bg: var(--cs-color-negative-soft);
+                --_fill-bg-hover: var(--cs-color-negative-soft-hover);
+                --_soft-fg: var(--cs-color-negative-soft-fg);
             }
 
             /* =========================================================

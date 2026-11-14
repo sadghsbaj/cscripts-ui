@@ -63,8 +63,8 @@ Architectural Notes:
 <style>
     @layer components.primitive {
         .cs-paste-icon {
-            --_check-color: var(--cs-paste-icon-check-color, var(--cs-color-success-500));
-            --_error-color: var(--cs-paste-icon-error-color, var(--cs-color-danger-500));
+            --_check-color: var(--cs-paste-icon-check-color, var(--cs-color-positive-500));
+            --_error-color: var(--cs-paste-icon-error-color, var(--cs-color-negative-500));
 
             isolation: isolate;
             position: relative;

@@ -98,8 +98,8 @@ describe("toggle-button-group ESLint rules", () => {
                         <ToggleButtonGroup>
                             <ToggleButton size="lg" variant="soft" color="accent"><ToggleButtonLabel>Outer 1</ToggleButtonLabel></ToggleButton>
                             <ToggleButtonGroup>
-                                <ToggleButton size="sm" variant="ghost" color="danger"><ToggleButtonLabel>Inner 1</ToggleButtonLabel></ToggleButton>
-                                <ToggleButton size="sm" variant="ghost" color="danger"><ToggleButtonLabel>Inner 2</ToggleButtonLabel></ToggleButton>
+                                <ToggleButton size="sm" variant="ghost" color="negative"><ToggleButtonLabel>Inner 1</ToggleButtonLabel></ToggleButton>
+                                <ToggleButton size="sm" variant="ghost" color="negative"><ToggleButtonLabel>Inner 2</ToggleButtonLabel></ToggleButton>
                             </ToggleButtonGroup>
                             <ToggleButton size="lg" variant="soft" color="accent"><ToggleButtonLabel>Outer 2</ToggleButtonLabel></ToggleButton>
                         </ToggleButtonGroup>
@@ -145,14 +145,14 @@ describe("toggle-button-group ESLint rules", () => {
                         code: `
                         <ToggleButtonGroup>
                             <ToggleButton size="md" variant="soft" color="accent"><ToggleButtonLabel>One</ToggleButtonLabel></ToggleButton>
-                            <ToggleButton size="md" variant="soft" color="danger"><ToggleButtonLabel>Two</ToggleButtonLabel></ToggleButton>
+                            <ToggleButton size="md" variant="soft" color="negative"><ToggleButtonLabel>Two</ToggleButtonLabel></ToggleButton>
                         </ToggleButtonGroup>
                         `,
                         filename: "src/Component.svelte",
                         errors: [
                             {
                                 messageId: "mismatchedButtonProp",
-                                data: { propName: "color", expected: '"accent"', found: '"danger"' },
+                                data: { propName: "color", expected: '"accent"', found: '"negative"' },
                             },
                         ],
                     },

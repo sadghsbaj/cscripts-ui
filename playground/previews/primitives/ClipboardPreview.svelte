@@ -85,7 +85,7 @@ ${closeScript}
 
     const errorCode = `<Button
     variant="secondary"
-    danger
+    negative
     size="md"
     {@attach copyOnClick(() => Promise.reject(new Error("Simulated failure")))}
 >
@@ -95,7 +95,7 @@ ${closeScript}
 
 <Button
     variant="secondary"
-    danger
+    negative
     size="md"
     {@attach pasteOnClick(() => Promise.reject(new Error("Simulated failure")))}
 >
@@ -243,7 +243,7 @@ ${closeScript}
 
         <Button
             variant="secondary"
-            danger
+            negative
             size="md"
             {@attach copyOnClick(() => Promise.reject(new Error("Simulated failure")))}
         >
@@ -253,7 +253,7 @@ ${closeScript}
 
         <Button
             variant="secondary"
-            danger
+            negative
             size="md"
             {@attach pasteOnClick(() => Promise.reject(new Error("Simulated failure")))}
         >

@@ -14,7 +14,7 @@ Architectural Notes:
     import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusDotProps } from "./index.ts";
 
     let {
-        status = "success",
+        status = "positive",
         label,
         pulse = true,
         class: className,
@@ -65,16 +65,16 @@ Architectural Notes:
                 scale: 0.92;
             }
 
-            &[data-status="success"] {
-                --_dot-color: var(--cs-color-success-solid);
+            &[data-status="positive"] {
+                --_dot-color: var(--cs-color-positive-solid);
             }
 
-            &[data-status="warning"] {
-                --_dot-color: var(--cs-color-warning-solid);
+            &[data-status="caution"] {
+                --_dot-color: var(--cs-color-caution-solid);
             }
 
-            &[data-status="danger"] {
-                --_dot-color: var(--cs-color-danger-solid);
+            &[data-status="negative"] {
+                --_dot-color: var(--cs-color-negative-solid);
             }
 
             &[data-status="base"] {

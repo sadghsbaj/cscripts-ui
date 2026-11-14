@@ -147,7 +147,7 @@ describe("css-safety ESLint rules", () => {
 <style>
     @layer components.primitive {
         .btn {
-            background: color-mix(in oklab, var(--cs-color-danger-500) 24%, var(--cs-color-base-950));
+            background: color-mix(in oklab, var(--cs-color-negative-500) 24%, var(--cs-color-base-950));
         }
     }
 </style>
@@ -176,7 +176,7 @@ describe("css-safety ESLint rules", () => {
 <style>
     @layer components.primitive {
         .btn {
-            background: color-mix(in oklch, var(--cs-color-danger-500) 24%, var(--cs-color-base-950));
+            background: color-mix(in oklch, var(--cs-color-negative-500) 24%, var(--cs-color-base-950));
         }
     }
 </style>
@@ -205,7 +205,7 @@ describe("css-safety ESLint rules", () => {
                     {
                         code: `
 :root {
-    --bad: color-mix(in oklch, var(--cs-color-warning-500) 24%, var(--cs-color-zinc-950));
+    --bad: color-mix(in oklch, var(--cs-color-caution-500) 24%, var(--cs-color-zinc-950));
 }
 `,
                         filename: "src/css/foundation/color-semantics.css",

@@ -60,8 +60,8 @@ Architectural Notes:
 <style>
     @layer components.primitive {
         .cs-copy-icon {
-            --_check-color: var(--cs-copy-icon-check-color, var(--cs-color-success-500));
-            --_error-color: var(--cs-copy-icon-error-color, var(--cs-color-danger-500));
+            --_check-color: var(--cs-copy-icon-check-color, var(--cs-color-positive-500));
+            --_error-color: var(--cs-copy-icon-error-color, var(--cs-color-negative-500));
 
             isolation: isolate;
             position: relative;

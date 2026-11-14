@@ -20,9 +20,9 @@
     let softVariantPressed = $state(true);
     let ghostVariantPressed = $state(true);
     let accentPressed = $state(true);
-    let successPressed = $state(true);
-    let warningPressed = $state(true);
-    let dangerPressed = $state(true);
+    let positivePressed = $state(true);
+    let cautionPressed = $state(true);
+    let negativePressed = $state(true);
     let iconPressed = $state(true);
 
     const closeScript = ["</", "script>"].join("");
@@ -48,14 +48,14 @@ ${closeScript}
     const colorsCode = `<ToggleButton variant="soft" color="accent" size="md" bind:pressed>
     <ToggleButtonLabel>Accent</ToggleButtonLabel>
 </ToggleButton>
-<ToggleButton variant="soft" color="success" size="md" bind:pressed>
-    <ToggleButtonLabel>Success</ToggleButtonLabel>
+<ToggleButton variant="soft" color="positive" size="md" bind:pressed>
+    <ToggleButtonLabel>Positive</ToggleButtonLabel>
 </ToggleButton>
-<ToggleButton variant="soft" color="warning" size="md" bind:pressed>
-    <ToggleButtonLabel>Warning</ToggleButtonLabel>
+<ToggleButton variant="soft" color="caution" size="md" bind:pressed>
+    <ToggleButtonLabel>Caution</ToggleButtonLabel>
 </ToggleButton>
-<ToggleButton variant="soft" color="danger" size="md" bind:pressed>
-    <ToggleButtonLabel>Danger</ToggleButtonLabel>
+<ToggleButton variant="soft" color="negative" size="md" bind:pressed>
+    <ToggleButtonLabel>Negative</ToggleButtonLabel>
 </ToggleButton>`;
 
     const sizesCode = `<ToggleButton variant="soft" color="accent" size="xs"><ToggleButtonLabel>xSmall</ToggleButtonLabel></ToggleButton>
@@ -105,9 +105,9 @@ ${closeScript}
 
     const colorLabels: Record<(typeof TOGGLE_BUTTON_COLORS)[number], string> = {
         accent: "Accent",
-        success: "Success",
-        warning: "Warning",
-        danger: "Danger",
+        positive: "Positive",
+        caution: "Caution",
+        negative: "Negative",
     };
 </script>
 
@@ -144,14 +144,14 @@ ${closeScript}
         <ToggleButton variant="soft" color="accent" size="md" bind:pressed={accentPressed}>
             <ToggleButtonLabel>{colorLabels.accent}</ToggleButtonLabel>
         </ToggleButton>
-        <ToggleButton variant="soft" color="success" size="md" bind:pressed={successPressed}>
-            <ToggleButtonLabel>{colorLabels.success}</ToggleButtonLabel>
+        <ToggleButton variant="soft" color="positive" size="md" bind:pressed={positivePressed}>
+            <ToggleButtonLabel>{colorLabels.positive}</ToggleButtonLabel>
         </ToggleButton>
-        <ToggleButton variant="soft" color="warning" size="md" bind:pressed={warningPressed}>
-            <ToggleButtonLabel>{colorLabels.warning}</ToggleButtonLabel>
+        <ToggleButton variant="soft" color="caution" size="md" bind:pressed={cautionPressed}>
+            <ToggleButtonLabel>{colorLabels.caution}</ToggleButtonLabel>
         </ToggleButton>
-        <ToggleButton variant="soft" color="danger" size="md" bind:pressed={dangerPressed}>
-            <ToggleButtonLabel>{colorLabels.danger}</ToggleButtonLabel>
+        <ToggleButton variant="soft" color="negative" size="md" bind:pressed={negativePressed}>
+            <ToggleButtonLabel>{colorLabels.negative}</ToggleButtonLabel>
         </ToggleButton>
     </PreviewSection>
 

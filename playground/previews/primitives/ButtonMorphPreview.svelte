@@ -33,14 +33,14 @@ ${closeScript}
 
 <ButtonMorph bind:value={mode} resetTimeout={3000} resetOnOutsideClick resetOnEscape>
     <ButtonMorphItem value="idle">
-        <Button variant="secondary" danger size="md" onclick={() => (mode = "confirm")}>
+        <Button variant="secondary" negative size="md" onclick={() => (mode = "confirm")}>
             <ButtonIcon icon={Trash2} />
             <ButtonLabel>Delete</ButtonLabel>
         </Button>
     </ButtonMorphItem>
 
     <ButtonMorphItem value="confirm">
-        <Button variant="primary" danger size="md" onclick={() => (mode = "idle")}>
+        <Button variant="primary" negative size="md" onclick={() => (mode = "idle")}>
             <ButtonIcon icon={TriangleAlert} />
             <ButtonLabel>Confirm delete?</ButtonLabel>
         </Button>
@@ -67,7 +67,7 @@ ${closeScript}
     </ButtonMorphItem>
 
     <ButtonMorphItem value="confirm">
-        <Button variant="primary" danger size="sm" onclick={() => (mode = "icon")}>
+        <Button variant="primary" negative size="sm" onclick={() => (mode = "icon")}>
             <ButtonIcon icon={Trash2} />
             <ButtonLabel>Delete?</ButtonLabel>
         </Button>
@@ -119,7 +119,7 @@ ${closeScript}
     </ButtonMorphItem>
 
     <ButtonMorphItem value="discard">
-        <Button variant="primary" danger size="sm" onclick={() => (mode = "close")}>
+        <Button variant="primary" negative size="sm" onclick={() => (mode = "close")}>
             <ButtonLabel>Discard?</ButtonLabel>
         </Button>
     </ButtonMorphItem>
@@ -140,14 +140,14 @@ ${closeScript}
     >
         <ButtonMorph bind:value={deleteMode} resetTimeout={3000} resetOnOutsideClick resetOnEscape>
             <ButtonMorphItem value="idle">
-                <Button variant="secondary" danger size="md" onclick={() => (deleteMode = "confirm")}>
+                <Button variant="secondary" negative size="md" onclick={() => (deleteMode = "confirm")}>
                     <ButtonIcon icon={Trash2} />
                     <ButtonLabel>Delete</ButtonLabel>
                 </Button>
             </ButtonMorphItem>
 
             <ButtonMorphItem value="confirm">
-                <Button variant="primary" danger size="md" onclick={() => (deleteMode = "idle")}>
+                <Button variant="primary" negative size="md" onclick={() => (deleteMode = "idle")}>
                     <ButtonIcon icon={TriangleAlert} />
                     <ButtonLabel>Confirm delete?</ButtonLabel>
                 </Button>
@@ -181,7 +181,7 @@ ${closeScript}
                 </ButtonMorphItem>
 
                 <ButtonMorphItem value="confirm">
-                    <Button variant="primary" danger size="sm" onclick={() => (iconMorphMode = "icon")}>
+                    <Button variant="primary" negative size="sm" onclick={() => (iconMorphMode = "icon")}>
                         <ButtonIcon icon={Trash2} />
                         <ButtonLabel>Delete?</ButtonLabel>
                     </Button>
@@ -257,7 +257,7 @@ ${closeScript}
                 </ButtonMorphItem>
 
                 <ButtonMorphItem value="discard">
-                    <Button variant="primary" danger size="sm" onclick={() => (closeMorphMode = "close")}>
+                    <Button variant="primary" negative size="sm" onclick={() => (closeMorphMode = "close")}>
                         <ButtonLabel>Discard?</ButtonLabel>
                     </Button>
                 </ButtonMorphItem>

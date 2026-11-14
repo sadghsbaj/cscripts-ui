@@ -56,73 +56,56 @@
     --cs-color-accent-solid-hover: color-mix(in oklch, var(--cs-color-accent-solid) 90%, white);
     --cs-color-accent-solid-fg: white;
 
-    /* Success Soft & Solid */
-    --cs-color-success-soft: light-dark(
-        color-mix(in oklab, var(--cs-color-success-500) 12%, white),
-        color-mix(in oklab, var(--cs-color-success-500) 24%, var(--cs-color-base-950))
+    /* Positive Soft & Solid */
+    --cs-color-positive-soft: light-dark(
+        color-mix(in oklab, var(--cs-color-positive-500) 12%, white),
+        color-mix(in oklab, var(--cs-color-positive-500) 24%, var(--cs-color-base-950))
     );
-    --cs-color-success-soft-hover: light-dark(
-        color-mix(in oklab, var(--cs-color-success-500) 18%, white),
-        color-mix(in oklab, var(--cs-color-success-500) 32%, var(--cs-color-base-950))
+    --cs-color-positive-soft-hover: light-dark(
+        color-mix(in oklab, var(--cs-color-positive-500) 18%, white),
+        color-mix(in oklab, var(--cs-color-positive-500) 32%, var(--cs-color-base-950))
     );
-    --cs-color-success-soft-fg: light-dark(var(--cs-color-success-600), var(--cs-color-success-400));
-    --cs-color-success-solid: light-dark(
-        color-mix(in oklch, var(--cs-color-success-500) 50%, var(--cs-color-success-600)),
-        var(--cs-color-success-500)
+    --cs-color-positive-soft-fg: light-dark(var(--cs-color-positive-600), var(--cs-color-positive-400));
+    --cs-color-positive-solid: light-dark(
+        color-mix(in oklch, var(--cs-color-positive-500) 50%, var(--cs-color-positive-600)),
+        var(--cs-color-positive-500)
     );
-    --cs-color-success-solid-hover: color-mix(in oklch, var(--cs-color-success-solid) 90%, white);
-    --cs-color-success-solid-fg: white;
+    --cs-color-positive-solid-hover: color-mix(in oklch, var(--cs-color-positive-solid) 90%, white);
+    --cs-color-positive-solid-fg: white;
 
-    /* Warning Soft & Solid */
-    --cs-color-warning-soft: light-dark(
-        color-mix(in oklab, var(--cs-color-warning-500) 12%, white),
-        color-mix(in oklab, var(--cs-color-warning-500) 24%, var(--cs-color-base-950))
+    /* Caution Soft & Solid */
+    --cs-color-caution-soft: light-dark(
+        color-mix(in oklab, var(--cs-color-caution-500) 12%, white),
+        color-mix(in oklab, var(--cs-color-caution-500) 24%, var(--cs-color-base-950))
     );
-    --cs-color-warning-soft-hover: light-dark(
-        color-mix(in oklab, var(--cs-color-warning-500) 18%, white),
-        color-mix(in oklab, var(--cs-color-warning-500) 32%, var(--cs-color-base-950))
+    --cs-color-caution-soft-hover: light-dark(
+        color-mix(in oklab, var(--cs-color-caution-500) 18%, white),
+        color-mix(in oklab, var(--cs-color-caution-500) 32%, var(--cs-color-base-950))
     );
-    --cs-color-warning-soft-fg: light-dark(var(--cs-color-warning-600), var(--cs-color-warning-400));
-    --cs-color-warning-solid: light-dark(
-        color-mix(in oklch, var(--cs-color-warning-500) 50%, var(--cs-color-warning-600)),
-        var(--cs-color-warning-500)
+    --cs-color-caution-soft-fg: light-dark(var(--cs-color-caution-600), var(--cs-color-caution-400));
+    --cs-color-caution-solid: light-dark(
+        color-mix(in oklch, var(--cs-color-caution-500) 50%, var(--cs-color-caution-600)),
+        var(--cs-color-caution-500)
     );
-    --cs-color-warning-solid-hover: color-mix(in oklch, var(--cs-color-warning-solid) 90%, white);
-    --cs-color-warning-solid-fg: white;
+    --cs-color-caution-solid-hover: color-mix(in oklch, var(--cs-color-caution-solid) 90%, white);
+    --cs-color-caution-solid-fg: white;
 
-    /* Danger Soft & Solid */
-    --cs-color-danger-soft: light-dark(
-        color-mix(in oklab, var(--cs-color-danger-500) 12%, white),
-        color-mix(in oklab, var(--cs-color-danger-500) 24%, var(--cs-color-base-950))
+    /* Negative Soft & Solid */
+    --cs-color-negative-soft: light-dark(
+        color-mix(in oklab, var(--cs-color-negative-500) 12%, white),
+        color-mix(in oklab, var(--cs-color-negative-500) 24%, var(--cs-color-base-950))
     );
-    --cs-color-danger-soft-hover: light-dark(
-        color-mix(in oklab, var(--cs-color-danger-500) 18%, white),
-        color-mix(in oklab, var(--cs-color-danger-500) 32%, var(--cs-color-base-950))
+    --cs-color-negative-soft-hover: light-dark(
+        color-mix(in oklab, var(--cs-color-negative-500) 18%, white),
+        color-mix(in oklab, var(--cs-color-negative-500) 32%, var(--cs-color-base-950))
     );
-    --cs-color-danger-soft-fg: light-dark(var(--cs-color-danger-600), var(--cs-color-danger-400));
-    --cs-color-danger-solid: light-dark(
-        color-mix(in oklch, var(--cs-color-danger-500) 50%, var(--cs-color-danger-600)),
-        var(--cs-color-danger-500)
+    --cs-color-negative-soft-fg: light-dark(var(--cs-color-negative-600), var(--cs-color-negative-400));
+    --cs-color-negative-solid: light-dark(
+        color-mix(in oklch, var(--cs-color-negative-500) 50%, var(--cs-color-negative-600)),
+        var(--cs-color-negative-500)
     );
-    --cs-color-danger-solid-hover: color-mix(in oklch, var(--cs-color-danger-solid) 90%, white);
-    --cs-color-danger-solid-fg: white;
-
-    /* Info Soft & Solid */
-    --cs-color-info-soft: light-dark(
-        color-mix(in oklab, var(--cs-color-info-500) 12%, white),
-        color-mix(in oklab, var(--cs-color-info-500) 24%, var(--cs-color-base-950))
-    );
-    --cs-color-info-soft-hover: light-dark(
-        color-mix(in oklab, var(--cs-color-info-500) 18%, white),
-        color-mix(in oklab, var(--cs-color-info-500) 32%, var(--cs-color-base-950))
-    );
-    --cs-color-info-soft-fg: light-dark(var(--cs-color-info-600), var(--cs-color-info-400));
-    --cs-color-info-solid: light-dark(
-        color-mix(in oklch, var(--cs-color-info-500) 50%, var(--cs-color-info-600)),
-        var(--cs-color-info-500)
-    );
-    --cs-color-info-solid-hover: color-mix(in oklch, var(--cs-color-info-solid) 90%, white);
-    --cs-color-info-solid-fg: white;
+    --cs-color-negative-solid-hover: color-mix(in oklch, var(--cs-color-negative-solid) 90%, white);
+    --cs-color-negative-solid-fg: white;
 
     --cs-color-accent-50: var(--cs-color-blue-50);
     --cs-color-accent-100: var(--cs-color-blue-100);
@@ -136,53 +119,41 @@
     --cs-color-accent-900: var(--cs-color-blue-900);
     --cs-color-accent-950: var(--cs-color-blue-950);
 
-    --cs-color-success-50: color-mix(in oklch, var(--cs-color-green-50) 50%, var(--cs-color-emerald-50));
-    --cs-color-success-100: color-mix(in oklch, var(--cs-color-green-100) 50%, var(--cs-color-emerald-100));
-    --cs-color-success-200: color-mix(in oklch, var(--cs-color-green-200) 50%, var(--cs-color-emerald-200));
-    --cs-color-success-300: color-mix(in oklch, var(--cs-color-green-300) 50%, var(--cs-color-emerald-300));
-    --cs-color-success-400: color-mix(in oklch, var(--cs-color-green-400) 50%, var(--cs-color-emerald-400));
-    --cs-color-success-500: color-mix(in oklch, var(--cs-color-green-500) 50%, var(--cs-color-emerald-500));
-    --cs-color-success-600: color-mix(in oklch, var(--cs-color-green-600) 50%, var(--cs-color-emerald-600));
-    --cs-color-success-700: color-mix(in oklch, var(--cs-color-green-700) 50%, var(--cs-color-emerald-700));
-    --cs-color-success-800: color-mix(in oklch, var(--cs-color-green-800) 50%, var(--cs-color-emerald-800));
-    --cs-color-success-900: color-mix(in oklch, var(--cs-color-green-900) 50%, var(--cs-color-emerald-900));
-    --cs-color-success-950: color-mix(in oklch, var(--cs-color-green-950) 50%, var(--cs-color-emerald-950));
+    --cs-color-positive-50: color-mix(in oklch, var(--cs-color-green-50) 50%, var(--cs-color-emerald-50));
+    --cs-color-positive-100: color-mix(in oklch, var(--cs-color-green-100) 50%, var(--cs-color-emerald-100));
+    --cs-color-positive-200: color-mix(in oklch, var(--cs-color-green-200) 50%, var(--cs-color-emerald-200));
+    --cs-color-positive-300: color-mix(in oklch, var(--cs-color-green-300) 50%, var(--cs-color-emerald-300));
+    --cs-color-positive-400: color-mix(in oklch, var(--cs-color-green-400) 50%, var(--cs-color-emerald-400));
+    --cs-color-positive-500: color-mix(in oklch, var(--cs-color-green-500) 50%, var(--cs-color-emerald-500));
+    --cs-color-positive-600: color-mix(in oklch, var(--cs-color-green-600) 50%, var(--cs-color-emerald-600));
+    --cs-color-positive-700: color-mix(in oklch, var(--cs-color-green-700) 50%, var(--cs-color-emerald-700));
+    --cs-color-positive-800: color-mix(in oklch, var(--cs-color-green-800) 50%, var(--cs-color-emerald-800));
+    --cs-color-positive-900: color-mix(in oklch, var(--cs-color-green-900) 50%, var(--cs-color-emerald-900));
+    --cs-color-positive-950: color-mix(in oklch, var(--cs-color-green-950) 50%, var(--cs-color-emerald-950));
 
-    --cs-color-warning-50: color-mix(in oklch, var(--cs-color-orange-50) 50%, var(--cs-color-amber-50));
-    --cs-color-warning-100: color-mix(in oklch, var(--cs-color-orange-100) 50%, var(--cs-color-amber-100));
-    --cs-color-warning-200: color-mix(in oklch, var(--cs-color-orange-200) 50%, var(--cs-color-amber-200));
-    --cs-color-warning-300: color-mix(in oklch, var(--cs-color-orange-300) 50%, var(--cs-color-amber-300));
-    --cs-color-warning-400: color-mix(in oklch, var(--cs-color-orange-400) 50%, var(--cs-color-amber-400));
-    --cs-color-warning-500: color-mix(in oklch, var(--cs-color-orange-500) 50%, var(--cs-color-amber-500));
-    --cs-color-warning-600: color-mix(in oklch, var(--cs-color-orange-600) 50%, var(--cs-color-amber-600));
-    --cs-color-warning-700: color-mix(in oklch, var(--cs-color-orange-700) 50%, var(--cs-color-amber-700));
-    --cs-color-warning-800: color-mix(in oklch, var(--cs-color-orange-800) 50%, var(--cs-color-amber-800));
-    --cs-color-warning-900: color-mix(in oklch, var(--cs-color-orange-900) 50%, var(--cs-color-amber-900));
-    --cs-color-warning-950: color-mix(in oklch, var(--cs-color-orange-950) 50%, var(--cs-color-amber-950));
+    --cs-color-caution-50: color-mix(in oklch, var(--cs-color-orange-50) 50%, var(--cs-color-amber-50));
+    --cs-color-caution-100: color-mix(in oklch, var(--cs-color-orange-100) 50%, var(--cs-color-amber-100));
+    --cs-color-caution-200: color-mix(in oklch, var(--cs-color-orange-200) 50%, var(--cs-color-amber-200));
+    --cs-color-caution-300: color-mix(in oklch, var(--cs-color-orange-300) 50%, var(--cs-color-amber-300));
+    --cs-color-caution-400: color-mix(in oklch, var(--cs-color-orange-400) 50%, var(--cs-color-amber-400));
+    --cs-color-caution-500: color-mix(in oklch, var(--cs-color-orange-500) 50%, var(--cs-color-amber-500));
+    --cs-color-caution-600: color-mix(in oklch, var(--cs-color-orange-600) 50%, var(--cs-color-amber-600));
+    --cs-color-caution-700: color-mix(in oklch, var(--cs-color-orange-700) 50%, var(--cs-color-amber-700));
+    --cs-color-caution-800: color-mix(in oklch, var(--cs-color-orange-800) 50%, var(--cs-color-amber-800));
+    --cs-color-caution-900: color-mix(in oklch, var(--cs-color-orange-900) 50%, var(--cs-color-amber-900));
+    --cs-color-caution-950: color-mix(in oklch, var(--cs-color-orange-950) 50%, var(--cs-color-amber-950));
 
-    --cs-color-danger-50: color-mix(in oklch, var(--cs-color-red-50) 70%, var(--cs-color-rose-50));
-    --cs-color-danger-100: color-mix(in oklch, var(--cs-color-red-100) 70%, var(--cs-color-rose-100));
-    --cs-color-danger-200: color-mix(in oklch, var(--cs-color-red-200) 70%, var(--cs-color-rose-200));
-    --cs-color-danger-300: color-mix(in oklch, var(--cs-color-red-300) 70%, var(--cs-color-rose-300));
-    --cs-color-danger-400: color-mix(in oklch, var(--cs-color-red-400) 70%, var(--cs-color-rose-400));
-    --cs-color-danger-500: color-mix(in oklch, var(--cs-color-red-500) 70%, var(--cs-color-rose-500));
-    --cs-color-danger-600: color-mix(in oklch, var(--cs-color-red-600) 70%, var(--cs-color-rose-600));
-    --cs-color-danger-700: color-mix(in oklch, var(--cs-color-red-700) 70%, var(--cs-color-rose-700));
-    --cs-color-danger-800: color-mix(in oklch, var(--cs-color-red-800) 70%, var(--cs-color-rose-800));
-    --cs-color-danger-900: color-mix(in oklch, var(--cs-color-red-900) 70%, var(--cs-color-rose-900));
-    --cs-color-danger-950: color-mix(in oklch, var(--cs-color-red-950) 70%, var(--cs-color-rose-950));
-
-    --cs-color-info-50: var(--cs-color-sky-50);
-    --cs-color-info-100: var(--cs-color-sky-100);
-    --cs-color-info-200: var(--cs-color-sky-200);
-    --cs-color-info-300: var(--cs-color-sky-300);
-    --cs-color-info-400: var(--cs-color-sky-400);
-    --cs-color-info-500: var(--cs-color-sky-500);
-    --cs-color-info-600: var(--cs-color-sky-600);
-    --cs-color-info-700: var(--cs-color-sky-700);
-    --cs-color-info-800: var(--cs-color-sky-800);
-    --cs-color-info-900: var(--cs-color-sky-900);
-    --cs-color-info-950: var(--cs-color-sky-950);
+    --cs-color-negative-50: color-mix(in oklch, var(--cs-color-red-50) 70%, var(--cs-color-rose-50));
+    --cs-color-negative-100: color-mix(in oklch, var(--cs-color-red-100) 70%, var(--cs-color-rose-100));
+    --cs-color-negative-200: color-mix(in oklch, var(--cs-color-red-200) 70%, var(--cs-color-rose-200));
+    --cs-color-negative-300: color-mix(in oklch, var(--cs-color-red-300) 70%, var(--cs-color-rose-300));
+    --cs-color-negative-400: color-mix(in oklch, var(--cs-color-red-400) 70%, var(--cs-color-rose-400));
+    --cs-color-negative-500: color-mix(in oklch, var(--cs-color-red-500) 70%, var(--cs-color-rose-500));
+    --cs-color-negative-600: color-mix(in oklch, var(--cs-color-red-600) 70%, var(--cs-color-rose-600));
+    --cs-color-negative-700: color-mix(in oklch, var(--cs-color-red-700) 70%, var(--cs-color-rose-700));
+    --cs-color-negative-800: color-mix(in oklch, var(--cs-color-red-800) 70%, var(--cs-color-rose-800));
+    --cs-color-negative-900: color-mix(in oklch, var(--cs-color-red-900) 70%, var(--cs-color-rose-900));
+    --cs-color-negative-950: color-mix(in oklch, var(--cs-color-red-950) 70%, var(--cs-color-rose-950));
 
     --cs-color-base-50: var(--cs-color-zinc-50);
     --cs-color-base-100: var(--cs-color-zinc-100);

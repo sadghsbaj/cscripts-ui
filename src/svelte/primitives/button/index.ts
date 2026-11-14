@@ -25,11 +25,11 @@ type InterestAttributes = {
 export type ButtonVariantProps =
     | {
           variant: "primary" | "secondary" | "ghost";
-          danger?: boolean;
+          negative?: boolean;
       }
     | {
           variant: "tertiary" | "elevated";
-          danger?: never;
+          negative?: never;
       };
 
 export type ButtonProps = (

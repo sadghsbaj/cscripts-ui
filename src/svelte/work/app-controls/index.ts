@@ -11,13 +11,13 @@ export { default as WorkAppStatusDot } from "./WorkAppStatusDot.svelte";
 export { default as WorkAppStatusPill } from "./WorkAppStatusDot.svelte";
 export { default as WorkAppStatusButton } from "./WorkAppStatusDot.svelte";
 
-export const WORK_APP_STATUS_COLORS = ["success", "warning", "danger", "base"] as const;
+export const WORK_APP_STATUS_COLORS = ["positive", "caution", "negative", "base"] as const;
 export type WorkAppStatusColor = (typeof WORK_APP_STATUS_COLORS)[number];
 
 export const WORK_APP_STATUS_DEFAULTS: Record<WorkAppStatusColor, string> = {
-    success: "Verbunden",
-    warning: "Wartend",
-    danger: "Getrennt",
+    positive: "Verbunden",
+    caution: "Wartend",
+    negative: "Getrennt",
     base: "Inaktiv",
 };
 

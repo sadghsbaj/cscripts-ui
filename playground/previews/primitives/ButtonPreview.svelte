@@ -38,13 +38,13 @@ ${closeScript}
     <ButtonLabel>Elevated</ButtonLabel>
 </Button>`;
 
-    const dangerCode = `<Button variant="primary" size="md" danger>
+    const negativeCode = `<Button variant="primary" size="md" negative>
     <ButtonLabel>Delete item</ButtonLabel>
 </Button>
-<Button variant="secondary" size="md" danger>
+<Button variant="secondary" size="md" negative>
     <ButtonLabel>Delete item</ButtonLabel>
 </Button>
-<Button variant="ghost" size="md" danger>
+<Button variant="ghost" size="md" negative>
     <ButtonLabel>Delete item</ButtonLabel>
 </Button>`;
 
@@ -138,17 +138,17 @@ ${closeScript}
     </PreviewSection>
 
     <PreviewSection
-        title="Danger"
+        title="Negative"
         description="Destructive intent is supported on primary, secondary, and ghost variants."
-        code={dangerCode}
+        code={negativeCode}
     >
-        <Button variant="primary" size="md" danger>
+        <Button variant="primary" size="md" negative>
             <ButtonLabel>Delete item</ButtonLabel>
         </Button>
-        <Button variant="secondary" size="md" danger>
+        <Button variant="secondary" size="md" negative>
             <ButtonLabel>Delete item</ButtonLabel>
         </Button>
-        <Button variant="ghost" size="md" danger>
+        <Button variant="ghost" size="md" negative>
             <ButtonLabel>Delete item</ButtonLabel>
         </Button>
     </PreviewSection>

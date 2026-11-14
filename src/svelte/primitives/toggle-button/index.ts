@@ -5,7 +5,7 @@ export { default as ToggleButton } from "./ToggleButton.svelte";
 export { default as ToggleButtonLabel } from "./ToggleButtonLabel.svelte";
 export { default as ToggleButtonIcon } from "./ToggleButtonIcon.svelte";
 
-export const TOGGLE_BUTTON_COLORS = ["accent", "success", "warning", "danger"] as const;
+export const TOGGLE_BUTTON_COLORS = ["accent", "positive", "caution", "negative"] as const;
 export const TOGGLE_BUTTON_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
 export const TOGGLE_BUTTON_VARIANTS = ["soft", "ghost"] as const;
 

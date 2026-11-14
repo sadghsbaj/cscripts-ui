@@ -4,13 +4,13 @@ Primary interactive button primitive (`<Button />`) supporting polymorphic rende
 (`as="button" | "a" | "label"`), semantic variants, and spring-physics press feedback.
 
 Architectural Notes:
-- Defaults & Resets: Requires explicit `variant` and `size` props (`danger` optional on `primary`, `secondary`, `ghost`).
+- Defaults & Resets: Requires explicit `variant` and `size` props (`negative` optional on `primary`, `secondary`, `ghost`).
   See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
     import type { ButtonProps } from "./index.ts";
 
-    let { variant, danger, size, as = "button", iconOnly, class: className, children, ...rest }: ButtonProps = $props();
+    let { variant, negative, size, as = "button", iconOnly, class: className, children, ...rest }: ButtonProps = $props();
 </script>
 
 <svelte:element
@@ -19,7 +19,7 @@ Architectural Notes:
     {...rest}
     class={["cs-button", className]}
     data-variant={variant}
-    data-danger={danger ? "" : undefined}
+    data-negative={negative ? "" : undefined}
     data-size={size}
     data-icon-only={iconOnly ? "" : undefined}
 >
@@ -92,7 +92,7 @@ Architectural Notes:
             }
 
             /* =========================================================
-             * INTENT TOKENS (Accent by default, overridden by [data-danger])
+             * INTENT TOKENS (Accent by default, overridden by [data-negative])
              * ---------------------------------------------------------
              * Uses `*-soft-fg` (600 light / 400 dark) for chromatic text on
              * neutral `base-soft` / transparent surfaces to guarantee contrast.
@@ -193,11 +193,11 @@ Architectural Notes:
                 padding-inline: 0;
             }
 
-            &[data-danger] {
-                --_solid-bg: var(--cs-color-danger-solid);
-                --_solid-bg-hover: var(--cs-color-danger-solid-hover);
-                --_solid-fg: var(--cs-color-danger-solid-fg);
-                --_accent-fg: var(--cs-color-danger-soft-fg);
+            &[data-negative] {
+                --_solid-bg: var(--cs-color-negative-solid);
+                --_solid-bg-hover: var(--cs-color-negative-solid-hover);
+                --_solid-fg: var(--cs-color-negative-solid-fg);
+                --_accent-fg: var(--cs-color-negative-soft-fg);
             }
 
             /* =========================================================
@@ -230,7 +230,7 @@ Architectural Notes:
                 --_fg: var(--cs-color-base-soft-fg);
                 --_fg-hover: var(--cs-color-base-soft-fg-hover);
 
-                &[data-danger] {
+                &[data-negative] {
                     --_fg: var(--_accent-fg);
                     --_fg-hover: var(--_accent-fg);
                 }

@@ -20,10 +20,10 @@ describe("button-morph ESLint rules", () => {
                         code: `
                         <ButtonMorph bind:value={mode}>
                             <ButtonMorphItem value="idle">
-                                <Button variant="soft" color="danger" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
+                                <Button variant="soft" color="negative" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
                             </ButtonMorphItem>
                             <ButtonMorphItem value="confirm">
-                                <Button variant="solid" color="danger" size="md"><ButtonLabel>Wirklich?</ButtonLabel></Button>
+                                <Button variant="solid" color="negative" size="md"><ButtonLabel>Wirklich?</ButtonLabel></Button>
                             </ButtonMorphItem>
                         </ButtonMorph>
                         `,
@@ -48,7 +48,7 @@ describe("button-morph ESLint rules", () => {
                         code: `
                         <ButtonMorph bind:value={mode}>
                             <ButtonMorphItem value="idle">
-                                <Button variant="soft" color="danger" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
+                                <Button variant="soft" color="negative" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
                             </ButtonMorphItem>
                         </ButtonMorph>
                         `,
@@ -60,10 +60,10 @@ describe("button-morph ESLint rules", () => {
                         code: `
                         <ButtonMorph bind:value={mode}>
                             <ButtonMorphItem>
-                                <Button variant="soft" color="danger" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
+                                <Button variant="soft" color="negative" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
                             </ButtonMorphItem>
                             <ButtonMorphItem value="confirm">
-                                <Button variant="solid" color="danger" size="md"><ButtonLabel>Wirklich?</ButtonLabel></Button>
+                                <Button variant="solid" color="negative" size="md"><ButtonLabel>Wirklich?</ButtonLabel></Button>
                             </ButtonMorphItem>
                         </ButtonMorph>
                         `,
@@ -75,10 +75,10 @@ describe("button-morph ESLint rules", () => {
                         code: `
                         <ButtonMorph bind:value={mode}>
                             <ButtonMorphItem value="idle">
-                                <Button variant="soft" color="danger" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
+                                <Button variant="soft" color="negative" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
                             </ButtonMorphItem>
                             <ButtonMorphItem value="idle">
-                                <Button variant="solid" color="danger" size="md"><ButtonLabel>Wirklich?</ButtonLabel></Button>
+                                <Button variant="solid" color="negative" size="md"><ButtonLabel>Wirklich?</ButtonLabel></Button>
                             </ButtonMorphItem>
                         </ButtonMorph>
                         `,
@@ -101,7 +101,7 @@ describe("button-morph ESLint rules", () => {
                                 <CloseButton variant="soft" size="md" />
                             </ButtonMorphItem>
                             <ButtonMorphItem value="confirm">
-                                <Button variant="solid" color="danger" size="sm"><ButtonLabel>Verwerfen?</ButtonLabel></Button>
+                                <Button variant="solid" color="negative" size="sm"><ButtonLabel>Verwerfen?</ButtonLabel></Button>
                             </ButtonMorphItem>
                             <ButtonMorphItem value="toggle">
                                 <ToggleButton variant="soft" color="accent" size="sm"><ToggleButtonLabel>Aktiv</ToggleButtonLabel></ToggleButton>
@@ -120,7 +120,7 @@ describe("button-morph ESLint rules", () => {
                                 <span>Kein Button</span>
                             </ButtonMorphItem>
                             <ButtonMorphItem value="confirm">
-                                <Button variant="solid" color="danger" size="sm"><ButtonLabel>Verwerfen?</ButtonLabel></Button>
+                                <Button variant="solid" color="negative" size="sm"><ButtonLabel>Verwerfen?</ButtonLabel></Button>
                             </ButtonMorphItem>
                         </ButtonMorph>
                         `,
@@ -131,9 +131,9 @@ describe("button-morph ESLint rules", () => {
                         // Unwrapped Button directly inside ButtonMorph
                         code: `
                         <ButtonMorph bind:value={mode}>
-                            <Button variant="soft" color="danger" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
+                            <Button variant="soft" color="negative" size="md"><ButtonLabel>Löschen</ButtonLabel></Button>
                             <ButtonMorphItem value="confirm">
-                                <Button variant="solid" color="danger" size="md"><ButtonLabel>Wirklich?</ButtonLabel></Button>
+                                <Button variant="solid" color="negative" size="md"><ButtonLabel>Wirklich?</ButtonLabel></Button>
                             </ButtonMorphItem>
                         </ButtonMorph>
                         `,

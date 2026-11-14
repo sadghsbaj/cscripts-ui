@@ -45,11 +45,11 @@ ${closeScript}
     role="dialog"
     aria-modal="true"
     {@attach focusTrap({
-        initialFocus: "#danger-confirm",
+        initialFocus: "#negative-confirm",
         onEscape: () => (isOpen = false),
     })}
 >
-    <button id="danger-confirm">Delete</button>
+    <button id="negative-confirm">Delete</button>
 </div>`;
 
     const nestedCode = `<!-- Stacked focus traps pause parent traps automatically -->
@@ -83,7 +83,7 @@ ${closeScript}
         description="Pass a CSS selector to initialFocus to focus a specific control when mounted."
         code={targetCode}
     >
-        <Button variant="secondary" danger size="md" onclick={() => (isTargetOpen = true)}>
+        <Button variant="secondary" negative size="md" onclick={() => (isTargetOpen = true)}>
             <ButtonLabel>Confirm deletion</ButtonLabel>
         </Button>
     </PreviewSection>
@@ -157,7 +157,7 @@ ${closeScript}
             aria-label="Confirm deletion"
             class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-380px relative"
             {@attach focusTrap({
-                initialFocus: "#danger-confirm",
+                initialFocus: "#negative-confirm",
                 onEscape: () => (isTargetOpen = false),
             })}
         >
@@ -182,9 +182,9 @@ ${closeScript}
                     <ButtonLabel>Cancel</ButtonLabel>
                 </Button>
                 <Button
-                    id="danger-confirm"
+                    id="negative-confirm"
                     variant="primary"
-                    danger
+                    negative
                     size="md"
                     onclick={() => (isTargetOpen = false)}
                 >
