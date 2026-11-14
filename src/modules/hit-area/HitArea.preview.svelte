@@ -101,7 +101,7 @@ ${closeScript}
                         <HitArea
                             size={button.size}
                             class={["border border-dashed", showHitArea ? "is-visible" : ""]}
-                            style="--hit-area-color: var(--cs-color-{button.color}-500);"
+                            style="--cs-hit-area-preview-border: var(--cs-color-{button.color}-500);"
                         />
                     </Button>
                 {/each}
@@ -117,7 +117,7 @@ ${closeScript}
                     <HitArea
                         size="md"
                         class={["border border-dashed size-64px", showHitArea ? "is-visible" : ""]}
-                        style="--hit-area-color: var(--cs-color-blue-500);"
+                        style="--cs-hit-area-preview-border: var(--cs-color-blue-500);"
                     />
                 </Button>
             </div>
@@ -131,6 +131,6 @@ ${closeScript}
     }
 
     :global(.is-visible) {
-        border-color: var(--hit-area-color);
+        border-color: var(--cs-hit-area-preview-border);
     }
 </style>

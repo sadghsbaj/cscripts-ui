@@ -14,8 +14,8 @@ Automatically fades out when adjacent toggle buttons are active (`aria-pressed="
 <style>
     @layer components.composite {
         .cs-toggle-button-group-separator {
-            --_separator-fg: var(--cs-color-base-soft-fg);
-            --_separator-alpha: 18%;
+            --cs-toggle-button-group-separator-fg: var(--cs-color-base-soft-fg);
+            --cs-toggle-button-group-separator-alpha: 18%;
 
             position: relative;
             z-index: 1;
@@ -26,7 +26,11 @@ Automatically fades out when adjacent toggle buttons are active (`aria-pressed="
             &::before {
                 content: "";
                 position: absolute;
-                background-color: color-mix(in oklab, var(--_separator-fg) var(--_separator-alpha), transparent);
+                background-color: color-mix(
+                    in oklab,
+                    var(--cs-toggle-button-group-separator-fg) var(--cs-toggle-button-group-separator-alpha),
+                    transparent
+                );
                 transition:
                     opacity 150ms var(--cs-ease-quad-out),
                     background-color 150ms var(--cs-ease-quad-out);
@@ -60,26 +64,26 @@ Automatically fades out when adjacent toggle buttons are active (`aria-pressed="
 
         :global(.cs-toggle-button[aria-pressed="true"][data-color="accent"])
             + .cs-toggle-button-group-separator:has(+ :global(.cs-toggle-button[aria-pressed="true"])) {
-            --_separator-fg: var(--cs-color-accent-soft-fg);
-            --_separator-alpha: 18%;
+            --cs-toggle-button-group-separator-fg: var(--cs-color-accent-soft-fg);
+            --cs-toggle-button-group-separator-alpha: 18%;
         }
 
         :global(.cs-toggle-button[aria-pressed="true"][data-color="positive"])
             + .cs-toggle-button-group-separator:has(+ :global(.cs-toggle-button[aria-pressed="true"])) {
-            --_separator-fg: var(--cs-color-positive-soft-fg);
-            --_separator-alpha: 18%;
+            --cs-toggle-button-group-separator-fg: var(--cs-color-positive-soft-fg);
+            --cs-toggle-button-group-separator-alpha: 18%;
         }
 
         :global(.cs-toggle-button[aria-pressed="true"][data-color="caution"])
             + .cs-toggle-button-group-separator:has(+ :global(.cs-toggle-button[aria-pressed="true"])) {
-            --_separator-fg: var(--cs-color-caution-soft-fg);
-            --_separator-alpha: 18%;
+            --cs-toggle-button-group-separator-fg: var(--cs-color-caution-soft-fg);
+            --cs-toggle-button-group-separator-alpha: 18%;
         }
 
         :global(.cs-toggle-button[aria-pressed="true"][data-color="negative"])
             + .cs-toggle-button-group-separator:has(+ :global(.cs-toggle-button[aria-pressed="true"])) {
-            --_separator-fg: var(--cs-color-negative-soft-fg);
-            --_separator-alpha: 18%;
+            --cs-toggle-button-group-separator-fg: var(--cs-color-negative-soft-fg);
+            --cs-toggle-button-group-separator-alpha: 18%;
         }
 
         /* =========================================================

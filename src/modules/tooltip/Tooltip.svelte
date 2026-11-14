@@ -9,7 +9,7 @@ Architectural Notes:
 - Sizing & Centering: Enforces `block-size: 26px` with zero vertical padding, allowing flexbox
   to vertically align text, icons, and keyboard badges along the optical center axis.
 - Motion Delegation: Delegates directional entry/exit transitions and `@starting-style` spring choreography
-  to underlying `<Popover animate>` (`[data-animate]`), purely tuning micro-surface feel via `--popover-anim-*` token overrides.
+  to underlying `<Popover animate>` (`[data-animate]`), purely tuning micro-surface feel via `--cs-popover-anim-*` token overrides.
 - Warmup Acceleration: Benefits from the global `:root[data-hint-warm]` acceleration window (300ms)
   managed by `popoverTrigger({ mode: "hint" })`. Once any tooltip is active or recently closed,
   subsequent tooltips open immediately (0ms delay) and render without transitions (`[data-warm]`),
@@ -65,17 +65,17 @@ Architectural Notes:
 <style>
     @layer components.composite {
         :global(.cs-tooltip) {
-            --_fs: 13px;
+            --cs-tooltip-font-size: 13px;
 
             /* Micro-surface motion overrides for Popover[data-animate] */
-            --popover-anim-distance: 5px;
-            --popover-anim-scale-start: 0.88;
-            --popover-anim-blur-start: 2.5px;
-            --popover-anim-blur-exit: 1.5px;
-            --popover-anim-dur-in: 260ms;
-            --popover-anim-dur-fade-in: 110ms;
-            --popover-anim-dur-blur-in: 120ms;
-            --popover-anim-dur-out: 100ms;
+            --cs-popover-anim-distance: 5px;
+            --cs-popover-anim-scale-start: 0.88;
+            --cs-popover-anim-blur-start: 2.5px;
+            --cs-popover-anim-blur-exit: 1.5px;
+            --cs-popover-anim-dur-in: 260ms;
+            --cs-popover-anim-dur-fade-in: 110ms;
+            --cs-popover-anim-dur-blur-in: 120ms;
+            --cs-popover-anim-dur-out: 100ms;
 
             gap: 6px;
             align-items: center;

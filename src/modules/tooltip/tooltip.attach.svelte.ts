@@ -8,7 +8,7 @@
  * - Dual Mode: Automatically mounts a lightweight `<Tooltip />` instance when given a string or `text`,
  *   or pairs seamlessly with a custom compound tooltip element via its `target` ID.
  * - Accessibility: Manages `aria-describedby` without manual attribute wiring.
- * - Centralized Configuration: Drives positioning (`data-placement`) and `--popover-offset` directly
+ * - Centralized Configuration: Drives positioning (`data-placement`) and `--cs-popover-offset` directly
  *   on the target element, ensuring all settings live in the attachment rather than component props.
  * - Warmup Acceleration: Seamlessly inherits the global `:root[data-hint-warm]` acceleration window (300ms)
  *   from `popoverTrigger`, eliminating hover delays during continuous browsing between adjacent triggers.
@@ -100,7 +100,7 @@ function applyTargetStyles(id: string, opts: NormalizedOptions): void {
     targetEl.dataset.placement = opts.placement ?? targetEl.dataset.placement ?? "top";
 
     if (opts.offset) {
-        targetEl.style.setProperty("--popover-offset", opts.offset);
+        targetEl.style.setProperty("--cs-popover-offset", opts.offset);
     }
 }
 

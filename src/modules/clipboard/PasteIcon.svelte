@@ -63,8 +63,8 @@ Architectural Notes:
 <style>
     @layer components.primitive {
         .cs-paste-icon {
-            --_check-color: var(--cs-paste-icon-check-color, var(--cs-color-positive-500));
-            --_error-color: var(--cs-paste-icon-error-color, var(--cs-color-negative-500));
+            --cs-paste-icon-status-fg-positive: var(--cs-paste-icon-fg-positive, var(--cs-color-positive-500));
+            --cs-paste-icon-status-fg-negative: var(--cs-paste-icon-fg-negative, var(--cs-color-negative-500));
 
             isolation: isolate;
             position: relative;
@@ -86,8 +86,8 @@ Architectural Notes:
 
             /* Inherit high-contrast foreground color on primary solid button surfaces */
             :global(:is(.cs-button, .cs-toggle-button)[data-variant="primary"]) > & {
-                --_check-color: var(--cs-paste-icon-check-color, currentColor);
-                --_error-color: var(--cs-paste-icon-error-color, currentColor);
+                --cs-paste-icon-status-fg-positive: var(--cs-paste-icon-fg-positive, currentColor);
+                --cs-paste-icon-status-fg-negative: var(--cs-paste-icon-fg-negative, currentColor);
             }
 
             > :global(svg) {
@@ -118,13 +118,13 @@ Architectural Notes:
             }
 
             > :global(.cs-paste-icon-check) {
-                color: var(--_check-color);
-                filter: drop-shadow(0 0 4px color-mix(in oklch, var(--_check-color) 40%, transparent));
+                color: var(--cs-paste-icon-status-fg-positive);
+                filter: drop-shadow(0 0 4px color-mix(in oklch, var(--cs-paste-icon-status-fg-positive) 40%, transparent));
             }
 
             > :global(.cs-paste-icon-error) {
-                color: var(--_error-color);
-                filter: drop-shadow(0 0 4px color-mix(in oklch, var(--_error-color) 40%, transparent));
+                color: var(--cs-paste-icon-status-fg-negative);
+                filter: drop-shadow(0 0 4px color-mix(in oklch, var(--cs-paste-icon-status-fg-negative) 40%, transparent));
             }
 
             /* =========================================================
@@ -158,7 +158,7 @@ Architectural Notes:
             }
 
             &:is([data-pasted], :global([data-pasted]) &) {
-                --_sparkle-color: var(--_check-color);
+                --cs-paste-icon-sparkle-fg: var(--cs-paste-icon-status-fg-positive);
 
                 > :global(.cs-paste-icon-check) {
                     transform: translateY(0) scale(1) rotate(0deg);
@@ -170,7 +170,7 @@ Architectural Notes:
             }
 
             &:is([data-paste-error], :global([data-paste-error]) &) {
-                --_sparkle-color: var(--_error-color);
+                --cs-paste-icon-sparkle-fg: var(--cs-paste-icon-status-fg-negative);
 
                 > :global(.cs-paste-icon-error) {
                     transform: translateY(0) scale(1) rotate(0deg);
@@ -203,7 +203,7 @@ Architectural Notes:
         .cs-paste-icon-star-1,
         .cs-paste-icon-star-2 {
             fill: currentColor;
-            color: var(--_sparkle-color);
+            color: var(--cs-paste-icon-sparkle-fg);
         }
 
         .cs-paste-icon-dot-1,
@@ -211,7 +211,7 @@ Architectural Notes:
         .cs-paste-icon-dot-3,
         .cs-paste-icon-dot-4 {
             border-radius: var(--cs-radius-full);
-            background-color: var(--_sparkle-color);
+            background-color: var(--cs-paste-icon-sparkle-fg);
         }
 
         .cs-paste-icon-star-1 {

@@ -77,16 +77,16 @@ Architectural Notes:
             /* =========================================================
             * CHECKED INTENT (Accent by default, overridden by [aria-invalid])
             * ========================================================= */
-            --_bg-checked: var(--cs-color-accent-solid);
-            --_bg-checked-hover: var(--cs-color-accent-solid-hover);
+            --cs-checkbox-bg-checked: var(--cs-color-accent-solid);
+            --cs-checkbox-bg-checked-hover: var(--cs-color-accent-solid-hover);
             position: relative;
-            width: var(--_size);
-            height: var(--_size);
+            width: var(--cs-checkbox-width);
+            height: var(--cs-checkbox-width);
             appearance: none;
-            background-color: var(--_bg);
-            border-radius: var(--_radius);
+            background-color: var(--cs-checkbox-bg);
+            border-radius: var(--cs-checkbox-radius);
             corner-shape: var(--cs-squircle-soft);
-            box-shadow: var(--_shadow, none);
+            box-shadow: var(--cs-checkbox-shadow, none);
 
             transition:
                 background-color 140ms var(--cs-ease-quad-out),
@@ -97,43 +97,43 @@ Architectural Notes:
             * SIZES
             * ========================================================= */
             &[data-size="xs"] {
-                --_size: 12px;
-                --_radius: 4px;
+                --cs-checkbox-width: 12px;
+                --cs-checkbox-radius: 4px;
             }
 
             &[data-size="sm"] {
-                --_size: 16px;
-                --_radius: 5px;
+                --cs-checkbox-width: 16px;
+                --cs-checkbox-radius: 5px;
             }
 
             &[data-size="md"] {
-                --_size: 20px;
-                --_radius: 6px;
+                --cs-checkbox-width: 20px;
+                --cs-checkbox-radius: 6px;
             }
 
             &[data-size="lg"] {
-                --_size: 24px;
-                --_radius: 7px;
+                --cs-checkbox-width: 24px;
+                --cs-checkbox-radius: 7px;
             }
 
             &[data-size="xl"] {
-                --_size: 28px;
-                --_radius: 8px;
+                --cs-checkbox-width: 28px;
+                --cs-checkbox-radius: 8px;
             }
 
             /* =========================================================
             * VARIANTS
             * ========================================================= */
             &[data-variant="soft"] {
-                --_bg: var(--cs-color-base-soft);
-                --_bg-hover: var(--cs-color-base-soft-hover);
+                --cs-checkbox-bg: var(--cs-color-base-soft);
+                --cs-checkbox-bg-hover: var(--cs-color-base-soft-hover);
             }
 
             &[data-variant="elevated"] {
-                --_bg: var(--cs-color-elevated);
-                --_bg-hover: var(--cs-color-elevated-hover);
-                --_shadow: var(--cs-shadow-elevated);
-                --_shadow-hover: var(--cs-shadow-elevated-hover);
+                --cs-checkbox-bg: var(--cs-color-elevated);
+                --cs-checkbox-bg-hover: var(--cs-color-elevated-hover);
+                --cs-checkbox-shadow: var(--cs-shadow-elevated);
+                --cs-checkbox-shadow-hover: var(--cs-shadow-elevated-hover);
             }
 
             &::before {
@@ -144,8 +144,8 @@ Architectural Notes:
 
             @media (hover: hover) {
                 &:hover:not(:disabled) {
-                    background-color: var(--_bg-hover);
-                    box-shadow: var(--_shadow-hover, none);
+                    background-color: var(--cs-checkbox-bg-hover);
+                    box-shadow: var(--cs-checkbox-shadow-hover, none);
                 }
             }
 
@@ -159,22 +159,22 @@ Architectural Notes:
             }
 
             &:is(:checked, :indeterminate) {
-                --_bg: var(--_bg-checked);
-                --_bg-hover: var(--_bg-checked-hover);
-                --_shadow: var(--cs-shadow-solid);
-                --_shadow-hover: var(--_shadow);
+                --cs-checkbox-bg: var(--cs-checkbox-bg-checked);
+                --cs-checkbox-bg-hover: var(--cs-checkbox-bg-checked-hover);
+                --cs-checkbox-shadow: var(--cs-shadow-solid);
+                --cs-checkbox-shadow-hover: var(--cs-checkbox-shadow);
             }
 
             &[aria-invalid="true"] {
-                --_bg-checked: var(--cs-color-negative-solid);
-                --_bg-checked-hover: var(--cs-color-negative-solid-hover);
+                --cs-checkbox-bg-checked: var(--cs-color-negative-solid);
+                --cs-checkbox-bg-checked-hover: var(--cs-color-negative-solid-hover);
 
                 /* Error ring & soft tint apply only when inactive so checked states inherit the top-lit solid highlight */
                 &:not(:checked, :indeterminate) {
-                    --_shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 45%, transparent);
-                    --_shadow-hover: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 65%, transparent);
-                    --_bg: var(--cs-color-negative-soft);
-                    --_bg-hover: var(--cs-color-negative-soft-hover);
+                    --cs-checkbox-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 45%, transparent);
+                    --cs-checkbox-shadow-hover: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 65%, transparent);
+                    --cs-checkbox-bg: var(--cs-color-negative-soft);
+                    --cs-checkbox-bg-hover: var(--cs-color-negative-soft-hover);
                 }
             }
 
@@ -183,22 +183,22 @@ Architectural Notes:
              * ========================================================= */
             &:disabled {
                 --cs-disabled-opacity: 1;
-                --_bg: var(--cs-color-disabled-bg);
-                --_shadow: none;
+                --cs-checkbox-bg: var(--cs-color-disabled-bg);
+                --cs-checkbox-shadow: none;
 
                 &[data-variant="elevated"] {
-                    --_bg: var(--cs-color-disabled-bg-elevated);
-                    --_shadow: 0 0 0 1px var(--cs-color-disabled-border);
+                    --cs-checkbox-bg: var(--cs-color-disabled-bg-elevated);
+                    --cs-checkbox-shadow: 0 0 0 1px var(--cs-color-disabled-border);
                 }
 
                 &[aria-invalid="true"]:not(:checked, :indeterminate) {
-                    --_bg: var(--cs-color-disabled-bg);
-                    --_shadow: none;
+                    --cs-checkbox-bg: var(--cs-color-disabled-bg);
+                    --cs-checkbox-shadow: none;
                 }
 
                 &:is(:checked, :indeterminate) {
-                    --_bg: var(--cs-color-disabled-bg-strong);
-                    --_shadow: none;
+                    --cs-checkbox-bg: var(--cs-color-disabled-bg-strong);
+                    --cs-checkbox-shadow: none;
                 }
             }
         }

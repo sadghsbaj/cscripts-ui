@@ -8,7 +8,7 @@ const FAST_BOOT_WINDOW_MS = 30 * 60 * 1000;
 
 /**
  * Ordered sequence in which the five plant locations draw and lock in.
- * Matches the `--_index` stagger order defined in `WorkAppIntro.svelte`.
+ * Matches the `--cs-work-app-intro-index` stagger order defined in `WorkAppIntro.svelte`.
  */
 export const BOOT_SEQUENCE: readonly WorkLocationId[] = ["neumarkt", "baruth", "guetersloh", "arnsberg", "leutkirch"];
 
@@ -20,7 +20,7 @@ type BootMode = "cold" | "instant";
  *
  * Architectural Note:
  * Individual plant staggering and progress bar interpolation are delegated entirely
- * to CSS via `data-phase` and per-location `--_index` custom properties, keeping
+ * to CSS via `data-phase` and per-location `--cs-work-app-intro-index` custom properties, keeping
  * the JavaScript timer schedule minimal (one timer per phase transition).
  */
 class WorkAppIntroManager {

@@ -1,22 +1,22 @@
-@property --_fade-top {
+@property --cs-scroll-fade-top {
     syntax: "<length>";
     inherits: false;
     initial-value: 0px;
 }
 
-@property --_fade-bottom {
+@property --cs-scroll-fade-bottom {
     syntax: "<length>";
     inherits: false;
     initial-value: 0px;
 }
 
-@property --_fade-left {
+@property --cs-scroll-fade-left {
     syntax: "<length>";
     inherits: false;
     initial-value: 0px;
 }
 
-@property --_fade-right {
+@property --cs-scroll-fade-right {
     syntax: "<length>";
     inherits: false;
     initial-value: 0px;
@@ -46,18 +46,18 @@
         * EDGES (Internal Multipliers: 0 | 1)
         * ========================================================= */
         &[data-scroll-fade-edges="both"] {
-            --_fade-start-mult: 1;
-            --_fade-end-mult: 1;
+            --cs-scroll-fade-start-mult: 1;
+            --cs-scroll-fade-end-mult: 1;
         }
 
         &[data-scroll-fade-edges="start"] {
-            --_fade-start-mult: 1;
-            --_fade-end-mult: 0;
+            --cs-scroll-fade-start-mult: 1;
+            --cs-scroll-fade-end-mult: 0;
         }
 
         &[data-scroll-fade-edges="end"] {
-            --_fade-start-mult: 0;
-            --_fade-end-mult: 1;
+            --cs-scroll-fade-start-mult: 0;
+            --cs-scroll-fade-end-mult: 1;
         }
 
         /* =========================================================
@@ -81,16 +81,16 @@
             mask-image: linear-gradient(
                 to bottom,
                 transparent 0px,
-                rgba(0, 0, 0, 0.08) calc(var(--_fade-top) * 0.18),
-                rgba(0, 0, 0, 0.33) calc(var(--_fade-top) * 0.4),
-                rgba(0, 0, 0, 0.67) calc(var(--_fade-top) * 0.6),
-                rgba(0, 0, 0, 0.92) calc(var(--_fade-top) * 0.82),
-                black var(--_fade-top),
-                black calc(100% - var(--_fade-bottom)),
-                rgba(0, 0, 0, 0.92) calc(100% - var(--_fade-bottom) * 0.82),
-                rgba(0, 0, 0, 0.67) calc(100% - var(--_fade-bottom) * 0.6),
-                rgba(0, 0, 0, 0.33) calc(100% - var(--_fade-bottom) * 0.4),
-                rgba(0, 0, 0, 0.08) calc(100% - var(--_fade-bottom) * 0.18),
+                rgba(0, 0, 0, 0.08) calc(var(--cs-scroll-fade-top) * 0.18),
+                rgba(0, 0, 0, 0.33) calc(var(--cs-scroll-fade-top) * 0.4),
+                rgba(0, 0, 0, 0.67) calc(var(--cs-scroll-fade-top) * 0.6),
+                rgba(0, 0, 0, 0.92) calc(var(--cs-scroll-fade-top) * 0.82),
+                black var(--cs-scroll-fade-top),
+                black calc(100% - var(--cs-scroll-fade-bottom)),
+                rgba(0, 0, 0, 0.92) calc(100% - var(--cs-scroll-fade-bottom) * 0.82),
+                rgba(0, 0, 0, 0.67) calc(100% - var(--cs-scroll-fade-bottom) * 0.6),
+                rgba(0, 0, 0, 0.33) calc(100% - var(--cs-scroll-fade-bottom) * 0.4),
+                rgba(0, 0, 0, 0.08) calc(100% - var(--cs-scroll-fade-bottom) * 0.18),
                 transparent 100%
             );
         }
@@ -106,16 +106,16 @@
             mask-image: linear-gradient(
                 to right,
                 transparent 0px,
-                rgba(0, 0, 0, 0.08) calc(var(--_fade-left) * 0.18),
-                rgba(0, 0, 0, 0.33) calc(var(--_fade-left) * 0.4),
-                rgba(0, 0, 0, 0.67) calc(var(--_fade-left) * 0.6),
-                rgba(0, 0, 0, 0.92) calc(var(--_fade-left) * 0.82),
-                black var(--_fade-left),
-                black calc(100% - var(--_fade-right)),
-                rgba(0, 0, 0, 0.92) calc(100% - var(--_fade-right) * 0.82),
-                rgba(0, 0, 0, 0.67) calc(100% - var(--_fade-right) * 0.6),
-                rgba(0, 0, 0, 0.33) calc(100% - var(--_fade-right) * 0.4),
-                rgba(0, 0, 0, 0.08) calc(100% - var(--_fade-right) * 0.18),
+                rgba(0, 0, 0, 0.08) calc(var(--cs-scroll-fade-left) * 0.18),
+                rgba(0, 0, 0, 0.33) calc(var(--cs-scroll-fade-left) * 0.4),
+                rgba(0, 0, 0, 0.67) calc(var(--cs-scroll-fade-left) * 0.6),
+                rgba(0, 0, 0, 0.92) calc(var(--cs-scroll-fade-left) * 0.82),
+                black var(--cs-scroll-fade-left),
+                black calc(100% - var(--cs-scroll-fade-right)),
+                rgba(0, 0, 0, 0.92) calc(100% - var(--cs-scroll-fade-right) * 0.82),
+                rgba(0, 0, 0, 0.67) calc(100% - var(--cs-scroll-fade-right) * 0.6),
+                rgba(0, 0, 0, 0.33) calc(100% - var(--cs-scroll-fade-right) * 0.4),
+                rgba(0, 0, 0, 0.08) calc(100% - var(--cs-scroll-fade-right) * 0.18),
                 transparent 100%
             );
         }
@@ -136,31 +136,31 @@
                 linear-gradient(
                     to bottom,
                     transparent 0px,
-                    rgba(0, 0, 0, 0.08) calc(var(--_fade-top) * 0.18),
-                    rgba(0, 0, 0, 0.33) calc(var(--_fade-top) * 0.4),
-                    rgba(0, 0, 0, 0.67) calc(var(--_fade-top) * 0.6),
-                    rgba(0, 0, 0, 0.92) calc(var(--_fade-top) * 0.82),
-                    black var(--_fade-top),
-                    black calc(100% - var(--_fade-bottom)),
-                    rgba(0, 0, 0, 0.92) calc(100% - var(--_fade-bottom) * 0.82),
-                    rgba(0, 0, 0, 0.67) calc(100% - var(--_fade-bottom) * 0.6),
-                    rgba(0, 0, 0, 0.33) calc(100% - var(--_fade-bottom) * 0.4),
-                    rgba(0, 0, 0, 0.08) calc(100% - var(--_fade-bottom) * 0.18),
+                    rgba(0, 0, 0, 0.08) calc(var(--cs-scroll-fade-top) * 0.18),
+                    rgba(0, 0, 0, 0.33) calc(var(--cs-scroll-fade-top) * 0.4),
+                    rgba(0, 0, 0, 0.67) calc(var(--cs-scroll-fade-top) * 0.6),
+                    rgba(0, 0, 0, 0.92) calc(var(--cs-scroll-fade-top) * 0.82),
+                    black var(--cs-scroll-fade-top),
+                    black calc(100% - var(--cs-scroll-fade-bottom)),
+                    rgba(0, 0, 0, 0.92) calc(100% - var(--cs-scroll-fade-bottom) * 0.82),
+                    rgba(0, 0, 0, 0.67) calc(100% - var(--cs-scroll-fade-bottom) * 0.6),
+                    rgba(0, 0, 0, 0.33) calc(100% - var(--cs-scroll-fade-bottom) * 0.4),
+                    rgba(0, 0, 0, 0.08) calc(100% - var(--cs-scroll-fade-bottom) * 0.18),
                     transparent 100%
                 ),
                 linear-gradient(
                     to right,
                     transparent 0px,
-                    rgba(0, 0, 0, 0.08) calc(var(--_fade-left) * 0.18),
-                    rgba(0, 0, 0, 0.33) calc(var(--_fade-left) * 0.4),
-                    rgba(0, 0, 0, 0.67) calc(var(--_fade-left) * 0.6),
-                    rgba(0, 0, 0, 0.92) calc(var(--_fade-left) * 0.82),
-                    black var(--_fade-left),
-                    black calc(100% - var(--_fade-right)),
-                    rgba(0, 0, 0, 0.92) calc(100% - var(--_fade-right) * 0.82),
-                    rgba(0, 0, 0, 0.67) calc(100% - var(--_fade-right) * 0.6),
-                    rgba(0, 0, 0, 0.33) calc(100% - var(--_fade-right) * 0.4),
-                    rgba(0, 0, 0, 0.08) calc(100% - var(--_fade-right) * 0.18),
+                    rgba(0, 0, 0, 0.08) calc(var(--cs-scroll-fade-left) * 0.18),
+                    rgba(0, 0, 0, 0.33) calc(var(--cs-scroll-fade-left) * 0.4),
+                    rgba(0, 0, 0, 0.67) calc(var(--cs-scroll-fade-left) * 0.6),
+                    rgba(0, 0, 0, 0.92) calc(var(--cs-scroll-fade-left) * 0.82),
+                    black var(--cs-scroll-fade-left),
+                    black calc(100% - var(--cs-scroll-fade-right)),
+                    rgba(0, 0, 0, 0.92) calc(100% - var(--cs-scroll-fade-right) * 0.82),
+                    rgba(0, 0, 0, 0.67) calc(100% - var(--cs-scroll-fade-right) * 0.6),
+                    rgba(0, 0, 0, 0.33) calc(100% - var(--cs-scroll-fade-right) * 0.4),
+                    rgba(0, 0, 0, 0.08) calc(100% - var(--cs-scroll-fade-right) * 0.18),
                     transparent 100%
                 );
             mask-composite: intersect;
@@ -174,37 +174,37 @@
     * ========================================================= */
     @keyframes cs-scroll-fade-top {
         from {
-            --_fade-top: 0px;
+            --cs-scroll-fade-top: 0px;
         }
         to {
-            --_fade-top: calc(var(--cs-scroll-fade-size) * var(--_fade-start-mult, 1));
+            --cs-scroll-fade-top: calc(var(--cs-scroll-fade-size) * var(--cs-scroll-fade-start-mult, 1));
         }
     }
 
     @keyframes cs-scroll-fade-bottom {
         from {
-            --_fade-bottom: calc(var(--cs-scroll-fade-size) * var(--_fade-end-mult, 1));
+            --cs-scroll-fade-bottom: calc(var(--cs-scroll-fade-size) * var(--cs-scroll-fade-end-mult, 1));
         }
         to {
-            --_fade-bottom: 0px;
+            --cs-scroll-fade-bottom: 0px;
         }
     }
 
     @keyframes cs-scroll-fade-left {
         from {
-            --_fade-left: 0px;
+            --cs-scroll-fade-left: 0px;
         }
         to {
-            --_fade-left: calc(var(--cs-scroll-fade-size) * var(--_fade-start-mult, 1));
+            --cs-scroll-fade-left: calc(var(--cs-scroll-fade-size) * var(--cs-scroll-fade-start-mult, 1));
         }
     }
 
     @keyframes cs-scroll-fade-right {
         from {
-            --_fade-right: calc(var(--cs-scroll-fade-size) * var(--_fade-end-mult, 1));
+            --cs-scroll-fade-right: calc(var(--cs-scroll-fade-size) * var(--cs-scroll-fade-end-mult, 1));
         }
         to {
-            --_fade-right: 0px;
+            --cs-scroll-fade-right: 0px;
         }
     }
 }

@@ -4,7 +4,7 @@ Full-screen 4-act boot choreography wrapper (`<WorkAppIntro />`) for internal wo
 
 Architectural Notes:
 - CSS-Driven Staggering: JavaScript only advances high-level `data-phase` states (`cad` -> `lock` -> `brand` -> `curtain` -> `idle`).
-  Per-location delays (`--_cad-delay`, `--_lock-delay`) and progress bar steps are computed purely in CSS via `--_index`.
+  Per-location delays (`--cs-work-app-intro-cad-delay`, `--cs-work-app-intro-lock-delay`) and progress bar steps are computed purely in CSS via `--cs-work-app-intro-index`.
 - Spatial Depth Handshake: While the intro is active, `.cs-work-app-intro-workspace` holds the wrapped application at `scale: 0.98`.
   During `curtain`, the overlay zooms out to `1.04` while the workspace scales up to `1.0`. Once `idle` is reached, no transform
   remains on the workspace so `position: fixed` descendants inside the app behave normally.
@@ -198,10 +198,10 @@ Architectural Notes:
         }
 
         .cs-work-app-intro-location-card {
-            /* Stagger timings derived per card from its `--_index` (0..4) */
-            --_cad-delay: calc(var(--_index) * 80ms);
-            --_lock-delay: calc(var(--_index) * 90ms);
-            --_draw-dir: 1;
+            /* Stagger timings derived per card from its `--cs-work-app-intro-index` (0..4) */
+            --cs-work-app-intro-cad-delay: calc(var(--cs-work-app-intro-index) * 80ms);
+            --cs-work-app-intro-lock-delay: calc(var(--cs-work-app-intro-index) * 90ms);
+            --cs-work-app-intro-draw-dir: 1;
 
             position: absolute;
             display: flex;
@@ -211,7 +211,8 @@ Architectural Notes:
             opacity: 0;
             translate: -50% calc(-50% + 10px);
             scale: 0.92;
-            animation: cs-work-app-intro-card-enter 480ms var(--cs-ease-expo-out) var(--_cad-delay) forwards;
+            animation: cs-work-app-intro-card-enter 480ms var(--cs-ease-expo-out) var(--cs-work-app-intro-cad-delay)
+                forwards;
 
             /**
             * Realistic Germany compass & latitude/longitude topology with harmonized spacing:
@@ -222,36 +223,36 @@ Architectural Notes:
             * - Leutkirch (47.82°N, 10.02°E)
             */
             &[data-location="neumarkt"] {
-                --_index: 0;
-                --_draw-dir: 1;
+                --cs-work-app-intro-index: 0;
+                --cs-work-app-intro-draw-dir: 1;
                 top: 59%;
                 left: 65%;
                 width: 155px;
             }
             &[data-location="baruth"] {
-                --_index: 1;
-                --_draw-dir: -1;
+                --cs-work-app-intro-index: 1;
+                --cs-work-app-intro-draw-dir: -1;
                 top: 15%;
                 left: 77%;
                 width: 160px;
             }
             &[data-location="guetersloh"] {
-                --_index: 2;
-                --_draw-dir: 1;
+                --cs-work-app-intro-index: 2;
+                --cs-work-app-intro-draw-dir: 1;
                 top: 17%;
                 left: 29%;
                 width: 138px;
             }
             &[data-location="arnsberg"] {
-                --_index: 3;
-                --_draw-dir: -1;
+                --cs-work-app-intro-index: 3;
+                --cs-work-app-intro-draw-dir: -1;
                 top: 50%;
                 left: 20%;
                 width: 155px;
             }
             &[data-location="leutkirch"] {
-                --_index: 4;
-                --_draw-dir: 1;
+                --cs-work-app-intro-index: 4;
+                --cs-work-app-intro-draw-dir: 1;
                 top: 82%;
                 left: 44%;
                 width: 132px;
@@ -259,9 +260,9 @@ Architectural Notes:
 
             :global(.cs-work-location) {
                 --cs-work-location-stroke: var(--cs-color-accent-500);
-                --cs-work-location-fill: transparent;
+                --cs-work-location-bg: transparent;
                 --cs-work-location-stroke-width: 9px;
-                --cs-work-location-marker-fill: var(--cs-color-accent-500);
+                --cs-work-location-marker-bg: var(--cs-color-accent-500);
                 --cs-work-location-marker-stroke: none;
                 --cs-work-location-marker-stroke-width: 0px;
                 --cs-work-location-marker-radius: 36px;
@@ -270,7 +271,7 @@ Architectural Notes:
                 height: auto;
 
                 .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
-                    --cs-work-location-fill: var(--cs-color-accent-soft);
+                    --cs-work-location-bg: var(--cs-color-accent-soft);
                     --cs-work-location-stroke-width: 10.5px;
                     --cs-work-location-marker-scale: 1;
                 }
@@ -279,15 +280,16 @@ Architectural Notes:
             /* `WorkLocation` normalizes path length via `pathLength="1"`, allowing a 0..1 dasharray draw */
             :global(.cs-work-location-map) {
                 stroke-dasharray: 1 2;
-                stroke-dashoffset: var(--_draw-dir);
+                stroke-dashoffset: var(--cs-work-app-intro-draw-dir);
                 transition:
-                    fill 260ms var(--cs-ease-quad-out) var(--_lock-delay),
-                    stroke-width 260ms var(--cs-ease-expo-out) var(--_lock-delay);
-                animation: cs-work-app-intro-cad-draw 540ms var(--cs-ease-expo-out) var(--_cad-delay) forwards;
+                    fill 260ms var(--cs-ease-quad-out) var(--cs-work-app-intro-lock-delay),
+                    stroke-width 260ms var(--cs-ease-expo-out) var(--cs-work-app-intro-lock-delay);
+                animation: cs-work-app-intro-cad-draw 540ms var(--cs-ease-expo-out) var(--cs-work-app-intro-cad-delay)
+                    forwards;
             }
 
             :global(.cs-work-location-marker) {
-                transition: scale 340ms var(--cs-spring-release) var(--_lock-delay);
+                transition: scale 340ms var(--cs-spring-release) var(--cs-work-app-intro-lock-delay);
             }
         }
 
@@ -311,7 +313,7 @@ Architectural Notes:
             width: 100%;
 
             .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
-                animation: cs-work-app-intro-figure-lock 380ms var(--cs-ease-expo-out) var(--_lock-delay);
+                animation: cs-work-app-intro-figure-lock 380ms var(--cs-ease-expo-out) var(--cs-work-app-intro-lock-delay);
             }
         }
 
@@ -340,9 +342,9 @@ Architectural Notes:
             filter: blur(3px);
             translate: 0 6px;
             transition:
-                opacity 220ms var(--cs-ease-quad-out) var(--_lock-delay),
-                translate 280ms var(--cs-ease-expo-out) var(--_lock-delay),
-                filter 240ms var(--cs-ease-quad-out) var(--_lock-delay);
+                opacity 220ms var(--cs-ease-quad-out) var(--cs-work-app-intro-lock-delay),
+                translate 280ms var(--cs-ease-expo-out) var(--cs-work-app-intro-lock-delay),
+                filter 240ms var(--cs-ease-quad-out) var(--cs-work-app-intro-lock-delay);
 
             .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
                 opacity: 1;
@@ -380,10 +382,11 @@ Architectural Notes:
             }
 
             .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
-                animation: sonar-pulse 620ms var(--cs-ease-expo-out) var(--_lock-delay) forwards;
+                animation: sonar-pulse 620ms var(--cs-ease-expo-out) var(--cs-work-app-intro-lock-delay) forwards;
 
                 &::after {
-                    animation: sonar-pulse 680ms var(--cs-ease-expo-out) calc(var(--_lock-delay) + 110ms) forwards;
+                    animation: sonar-pulse 680ms var(--cs-ease-expo-out)
+                        calc(var(--cs-work-app-intro-lock-delay) + 110ms) forwards;
                 }
             }
         }

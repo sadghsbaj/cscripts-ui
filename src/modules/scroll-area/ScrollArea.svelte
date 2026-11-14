@@ -74,8 +74,12 @@ Architectural Notes:
                 class="cs-scroll-area-track"
                 data-orientation={axis}
                 data-dragging={scrollArea.draggingAxis === axis ? "" : undefined}
-                style:--_thumb-size="{axis === 'vertical' ? scrollArea.thumbYSize : scrollArea.thumbXSize}px"
-                style:--_thumb-offset="{axis === 'vertical' ? scrollArea.thumbYOffset : scrollArea.thumbXOffset}px"
+                style:--cs-scroll-area-thumb-length="{axis === 'vertical'
+                    ? scrollArea.thumbYSize
+                    : scrollArea.thumbXSize}px"
+                style:--cs-scroll-area-thumb-offset="{axis === 'vertical'
+                    ? scrollArea.thumbYOffset
+                    : scrollArea.thumbXOffset}px"
             >
                 <div {@attach scrollArea.attachThumb(axis)} class="cs-scroll-area-thumb"></div>
             </div>
@@ -86,7 +90,7 @@ Architectural Notes:
 <style>
     @layer components.composite {
         .cs-scroll-area {
-            --_track-end-inset: 3px;
+            --cs-scroll-area-track-end-inset: 3px;
 
             position: relative;
             display: flex;
@@ -97,19 +101,19 @@ Architectural Notes:
              * SIZES (Resting thumb is 0.5x -> sm: 3->6px, md: 4->8px, lg: 6->12px)
              * ========================================================= */
             &[data-size="sm"] {
-                --_track-size: 6px;
+                --cs-scroll-area-track-thickness: 6px;
             }
 
             &[data-size="md"] {
-                --_track-size: 8px;
+                --cs-scroll-area-track-thickness: 8px;
             }
 
             &[data-size="lg"] {
-                --_track-size: 12px;
+                --cs-scroll-area-track-thickness: 12px;
             }
 
             &[data-both-scrollable] {
-                --_track-end-inset: calc(var(--_track-size, 8px) + 6px);
+                --cs-scroll-area-track-end-inset: calc(var(--cs-scroll-area-track-thickness, 8px) + 6px);
             }
 
             /* =========================================================
@@ -128,19 +132,19 @@ Architectural Notes:
          * OVERLAY SCROLLBAR TRACK & THUMB
          * ========================================================= */
         .cs-scroll-area-track {
-            --_track-bg: light-dark(
+            --cs-scroll-area-track-bg: light-dark(
                 color-mix(in oklch, var(--cs-color-base-900) 6%, transparent),
                 color-mix(in oklch, var(--cs-color-base-100) 8%, transparent)
             );
-            --_thumb-bg: light-dark(
+            --cs-scroll-area-thumb-bg: light-dark(
                 color-mix(in oklch, var(--cs-color-base-900) 20%, transparent),
                 color-mix(in oklch, var(--cs-color-base-100) 22%, transparent)
             );
-            --_thumb-bg-track-hover: light-dark(
+            --cs-scroll-area-thumb-bg-track-hover: light-dark(
                 color-mix(in oklch, var(--cs-color-base-900) 36%, transparent),
                 color-mix(in oklch, var(--cs-color-base-100) 44%, transparent)
             );
-            --_thumb-bg-thumb-hover: light-dark(
+            --cs-scroll-area-thumb-bg-hover: light-dark(
                 color-mix(in oklch, var(--cs-color-base-900) 54%, transparent),
                 color-mix(in oklch, var(--cs-color-base-100) 76%, transparent)
             );
@@ -150,7 +154,7 @@ Architectural Notes:
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-soft);
             opacity: 0;
-            translate: var(--_track-hide-translate);
+            translate: var(--cs-scroll-area-track-hide-translate);
             user-select: none;
             transition:
                 opacity 220ms var(--cs-ease-cubic-out),
@@ -163,12 +167,12 @@ Architectural Notes:
                 content: "";
                 position: absolute;
                 inset: 0;
-                background-color: var(--_track-bg);
+                background-color: var(--cs-scroll-area-track-bg);
                 border-radius: inherit;
                 corner-shape: inherit;
                 opacity: 0;
-                scale: var(--_track-folded-scale);
-                transform-origin: var(--_track-unfold-origin);
+                scale: var(--cs-scroll-area-track-folded-scale);
+                transform-origin: var(--cs-scroll-area-track-unfold-origin);
                 transition:
                     opacity 200ms var(--cs-ease-cubic-out),
                     scale 260ms var(--cs-ease-cubic-out);
@@ -176,38 +180,42 @@ Architectural Notes:
             }
 
             &[data-orientation="vertical"] {
-                --_track-hide-translate: 5px 0;
-                --_track-hover-translate: -1.5px 0;
-                --_track-unfold-origin: right calc(var(--_thumb-offset, 0px) + var(--_thumb-size, 0px) * 0.5);
-                --_track-folded-scale: 0.45 0.25;
-                --_thumb-drag-scale: 1.12 1;
+                --cs-scroll-area-track-hide-translate: 5px 0;
+                --cs-scroll-area-track-hover-translate: -1.5px 0;
+                --cs-scroll-area-track-unfold-origin: right
+                    calc(var(--cs-scroll-area-thumb-offset, 0px) + var(--cs-scroll-area-thumb-length, 0px) * 0.5);
+                --cs-scroll-area-track-folded-scale: 0.45 0.25;
+                --cs-scroll-area-thumb-drag-scale: 1.12 1;
 
-                inset: 3px 2px var(--_track-end-inset, 3px) auto;
-                width: var(--_track-size, 8px);
+                inset: 3px 2px var(--cs-scroll-area-track-end-inset, 3px) auto;
+                width: var(--cs-scroll-area-track-thickness, 8px);
 
                 .cs-scroll-area-thumb {
                     width: 100%;
-                    height: var(--_thumb-size, 0px);
-                    translate: 0 var(--_thumb-offset, 0px);
+                    height: var(--cs-scroll-area-thumb-length, 0px);
+                    translate: 0 var(--cs-scroll-area-thumb-offset, 0px);
                     scale: 0.5 1;
                     transform-origin: right center;
                 }
             }
 
             &[data-orientation="horizontal"] {
-                --_track-hide-translate: 0 5px;
-                --_track-hover-translate: 0 -1.5px;
-                --_track-unfold-origin: calc(var(--_thumb-offset, 0px) + var(--_thumb-size, 0px) * 0.5) bottom;
-                --_track-folded-scale: 0.25 0.45;
-                --_thumb-drag-scale: 1 1.12;
+                --cs-scroll-area-track-hide-translate: 0 5px;
+                --cs-scroll-area-track-hover-translate: 0 -1.5px;
+                --cs-scroll-area-track-unfold-origin: calc(
+                        var(--cs-scroll-area-thumb-offset, 0px) + var(--cs-scroll-area-thumb-length, 0px) * 0.5
+                    )
+                    bottom;
+                --cs-scroll-area-track-folded-scale: 0.25 0.45;
+                --cs-scroll-area-thumb-drag-scale: 1 1.12;
 
-                inset: auto var(--_track-end-inset, 3px) 2px 3px;
-                height: var(--_track-size, 8px);
+                inset: auto var(--cs-scroll-area-track-end-inset, 3px) 2px 3px;
+                height: var(--cs-scroll-area-track-thickness, 8px);
 
                 .cs-scroll-area-thumb {
-                    width: var(--_thumb-size, 0px);
+                    width: var(--cs-scroll-area-thumb-length, 0px);
                     height: 100%;
-                    translate: var(--_thumb-offset, 0px) 0;
+                    translate: var(--cs-scroll-area-thumb-offset, 0px) 0;
                     scale: 1 0.5;
                     transform-origin: center bottom;
                 }
@@ -217,7 +225,7 @@ Architectural Notes:
             &:hover,
             &[data-dragging] {
                 opacity: 1;
-                translate: var(--_track-hover-translate);
+                translate: var(--cs-scroll-area-track-hover-translate);
                 transition:
                     opacity 150ms var(--cs-ease-expo-out),
                     translate 180ms var(--cs-ease-expo-out);
@@ -232,7 +240,7 @@ Architectural Notes:
                 }
 
                 .cs-scroll-area-thumb {
-                    background-color: var(--_thumb-bg-track-hover);
+                    background-color: var(--cs-scroll-area-thumb-bg-track-hover);
                     scale: 1;
                     transition:
                         scale 220ms var(--cs-ease-back-out),
@@ -240,22 +248,22 @@ Architectural Notes:
 
                     /* Stage 3a: Thumb Directly Hovered -> High-Contrast Highlight */
                     &:hover {
-                        background-color: var(--_thumb-bg-thumb-hover);
+                        background-color: var(--cs-scroll-area-thumb-bg-hover);
                     }
                 }
             }
 
             /* Stage 3b: Active Drag -> High-Contrast Highlight + Tactile Grip */
             &[data-dragging] .cs-scroll-area-thumb {
-                background-color: var(--_thumb-bg-thumb-hover);
-                scale: var(--_thumb-drag-scale);
+                background-color: var(--cs-scroll-area-thumb-bg-hover);
+                scale: var(--cs-scroll-area-thumb-drag-scale);
             }
         }
 
         .cs-scroll-area-thumb {
             position: relative;
             z-index: 1;
-            background-color: var(--_thumb-bg);
+            background-color: var(--cs-scroll-area-thumb-bg);
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-soft);
             transition:

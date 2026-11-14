@@ -4,7 +4,7 @@ Composite state-morphing container (`<ButtonMorph />`) that smoothly interpolate
 surfaces, icons, and labels across multiple `<ButtonMorphItem />` button states.
 
 Architectural Notes:
-- Shared Morph Shell: Synchronizes outer dimensions (`--_morph-width`, `--_morph-height`) and
+- Shared Morph Shell: Synchronizes outer dimensions (`--cs-button-morph-width`, `--cs-button-morph-height`) and
   locks active/exiting button surfaces during transitions so `::before` backgrounds and
   `:focus-visible` outlines morph as a single cohesive body.
 - Interaction Safety & Auto-Reset: Includes capture-phase accidental double-click protection
@@ -68,14 +68,14 @@ Architectural Notes:
     data-measured={morph.isMeasured ? "" : undefined}
     data-transitioning={morph.isTransitioning ? "" : undefined}
     data-guarded={morph.isGuarded ? "" : undefined}
-    style:--_morph-width={morph.width !== null ? `${morph.width}px` : undefined}
-    style:--_morph-height={morph.height !== null ? `${morph.height}px` : undefined}
-    style:--_morph-from-bg={morph.surfaceFrom?.background}
-    style:--_morph-from-shadow={morph.surfaceFrom?.shadow}
-    style:--_morph-to-bg={morph.surfaceTo?.background}
-    style:--_morph-to-shadow={morph.surfaceTo?.shadow}
-    style:--_morph-from-corner={morph.surfaceFrom?.corner ?? undefined}
-    style:--_morph-to-corner={morph.surfaceTo?.corner ?? undefined}
+    style:--cs-button-morph-width={morph.width !== null ? `${morph.width}px` : undefined}
+    style:--cs-button-morph-height={morph.height !== null ? `${morph.height}px` : undefined}
+    style:--cs-button-morph-from-bg={morph.surfaceFrom?.background}
+    style:--cs-button-morph-from-shadow={morph.surfaceFrom?.shadow}
+    style:--cs-button-morph-to-bg={morph.surfaceTo?.background}
+    style:--cs-button-morph-to-shadow={morph.surfaceTo?.shadow}
+    style:--cs-button-morph-from-superellipse={morph.surfaceFrom?.corner ?? undefined}
+    style:--cs-button-morph-to-superellipse={morph.surfaceTo?.corner ?? undefined}
 >
     {@render children?.()}
 </div>
@@ -91,8 +91,8 @@ Architectural Notes:
              * Backward transitions (e.g. reset back to "idle") invert the
              * vertical axis so the spatial mental model feels reversible.
              * ========================================================= */
-            --_enter-y: 3px;
-            --_exit-y: -3px;
+            --cs-button-morph-enter-y: 3px;
+            --cs-button-morph-exit-y: -3px;
 
             isolation: isolate;
             position: relative;
@@ -102,8 +102,8 @@ Architectural Notes:
             vertical-align: middle;
 
             &[data-direction="backward"] {
-                --_enter-y: -3px;
-                --_exit-y: 3px;
+                --cs-button-morph-enter-y: -3px;
+                --cs-button-morph-exit-y: 3px;
             }
 
             /* =========================================================
@@ -113,8 +113,8 @@ Architectural Notes:
              * the container sizes naturally to its active child (SSR-safe).
              * Once `[data-measured]` is set:
              * 1. `grid-template-columns/rows: minmax(0, 1fr)` constrains the
-             *    shared `1 / 1` grid cell strictly to `--_morph-width` and
-             *    `--_morph-height`. Without `minmax(0, 1fr)`, a wider incoming
+             *    shared `1 / 1` grid cell strictly to `--cs-button-morph-width` and
+             *    `--cs-button-morph-height`. Without `minmax(0, 1fr)`, a wider incoming
              *    button's intrinsic `min-content` width would immediately blow
              *    out the grid track to the right on frame 0.
              * 2. `--cs-spring-morph` (350ms) provides tactile initial friction
@@ -124,8 +124,8 @@ Architectural Notes:
             &[data-measured] {
                 grid-template-rows: minmax(0, 1fr);
                 grid-template-columns: minmax(0, 1fr);
-                width: var(--_morph-width);
-                height: var(--_morph-height);
+                width: var(--cs-button-morph-width);
+                height: var(--cs-button-morph-height);
                 transition:
                     width 350ms var(--cs-spring-morph),
                     height 350ms var(--cs-spring-morph);
@@ -147,7 +147,7 @@ Architectural Notes:
              * - Colors, shadows and the corner exponent are read once by the state
              *   manager at the moment of the switch, which keeps the handoff to and
              *   from the real button surfaces visually seamless.
-             * - `corner-shape` is driven by the registered `--_morph-corner` number
+             * - `corner-shape` is driven by the registered `--cs-button-morph-superellipse` number
              *   (see `@property` below) instead of being keyframed directly: it is a
              *   shorthand, and shorthands containing `var()` are not animated inside
              *   `@keyframes`. The custom property is a plain longhand, so it
@@ -159,21 +159,21 @@ Architectural Notes:
                 inset: 0;
                 z-index: 0;
                 border-radius: var(--cs-radius-full);
-                corner-shape: superellipse(var(--_morph-corner));
+                corner-shape: superellipse(var(--cs-button-morph-superellipse));
                 opacity: 0;
                 pointer-events: none;
             }
 
             &[data-transitioning]::before {
-                background-color: var(--_morph-to-bg, transparent);
-                box-shadow: var(--_morph-to-shadow, none);
+                background-color: var(--cs-button-morph-to-bg, transparent);
+                box-shadow: var(--cs-button-morph-to-shadow, none);
                 opacity: 1;
                 animation: cs-button-morph-surface 160ms var(--cs-ease-quad-in-out) both;
             }
         }
 
         /* Registered so the browser can interpolate it numerically (must stay in sync with `--cs-squircle-smooth`). */
-        @property --_morph-corner {
+        @property --cs-button-morph-superellipse {
             syntax: "<number>";
             inherits: false;
             initial-value: 1.6;
@@ -181,14 +181,14 @@ Architectural Notes:
 
         @keyframes cs-button-morph-surface {
             from {
-                --_morph-corner: var(--_morph-from-corner, 1.6);
-                background-color: var(--_morph-from-bg, transparent);
-                box-shadow: var(--_morph-from-shadow, none);
+                --cs-button-morph-superellipse: var(--cs-button-morph-from-superellipse, 1.6);
+                background-color: var(--cs-button-morph-from-bg, transparent);
+                box-shadow: var(--cs-button-morph-from-shadow, none);
             }
             to {
-                --_morph-corner: var(--_morph-to-corner, 1.6);
-                background-color: var(--_morph-to-bg, transparent);
-                box-shadow: var(--_morph-to-shadow, none);
+                --cs-button-morph-superellipse: var(--cs-button-morph-to-superellipse, 1.6);
+                background-color: var(--cs-button-morph-to-bg, transparent);
+                box-shadow: var(--cs-button-morph-to-shadow, none);
             }
         }
     }

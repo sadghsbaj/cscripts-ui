@@ -441,12 +441,12 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
         describe("Warmup phase", () => {
             test("configures the hint close delay CSS property for acceleration", () => {
                 popoverTrigger({ target: "pop", mode: "hint" })(trigger);
-                expect(trigger.style.getPropertyValue("--_hint-close-delay")).toBe("150ms");
+                expect(trigger.style.getPropertyValue("--cs-popover-hint-close-delay")).toBe("150ms");
 
                 const custom = document.createElement("button");
                 document.body.append(custom);
                 popoverTrigger({ target: "pop", mode: "hint", delay: "600ms 80ms" })(custom);
-                expect(custom.style.getPropertyValue("--_hint-close-delay")).toBe("80ms");
+                expect(custom.style.getPropertyValue("--cs-popover-hint-close-delay")).toBe("80ms");
                 custom.remove();
             });
 

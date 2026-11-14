@@ -305,7 +305,7 @@ function bindHint(node: HTMLElement, options: HintOptions): () => void {
     }
 
     node.style.setProperty("interest-delay", delay);
-    node.style.setProperty("--_hint-close-delay", closeDelay);
+    node.style.setProperty("--cs-popover-hint-close-delay", closeDelay);
     if (!disarmedTriggers.has(node)) {
         node.setAttribute("interestfor", target);
     }
@@ -339,7 +339,7 @@ function bindHint(node: HTMLElement, options: HintOptions): () => void {
 
         node.removeAttribute("interestfor");
         node.style.removeProperty("interest-delay");
-        node.style.removeProperty("--_hint-close-delay");
+        node.style.removeProperty("--cs-popover-hint-close-delay");
 
         // An immediate re-run (reactive update) re-applies the anchor synchronously and keeps the disarmed
         // state. Only a real teardown forgets it.

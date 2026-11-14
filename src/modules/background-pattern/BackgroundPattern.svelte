@@ -77,7 +77,7 @@ Architectural Notes:
 
         .cs-background-pattern {
             /* Public tokens - override these from outside */
-            --cs-background-pattern-color: light-dark(
+            --cs-background-pattern-fg: light-dark(
                 color-mix(in oklch, var(--cs-color-base-900) 12%, transparent),
                 color-mix(in oklch, var(--cs-color-base-100) 16%, transparent)
             );
@@ -91,7 +91,7 @@ Architectural Notes:
             display: block;
             width: 100%;
             height: 100%;
-            color: var(--cs-background-pattern-color);
+            color: var(--cs-background-pattern-fg);
             border-radius: inherit;
             corner-shape: inherit;
             pointer-events: none;

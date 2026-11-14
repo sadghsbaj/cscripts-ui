@@ -6,9 +6,8 @@
 
 ## A. Module-Standards, Tokens & Attachments
 
-1. **Private CSS-Vars (`--_`):** Alle verbliebenen `--_*`-Variablen durch `--cs-<module>-*` (bzw. `--cs-work-*`) ersetzen.
-2. **`ref = $bindable()`:** Bei Root-Components durchgängig ergänzen.
-3. **Attachments:** Signaturen einzeln prüfen und auf `enabled?: boolean | (() => boolean)` via `resolveGetter` vereinheitlichen.
+1. **`ref = $bindable()`:** Bei Root-Components durchgängig ergänzen.
+2. **Attachments:** Signaturen einzeln prüfen und auf `enabled?: boolean | (() => boolean)` via `resolveGetter` vereinheitlichen.
 
 ---
 

@@ -47,9 +47,9 @@ Architectural Notes:
             -webkit-tap-highlight-color: transparent;
             position: absolute;
             inset: 50% auto auto 50%;
-            width: var(--_size);
+            width: var(--cs-hit-area-width);
             min-width: 100%;
-            height: var(--_size);
+            height: var(--cs-hit-area-width);
             min-height: 100%;
             translate: -50% -50%;
             user-select: none;
@@ -65,15 +65,15 @@ Architectural Notes:
              * - lg (48px): W3C WCAG 2.5.5 AAA & Android Material target
              * ========================================================= */
             &[data-size="sm"] {
-                --_size: 40px;
+                --cs-hit-area-width: 40px;
             }
 
             &[data-size="md"] {
-                --_size: 44px;
+                --cs-hit-area-width: 44px;
             }
 
             &[data-size="lg"] {
-                --_size: 48px;
+                --cs-hit-area-width: 48px;
             }
         }
     }

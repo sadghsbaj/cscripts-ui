@@ -65,7 +65,7 @@ Architectural Notes:
             * A 9999px radius would trigger the CSS Corner Overlap reduction algorithm
             * (CSS Backgrounds & Borders §5.5) on asymmetric corners (e.g. inside ButtonGroup),
             * proportionally crushing small adjacent radii (e.g. 4px) down to near 0px. */
-            --_pill-radius: calc(var(--_height) / 2);
+            --cs-toggle-button-pill-radius: calc(var(--cs-toggle-button-height) / 2);
 
             /* Fill transition per state (consumed by ::after).
              * When releasing (pressed -> unpressed), transform deliberately uses a slower
@@ -74,7 +74,7 @@ Architectural Notes:
              * invisible. This yields a calm, smooth background fade for the human eye without
              * an abrupt collapse, while still allowing ::after to settle at scale(0.55) so the
              * next press pop-in has full spring distance and momentum. */
-            --_fill-transition: transform 300ms var(--cs-ease-quad-in), opacity 140ms linear;
+            --cs-toggle-button-transition-pressed: transform 300ms var(--cs-ease-quad-in), opacity 140ms linear;
 
             isolation: isolate;
             position: relative;
@@ -82,11 +82,11 @@ Architectural Notes:
             flex-shrink: 0;
             align-items: center;
             justify-content: center;
-            height: var(--_height);
-            color: var(--_fg);
+            height: var(--cs-toggle-button-height);
+            color: var(--cs-toggle-button-fg);
             font-weight: 600;
             white-space: nowrap;
-            border-radius: var(--_pill-radius);
+            border-radius: var(--cs-toggle-button-pill-radius);
             corner-shape: var(--cs-squircle-soft);
             transition:
                 color 200ms var(--cs-ease-quad-out),
@@ -102,11 +102,11 @@ Architectural Notes:
                 position: absolute;
                 inset: 0;
                 z-index: -2;
-                background-color: var(--_bg);
-                border: var(--_border, none);
+                background-color: var(--cs-toggle-button-bg);
+                border: var(--cs-toggle-button-border, none);
                 border-radius: inherit;
                 corner-shape: inherit;
-                box-shadow: var(--_shadow, none);
+                box-shadow: var(--cs-toggle-button-shadow, none);
                 transition:
                     background-color 200ms var(--cs-ease-quad-out),
                     box-shadow 200ms var(--cs-ease-quad-out),
@@ -126,13 +126,13 @@ Architectural Notes:
                 position: absolute;
                 inset: 0;
                 z-index: -1;
-                background-color: var(--_fill-bg);
+                background-color: var(--cs-toggle-button-bg-pressed);
                 border-radius: inherit;
                 corner-shape: inherit;
                 opacity: 0;
                 transform: scale(0.55);
                 transition:
-                    var(--_fill-transition),
+                    var(--cs-toggle-button-transition-pressed),
                     background-color 200ms var(--cs-ease-quad-out),
                     scale 600ms var(--cs-spring-release);
                 pointer-events: none;
@@ -141,15 +141,15 @@ Architectural Notes:
             @media (hover: hover) {
                 &:hover,
                 &[data-morph-hover] {
-                    color: var(--_fg-hover, var(--_fg));
+                    color: var(--cs-toggle-button-fg-hover, var(--cs-toggle-button-fg));
 
                     &::before {
-                        background-color: var(--_bg-hover);
-                        box-shadow: var(--_shadow-hover, var(--_shadow, none));
+                        background-color: var(--cs-toggle-button-bg-hover);
+                        box-shadow: var(--cs-toggle-button-shadow-hover, var(--cs-toggle-button-shadow, none));
                     }
 
                     &::after {
-                        background-color: var(--_fill-bg-hover);
+                        background-color: var(--cs-toggle-button-bg-pressed-hover);
                     }
                 }
 
@@ -165,11 +165,11 @@ Architectural Notes:
              * Interaction modality split (spring squash vs uniform scale).
              * ========================================================= */
             &:active {
-                color: var(--_fg-hover, var(--_fg));
+                color: var(--cs-toggle-button-fg-hover, var(--cs-toggle-button-fg));
 
                 &::before {
-                    background-color: var(--_bg-hover);
-                    box-shadow: var(--_shadow-active, none);
+                    background-color: var(--cs-toggle-button-bg-hover);
+                    box-shadow: var(--cs-toggle-button-shadow-active, none);
                     transition:
                         background-color 140ms var(--cs-ease-quad-out),
                         box-shadow 140ms var(--cs-ease-quad-out),
@@ -177,20 +177,20 @@ Architectural Notes:
                 }
 
                 &::after {
-                    background-color: var(--_fill-bg-hover);
+                    background-color: var(--cs-toggle-button-bg-pressed-hover);
                     transition:
-                        var(--_fill-transition),
+                        var(--cs-toggle-button-transition-pressed),
                         background-color 140ms var(--cs-ease-quad-out),
                         scale 140ms var(--cs-ease-quad-out);
                 }
 
                 &:not(:focus-visible)::before,
                 &:not(:focus-visible)::after {
-                    scale: var(--_active-squash, var(--cs-squash-subtle));
+                    scale: var(--cs-toggle-button-squash-active, var(--cs-squash-subtle));
                 }
 
                 &:focus-visible {
-                    scale: var(--_active-focus-scale, 0.97);
+                    scale: var(--cs-toggle-button-focus-scale-active, 0.97);
                 }
             }
 
@@ -204,35 +204,35 @@ Architectural Notes:
             *   treated as general-purpose defaults.
             * ========================================================= */
             &[data-size="xs"] {
-                --_height: 28px;
+                --cs-toggle-button-height: 28px;
                 gap: 4px;
                 padding-inline: 8px;
                 font-size: var(--cs-text-xs);
             }
 
             &[data-size="sm"] {
-                --_height: 32px;
+                --cs-toggle-button-height: 32px;
                 gap: 4px;
                 padding-inline: 12px;
                 font-size: var(--cs-text-xs);
             }
 
             &[data-size="md"] {
-                --_height: 36px;
+                --cs-toggle-button-height: 36px;
                 gap: 6px;
                 padding-inline: 14px;
                 font-size: var(--cs-text-sm);
             }
 
             &[data-size="lg"] {
-                --_height: 40px;
+                --cs-toggle-button-height: 40px;
                 gap: 6px;
                 padding-inline: 16px;
                 font-size: var(--cs-text-sm);
             }
 
             &[data-size="xl"] {
-                --_height: 44px;
+                --cs-toggle-button-height: 44px;
                 gap: 6px;
                 padding-inline: 20px;
                 font-size: var(--cs-text-base);
@@ -253,7 +253,7 @@ Architectural Notes:
             * screen-reader labels are added.
             * ========================================================= */
             &[data-icon-only] {
-                --_active-squash: var(--cs-squash-default);
+                --cs-toggle-button-squash-active: var(--cs-squash-default);
                 aspect-ratio: 1;
                 padding-inline: 0;
             }
@@ -262,43 +262,43 @@ Architectural Notes:
             * COLORS
             * ========================================================= */
             &[data-color="accent"] {
-                --_fill-bg: var(--cs-color-accent-soft);
-                --_fill-bg-hover: var(--cs-color-accent-soft-hover);
-                --_soft-fg: var(--cs-color-accent-soft-fg);
+                --cs-toggle-button-bg-pressed: var(--cs-color-accent-soft);
+                --cs-toggle-button-bg-pressed-hover: var(--cs-color-accent-soft-hover);
+                --cs-toggle-button-soft-fg: var(--cs-color-accent-soft-fg);
             }
 
             &[data-color="positive"] {
-                --_fill-bg: var(--cs-color-positive-soft);
-                --_fill-bg-hover: var(--cs-color-positive-soft-hover);
-                --_soft-fg: var(--cs-color-positive-soft-fg);
+                --cs-toggle-button-bg-pressed: var(--cs-color-positive-soft);
+                --cs-toggle-button-bg-pressed-hover: var(--cs-color-positive-soft-hover);
+                --cs-toggle-button-soft-fg: var(--cs-color-positive-soft-fg);
             }
 
             &[data-color="caution"] {
-                --_fill-bg: var(--cs-color-caution-soft);
-                --_fill-bg-hover: var(--cs-color-caution-soft-hover);
-                --_soft-fg: var(--cs-color-caution-soft-fg);
+                --cs-toggle-button-bg-pressed: var(--cs-color-caution-soft);
+                --cs-toggle-button-bg-pressed-hover: var(--cs-color-caution-soft-hover);
+                --cs-toggle-button-soft-fg: var(--cs-color-caution-soft-fg);
             }
 
             &[data-color="negative"] {
-                --_fill-bg: var(--cs-color-negative-soft);
-                --_fill-bg-hover: var(--cs-color-negative-soft-hover);
-                --_soft-fg: var(--cs-color-negative-soft-fg);
+                --cs-toggle-button-bg-pressed: var(--cs-color-negative-soft);
+                --cs-toggle-button-bg-pressed-hover: var(--cs-color-negative-soft-hover);
+                --cs-toggle-button-soft-fg: var(--cs-color-negative-soft-fg);
             }
 
             /* =========================================================
             * VARIANTS
             * ========================================================= */
             &[data-variant="soft"] {
-                --_bg: var(--cs-color-base-soft);
-                --_bg-hover: var(--cs-color-base-soft-hover);
+                --cs-toggle-button-bg: var(--cs-color-base-soft);
+                --cs-toggle-button-bg-hover: var(--cs-color-base-soft-hover);
             }
 
             &[data-variant="ghost"] {
-                --_bg: transparent;
-                --_bg-hover: var(--cs-color-base-soft);
+                --cs-toggle-button-bg: transparent;
+                --cs-toggle-button-bg-hover: var(--cs-color-base-soft);
 
                 &[aria-pressed="true"] {
-                    --_bg-hover: transparent;
+                    --cs-toggle-button-bg-hover: transparent;
                 }
             }
 
@@ -310,13 +310,13 @@ Architectural Notes:
             * switches the foreground color.
             * ========================================================= */
             &[aria-pressed="false"] {
-                --_fg: var(--cs-color-base-soft-fg);
-                --_fg-hover: var(--cs-color-base-soft-fg-hover);
+                --cs-toggle-button-fg: var(--cs-color-base-soft-fg);
+                --cs-toggle-button-fg-hover: var(--cs-color-base-soft-fg-hover);
             }
 
             &[aria-pressed="true"] {
-                --_fg: var(--_soft-fg);
-                --_fill-transition: transform 550ms var(--cs-spring-snappy), opacity 90ms linear;
+                --cs-toggle-button-fg: var(--cs-toggle-button-soft-fg);
+                --cs-toggle-button-transition-pressed: transform 550ms var(--cs-spring-snappy), opacity 90ms linear;
 
                 &::after {
                     opacity: 1;
@@ -329,19 +329,19 @@ Architectural Notes:
             * ========================================================= */
             &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
                 --cs-disabled-opacity: 1;
-                --_fg: var(--cs-color-disabled-fg);
+                --cs-toggle-button-fg: var(--cs-color-disabled-fg);
 
                 &[data-variant="soft"] {
-                    --_bg: var(--cs-color-disabled-bg);
+                    --cs-toggle-button-bg: var(--cs-color-disabled-bg);
                 }
 
                 &[data-variant="ghost"] {
-                    --_bg: transparent;
+                    --cs-toggle-button-bg: transparent;
                 }
 
                 &[aria-pressed="true"] {
-                    --_fg: var(--cs-color-disabled-fg-active);
-                    --_fill-bg: var(--cs-color-disabled-bg-active);
+                    --cs-toggle-button-fg: var(--cs-color-disabled-fg-active);
+                    --cs-toggle-button-bg-pressed: var(--cs-color-disabled-bg-active);
                 }
             }
         }

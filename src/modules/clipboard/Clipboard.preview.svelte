@@ -41,7 +41,7 @@ ${closeScript}
 <Button
     variant="primary"
     size="md"
-    style="--cs-copy-icon-check-color: currentColor;"
+    style="--cs-copy-icon-fg-positive: currentColor;"
     {@attach copyOnClick("bun add cs")}
 >
     <CopyIcon />
@@ -134,7 +134,7 @@ ${closeScript}
         <Button
             variant="primary"
             size="md"
-            style="--cs-copy-icon-check-color: currentColor;"
+            style="--cs-copy-icon-fg-positive: currentColor;"
             {@attach copyOnClick("bun add cs")}
         >
             <CopyIcon />

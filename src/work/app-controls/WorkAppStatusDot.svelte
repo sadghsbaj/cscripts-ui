@@ -47,7 +47,7 @@ Architectural Notes:
             width: 12px;
             height: 12px;
             padding: 0;
-            background-color: var(--_dot-color);
+            background-color: var(--cs-work-app-status-dot-bg);
             border: none;
             border-radius: var(--cs-radius-full);
             transition:
@@ -66,19 +66,19 @@ Architectural Notes:
             }
 
             &[data-status="positive"] {
-                --_dot-color: var(--cs-color-positive-solid);
+                --cs-work-app-status-dot-bg: var(--cs-color-positive-solid);
             }
 
             &[data-status="caution"] {
-                --_dot-color: var(--cs-color-caution-solid);
+                --cs-work-app-status-dot-bg: var(--cs-color-caution-solid);
             }
 
             &[data-status="negative"] {
-                --_dot-color: var(--cs-color-negative-solid);
+                --cs-work-app-status-dot-bg: var(--cs-color-negative-solid);
             }
 
             &[data-status="base"] {
-                --_dot-color: var(--cs-color-base-400);
+                --cs-work-app-status-dot-bg: var(--cs-color-base-400);
             }
 
             &[data-pulse]::before,

@@ -64,23 +64,23 @@ Architectural Notes:
 <style>
     @layer components.composite {
         .cs-toggle-button-group {
-            --_inner-radius: var(--cs-radius-none);
+            --cs-toggle-button-group-inner-radius: var(--cs-radius-none);
 
             display: inline-flex;
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-soft);
 
             > :global(.cs-toggle-button) {
-                --_active-squash: 0.97;
-                --_active-focus-scale: 0.97;
-                border-radius: var(--_inner-radius);
+                --cs-toggle-button-squash-active: 0.97;
+                --cs-toggle-button-focus-scale-active: 0.97;
+                border-radius: var(--cs-toggle-button-group-inner-radius);
             }
 
             /* In fixed single-selection mode (segmented control), clicking the already-active
              * item is a no-op. Neutralizing press squash prevents confusing interactivity cues. */
             &[data-fixed-selection] > :global(.cs-toggle-button[aria-pressed="true"]) {
-                --_active-squash: 1;
-                --_active-focus-scale: 1;
+                --cs-toggle-button-squash-active: 1;
+                --cs-toggle-button-focus-scale-active: 1;
             }
 
             /* =========================================================
@@ -100,13 +100,13 @@ Architectural Notes:
                 align-items: center;
 
                 > :global(.cs-toggle-button:nth-child(1 of .cs-toggle-button)) {
-                    border-top-left-radius: var(--_pill-radius);
-                    border-bottom-left-radius: var(--_pill-radius);
+                    border-top-left-radius: var(--cs-toggle-button-pill-radius);
+                    border-bottom-left-radius: var(--cs-toggle-button-pill-radius);
                 }
 
                 > :global(.cs-toggle-button:nth-last-child(1 of .cs-toggle-button)) {
-                    border-top-right-radius: var(--_pill-radius);
-                    border-bottom-right-radius: var(--_pill-radius);
+                    border-top-right-radius: var(--cs-toggle-button-pill-radius);
+                    border-bottom-right-radius: var(--cs-toggle-button-pill-radius);
                 }
             }
 
@@ -115,13 +115,13 @@ Architectural Notes:
                 align-items: stretch;
 
                 > :global(.cs-toggle-button:nth-child(1 of .cs-toggle-button)) {
-                    border-top-left-radius: var(--_pill-radius);
-                    border-top-right-radius: var(--_pill-radius);
+                    border-top-left-radius: var(--cs-toggle-button-pill-radius);
+                    border-top-right-radius: var(--cs-toggle-button-pill-radius);
                 }
 
                 > :global(.cs-toggle-button:nth-last-child(1 of .cs-toggle-button)) {
-                    border-bottom-right-radius: var(--_pill-radius);
-                    border-bottom-left-radius: var(--_pill-radius);
+                    border-bottom-right-radius: var(--cs-toggle-button-pill-radius);
+                    border-bottom-left-radius: var(--cs-toggle-button-pill-radius);
                 }
             }
 

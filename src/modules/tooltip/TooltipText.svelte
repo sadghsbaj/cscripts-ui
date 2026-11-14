@@ -27,7 +27,7 @@ Architectural Notes:
             overflow-x: clip;
             overflow-y: visible;
             color: var(--cs-color-text-strong);
-            font-size: var(--_fs, var(--cs-text-xs));
+            font-size: var(--cs-tooltip-font-size, var(--cs-text-xs));
             font-weight: 600;
             line-height: var(--cs-leading-none);
             text-overflow: ellipsis;

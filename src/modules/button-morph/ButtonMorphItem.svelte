@@ -189,7 +189,7 @@ Architectural Notes:
             0% {
                 opacity: 0;
                 filter: blur(1px);
-                translate: 0 var(--_enter-y, 3px);
+                translate: 0 var(--cs-button-morph-enter-y, 3px);
             }
             100% {
                 opacity: 1;
@@ -207,7 +207,7 @@ Architectural Notes:
             100% {
                 opacity: 0;
                 filter: blur(1px);
-                translate: 0 var(--_exit-y, -3px);
+                translate: 0 var(--cs-button-morph-exit-y, -3px);
             }
         }
     }
