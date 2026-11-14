@@ -9,3 +9,5 @@
 - Maybe i dont know checkbox niamiton schneller
 
 - checkbox invalid styling noch etwas weniger aggressiv
+
+- checkbox auch analg zur togglebutton etwas erweitern logisch?

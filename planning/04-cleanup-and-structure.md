@@ -4,12 +4,6 @@
 
 ---
 
-## C. API-Fixes & Doku-Basis
-
-1. **`ToggleButton` API & Logik:** State- und Group-API (`pressed`, `ToggleButtonGroup`) sauber neu durchdenken und vereinheitlichen.
-
----
-
 ## D. Co-located Docs & ESLint
 
 1. **`*.docs.md`:** `<!-- @component -->`-Kommentare aus `.svelte` in co-located `*.docs.md` auslagern.
