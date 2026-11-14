@@ -1,81 +1,186 @@
-# Scratch – To-Dos & Notizen
+# Scratch – Struktur, Architektur & Roadmap
 
-## 1. Theme-System (`data-color-scheme` & `data-color-tone`)
-
-Ziel: Globales Umschalten zwischen **Farbig** (`colorful`) und **Neutral** (`neutral`) statt `color`-Prop an einzelnen Komponenten.
-
-- **Struktur:** `theme/`-Ordner unter Primitives (`color-scheme`, `tone`, `theme`) + Inline-Script in `src/vite/theme.ts` gegen FOUC.
-- **Attribute:** `data-color-scheme` (`light` | `dark`) und `data-color-tone` (`colorful` | `neutral`).
-- **Umstellungs-Checkliste (alle bisherigen Theme-Stellen anpassen):**
-  - UnoCSS (`src/uno/index.ts` → `dark` / `light` Selektoren)
-  - CSS Foundation (`lightningcss.css`, `shapes.css`, `colors.css`)
-  - Globale Akzent-Stellen prüfen: `selection.css`, Cursor-/Caret-Farbe, `focus.css` (Focus-Ring-Farbe)
-  - Dokumentation (`src/svelte/explanations/`, `src/agents/`)
-
-### Erkenntnisse aus dem Experiment
-- **Checkbox:** Ohne `color`-Prop (nur `data-color-tone`) funktioniert hervorragend.
-- **Button:** Neutraler `soft`/`ghost`-Hintergrund + Akzent-Textfarbe funktioniert sehr gut.
-  - *Idee:* Auch bei `danger` (`soft`/`ghost`) den Hintergrund neutral lassen und nur den Text/Icon in Danger-Rot färben.
-- **Clipboard (`CopyIcon` / `PasteIcon`):** Klären, ob Feedback-Icons im `neutral`-Modus farbig bleiben oder ebenfalls monoton werden.
-- **ToggleButton (größte offene Baustelle):** Einen neutralen Pressed-State zu finden, der klar erkennbar, aber nicht zu aggressiv/hart ist, bleibt schwierig – Konzept überdenken oder hier ggf. bewusst Farbe zulassen.
+> Bestandsaufnahme der aktuellen Schmerzpunkte in `cscripts-ui`, konkrete Optionen mit Pro/Contra, Empfehlungen und ein Mini-Plan für die nächsten Schritte.
 
 ---
 
-## 2. Sunken-Background (Experiment / UI-Test)
+## 1. Dokumentation & `src/agents/`-Struktur
 
-Gegenstück zu `elevated`: leicht „eingesunkener“ Hintergrund über subtile Inset-Schatten statt flacher `base-soft`-Flächen.
+### Problem
+- Component-Kommentare (`<!-- @component ... -->`) sind teilweise uneinheitlich oder unvollständig.
+- `src/agents/` vermischt generische Grundlagen (CSS, UnoCSS, Code-Style) mit Detailwissen, was schwer zu pflegen ist und leicht veraltet.
+- `README.md` ist veraltet (zeigt z. B. noch `cs/svelte/components` statt `cs/svelte/<primitive>`).
+- Langfristig soll die Library sowohl für dich als auch für Agents (ggf. über einen eigenen Docs-MCP) zuverlässig und ohne Halluzinationen nutzbar sein.
 
-- **Test-Kandidaten:**
-  - **Segmented Control** (als Track-Hintergrund)
-  - **Checkbox (`soft`, unchecked)** als leichte Einkerbung (prüfen, ob es bei der kleinen Größe wirkt)
+### Optionen
+1. **Alles in `src/agents/` zentral pflegen**
+   - *Pro:* Eine zentrale Stelle.
+   - *Contra:* Hoher Pflegeaufwand, doppelte Wahrheit zwischen Code und Markdown, skaliert schlecht bei vielen Primitives.
+2. **`src/agents/` radikal auf Basisregeln kürzen + strukturiertes Doku-System direkt an jedem Primitive**
+   - *Pro:* Single Source of Truth direkt beim Code; `src/agents/` bleibt klein und stabil (Design-System, CSS-Foundation, UnoCSS, Code-Style, Svelte-Basics); maschinenlesbare Struktur pro Primitive ermöglicht später problemlos einen Docs-MCP.
+   - *Contra:* Erfordert einmalig ein festes Doku-Schema (z. B. einheitliche `@component`-Sektionen oder `DOCS.md` pro Primitive + optionales `#`-Tagging/Git-Hash-Abgleich für Aktualität).
 
+### Empfehlung
+**Option 2.** `src/agents/` auf generische Basisregeln verschlanken. Jedes Primitive/Attachment bekommt ein knappes, einheitliches Doku-Format direkt im Ordner (oder im `@component`-Header mit festen `#`-Sektionen wie `# API`, `# Tokens`, `# Notes`), das per ESLint/Script prüfbar ist und später direkt von einem MCP ausgeliefert werden kann.
 
 ---
 
-## 3. Primitives-Audit & Lösungsvorschläge
+## 2. Sub-Agents & Workflow (Antigravity CLI / `.agents/` + MCPs)
 
-### A. Konkrete Bugs / unfertige Stellen
-1. **`Checkbox`: `hitAreaSize`-Prop ist tot & leakt ins DOM**
-   - *Problem:* `CheckboxProps` (`src/svelte/primitives/checkbox/index.ts`) definiert `hitAreaSize?: CheckboxHitAreaSize`, `Checkbox.svelte` destructured es aber nicht → landet über `{...rest}` als `hitareasize="..."` auf `<input>`.
-   - *Lösung:* Entweder `hitAreaSize` sauber entfernen (und `<HitArea>` bei Bedarf im Wrapper/Label setzen, da `<input>` ein Void-Element ist und keine Kinder haben kann) oder in `Checkbox.svelte` `hitAreaSize` destructuren und über ein Wrapper-Element / `::before` abbilden.
-2. **`ToggleButton`: `value` ohne `ToggleButtonGroup` unbrauchbar**
-   - *Problem:* `ToggleButtonStateProps` verbietet `pressed`, sobald `value` gesetzt ist. Außerhalb einer `ToggleButtonGroup` lässt sich der Zustand dann nicht binden/lesen.
-   - *Lösung:* Entweder `value` + `pressed` entkoppeln (wenn kein Group-Context vorhanden ist, Warnung/Dev-Assert oder `pressed` trotzdem erlauben) oder `ToggleButtonGroupItem` als eigene dünne Komponente trennen.
-3. **`README.md` veraltet**
-   - *Problem:* Beispiel-Imports zeigen noch `cs/svelte/components` und `cs/svelte/attachments`, obwohl `package.json` `./svelte/*` direkt auf `./src/svelte/primitives/*/index.ts` mappt.
-   - *Lösung:* `README.md` auf die aktuellen `cs/svelte/<primitive>`-Imports aktualisieren.
+### Problem
+- Allein auf Konsistenz, fehlende Doku, Animation-Timings oder kleine optische Details (z. B. `1px` Top-Highlight / Lichtkante bei Solid-Accent) zu achten, bremst aus und führt zwangsläufig zu Drift.
+- Gleichzeitig soll **nicht** alles blind von Agents gecodet werden – Optik, Motion und Design-Entscheidungen bleiben bei dir.
 
-### B. Inkonsistente Design-System-Skalen & Props
-1. **Farben (`color`) driften auseinander**
-   - *Problem:* `Button` (`accent | base | danger`), `ToggleButton` (`accent | success | warning | danger` – ohne `base` & `elevated`), `Checkbox` (`accent | base`), `CloseButton` (nur `base`).
-   - *Lösung:* Falls `data-color-tone` (`colorful` | `neutral`, siehe Abschnitt 1) eingeführt wird, `color` auf echte **semantische Intents** reduzieren (z. B. `danger` / `success` / `warning`) und Standard-Neutralität vs. Akzent über das Theme-System regeln. Bis dahin: `ToggleButton` mindestens um `base` (oder `neutral`) und `elevated` ergänzen.
-2. **Größenskalen (`size`) sind nicht kompatibel**
-   - *Problem:* `Button` / `ToggleButton` (`xs=28px .. xl=44px`), `CloseButton` (`xs=16px .. xl=48px`). Ein `CloseButton size="md"` (32px) ist so groß wie `Button size="sm"`.
-   - *Lösung:* Entweder `CloseButton` an die Button-Skala angleichen (und kompakte Größen über `2xs`/`xs` abbilden) oder die Abweichung bewusst dokumentieren, wenn Icon-Only-Dismiss-Buttons kleiner skalieren sollen.
-3. **Polymorphes `as` & `type="button"`**
-   - *Problem:* `Button` unterstützt `as="button" | "a" | "label"` und erlaubt `type="submit"` via `{...rest}`. `ToggleButton` und `CloseButton` erzwingen `<button {...rest} type="button">`.
-   - *Lösung:* Bei `ToggleButton` / `CloseButton` `type="button"` *vor* `{...rest}` setzen (Konsistenz), `as` nur bei Bedarf ergänzen.
+### Optionen
+1. **Nur mit einem allgemeinen Agent arbeiten + manuell gegenlesen**
+   - *Pro:* Kein Setup-Aufwand.
+   - *Contra:* Kontext bläht sich auf, Review-Checklisten werden vergessen.
+2. **Spezialisierte lokale Sub-Agents (`.agents/` in `cscripts-ui` und `template/`) + gezielte ESLint-Regeln**
+   - *Pro:* Du baust/designst mit dem Haupt-Agent (Orchestrator); spezialisierte Sub-Agents übernehmen die „Bürokratie“:
+     - **Consistency-Reviewer:** Prüft neue/geänderte Components gegen bestehende Patterns (Lichtkanten, Schatten, Größenverhältnisse, Transition-Dauern, Prop-Naming).
+     - **Docs-Agent:** Aktualisiert Doku-Header / `README.md` nach API-Änderungen.
+     - **Template-Sync / Consumer-Agent (im `template/`):** Kennt nur die öffentliche API + Basis-Agents.
+   - *Contra:* Initiales Prompt-Tuning nötig; Agents müssen auf das Naming-Dictionary und feste Checklisten verweisen können.
 
-### C. Duplizierung & Drift (`Button*` vs. `ToggleButton*`, `Clipboard`)
-1. **`ButtonIcon` / `ToggleButtonIcon` & `ButtonLabel` / `ToggleButtonLabel` identisch**
-   - *Problem:* Praktisch 1:1 kopiert, nur Klassennamen unterscheiden sich.
-   - *Lösung:* Entweder über gemeinsame CSS-Basis-Klassen / Shared-Styles (z. B. in `src/css` oder ein gemeinsames internal Helper-Primitive) abbilden oder `Button` + `ToggleButton` über ein gemeinsames Button-Core-Stylesheet teilen.
-2. **`ButtonGroup` vs. `ToggleButtonGroup` laufen auseinander**
-   - *Problem:* `ButtonGroup` setzt bei `ghost` `--_inner-radius: 4px`, `ToggleButtonGroup` vergisst das. `ButtonGroupSeparator` färbt sich per `color-mix()` passend zum Button, `ToggleButtonGroupSeparator` bleibt immer neutral.
-   - *Lösung:* Gemeinsames Group-CSS/Mixin oder eine gemeinsame `Group`-Basis für Radius-, Separator- und HitArea-Logik verwenden, damit Änderungen nur an einer Stelle passieren.
-3. **`CopyIcon` & `PasteIcon` Sparkle-Duplizierung**
-   - *Problem:* Identisches Particle-Markup (Sterne/Dots) und CSS in beiden Komponenten.
-   - *Lösung:* Kleines internes `<SparkleParticles />` (oder CSS-Klasse) extrahieren, das beide Icons nutzen.
+### Empfehlung
+**Option 2**, aber schlank starten: Erst **2 Sub-Agents** (`consistency-reviewer` und `docs-maintainer`) plus harte Invarianten weiter in `src/eslint/rules/` abbilden (was ein Linter deterministisch prüfen kann, braucht keinen Agent).
 
-### D. Attachment-APIs & Ordnerstruktur
-1. **Mischmasch unter `src/svelte/primitives/`**
-   - *Problem:* UI-Komponenten, DOM-Attachments (`click-outside`, `focus`, `fade-mask`, `scroll-fade`, `scroll-lock`) und reine JS-Utilities (`browser-storage`) liegen alle im selben Ordner.
-   - *Lösung:* Optional trennen in `primitives/` (UI-Komponenten), `attachments/` (DOM-Direktiven) und `utils/` (oder `storage/`), mit passenden `package.json`-Exports (falls gewünscht).
-2. **`enabled`-Signatur bei Attachments uneinheitlich**
-   - *Problem:* `scrollLock` akzeptiert `boolean | (() => boolean)`, während `fadeMask`, `scrollFade` und `clickOutside` nur `boolean` akzeptieren.
-   - *Lösung:* Kleinen Helper `resolveGetter(val)` einführen und alle Attachments einheitlich `boolean | (() => boolean)` unterstützen lassen.
+---
 
-### E. A11y / i18n
-1. **Hardcodiertes Deutsch in `CloseButton`**
-   - *Problem:* `aria-label="Schließen"` in `CloseButton.svelte` widerspricht der englischen Codebase/API.
-   - *Lösung:* Auf `"Close"` ändern (weiterhin via `{...rest}` überschreibbar).
+## 3. Design-System: Skalen, Statusfarben & visuelle Abstimmung
+
+### 3a. Größenskalen (`size`)
+- **Problem:** Aktuell zwei konkurrierende Skalen + Bedeutungen:
+  - `xs..xl`: `Button`, `ToggleButton`, `Checkbox`, `CloseButton` (wobei `CloseButton md` = `32px` so groß ist wie `Button sm` = `32px`).
+  - `sm..lg`: `ScrollFade`, `ScrollArea`, `BackgroundPattern`, `HitArea`.
+  - `content | anchor | min-anchor`: `Popover` (belegt ebenfalls den Prop-Namen `size`, meint aber Breite statt T-Shirt-Größe).
+- **Optionen:**
+  1. Alle UI-Controls strikt auf `xs..xl` angleichen (auch `CloseButton`-Pixelwerte anpassen, kleinere Varianten ggf. über `2xs`).
+  2. Bewusst zwei getrennte Konzepte definieren: **Control-Sizes (`xs..xl`)** mit einheitlicher Höhenmatrix vs. **Modifier/Effect-Sizes (`sm..lg`)** – und bei `Popover` `size` eher in `width` umbenennen.
+- **Empfehlung:** **Option 2.** Einmal eine verbindliche Größen-Tabelle festlegen (welche Pixelhöhe hat `xs..xl` bei Buttons vs. kompakten Controls wie Checkbox/CloseButton) und `Popover.size` von T-Shirt-Größen entkoppeln (`width`).
+
+### 3b. Color-Scheme (bereits geklärt)
+- **Entscheidung festhalten:** Kein Dual-System (Neutral vs. Accent). Bewusst nur auf **Accent** standardisieren (wie in `Checkbox` und `Button` bereits umgesetzt).
+
+### 3c. Statusfarben-Benennung
+- **Problem:** `src/css/foundation/color-semantics.css` nutzt `success`, `warning`, `danger`, `info`. Bei `Checkbox invalid` auf `--cs-color-danger-*` zu mappen fühlt sich semantisch schief an. `info` wird praktisch nicht gebraucht.
+- **Optionen:**
+  1. Alles bei `success / warning / danger / info` belassen.
+  2. Umbenennen auf neutrale Polaritäten: **`positive`**, **`caution`**, **`negative`** und **`info` komplett entfernen**.
+- **Empfehlung:** **Option 2.** `positive / caution / negative` passt sauber sowohl auf Actions (`Button`) als auch auf States (`Checkbox invalid`, Badges, Alerts) und reduziert den Token-Ballast.
+
+### 3d. Visuelle & Motion-Konsistenz
+- **Problem:** Kleine Abweichungen bei Lichtkanten (`--cs-shadow-solid`), Rahmen, Größenverhältnissen und Transition-Dauern (z. B. 180ms vs. 200ms) schleichen sich über Zeit ein.
+- **Empfehlung:** Gemeinsame CSS-Tokens für Transition-Dauern/Easings (`--cs-duration-*` in `motion.css`) konsequent nutzen und in der Consistency-Agent-Checkliste verankern.
+
+---
+
+## 4. Architektur: Vanilla/CSS-First + Attachments vs. React-Aria-Abstraktion (`$bindable`, `data-*`)
+
+### Problem
+- Der aktuelle Vanilla-Approach (native Elemente, CSS `:hover`/`:active`, Attachments statt `$bindable` für DOM-Refs) ist schnell, klein und funktioniert sehr gut.
+- Unklarheit vor komplexeren Components (z. B. `Switch`, `Select`, `Tabs`):
+  1. Soll man jetzt schon States als `data-hovered`, `data-pressed`, `data-focus-visible` abstrahieren (wie React Aria), um später einheitlicher zu sein?
+  2. Wann `$bindable` vs. Attachment?
+
+### Optionen
+1. **Voll auf React-Aria-Muster umbauen (`data-hovered`, `data-pressed`, Interaction-Hooks überall)**
+   - *Pro:* Einheitliches Styling unabhängig vom nativen Element; löst Touch-Sticky-Hover und Compound-Trigger.
+   - *Contra:* Viel JS-Boilerplate und Event-Listener-Overhead für simple Components; genau das „Over-Engineering“, das du vermeiden willst.
+2. **Reiner Vanilla-Ansatz bleibt Standard; Abstraktion nur gezielt bei Bedarf**
+   - *Pro:* Minimaler Code, native Browser-Semantik, maximale Geschwindigkeit beim Bauen.
+   - *Contra:* Wenn später ein komplexes Primitive doch JS-Interaction-State braucht, nutzt es lokal `data-pressed`/`data-hovered`.
+- **Zum Thema `$bindable` vs. Attachments:**
+  - *DOM-Referenzen:* Weiterhin **Attachments** (`{@attach ...}`) statt `bind:this`/$bindable-Ref-Durchreichung – passt perfekt zu Svelte 5.
+  - *Component-State (`checked`, `pressed`, `open`):* **`$bindable()`** gezielt für kontrollierbaren UI-State nutzen (wie bei `Checkbox`).
+
+### Empfehlung
+**Option 2.** Kein präventiver React-Aria-Refactor. Native CSS-Pseudo-Klassen (`:hover`, `:active`, `:focus-visible`) bleiben Standard. `data-hovered` / `data-pressed` nur dann lokal einführen, wenn CSS allein nicht reicht (z. B. Custom-Pointer-Logik oder verschachtelte Trigger).
+
+---
+
+## 5. Naming-Dictionary & Konventionen
+
+### Problem
+- Ohne verbindliche Benennungsregeln entstehen schleichend Inkonsistenzen bei CSS-Variablen, Klassen, `data-*`-Attributen, Props, Datei- und Ordnernamen.
+
+### Optionen
+1. Implizit aus bestehendem Code ableiten.
+2. Ein kurzes, verbindliches **`NAMING.md`** (max. 1–2 Seiten) als Referenz für dich und alle Agents anlegen:
+   - CSS-Tokens (`--cs-<kategorie>-<name>`) vs. lokale Component-Vars (`--_name`)
+   - Klassen (`.cs-<primitive>`, Subparts `.cs-<primitive>-<part>`)
+   - `data-*`-Attribute (Boolean als `data-foo={foo ? "" : undefined}`, Enums als `data-size={size}`)
+   - Prop-Namen (`size`, `variant`, `invalid`, `disabled`, `as`)
+   - Datei-/Ordner-Konventionen (`kebab-case` Ordner, `PascalCase.svelte`, `*.attach.ts`)
+
+### Empfehlung
+**Option 2.** Ein knappes Dictionary spart bei jeder neuen Component und jedem Agent-Prompt Diskussionen.
+
+---
+
+## 6. Konkrete Duplizierungen, API-Drift & Altlasten
+
+1. **`ButtonIcon` / `ToggleButtonIcon` & `ButtonLabel` / `ToggleButtonLabel`**
+   - *Problem:* Praktisch 1:1 dupliziert.
+   - *Optionen:* (a) Gemeinsame CSS-Klassen in `src/css` oder shared internal Helper; (b) `ToggleButton` nutzt intern die `Button`-Subcomponents mit.
+   - *Empfehlung:* Shared Styles/Helper extrahieren, öffentliche Exports aber nur zusammenlegen, wenn es sich in der Nutzung sauber anfühlt.
+2. **`ButtonGroup` vs. `ToggleButtonGroup`**
+   - *Problem:* Laufen auseinander (`ghost` `--_inner-radius: 4px` und `color-mix()`-Separator fehlen bei `ToggleButtonGroup`).
+   - *Empfehlung:* Gemeinsame Group-CSS-Basis für Radius-, Separator- und HitArea-Logik.
+3. **`CopyIcon` & `PasteIcon`**
+   - *Problem:* Identisches Sparkle-Markup & CSS in beiden Icons.
+   - *Empfehlung:* Kleines internes `<SparkleParticles />` (oder shared CSS) extrahieren.
+4. **`ToggleButton`: `value` ohne `ToggleButtonGroup`**
+   - *Problem:* `ToggleButtonStateProps` verbietet `pressed`, sobald `value` gesetzt ist.
+   - *Empfehlung:* Entweder `ToggleButtonGroupItem` trennen oder `pressed` nur bei aktivem Group-Context verbieten/warnen.
+5. **`Checkbox`: `hitAreaSize`-Prop leakt ins DOM**
+   - *Problem:* In `CheckboxProps` definiert, in `Checkbox.svelte` nicht destructured → landet als `hitareasize="..."` auf `<input>`.
+   - *Empfehlung:* Sauber entfernen (Checkbox hat bereits die `::before` Counter-Scale-Hit-Area) oder explizit unterstützen.
+6. **Polymorphes `as` & `type="button"`**
+   - *Problem:* `Button` erlaubt `as` + `type="submit"` via `{...rest}`, `ToggleButton`/`CloseButton` erzwingen `type="button"` nach `{...rest}`.
+   - *Empfehlung:* `type="button"` bei `ToggleButton`/`CloseButton` *vor* `{...rest}` setzen; `as` nur ergänzen, wo wirklich nötig.
+
+---
+
+## 7. Attachment-Signaturen & Ordner-Mischmasch (`src/svelte/primitives/`)
+
+### Problem
+- **Signaturen:** `scrollLock` akzeptiert `boolean | (() => boolean)`, während `fadeMask`, `scrollFade` und `clickOutside` nur `boolean` akzeptieren (oder teils inkonsistente Options-Objekte haben).
+- **Ordnerstruktur:** UI-Components, reine DOM-Attachments (`click-outside`, `focus`, `fade-mask`, `scroll-fade`, `scroll-lock`) und JS-Utilities (`browser-storage`) liegen alle unter `src/svelte/primitives/`. Manche Dinge (z. B. `hit-area` oder `overlay`) sind aber Hybride aus Component + CSS/Attachment.
+
+### Optionen
+1. **Hart trennen** in `primitives/`, `attachments/`, `utils/`.
+   - *Pro:* Aufgeräumte Ordner.
+   - *Contra:* Unflexibel bei Hybriden; bricht `cs/svelte/*`-Imports (oder erfordert komplexere `package.json`-Exports).
+2. **`src/svelte/primitives/` als flachen Export-Namespace behalten, aber intern/konzeptionell sauber klassifizieren + Signaturen vereinheitlichen**
+   - *Pro:* Maximale Flexibilität für Hybride, keine Breaking Changes bei Imports (`cs/svelte/<name>`).
+   - *Contra:* Ordnerliste wächst weiter (lässt sich aber durch Namenskonventionen / Doku-Typ `type: component | attachment | hybrid | util` abfedern).
+
+### Empfehlung
+**Option 2** (oder maximal reine JS-Utils wie `browser-storage` auslagern). Wichtiger als die Ordner-Trennung ist die **einheitliche Attachment-Signatur**: kleiner Helper `resolveGetter(val)` für `boolean | (() => boolean)` und einheitliche Parameter-Struktur (z. B. immer `(options?: ...)` oder `(target, options)` nach festem Muster).
+
+---
+
+## 8. Mini-Plan: Wie wir jetzt vorgehen
+
+### Phase 0 – Offene Fragen klären (vor jeder Code-Änderung)
+1. **Statusfarben:** `positive / caution / negative` (ohne `info`) final absegnen?
+2. **Größenskala:** Darf `CloseButton` in seinen Pixelwerten an `Button` angepasst werden (oder eigene dokumentierte Compact-Skala)? Und `Popover.size` → `Popover.width`?
+3. **Doku-Format:** Einheitlicher `@component`-Header mit festen `#`-Sektionen direkt in den Dateien oder jeweils eine kleine `README.md`/`DOCS.md` pro Primitive?
+4. **Sub-Agents:** Welche Rollen willst du direkt in `.agents/` haben (Vorschlag: `consistency-reviewer` + `docs-maintainer`)?
+
+### Phase 1 – Fundament & Dictionary festlegen (kein Refactor, nur Regeln)
+1. Kurzes **`NAMING.md`** erstellen (Tokens, Klassen, `data-*`, Props, Attachments, Dateien).
+2. **`src/agents/`** auf generische Basisregeln kürzen (keine Primitive-Details mehr dort).
+3. Doku-Template für Primitives & Attachments definieren.
+
+### Phase 2 – Bestehendes glattziehen (kleine, sichere Schritte)
+1. **Quick-Fixes / Altlasten:** `Checkbox` (`hitAreaSize`), `README.md` Imports, `ToggleButton`/`CloseButton` `type="button"` Reihenfolge.
+2. **Design-Tokens:** Statusfarben auf `positive / caution / negative` umstellen (`info` raus); `motion.css` Timings prüfen.
+3. **Duplizierungen & Signaturen:** `ButtonGroup`/`ToggleButtonGroup`, `CopyIcon`/`PasteIcon`, `resolveGetter` für alle Attachments.
+4. **Doku-Sync:** Alle bestehenden Primitives/Attachments auf das neue Doku-Format bringen.
+
+### Phase 3 – Agent-Tooling & Skalierung
+1. `.agents/` Sub-Agents in `cscripts-ui` (und `template/`) anlegen und am nächsten neuen Primitive (z. B. `Switch`) testen.
+2. Wiederkehrende Checks, die deterministisch sind, als ESLint-Regeln in `src/eslint/rules/` ergänzen.
+3. *Optional später:* Kleinen Docs-MCP auf Basis des strukturierten Doku-Formats bauen.
