@@ -15,12 +15,17 @@ export type ToggleButtonVariant = (typeof TOGGLE_BUTTON_VARIANTS)[number];
 
 export type ToggleButtonStateProps =
     | {
+          /** Item identifier inside `<ToggleButtonGroup>`. Forbidden standalone. */
           value: string;
           pressed?: never;
+          onPressedChange?: never;
       }
     | {
           value?: never;
+          /** Bindable pressed state (standalone only). Supports `bind:pressed` and `bind:pressed={get, set}`. */
           pressed?: boolean;
+          /** Fires with the next pressed state after a user toggle (standalone only). */
+          onPressedChange?: (pressed: boolean) => void;
       };
 
 export type ToggleButtonProps = Omit<HTMLButtonAttributes, "color" | "size" | "value"> &

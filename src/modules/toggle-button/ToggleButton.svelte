@@ -1,7 +1,7 @@
 <!--
 @component
-Two-state toggle button primitive (`<ToggleButton />`) supporting controlled and uncontrolled
-state via `bind:pressed` or `pressed`, semantic color themes, and spring-physics press feedback.
+Two-state toggle button primitive (`<ToggleButton />`) supporting standalone `bind:pressed` /
+`onPressedChange` and `<ToggleButtonGroup>` item `value` selection.
 -->
 <script lang="ts">
     import "../../css/shared/button-control.css";
@@ -14,8 +14,10 @@ state via `bind:pressed` or `pressed`, semantic color themes, and spring-physics
         color,
         size,
         iconOnly,
+        disabled = false,
         value,
         pressed = $bindable(false),
+        onPressedChange,
         class: className,
         onclick,
         children,
@@ -23,7 +25,18 @@ state via `bind:pressed` or `pressed`, semantic color themes, and spring-physics
     }: ToggleButtonProps = $props();
 
     const group = hasToggleButtonGroupContext() ? getToggleButtonGroupContext() : undefined;
-    const isPressed = $derived(group ? group.isSelected(value) : Boolean(pressed));
+    const isDisabled = $derived(Boolean(disabled || group?.disabled));
+    const isPressed = $derived(group ? (value !== undefined ? group.isSelected(value) : false) : Boolean(pressed));
+
+    if (import.meta.env.DEV) {
+        $effect(() => {
+            if (group && value === undefined) {
+                console.warn('<ToggleButton> inside <ToggleButtonGroup> must specify a "value" prop.');
+            } else if (!group && value !== undefined) {
+                console.warn('<ToggleButton> outside <ToggleButtonGroup> must not specify a "value" prop.');
+            }
+        });
+    }
 
     function handleClick(
         event: MouseEvent & {
@@ -31,14 +44,18 @@ state via `bind:pressed` or `pressed`, semantic color themes, and spring-physics
         }
     ): void {
         onclick?.(event);
-        if (event.defaultPrevented) return;
+        if (event.defaultPrevented || isDisabled) return;
 
         if (group) {
-            group.toggle(value);
+            if (value !== undefined) {
+                group.toggle(value);
+            }
             return;
         }
 
-        pressed = !pressed;
+        const next = !pressed;
+        pressed = next;
+        onPressedChange?.(next);
     }
 </script>
 
@@ -47,6 +64,7 @@ state via `bind:pressed` or `pressed`, semantic color themes, and spring-physics
     {...rest}
     type="button"
     aria-pressed={isPressed}
+    disabled={isDisabled || undefined}
     onclick={handleClick}
     class={["cs-toggle-button", "cs-button-control", className]}
     data-variant={variant}

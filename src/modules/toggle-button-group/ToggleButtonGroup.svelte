@@ -13,35 +13,44 @@ a cohesive segmented or clustered control bar with coordinated corner radii and 
         value = $bindable(),
         allowDeselect = false,
         orientation = "horizontal",
+        disabled = false,
+        onValueChange,
         class: className,
         children,
         ...rest
     }: ToggleButtonGroupProps = $props();
 
     setToggleButtonGroupContext({
-        isSelected(itemValue: string | undefined): boolean {
-            if (itemValue === undefined) return false;
+        get type() {
+            return type;
+        },
+        get orientation() {
+            return orientation;
+        },
+        get disabled() {
+            return Boolean(disabled);
+        },
+        isSelected(itemValue: string): boolean {
             if (type === "single") {
                 return value === itemValue;
             }
             return Array.isArray(value) && value.includes(itemValue);
         },
-        toggle(itemValue: string | undefined): void {
-            if (itemValue === undefined) return;
+        toggle(itemValue: string): void {
+            if (disabled) return;
 
             if (type === "single") {
-                if (value === itemValue) {
-                    if (allowDeselect) {
-                        value = undefined;
-                    }
-                    return;
-                }
-                value = itemValue;
+                if (value === itemValue && !allowDeselect) return;
+                const next = value === itemValue ? undefined : itemValue;
+                value = next;
+                (onValueChange as ((val: string | undefined) => void) | undefined)?.(next);
                 return;
             }
 
             const current = Array.isArray(value) ? value : [];
-            value = current.includes(itemValue) ? current.filter((v) => v !== itemValue) : [...current, itemValue];
+            const next = current.includes(itemValue) ? current.filter((v) => v !== itemValue) : [...current, itemValue];
+            value = next;
+            (onValueChange as ((next: string[]) => void) | undefined)?.(next);
         },
     });
 </script>
@@ -50,10 +59,12 @@ a cohesive segmented or clustered control bar with coordinated corner radii and 
     bind:this={ref}
     role="group"
     {...rest}
+    aria-disabled={disabled ? "true" : undefined}
     class={["cs-toggle-button-group", "cs-button-control-group", className]}
     data-type={type}
     data-orientation={orientation}
     data-fixed-selection={type === "single" && !allowDeselect ? "" : undefined}
+    data-disabled={disabled ? "" : undefined}
 >
     {@render children?.()}
 </div>

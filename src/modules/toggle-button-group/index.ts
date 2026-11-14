@@ -7,22 +7,38 @@ export { default as ToggleButtonGroupSeparator } from "./ToggleButtonGroupSepara
 export const TOGGLE_BUTTON_GROUP_TYPES = ["single", "multiple"] as const;
 export type ToggleButtonGroupType = (typeof TOGGLE_BUTTON_GROUP_TYPES)[number];
 
-export type ToggleButtonGroupTypeProps =
+export const TOGGLE_BUTTON_GROUP_ORIENTATIONS = ["horizontal", "vertical"] as const;
+export type ToggleButtonGroupOrientation = (typeof TOGGLE_BUTTON_GROUP_ORIENTATIONS)[number];
+
+export type ToggleButtonGroupSingleProps =
     | {
           type: "single";
           value?: string;
-          allowDeselect?: boolean;
+          allowDeselect?: false;
+          onValueChange?: (value: string) => void;
       }
     | {
-          type: "multiple";
-          value?: string[];
-          allowDeselect?: never;
+          type: "single";
+          value?: string | undefined;
+          allowDeselect: true;
+          onValueChange?: (value: string | undefined) => void;
       };
+
+export type ToggleButtonGroupMultipleProps = {
+    type: "multiple";
+    value?: string[];
+    allowDeselect?: never;
+    onValueChange?: (value: string[]) => void;
+};
+
+export type ToggleButtonGroupTypeProps = ToggleButtonGroupSingleProps | ToggleButtonGroupMultipleProps;
 
 export type ToggleButtonGroupProps = HTMLAttributes<HTMLDivElement> &
     ToggleButtonGroupTypeProps & {
         ref?: HTMLDivElement | null;
-        orientation?: "horizontal" | "vertical";
+        orientation?: ToggleButtonGroupOrientation;
+        /** Disables the group and all child `<ToggleButton>` items. */
+        disabled?: boolean;
     };
 
 export type ToggleButtonGroupSeparatorProps = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
@@ -30,8 +46,11 @@ export type ToggleButtonGroupSeparatorProps = Omit<HTMLAttributes<HTMLSpanElemen
 };
 
 export interface ToggleButtonGroupContext {
-    isSelected(itemValue: string | undefined): boolean;
-    toggle(itemValue: string | undefined): void;
+    readonly type: ToggleButtonGroupType;
+    readonly orientation: ToggleButtonGroupOrientation;
+    readonly disabled: boolean;
+    isSelected(itemValue: string): boolean;
+    toggle(itemValue: string): void;
 }
 
 export const [getToggleButtonGroupContext, setToggleButtonGroupContext, hasToggleButtonGroupContext] =
