@@ -2,14 +2,9 @@
 @component
 Composite container (`<ToggleButtonGroup />`) grouping multiple `<ToggleButton />` instances into
 a cohesive segmented or clustered control bar with coordinated corner radii and physics.
-
-Architectural Notes:
-- Selection Mode: Requires explicit `type` (`"single" | "multiple"`). Coordinates child `<ToggleButton value="...">` state via `bind:value` / `value` (`string | undefined` for `"single"`, `string[]` for `"multiple"`). In `"single"` mode, `allowDeselect` controls whether clicking the active button can clear `value` back to `undefined`.
-- Layout & Flow: Supports horizontal and vertical orientations via `orientation` (`"horizontal" | "vertical"`).
-- Filtered Radii: Uses `:nth-child(1 of .cs-toggle-button)` to strictly target true toggle buttons and flatten inner radii.
-- Defaults: Requires explicit `type` prop (`"single" | "multiple"`).
 -->
 <script lang="ts">
+    import "../../css/shared/button-group.css";
     import { setToggleButtonGroupContext, type ToggleButtonGroupProps } from "./index.ts";
 
     let {
@@ -55,7 +50,7 @@ Architectural Notes:
     bind:this={ref}
     role="group"
     {...rest}
-    class={["cs-toggle-button-group", className]}
+    class={["cs-toggle-button-group", "cs-button-control-group", className]}
     data-type={type}
     data-orientation={orientation}
     data-fixed-selection={type === "single" && !allowDeselect ? "" : undefined}
@@ -66,86 +61,13 @@ Architectural Notes:
 <style>
     @layer components.composite {
         .cs-toggle-button-group {
-            --cs-toggle-button-group-inner-radius: var(--cs-radius-none);
-
-            display: inline-flex;
-            border-radius: var(--cs-radius-full);
-            corner-shape: var(--cs-squircle-soft);
-
-            > :global(.cs-toggle-button) {
-                --cs-toggle-button-squash-active: 0.97;
-                --cs-toggle-button-focus-scale-active: 0.97;
-                border-radius: var(--cs-toggle-button-group-inner-radius);
-            }
+            --cs-button-control-group-inner-radius: var(--cs-toggle-button-group-inner-radius, var(--cs-radius-none));
 
             /* In fixed single-selection mode (segmented control), clicking the already-active
              * item is a no-op. Neutralizing press squash prevents confusing interactivity cues. */
             &[data-fixed-selection] > :global(.cs-toggle-button[aria-pressed="true"]) {
-                --cs-toggle-button-squash-active: 1;
-                --cs-toggle-button-focus-scale-active: 1;
-            }
-
-            /* =========================================================
-             * FILTERED FIRST/LAST BUTTON TARGETING (`:nth-child(... of S)`)
-             * ---------------------------------------------------------
-             * Standard `:first-child` and `:last-child` fail if non-button
-             * nodes (auxiliary DOM elements, comments, or Svelte block
-             * markers) are present.
-             *
-             * Using `:nth-child(1 of .cs-toggle-button)` and
-             * `:nth-last-child(1 of .cs-toggle-button)` guarantees that outer
-             * corner radii apply exclusively to the true first and last
-             * toggle button in the group.
-             * ========================================================= */
-            &[data-orientation="horizontal"] {
-                flex-direction: row;
-                align-items: center;
-
-                > :global(.cs-toggle-button:nth-child(1 of .cs-toggle-button)) {
-                    border-top-left-radius: var(--cs-toggle-button-pill-radius);
-                    border-bottom-left-radius: var(--cs-toggle-button-pill-radius);
-                }
-
-                > :global(.cs-toggle-button:nth-last-child(1 of .cs-toggle-button)) {
-                    border-top-right-radius: var(--cs-toggle-button-pill-radius);
-                    border-bottom-right-radius: var(--cs-toggle-button-pill-radius);
-                }
-            }
-
-            &[data-orientation="vertical"] {
-                flex-direction: column;
-                align-items: stretch;
-
-                > :global(.cs-toggle-button:nth-child(1 of .cs-toggle-button)) {
-                    border-top-left-radius: var(--cs-toggle-button-pill-radius);
-                    border-top-right-radius: var(--cs-toggle-button-pill-radius);
-                }
-
-                > :global(.cs-toggle-button:nth-last-child(1 of .cs-toggle-button)) {
-                    border-bottom-right-radius: var(--cs-toggle-button-pill-radius);
-                    border-bottom-left-radius: var(--cs-toggle-button-pill-radius);
-                }
-            }
-
-            /* =========================================================
-             * HIT AREA CONTAINMENT (Unidirectional Touch Expansion)
-             * ---------------------------------------------------------
-             * Constrains the touch expander to 100% on the shared layout axis
-             * to eliminate tap collision between adjacent buttons, while allowing
-             * the unconstrained cross-axis to expand freely into open space.
-             * ========================================================= */
-            &[data-orientation="horizontal"] :global(.cs-hit-area) {
-                left: 0;
-                width: 100%;
-                min-width: 0;
-                translate: 0 -50%;
-            }
-
-            &[data-orientation="vertical"] :global(.cs-hit-area) {
-                top: 0;
-                height: 100%;
-                min-height: 0;
-                translate: -50% 0;
+                --cs-button-control-squash-active: 1;
+                --cs-button-control-focus-scale-active: 1;
             }
         }
     }

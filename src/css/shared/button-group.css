@@ -1,0 +1,61 @@
+@layer components.composite {
+    .cs-button-control-group {
+        --cs-button-control-group-inner-radius: var(--cs-radius-none);
+
+        display: inline-flex;
+        border-radius: var(--cs-radius-full);
+        corner-shape: var(--cs-squircle-soft);
+
+        > .cs-button-control {
+            --cs-button-control-squash-active: 0.97;
+            --cs-button-control-focus-scale-active: 0.97;
+            border-radius: var(--cs-button-control-group-inner-radius);
+        }
+
+        /* Filtered :nth-child(... of .cs-button-control) ignores auxiliary DOM nodes/separators. */
+        &[data-orientation="horizontal"] {
+            flex-direction: row;
+            align-items: center;
+
+            > .cs-button-control:nth-child(1 of .cs-button-control) {
+                border-top-left-radius: var(--cs-button-control-pill-radius);
+                border-bottom-left-radius: var(--cs-button-control-pill-radius);
+            }
+
+            > .cs-button-control:nth-last-child(1 of .cs-button-control) {
+                border-top-right-radius: var(--cs-button-control-pill-radius);
+                border-bottom-right-radius: var(--cs-button-control-pill-radius);
+            }
+        }
+
+        &[data-orientation="vertical"] {
+            flex-direction: column;
+            align-items: stretch;
+
+            > .cs-button-control:nth-child(1 of .cs-button-control) {
+                border-top-left-radius: var(--cs-button-control-pill-radius);
+                border-top-right-radius: var(--cs-button-control-pill-radius);
+            }
+
+            > .cs-button-control:nth-last-child(1 of .cs-button-control) {
+                border-bottom-right-radius: var(--cs-button-control-pill-radius);
+                border-bottom-left-radius: var(--cs-button-control-pill-radius);
+            }
+        }
+
+        /* Constrain touch expansion along the shared layout axis to prevent adjacent tap collisions. */
+        &[data-orientation="horizontal"] .cs-hit-area {
+            left: 0;
+            width: 100%;
+            min-width: 0;
+            translate: 0 -50%;
+        }
+
+        &[data-orientation="vertical"] .cs-hit-area {
+            top: 0;
+            height: 100%;
+            min-height: 0;
+            translate: -50% 0;
+        }
+    }
+}

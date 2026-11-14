@@ -1,0 +1,155 @@
+@layer components.primitive {
+    .cs-button-control {
+        /* Dynamically computed from height instead of --cs-radius-full (9999px) to prevent
+         * CSS Corner Overlap reduction from crushing adjacent inner radii inside groups. */
+        --cs-button-control-height-resolved: var(--cs-button-control-height, var(--cs-button-control-size-height));
+        --cs-button-control-pill-radius: calc(var(--cs-button-control-height-resolved) / 2);
+
+        isolation: isolate;
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        height: var(--cs-button-control-height-resolved);
+        color: var(--cs-button-control-fg);
+        font-weight: 600;
+        white-space: nowrap;
+        border-radius: var(--cs-button-control-pill-radius);
+        corner-shape: var(--cs-squircle-soft);
+        transition:
+            color 200ms var(--cs-ease-quad-out),
+            scale 200ms var(--cs-ease-expo-out);
+
+        &:any-link {
+            cursor: pointer;
+        }
+
+        /* Elastic surface decoupled from text/icons for squash-and-stretch.
+         * z-index: -2 keeps it below optional overlay layers (e.g. ::after at -1). */
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            background-color: var(--cs-button-control-bg);
+            border: var(--cs-button-control-border, none);
+            border-radius: inherit;
+            corner-shape: inherit;
+            box-shadow: var(--cs-button-control-shadow, none);
+            transition:
+                background-color 200ms var(--cs-ease-quad-out),
+                box-shadow 200ms var(--cs-ease-quad-out),
+                scale 600ms var(--cs-spring-release);
+        }
+
+        @media (hover: hover) {
+            &:hover,
+            &[data-morph-hover] {
+                color: var(--cs-button-control-fg-hover, var(--cs-button-control-fg));
+
+                &::before {
+                    background-color: var(--cs-button-control-bg-hover);
+                    box-shadow: var(--cs-button-control-shadow-hover, var(--cs-button-control-shadow, none));
+                }
+            }
+
+            &[data-morph-hover]::before {
+                transition: none;
+            }
+        }
+
+        &:active {
+            color: var(--cs-button-control-fg-hover, var(--cs-button-control-fg));
+
+            &::before {
+                background-color: var(--cs-button-control-bg-hover);
+                box-shadow: var(--cs-button-control-shadow-active, none);
+                transition:
+                    background-color 140ms var(--cs-ease-quad-out),
+                    box-shadow 140ms var(--cs-ease-quad-out),
+                    scale 140ms var(--cs-ease-quad-out);
+            }
+
+            &:not(:focus-visible)::before {
+                scale: var(
+                    --cs-button-control-squash-active,
+                    var(--cs-button-control-default-squash, var(--cs-squash-subtle))
+                );
+            }
+
+            &:focus-visible {
+                scale: var(--cs-button-control-focus-scale-active, 0.97);
+            }
+        }
+
+        &[data-size="xs"] {
+            --cs-button-control-size-height: 28px;
+            gap: 4px;
+            padding-inline: 8px;
+            font-size: var(--cs-text-xs);
+        }
+
+        &[data-size="sm"] {
+            --cs-button-control-size-height: 32px;
+            gap: 4px;
+            padding-inline: 12px;
+            font-size: var(--cs-text-xs);
+        }
+
+        &[data-size="md"] {
+            --cs-button-control-size-height: 36px;
+            gap: 6px;
+            padding-inline: 14px;
+            font-size: var(--cs-text-sm);
+        }
+
+        &[data-size="lg"] {
+            --cs-button-control-size-height: 40px;
+            gap: 6px;
+            padding-inline: 16px;
+            font-size: var(--cs-text-sm);
+        }
+
+        &[data-size="xl"] {
+            --cs-button-control-size-height: 44px;
+            gap: 6px;
+            padding-inline: 20px;
+            font-size: var(--cs-text-base);
+        }
+
+        /* Placed after sizes so [data-icon-only] overrides inline padding at equal specificity. */
+        &[data-icon-only] {
+            --cs-button-control-default-squash: var(--cs-squash-default);
+            aspect-ratio: 1;
+            padding-inline: 0;
+        }
+
+        &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+            --cs-disabled-opacity: 1;
+        }
+    }
+
+    .cs-button-control-icon {
+        flex-shrink: 0;
+        width: calc(1em + 2px);
+        height: calc(1em + 2px);
+        stroke-width: 2.5;
+        pointer-events: none;
+
+        /* 50% scale ensures integer pixel alignment and optical balance without text. */
+        .cs-button-control[data-icon-only] > & {
+            width: 50%;
+            height: 50%;
+        }
+    }
+
+    .cs-button-control-label {
+        min-width: 0;
+        overflow-x: clip;
+        overflow-y: visible;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-box: trim-both cap alphabetic;
+    }
+}

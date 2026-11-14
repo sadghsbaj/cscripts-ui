@@ -2,12 +2,9 @@
 @component
 Two-state toggle button primitive (`<ToggleButton />`) supporting controlled and uncontrolled
 state via `bind:pressed` or `pressed`, semantic color themes, and spring-physics press feedback.
-
-Architectural Notes:
-- Accessibility: Operates as an accessible WAI-ARIA toggle button using `aria-pressed="true" | "false"`.
-- Defaults & Resets: Requires explicit `variant`, `size`, and `color` props.
 -->
 <script lang="ts">
+    import "../../css/shared/button-control.css";
     import { getToggleButtonGroupContext, hasToggleButtonGroupContext } from "../toggle-button-group/index.ts";
     import type { ToggleButtonProps } from "./index.ts";
 
@@ -51,7 +48,7 @@ Architectural Notes:
     type="button"
     aria-pressed={isPressed}
     onclick={handleClick}
-    class={["cs-toggle-button", className]}
+    class={["cs-toggle-button", "cs-button-control", className]}
     data-variant={variant}
     data-color={color}
     data-size={size}
@@ -63,66 +60,28 @@ Architectural Notes:
 <style>
     @layer components.primitive {
         .cs-toggle-button {
-            /* Dynamically computed from height instead of --cs-radius-full (9999px).
-            * A 9999px radius would trigger the CSS Corner Overlap reduction algorithm
-            * (CSS Backgrounds & Borders §5.5) on asymmetric corners (e.g. inside ButtonGroup),
-            * proportionally crushing small adjacent radii (e.g. 4px) down to near 0px. */
-            --cs-toggle-button-pill-radius: calc(var(--cs-toggle-button-height) / 2);
-
-            /* Fill transition per state (consumed by ::after).
-             * When releasing (pressed -> unpressed), transform deliberately uses a slower
-             * 300ms quad-in curve while opacity fades out in only 140ms. Because quad-in
-             * starts slowly, the fill barely shrinks (~0.90 scale) before becoming completely
-             * invisible. This yields a calm, smooth background fade for the human eye without
-             * an abrupt collapse, while still allowing ::after to settle at scale(0.55) so the
-             * next press pop-in has full spring distance and momentum. */
+            /* When releasing (pressed -> unpressed), transform uses a slower 300ms quad-in curve
+             * while opacity fades in 140ms so ::after settles at scale(0.55) invisibly, giving
+             * the next press pop-in full spring distance without an abrupt visual collapse. */
             --cs-toggle-button-transition-pressed: transform 300ms var(--cs-ease-quad-in), opacity 140ms linear;
 
-            isolation: isolate;
-            position: relative;
-            display: inline-flex;
-            flex-shrink: 0;
-            align-items: center;
-            justify-content: center;
-            height: var(--cs-toggle-button-height);
-            color: var(--cs-toggle-button-fg);
-            font-weight: 600;
-            white-space: nowrap;
-            border-radius: var(--cs-toggle-button-pill-radius);
-            corner-shape: var(--cs-squircle-soft);
-            transition:
-                color 200ms var(--cs-ease-quad-out),
-                scale 200ms var(--cs-ease-expo-out);
+            /* Bridge module hooks to shared button-control variables */
+            --cs-button-control-height: var(--cs-toggle-button-height, var(--cs-button-control-size-height));
+            --cs-button-control-fg: var(--cs-toggle-button-fg);
+            --cs-button-control-fg-hover: var(--cs-toggle-button-fg-hover, var(--cs-toggle-button-fg));
+            --cs-button-control-bg: var(--cs-toggle-button-bg);
+            --cs-button-control-bg-hover: var(--cs-toggle-button-bg-hover);
+            --cs-button-control-border: var(--cs-toggle-button-border, none);
+            --cs-button-control-shadow: var(--cs-toggle-button-shadow, none);
+            --cs-button-control-shadow-hover: var(--cs-toggle-button-shadow-hover, var(--cs-toggle-button-shadow, none));
+            --cs-button-control-shadow-active: var(--cs-toggle-button-shadow-active, none);
+            --cs-button-control-squash-active: var(
+                --cs-toggle-button-squash-active,
+                var(--cs-button-control-default-squash, var(--cs-squash-subtle))
+            );
+            --cs-button-control-focus-scale-active: var(--cs-toggle-button-focus-scale-active, 0.97);
 
-            /* =========================================================
-             * ELASTIC SURFACE (::before)
-             * ---------------------------------------------------------
-             * Decouples visual surface from text/icons for squash-and-stretch.
-             * ========================================================= */
-            &::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                z-index: -2;
-                background-color: var(--cs-toggle-button-bg);
-                border: var(--cs-toggle-button-border, none);
-                border-radius: inherit;
-                corner-shape: inherit;
-                box-shadow: var(--cs-toggle-button-shadow, none);
-                transition:
-                    background-color 200ms var(--cs-ease-quad-out),
-                    box-shadow 200ms var(--cs-ease-quad-out),
-                    scale 600ms var(--cs-spring-release); /* CSS linear() transition */
-            }
-
-            /* =========================================================
-            * PRESSED FILL (::after)
-            * ---------------------------------------------------------
-            * Lives above the base surface. Pops in from the center with a
-            * spring overshoot when pressed, shrinks back (no spring) when
-            * released. `transform` drives the pop, `scale` the shared
-            * pointer squash, so both compose without fighting.
-            * ========================================================= */
+            /* Pressed fill layer (::after): `transform` drives pop-in, `scale` drives shared pointer squash. */
             &::after {
                 content: "";
                 position: absolute;
@@ -143,41 +102,17 @@ Architectural Notes:
             @media (hover: hover) {
                 &:hover,
                 &[data-morph-hover] {
-                    color: var(--cs-toggle-button-fg-hover, var(--cs-toggle-button-fg));
-
-                    &::before {
-                        background-color: var(--cs-toggle-button-bg-hover);
-                        box-shadow: var(--cs-toggle-button-shadow-hover, var(--cs-toggle-button-shadow, none));
-                    }
-
                     &::after {
                         background-color: var(--cs-toggle-button-bg-pressed-hover);
                     }
                 }
 
-                &[data-morph-hover]::before,
                 &[data-morph-hover]::after {
                     transition: none;
                 }
             }
 
-            /* =========================================================
-             * ACTIVE STATES (Pointer vs. Keyboard)
-             * ---------------------------------------------------------
-             * Interaction modality split (spring squash vs uniform scale).
-             * ========================================================= */
             &:active {
-                color: var(--cs-toggle-button-fg-hover, var(--cs-toggle-button-fg));
-
-                &::before {
-                    background-color: var(--cs-toggle-button-bg-hover);
-                    box-shadow: var(--cs-toggle-button-shadow-active, none);
-                    transition:
-                        background-color 140ms var(--cs-ease-quad-out),
-                        box-shadow 140ms var(--cs-ease-quad-out),
-                        scale 140ms var(--cs-ease-quad-out);
-                }
-
                 &::after {
                     background-color: var(--cs-toggle-button-bg-pressed-hover);
                     transition:
@@ -186,83 +121,11 @@ Architectural Notes:
                         scale 140ms var(--cs-ease-quad-out);
                 }
 
-                &:not(:focus-visible)::before,
                 &:not(:focus-visible)::after {
-                    scale: var(--cs-toggle-button-squash-active, var(--cs-squash-subtle));
-                }
-
-                &:focus-visible {
-                    scale: var(--cs-toggle-button-focus-scale-active, 0.97);
+                    scale: var(--cs-button-control-squash-active);
                 }
             }
 
-            /* =========================================================
-            * SIZES
-            * ---------------------------------------------------------
-            * Size Hierarchy Guidance:
-            * - Workhorses: sm, md, lg are the primary sizes for daily UI.
-            * - Extremes: xs and xl exist for edge cases (e.g. ultra-dense
-            *   inline badges or standalone hero CTAs) and should not be
-            *   treated as general-purpose defaults.
-            * ========================================================= */
-            &[data-size="xs"] {
-                --cs-toggle-button-height: 28px;
-                gap: 4px;
-                padding-inline: 8px;
-                font-size: var(--cs-text-xs);
-            }
-
-            &[data-size="sm"] {
-                --cs-toggle-button-height: 32px;
-                gap: 4px;
-                padding-inline: 12px;
-                font-size: var(--cs-text-xs);
-            }
-
-            &[data-size="md"] {
-                --cs-toggle-button-height: 36px;
-                gap: 6px;
-                padding-inline: 14px;
-                font-size: var(--cs-text-sm);
-            }
-
-            &[data-size="lg"] {
-                --cs-toggle-button-height: 40px;
-                gap: 6px;
-                padding-inline: 16px;
-                font-size: var(--cs-text-sm);
-            }
-
-            &[data-size="xl"] {
-                --cs-toggle-button-height: 44px;
-                gap: 6px;
-                padding-inline: 20px;
-                font-size: var(--cs-text-base);
-            }
-
-            /* =========================================================
-            * ICON-ONLY TOGGLE BUTTONS
-            * ---------------------------------------------------------
-            * Icon-only toggle buttons must be explicitly declared using the
-            * `[data-icon-only]` attribute.
-            *
-            * Placed after SIZES so `.cs-toggle-button[data-icon-only]` `(0, 2, 0)`
-            * overrides size-specific inline padding at equal specificity
-            * through source order.
-            *
-            * Explicit declaration keeps the component behavior stable when
-            * auxiliary children such as notification badges, hit areas or
-            * screen-reader labels are added.
-            * ========================================================= */
-            &[data-icon-only] {
-                --cs-toggle-button-squash-active: var(--cs-squash-default);
-                aspect-ratio: 1;
-                padding-inline: 0;
-            }
-
-            /* =========================================================
-            * COLORS
-            * ========================================================= */
             &[data-color="accent"] {
                 --cs-toggle-button-bg-pressed: var(--cs-color-accent-soft);
                 --cs-toggle-button-bg-pressed-hover: var(--cs-color-accent-soft-hover);
@@ -287,9 +150,6 @@ Architectural Notes:
                 --cs-toggle-button-soft-fg: var(--cs-color-negative-soft-fg);
             }
 
-            /* =========================================================
-            * VARIANTS
-            * ========================================================= */
             &[data-variant="soft"] {
                 --cs-toggle-button-bg: var(--cs-color-base-soft);
                 --cs-toggle-button-bg-hover: var(--cs-color-base-soft-hover);
@@ -304,13 +164,6 @@ Architectural Notes:
                 }
             }
 
-            /* =========================================================
-            * ARIA PRESSED
-            * ---------------------------------------------------------
-            * The base surface (::before) stays untouched. Pressed only
-            * reveals the fill layer (::after) with a spring pop and
-            * switches the foreground color.
-            * ========================================================= */
             &[aria-pressed="false"] {
                 --cs-toggle-button-fg: var(--cs-color-base-soft-fg);
                 --cs-toggle-button-fg-hover: var(--cs-color-base-soft-fg-hover);
@@ -326,11 +179,7 @@ Architectural Notes:
                 }
             }
 
-            /* =========================================================
-            * DISABLED
-            * ========================================================= */
             &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
-                --cs-disabled-opacity: 1;
                 --cs-toggle-button-fg: var(--cs-color-disabled-fg);
 
                 &[data-variant="soft"] {
