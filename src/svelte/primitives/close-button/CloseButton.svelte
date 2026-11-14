@@ -16,7 +16,7 @@ Architectural Notes:
 </script>
 
 <button
-    aria-label="Schließen"
+    aria-label="Close"
     {...rest}
     type="button"
     class={["cs-close-button", className]}
