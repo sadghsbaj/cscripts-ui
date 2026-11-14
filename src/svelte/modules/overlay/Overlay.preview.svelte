@@ -12,7 +12,7 @@
     import { scrollFade } from "cs/svelte/scroll-fade";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
-    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
 
     let isOpen = $state(false);
     let selectedVariant = $state<string>("blur");

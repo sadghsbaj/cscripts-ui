@@ -6,7 +6,7 @@
 <script lang="ts">
     import { CLOSE_BUTTON_SIZES, CloseButton } from "cs/svelte/close-button";
     import { HitArea } from "cs/svelte/hit-area";
-    import { PreviewHeader, PreviewSection, SunkenWell } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection, SunkenWell } from "../../../../playground/components/index.ts";
 
     const closeScript = ["</", "script>"].join("");
 

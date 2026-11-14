@@ -4,7 +4,7 @@ Du arbeitest ausschließlich in `playground/lab/` (erreichbar unter `/lab`).
 
 ## 1. Harte Regeln (Zero Side-Effects)
 - **Strict Scope:** Ändere oder erstelle **nur** Dateien innerhalb von `playground/lab/`.
-- **Tabu:** Fasse **niemals** `src/`, `template/`, `package.json`, `playground/previews/` oder Config-Dateien außerhalb von `playground/lab/` an.
+- **Tabu:** Fasse **niemals** `src/`, `template/`, `package.json` oder Config-Dateien außerhalb von `playground/lab/` an.
 - **Kein Export:** Nichts aus `playground/lab/` wird von der Library exportiert.
 - **Saubere Isolation:** Lege größere Experimente als eigene `.svelte`- oder `.ts`-Datei in `playground/lab/` an und binde sie in `LabView.svelte` ein. So lässt sich jedes Experiment rückstandslos wieder entfernen.
 

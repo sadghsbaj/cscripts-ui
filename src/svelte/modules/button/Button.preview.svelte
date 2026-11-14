@@ -9,7 +9,7 @@
     import { HitArea } from "cs/svelte/hit-area";
     import { tooltip } from "cs/svelte/tooltip";
 
-    import { PreviewHeader, PreviewSection, SunkenWell } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection, SunkenWell } from "../../../../playground/components/index.ts";
 
     const closeScript = ["</", "script>"].join("");
 

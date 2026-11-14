@@ -12,7 +12,7 @@
         PREVIEW_CATEGORIES,
         PREVIEW_CATEGORY_LABELS,
         type PreviewCategory,
-    } from "../components/index.ts";
+    } from "./components/index.ts";
 
     const THEME_LABELS: Record<ThemeMode, string> = {
         system: "System",
@@ -44,14 +44,12 @@
     const CONTROLS_IDLE_MS = 2200;
 
     const modules = import.meta.glob<SvelteModule>(
-        ["./primitives/*.svelte", "./attachments/*.svelte", "./work/*.svelte"],
+        ["../src/svelte/modules/**/*.preview.svelte", "../src/svelte/work/**/*.preview.svelte"],
         { eager: true }
     );
 
     function categoryFromPath(path: string): PreviewCategory {
-        const folder = path.split("/", 2)[1];
-        if (folder === "attachments" || folder === "work") return folder;
-        return "primitives";
+        return path.includes("/svelte/work/") ? "work" : "modules";
     }
 
     const previews: PreviewItem[] = Object.entries(modules)

@@ -11,7 +11,7 @@
     import { HitArea } from "cs/svelte/hit-area";
     import { ToggleButton, ToggleButtonIcon, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { tooltip } from "cs/svelte/tooltip";
-    import { PreviewHeader, PreviewSection, SunkenWell } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection, SunkenWell } from "../../../../playground/components/index.ts";
 
     let deleteMode = $state("idle");
     let iconMorphMode = $state("icon");

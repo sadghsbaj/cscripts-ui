@@ -7,7 +7,7 @@ import { configureStoragePrefix } from "cs/svelte/browser-storage";
 
 import "virtual:uno.css";
 
-import PreviewView from "./previews/PreviewView.svelte";
+import PreviewView from "./PreviewView.svelte";
 
 configureStoragePrefix("cs-docs");
 

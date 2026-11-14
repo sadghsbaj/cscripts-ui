@@ -5,7 +5,7 @@
 
 <script lang="ts">
     import { WORK_LOCATION_IDS, WORK_LOCATIONS, WorkLocation } from "cs/svelte/work";
-    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
 
     const closeScript = ["</", "script>"].join("");
 

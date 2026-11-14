@@ -9,7 +9,7 @@
     import { ToggleButton, ToggleButtonIcon, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
     import { tooltip } from "cs/svelte/tooltip";
-    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
 
     let singleValue = $state<string | undefined>("day");
     let ghostValue = $state<string | undefined>("list");

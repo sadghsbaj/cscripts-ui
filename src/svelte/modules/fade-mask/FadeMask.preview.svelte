@@ -6,7 +6,7 @@
 <script lang="ts">
     import { BackgroundPattern } from "cs/svelte/background-pattern";
     import { FADE_MASK_STRENGTHS, FADE_MASK_VARIANTS, fadeMask } from "cs/svelte/fade-mask";
-    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
 
     const closeScript = ["</", "script>"].join("");
 

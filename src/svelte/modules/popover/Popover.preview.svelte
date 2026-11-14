@@ -6,7 +6,7 @@
 <script lang="ts">
     import { Button, ButtonLabel } from "cs/svelte/button";
     import { Popover, popoverTrigger, type PopoverPlacement, type PopoverSize } from "cs/svelte/popover";
-    import { PreviewHeader, PreviewSection } from "../../components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../../playground/components/index.ts";
 
     const placements: PopoverPlacement[] = ["top", "bottom", "left", "right"];
     const sizes: PopoverSize[] = ["content", "anchor", "min-anchor"];
