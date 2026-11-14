@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "svelte": {
-      "command": "bun",
-      "args": ["x", "@sveltejs/mcp"]
-    }
-  }
-}
