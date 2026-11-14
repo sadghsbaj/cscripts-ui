@@ -75,7 +75,7 @@ ${closeScript}
     size="md"
     iconOnly
     aria-label="Toggle bookmark"
-    {@attach tooltip("Toggle bookmark")}
+    {@attach tooltip({ text: "Toggle bookmark" })}
 >
     <ToggleButtonIcon icon={Bookmark} />
     <HitArea size="md" />
@@ -180,7 +180,7 @@ ${closeScript}
             iconOnly
             bind:pressed={iconPressed}
             aria-label="Toggle bookmark"
-            {@attach tooltip("Toggle bookmark")}
+            {@attach tooltip({ text: "Toggle bookmark" })}
         >
             <ToggleButtonIcon icon={Bookmark} />
             <HitArea size="md" />

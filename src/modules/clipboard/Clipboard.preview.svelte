@@ -27,14 +27,14 @@ ${closeScript}
     size="md"
     iconOnly
     aria-label="Copy"
-    {@attach copyOnClick("bun add cs")}
-    {@attach tooltip("Copy")}
+    {@attach copyOnClick({ text: "bun add cs" })}
+    {@attach tooltip({ text: "Copy" })}
 >
     <CopyIcon />
     <HitArea size="md" />
 </Button>`;
 
-    const labelCode = `<Button variant="tertiary" size="md" {@attach copyOnClick("bun add cs")}>
+    const labelCode = `<Button variant="tertiary" size="md" {@attach copyOnClick({ text: "bun add cs" })}>
     <CopyIcon />
     <ButtonLabel>Copy command</ButtonLabel>
 </Button>
@@ -42,12 +42,12 @@ ${closeScript}
     variant="primary"
     size="md"
     style="--cs-copy-icon-fg-positive: currentColor;"
-    {@attach copyOnClick("bun add cs")}
+    {@attach copyOnClick({ text: "bun add cs" })}
 >
     <CopyIcon />
     <ButtonLabel>Primary</ButtonLabel>
 </Button>
-<Button variant="ghost" size="md" {@attach copyOnClick("bun add cs")}>
+<Button variant="ghost" size="md" {@attach copyOnClick({ text: "bun add cs" })}>
     <CopyIcon />
     <ButtonLabel>Ghost</ButtonLabel>
 </Button>`;
@@ -65,7 +65,7 @@ ${closeScript}
             pasteValue = e.text;
         },
     })}
-    {@attach tooltip("Paste")}
+    {@attach tooltip({ text: "Paste" })}
 >
     <PasteIcon />
     <HitArea size="md" />
@@ -76,8 +76,8 @@ ${closeScript}
     size="md"
     iconOnly
     aria-label="Copy"
-    {@attach copyOnClick("Copied")}
-    {@attach tooltip("Copy")}
+    {@attach copyOnClick({ text: "Copied" })}
+    {@attach tooltip({ text: "Copy" })}
 >
     <CopyIcon />
     <HitArea size="md" />
@@ -87,7 +87,7 @@ ${closeScript}
     variant="secondary"
     negative
     size="md"
-    {@attach copyOnClick(() => Promise.reject(new Error("Simulated failure")))}
+    {@attach copyOnClick({ text: () => Promise.reject(new Error("Simulated failure")) })}
 >
     <CopyIcon />
     <ButtonLabel>Fail copy</ButtonLabel>
@@ -97,7 +97,7 @@ ${closeScript}
     variant="secondary"
     negative
     size="md"
-    {@attach pasteOnClick(() => Promise.reject(new Error("Simulated failure")))}
+    {@attach pasteOnClick({ target: () => Promise.reject(new Error("Simulated failure")) })}
 >
     <PasteIcon />
     <ButtonLabel>Fail paste</ButtonLabel>
@@ -117,8 +117,8 @@ ${closeScript}
             size="md"
             iconOnly
             aria-label="Copy"
-            {@attach copyOnClick("bun add cs")}
-            {@attach tooltip("Copy")}
+            {@attach copyOnClick({ text: "bun add cs" })}
+            {@attach tooltip({ text: "Copy" })}
         >
             <CopyIcon />
             <HitArea size="md" />
@@ -126,7 +126,7 @@ ${closeScript}
     </PreviewSection>
 
     <PreviewSection title="With Label" code={labelCode}>
-        <Button variant="tertiary" size="md" {@attach copyOnClick("bun add cs")}>
+        <Button variant="tertiary" size="md" {@attach copyOnClick({ text: "bun add cs" })}>
             <CopyIcon />
             <ButtonLabel>Copy command</ButtonLabel>
         </Button>
@@ -135,13 +135,13 @@ ${closeScript}
             variant="primary"
             size="md"
             style="--cs-copy-icon-fg-positive: currentColor;"
-            {@attach copyOnClick("bun add cs")}
+            {@attach copyOnClick({ text: "bun add cs" })}
         >
             <CopyIcon />
             <ButtonLabel>Primary</ButtonLabel>
         </Button>
 
-        <Button variant="ghost" size="md" {@attach copyOnClick("bun add cs")}>
+        <Button variant="ghost" size="md" {@attach copyOnClick({ text: "bun add cs" })}>
             <CopyIcon />
             <ButtonLabel>Ghost</ButtonLabel>
         </Button>
@@ -170,7 +170,7 @@ ${closeScript}
                             pasteValue = e.text;
                         },
                     })}
-                    {@attach tooltip("Paste")}
+                    {@attach tooltip({ text: "Paste" })}
                 >
                     <PasteIcon />
                     <HitArea size="md" />
@@ -178,7 +178,7 @@ ${closeScript}
             </div>
 
             <div class="flex items-center gap-2">
-                <Button variant="tertiary" size="sm" {@attach copyOnClick("")}>
+                <Button variant="tertiary" size="sm" {@attach copyOnClick({ text: "" })}>
                     <CopyIcon />
                     <ButtonLabel>Copy empty</ButtonLabel>
                 </Button>
@@ -195,8 +195,8 @@ ${closeScript}
                         {size}
                         iconOnly
                         aria-label="Copy"
-                        {@attach copyOnClick(`Copied size: ${size}`)}
-                        {@attach tooltip(`Copy (${size})`)}
+                        {@attach copyOnClick({ text: `Copied size: ${size}` })}
+                        {@attach tooltip({ text: `Copy (${size})` })}
                     >
                         <CopyIcon />
                         <HitArea size="md" />
@@ -211,10 +211,12 @@ ${closeScript}
                         {size}
                         iconOnly
                         aria-label="Paste"
-                        {@attach pasteOnClick((e) => {
-                            pasteValue = e.text;
+                        {@attach pasteOnClick({
+                            target: (e) => {
+                                pasteValue = e.text;
+                            },
                         })}
-                        {@attach tooltip(`Paste (${size})`)}
+                        {@attach tooltip({ text: `Paste (${size})` })}
                     >
                         <PasteIcon />
                         <HitArea size="md" />
@@ -234,8 +236,8 @@ ${closeScript}
             size="md"
             iconOnly
             aria-label="Simulate copy error"
-            {@attach copyOnClick(() => Promise.reject(new Error("Simulated failure")))}
-            {@attach tooltip("Test error")}
+            {@attach copyOnClick({ text: () => Promise.reject(new Error("Simulated failure")) })}
+            {@attach tooltip({ text: "Test error" })}
         >
             <CopyIcon />
             <HitArea size="md" />
@@ -245,7 +247,7 @@ ${closeScript}
             variant="secondary"
             negative
             size="md"
-            {@attach copyOnClick(() => Promise.reject(new Error("Simulated failure")))}
+            {@attach copyOnClick({ text: () => Promise.reject(new Error("Simulated failure")) })}
         >
             <CopyIcon />
             <ButtonLabel>Fail copy</ButtonLabel>
@@ -255,7 +257,7 @@ ${closeScript}
             variant="secondary"
             negative
             size="md"
-            {@attach pasteOnClick(() => Promise.reject(new Error("Simulated failure")))}
+            {@attach pasteOnClick({ target: () => Promise.reject(new Error("Simulated failure")) })}
         >
             <PasteIcon />
             <ButtonLabel>Fail paste</ButtonLabel>

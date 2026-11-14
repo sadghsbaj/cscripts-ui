@@ -34,25 +34,25 @@ ${closeScript}
     variant="tertiary"
     iconOnly
     aria-label="Add item"
-    {@attach tooltip("Add item")}
+    {@attach tooltip({ text: "Add item" })}
 >
     <ButtonIcon icon={Plus} />
     <HitArea size="md" />
 </Button>`;
 
-    const sizesCode = `<Button size="sm" variant="tertiary" iconOnly aria-label="Small" {@attach tooltip("Small")}>
+    const sizesCode = `<Button size="sm" variant="tertiary" iconOnly aria-label="Small" {@attach tooltip({ text: "Small" })}>
     <ButtonIcon icon={Plus} />
     <HitArea size="sm" />
 </Button>
-<Button size="md" variant="tertiary" iconOnly aria-label="Medium" {@attach tooltip("Medium")}>
+<Button size="md" variant="tertiary" iconOnly aria-label="Medium" {@attach tooltip({ text: "Medium" })}>
     <ButtonIcon icon={Plus} />
     <HitArea size="md" />
 </Button>
-<Button size="lg" variant="tertiary" iconOnly aria-label="Large" {@attach tooltip("Large")}>
+<Button size="lg" variant="tertiary" iconOnly aria-label="Large" {@attach tooltip({ text: "Large" })}>
     <ButtonIcon icon={Plus} />
     <HitArea size="lg" />
 </Button>
-<Button size="md" variant="tertiary" iconOnly aria-label="Custom 64px" {@attach tooltip("Custom 64px")}>
+<Button size="md" variant="tertiary" iconOnly aria-label="Custom 64px" {@attach tooltip({ text: "Custom 64px" })}>
     <ButtonIcon icon={Plus} />
     <HitArea size="md" class="size-64px" />
 </Button>`;
@@ -71,7 +71,7 @@ ${closeScript}
             variant="tertiary"
             iconOnly
             aria-label="Add item"
-            {@attach tooltip("Add item")}
+            {@attach tooltip({ text: "Add item" })}
         >
             <ButtonIcon icon={Plus} />
             <HitArea size="md" />
@@ -95,7 +95,7 @@ ${closeScript}
                         variant="tertiary"
                         iconOnly
                         aria-label={button.label}
-                        {@attach tooltip(button.label)}
+                        {@attach tooltip({ text: button.label })}
                     >
                         <ButtonIcon icon={Plus} />
                         <HitArea
@@ -111,7 +111,7 @@ ${closeScript}
                     variant="tertiary"
                     iconOnly
                     aria-label="Custom 64px hit area"
-                    {@attach tooltip("Custom 64px")}
+                    {@attach tooltip({ text: "Custom 64px" })}
                 >
                     <ButtonIcon icon={Plus} />
                     <HitArea

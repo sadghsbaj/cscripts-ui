@@ -18,6 +18,7 @@ import { mount, unmount } from "svelte";
 import type { Attachment } from "svelte/attachments";
 
 import type { TooltipIconConfig } from ".";
+import { resolveGetter } from "../../utils/resolve-getter.ts";
 import { popoverTrigger, type PopoverPlacement } from "../popover";
 import Tooltip from "./Tooltip.svelte";
 
@@ -25,10 +26,14 @@ export type TooltipBaseOptions = {
     placement?: PopoverPlacement;
     offset?: string;
     delay?: string;
+    /**
+     * Whether the tooltip attachment is active.
+     * @default true
+     */
+    enabled?: boolean | (() => boolean);
 };
 
-export type TooltipAttachmentOptions =
-    | string
+export type TooltipOptions =
     | (TooltipBaseOptions & {
           text: string;
           icon?: TooltipIconConfig;
@@ -104,15 +109,17 @@ function applyTargetStyles(id: string, opts: NormalizedOptions): void {
     }
 }
 
-export function tooltip(options: TooltipAttachmentOptions): Attachment<HTMLElement> {
+export function tooltip(options: TooltipOptions): Attachment<HTMLElement> {
     return (node) => {
-        const opts: NormalizedOptions = typeof options === "string" ? { text: options } : options;
+        if (!(resolveGetter(options.enabled) ?? true)) {
+            return () => {};
+        }
 
-        const id = resolveTooltipId(node, opts);
-        const unbindTrigger = popoverTrigger({ target: id, mode: "hint", delay: opts.delay })(node);
+        const id = resolveTooltipId(node, options);
+        const unbindTrigger = popoverTrigger({ target: id, mode: "hint", delay: options.delay })(node);
 
         node.setAttribute("aria-describedby", id);
-        applyTargetStyles(id, opts);
+        applyTargetStyles(id, options);
 
         return () => {
             if (typeof unbindTrigger === "function") unbindTrigger();

@@ -102,11 +102,11 @@ describe("button ESLint rules", () => {
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close" {@attach tooltip("Close")}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close" {@attach tooltip({ text: "Close" })}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close" {@attach tooltip({ text: "Close" })}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
+                        code: '<Button variant="secondary" size="md" iconOnly aria-label="Close" {@attach tooltip({ target: "close-tooltip" })}><HitArea size="md" /><ButtonIcon icon={X} /></Button>',
                         filename: "src/Component.svelte",
                     },
                 ],

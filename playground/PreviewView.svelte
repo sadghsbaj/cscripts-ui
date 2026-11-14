@@ -141,7 +141,7 @@
             iconOnly
             aria-label="Switch theme ({THEME_LABELS[theme.mode]})"
             onclick={() => theme.cycle()}
-            {@attach tooltip(`Theme: ${THEME_LABELS[theme.mode]}`)}
+            {@attach tooltip({ text: `Theme: ${THEME_LABELS[theme.mode]}` })}
         >
             <ButtonIcon icon={THEME_ICONS[theme.mode]} />
             <HitArea size="md" />
@@ -153,7 +153,7 @@
             iconOnly
             aria-label={sidebarIsOpen ? "Close sidebar" : "Open sidebar"}
             onclick={() => (sidebarIsOpen = !sidebarIsOpen)}
-            {@attach tooltip(sidebarIsOpen ? "Close sidebar" : "Open sidebar")}
+            {@attach tooltip({ text: sidebarIsOpen ? "Close sidebar" : "Open sidebar" })}
         >
             <ButtonIcon icon={sidebarIsOpen ? PanelLeftClose : PanelLeftOpen} />
             <HitArea size="md" />

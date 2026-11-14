@@ -1,5 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
 import {
     getActiveElement,
     getFocusableElements,
@@ -32,7 +33,7 @@ export interface FocusTrapOptions {
      * Whether the focus trap is active.
      * @default true
      */
-    enabled?: boolean;
+    enabled?: boolean | (() => boolean);
 
     /**
      * Which element to initially focus upon trap activation:
@@ -125,8 +126,6 @@ export interface FocusTrapOptions {
     onError?: (event: FocusTrapErrorEvent) => void;
 }
 
-export type FocusTrapSource = boolean | FocusTrapTarget | FocusTrapOptions;
-
 interface ActiveTrapEntry {
     container: HTMLElement;
     pause: () => void;
@@ -201,7 +200,7 @@ function resolveTarget(
  * @example
  * ```svelte
  * <!-- Simple dialog focus trap -->
- * <div role="dialog" {@attach focusTrap()}>
+ * <div role="dialog" {@attach focusTrap({ initialFocus: "first-focusable" })}>
  *     <h2>Title</h2>
  *     <button onclick={close}>Close</button>
  * </div>
@@ -218,15 +217,8 @@ function resolveTarget(
  * ```
  */
 export function focusTrap<T extends HTMLElement = HTMLElement>(
-    source: FocusTrapSource
+    options: FocusTrapOptions
 ): Attachment<T> {
-    const options: FocusTrapOptions =
-        typeof source === "boolean"
-            ? { enabled: source, initialFocus: "first-focusable" }
-            : typeof source === "string" || typeof source === "function"
-              ? { initialFocus: source }
-              : source;
-
     const {
         enabled = true,
         initialFocus,
@@ -244,11 +236,10 @@ export function focusTrap<T extends HTMLElement = HTMLElement>(
         onError,
     } = options;
 
-    if (!enabled) {
-        return () => () => {};
-    }
-
     return (container: T) => {
+        if (!(resolveGetter(enabled) ?? true)) {
+            return () => {};
+        }
         let isUnmounted = false;
         let isPaused = false;
         let timerId: ReturnType<typeof setTimeout> | null = null;

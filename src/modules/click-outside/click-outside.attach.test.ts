@@ -24,7 +24,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
     describe("Initialization & Lifecycle", () => {
         test("should set data-click-outside attribute and remove on unmount", async () => {
             const handler = vi.fn();
-            const attach = clickOutside(handler);
+            const attach = clickOutside({ onOutsideClick: handler });
             const cleanup = attach(container);
 
             expect("clickOutside" in container.dataset).toBe(true);
@@ -35,7 +35,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
 
         test("should return early no-op cleanup when enabled is false", () => {
             const handler = vi.fn();
-            const attach = clickOutside({ handler, enabled: false });
+            const attach = clickOutside({ onOutsideClick: handler, enabled: false });
             const cleanup = attach(container);
 
             expect("clickOutside" in container.dataset).toBe(false);
@@ -46,11 +46,24 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             cleanup?.();
         });
 
-        test("should return early no-op cleanup when handler is undefined", () => {
-            const attach = clickOutside({} as unknown as { handler: () => void });
+        test("should return early no-op cleanup when onOutsideClick is undefined", () => {
+            const attach = clickOutside({} as unknown as { onOutsideClick: () => void });
             const cleanup = attach(container);
 
             expect("clickOutside" in container.dataset).toBe(false);
+            cleanup?.();
+        });
+
+        test("should support enabled getter function returning false", () => {
+            const handler = vi.fn();
+            const attach = clickOutside({ onOutsideClick: handler, enabled: () => false });
+            const cleanup = attach(container);
+
+            expect("clickOutside" in container.dataset).toBe(false);
+
+            outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+            expect(handler).not.toHaveBeenCalled();
+
             cleanup?.();
         });
     });
@@ -58,7 +71,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
     describe("Outside Interaction Detection", () => {
         test("should trigger handler when clicking outside element", async () => {
             const handler = vi.fn();
-            const attach = clickOutside(handler);
+            const attach = clickOutside({ onOutsideClick: handler });
             const cleanup = attach(container);
 
             // Wait a microtask for listener registration
@@ -84,7 +97,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             const childButton = document.createElement("button");
             container.append(childButton);
 
-            const attach = clickOutside(handler);
+            const attach = clickOutside({ onOutsideClick: handler });
             const cleanup = attach(container);
 
             await Promise.resolve();
@@ -108,7 +121,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             container.append(child);
 
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 requireMatchingPointerDown: true,
             });
             const cleanup = attach(container);
@@ -132,7 +145,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
         test("should trigger when pointerdown started outside and click released outside", async () => {
             const handler = vi.fn();
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 requireMatchingPointerDown: true,
             });
             const cleanup = attach(container);
@@ -158,7 +171,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
                 removableBtn.remove();
             });
 
-            const attach = clickOutside(handler);
+            const attach = clickOutside({ onOutsideClick: handler });
             const cleanup = attach(container);
 
             await Promise.resolve();
@@ -180,7 +193,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             document.body.append(ignoreButton);
 
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 ignore: ".ignore-me",
             });
             const cleanup = attach(container);
@@ -202,7 +215,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             document.body.append(toggleButton);
 
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 ignore: toggleButton,
             });
             const cleanup = attach(container);
@@ -225,7 +238,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             document.body.append(specialElement);
 
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 ignore: (target) => Boolean(target.closest("[data-portal]")),
             });
             const cleanup = attach(container);
@@ -248,7 +261,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             document.body.append(portalEl);
 
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 ignore: [() => portalEl, "#extra-trigger"],
             });
             const cleanup = attach(container);
@@ -274,7 +287,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             document.body.append(iframe);
 
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 detectIframe: true,
             });
             const cleanup = attach(container);
@@ -308,7 +321,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             container.append(innerIframe);
 
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 detectIframe: true,
             });
             const cleanup = attach(container);
@@ -331,7 +344,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
         test("should listen to custom event list (e.g. contextmenu)", async () => {
             const handler = vi.fn();
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 events: ["contextmenu"],
                 requireMatchingPointerDown: false,
             });
@@ -350,7 +363,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
 
             const handler = vi.fn();
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 delay: 150,
             });
             const cleanup = attach(container);
@@ -378,7 +391,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             const child = document.createElement("input");
             container.append(child);
 
-            const attach = clickOutside(handler);
+            const attach = clickOutside({ onOutsideClick: handler });
             const cleanup = attach(container);
 
             await Promise.resolve();
@@ -409,7 +422,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             document.body.append(host);
 
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 detectIframe: true,
             });
             const cleanup = attach(container);
@@ -438,7 +451,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
 
         test("should fall back to documentElement when event target is not an Element", async () => {
             const handler = vi.fn();
-            const attach = clickOutside(handler);
+            const attach = clickOutside({ onOutsideClick: handler });
             const cleanup = attach(container);
 
             await Promise.resolve();
@@ -462,7 +475,7 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
 
             const handler = vi.fn();
             const attach = clickOutside({
-                handler,
+                onOutsideClick: handler,
                 requireMatchingPointerDown: true,
             });
             const cleanup = attach(container);

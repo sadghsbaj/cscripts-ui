@@ -25,7 +25,7 @@ ${closeScript}
     {@attach autoFocus({ select: "all" })}
 />`;
 
-    const containerCode = `<div {@attach autoFocus("first-focusable")}>
+    const containerCode = `<div {@attach autoFocus({ target: "first-focusable" })}>
     <input type="text" placeholder="First name (focused)" />
     <input type="text" placeholder="Last name" />
 </div>`;
@@ -87,7 +87,7 @@ ${closeScript}
             {#if showContainerForm}
                 <div
                     class="bg-sunken shadow-sunken rounded-2xl squircle-soft p-4 flex flex-col gap-3 w-full"
-                    {@attach autoFocus("first-focusable")}
+                    {@attach autoFocus({ target: "first-focusable" })}
                 >
                     <input
                         type="text"

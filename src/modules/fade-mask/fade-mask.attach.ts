@@ -5,6 +5,7 @@
 
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
 import "./fade-mask.attach.css";
 
 export const FADE_MASK_VARIANTS = ["radial", "top", "bottom", "left", "right", "block", "inline"] as const;
@@ -17,7 +18,7 @@ export interface FadeMaskOptions {
     /**
      * @default true
      */
-    enabled?: boolean;
+    enabled?: boolean | (() => boolean);
 
     /**
      * The shape and direction of the fade mask:
@@ -55,7 +56,7 @@ export function fadeMask(options: FadeMaskOptions): Attachment<Element> {
         if (!(node instanceof HTMLElement || node instanceof SVGElement)) {
             return () => {};
         }
-        if (options.enabled === false) {
+        if (!(resolveGetter(options.enabled) ?? true)) {
             return () => {};
         }
 

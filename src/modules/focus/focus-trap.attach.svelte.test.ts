@@ -32,7 +32,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btn1, btn2);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -51,7 +51,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btn);
             container.append(modal);
 
-            const attach = focusTrap(false);
+            const attach = focusTrap({ enabled: false, initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -231,7 +231,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btn1, btn2, btn3);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -262,7 +262,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btn1, btn2, btn3);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -293,7 +293,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btn1, btn2, btn3);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -349,7 +349,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(paragraph);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -373,7 +373,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btn);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -408,7 +408,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btnNormal, btnSecond, btnFirst);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -457,7 +457,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btn1, disabledBtn, ariaDisabledBtn, btn2);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -487,7 +487,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(btn1, programmaticBtn, btn2);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);
@@ -547,7 +547,7 @@ describe("focusTrap Svelte 5 Element Attachment", () => {
             modal.append(insideBtn);
             container.append(modal);
 
-            const attach = focusTrap("first-focusable");
+            const attach = focusTrap({ initialFocus: "first-focusable" });
             const cleanup = attach(modal);
 
             vi.advanceTimersByTime(20);

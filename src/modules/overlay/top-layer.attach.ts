@@ -5,6 +5,16 @@
 
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
+
+export interface TopLayerOptions {
+    /**
+     * Whether the top-layer promotion is active.
+     * @default true
+     */
+    enabled?: boolean | (() => boolean);
+}
+
 function attachTopLayer(node: HTMLElement): () => void {
     if (typeof node.showPopover === "function") {
         try {
@@ -37,6 +47,11 @@ function attachTopLayer(node: HTMLElement): () => void {
  * </div>
  * ```
  */
-export function topLayer(): Attachment<HTMLElement> {
-    return attachTopLayer;
+export function topLayer(options?: TopLayerOptions): Attachment<HTMLElement> {
+    return (node: HTMLElement) => {
+        if (!(resolveGetter(options?.enabled) ?? true)) {
+            return () => {};
+        }
+        return attachTopLayer(node);
+    };
 }

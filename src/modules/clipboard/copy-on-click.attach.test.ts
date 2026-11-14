@@ -40,7 +40,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             const btn = document.createElement("button");
             container.append(btn);
 
-            const attach = copyOnClick("static-token-123");
+            const attach = copyOnClick({ text: "static-token-123" });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -59,7 +59,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             container.append(btn);
 
             let token = "token-v1";
-            const attach = copyOnClick(() => token);
+            const attach = copyOnClick({ text: () => token });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -84,8 +84,10 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             const btn = document.createElement("button");
             container.append(btn);
 
-            const attach = copyOnClick(async () => {
-                return "async-resolved-data";
+            const attach = copyOnClick({
+                text: async () => {
+                    return "async-resolved-data";
+                },
             });
             const cleanup = attach(btn);
 
@@ -106,7 +108,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             const btn = document.createElement("button");
             container.append(input, btn);
 
-            const attach = copyOnClick(input);
+            const attach = copyOnClick({ text: input });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -125,7 +127,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             const btn = document.createElement("button");
             container.append(svgText, btn);
 
-            const attach = copyOnClick(svgText);
+            const attach = copyOnClick({ text: svgText });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -198,7 +200,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             container.append(svg);
 
-            const attach = copyOnClick("svg-copy-token");
+            const attach = copyOnClick({ text: "svg-copy-token" });
             const cleanup = attach(svg);
 
             svg.dispatchEvent(
@@ -505,7 +507,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             customDiv.setAttribute("tabindex", "0");
             container.append(customDiv);
 
-            const attach = copyOnClick("custom-div-token");
+            const attach = copyOnClick({ text: "custom-div-token" });
             const cleanup = attach(customDiv);
 
             const enterEvent = new KeyboardEvent("keydown", {
@@ -527,7 +529,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             customSpan.setAttribute("tabindex", "0");
             container.append(customSpan);
 
-            const attach = copyOnClick("space-custom-token");
+            const attach = copyOnClick({ text: "space-custom-token" });
             const cleanup = attach(customSpan);
 
             const spaceEvent = new KeyboardEvent("keydown", {
@@ -549,7 +551,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             editableDiv.setAttribute("contenteditable", "plaintext-only");
             container.append(editableDiv);
 
-            const attach = copyOnClick("should-not-copy-in-editable");
+            const attach = copyOnClick({ text: "should-not-copy-in-editable" });
             const cleanup = attach(editableDiv);
 
             const spaceEvent = new KeyboardEvent("keydown", {
@@ -620,7 +622,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             btn.setAttribute("aria-disabled", "true");
             container.append(btn);
 
-            const attach = copyOnClick("disabled-test");
+            const attach = copyOnClick({ text: "disabled-test" });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -638,7 +640,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             btn.disabled = true;
             container.append(btn);
 
-            const attach = copyOnClick("disabled-test");
+            const attach = copyOnClick({ text: "disabled-test" });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -658,7 +660,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             wrapper.append(btn);
             container.append(wrapper);
 
-            const attach = copyOnClick("inert-test");
+            const attach = copyOnClick({ text: "inert-test" });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -772,7 +774,7 @@ describe("copyOnClick Svelte 5 Element Attachment", () => {
             const btn = document.createElement("button");
             container.append(btn);
 
-            const attach = copyOnClick("cleanup-test");
+            const attach = copyOnClick({ text: "cleanup-test" });
             const cleanup = attach(btn);
 
             // Trigger copy

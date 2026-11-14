@@ -44,7 +44,7 @@ describe("autoFocus Svelte 5 Element Attachment", () => {
             const input = document.createElement("input");
             container.append(input);
 
-            const attach = autoFocus(false);
+            const attach = autoFocus({ enabled: false });
             const cleanup = attach(input);
 
             vi.advanceTimersByTime(20);
@@ -102,7 +102,7 @@ describe("autoFocus Svelte 5 Element Attachment", () => {
             wrapper.append(input1, input2, input3);
             container.append(wrapper);
 
-            const attach = autoFocus("last-focusable");
+            const attach = autoFocus({ target: "last-focusable" });
             const cleanup = attach(wrapper);
 
             vi.advanceTimersByTime(20);
@@ -119,7 +119,7 @@ describe("autoFocus Svelte 5 Element Attachment", () => {
             wrapper.append(input1, input2);
             container.append(wrapper);
 
-            const attach = autoFocus("[data-primary]");
+            const attach = autoFocus({ target: "[data-primary]" });
             const cleanup = attach(wrapper);
 
             vi.advanceTimersByTime(20);
@@ -135,7 +135,7 @@ describe("autoFocus Svelte 5 Element Attachment", () => {
             wrapper.append(input1, input2);
             container.append(wrapper);
 
-            const attach = autoFocus((root) => root.querySelectorAll("input")[1] ?? null);
+            const attach = autoFocus({ target: (root) => root.querySelectorAll("input")[1] ?? null });
             const cleanup = attach(wrapper);
 
             vi.advanceTimersByTime(20);

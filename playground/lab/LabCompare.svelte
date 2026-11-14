@@ -51,7 +51,7 @@
                 size="sm"
                 iconOnly
                 aria-label="Nebeneinander"
-                {@attach tooltip("Nebeneinander")}
+                {@attach tooltip({ text: "Nebeneinander" })}
             >
                 <ToggleButtonIcon icon={Columns2} />
                 <HitArea size="sm" />
@@ -64,7 +64,7 @@
                 size="sm"
                 iconOnly
                 aria-label="Umschalten"
-                {@attach tooltip("Umschalten")}
+                {@attach tooltip({ text: "Umschalten" })}
             >
                 <ToggleButtonIcon icon={Layers} />
                 <HitArea size="sm" />

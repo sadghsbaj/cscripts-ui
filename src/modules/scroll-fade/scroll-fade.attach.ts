@@ -5,6 +5,7 @@
 
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
 import "./scroll-fade.attach.css";
 
 export const SCROLL_FADE_DIRECTIONS = ["vertical", "horizontal", "both"] as const;
@@ -20,7 +21,7 @@ export interface ScrollFadeOptions {
      * Whether the scroll fade effect is enabled.
      * @default true
      */
-    enabled?: boolean;
+    enabled?: boolean | (() => boolean);
 
     /**
      * Maximum depth/size of the fade gradient in presets ("sm" | "md" | "lg").
@@ -64,7 +65,7 @@ export function scrollFade(options: ScrollFadeOptions): Attachment<Element> {
         if (!(node instanceof HTMLElement)) {
             return (): void => {};
         }
-        if (options.enabled === false) {
+        if (!(resolveGetter(options.enabled) ?? true)) {
             return (): void => {};
         }
 

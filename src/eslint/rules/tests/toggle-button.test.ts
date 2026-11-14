@@ -116,11 +116,11 @@ describe("toggle-button ESLint rules", () => {
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<ToggleButton variant="soft" color="accent" size="md" iconOnly aria-label="Bookmark" {@attach tooltip("Bookmark")}><HitArea /><ToggleButtonIcon icon={Bookmark} /></ToggleButton>',
+                        code: '<ToggleButton variant="soft" color="accent" size="md" iconOnly aria-label="Bookmark" {@attach tooltip({ text: "Bookmark" })}><HitArea /><ToggleButtonIcon icon={Bookmark} /></ToggleButton>',
                         filename: "src/Component.svelte",
                     },
                     {
-                        code: '<ToggleButton variant="soft" color="accent" size="md" iconOnly aria-label="Bookmark" {@attach tooltip({ text: "Bookmark" })}><HitArea /><ToggleButtonIcon icon={Bookmark} /></ToggleButton>',
+                        code: '<ToggleButton variant="soft" color="accent" size="md" iconOnly aria-label="Bookmark" {@attach tooltip({ target: "bookmark-tooltip" })}><HitArea /><ToggleButtonIcon icon={Bookmark} /></ToggleButton>',
                         filename: "src/Component.svelte",
                     },
                 ],

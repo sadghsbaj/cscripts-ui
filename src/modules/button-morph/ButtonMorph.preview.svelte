@@ -59,7 +59,7 @@ ${closeScript}
             iconOnly
             aria-label="Delete item"
             onclick={() => (mode = "confirm")}
-            {@attach tooltip("Delete")}
+            {@attach tooltip({ text: "Delete" })}
         >
             <ButtonIcon icon={Trash2} />
             <HitArea size="md" />
@@ -173,7 +173,7 @@ ${closeScript}
                         iconOnly
                         aria-label="Delete item"
                         onclick={() => (iconMorphMode = "confirm")}
-                        {@attach tooltip("Delete")}
+                        {@attach tooltip({ text: "Delete" })}
                     >
                         <ButtonIcon icon={Trash2} />
                         <HitArea size="md" />

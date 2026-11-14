@@ -142,7 +142,7 @@ export const buttonTooltipRule: Rule.RuleModule = {
         },
         messages: {
             missingTooltip:
-                'Icon-only <Button iconOnly> should specify a tooltip via \'{@attach tooltip("...")}\' (from "cs/svelte/tooltip") to clarify its action for sighted users.',
+                'Icon-only <Button iconOnly> should specify a tooltip via \'{@attach tooltip({ text: "..." })}\' (from "cs/svelte/tooltip") to clarify its action for sighted users.',
         },
         schema: [],
     },

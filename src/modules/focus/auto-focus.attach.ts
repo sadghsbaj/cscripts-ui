@@ -1,5 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
 import {
     getActiveElement,
     getFocusableElements,
@@ -90,7 +91,7 @@ export interface AutoFocusOptions {
      * Whether the attachment is active.
      * @default true
      */
-    enabled?: boolean;
+    enabled?: boolean | (() => boolean);
 
     /**
      * Callback triggered when focus has successfully been applied.
@@ -102,8 +103,6 @@ export interface AutoFocusOptions {
      */
     onError?: (event: AutoFocusErrorEvent) => void;
 }
-
-export type AutoFocusSource = boolean | AutoFocusTarget | AutoFocusOptions;
 
 /**
  * Finds the target focusable element within a container based on the target strategy.
@@ -248,14 +247,7 @@ function applyTextSelection(element: HTMLElement, selection: AutoFocusSelection)
  * </div>
  * ```
  */
-export function autoFocus<T extends HTMLElement = HTMLElement>(sourceOrOptions?: AutoFocusSource): Attachment<T> {
-    const options: AutoFocusOptions =
-        typeof sourceOrOptions === "boolean"
-            ? { enabled: sourceOrOptions }
-            : typeof sourceOrOptions === "string" || typeof sourceOrOptions === "function"
-              ? { target: sourceOrOptions }
-              : (sourceOrOptions ?? {});
-
+export function autoFocus<T extends HTMLElement = HTMLElement>(options?: AutoFocusOptions): Attachment<T> {
     const {
         target,
         select = false,
@@ -267,13 +259,12 @@ export function autoFocus<T extends HTMLElement = HTMLElement>(sourceOrOptions?:
         enabled = true,
         onSuccess,
         onError,
-    } = options;
-
-    if (!enabled) {
-        return () => () => {};
-    }
+    } = options ?? {};
 
     return (container: T) => {
+        if (!(resolveGetter(enabled) ?? true)) {
+            return () => {};
+        }
         let isUnmounted = false;
         let timerId: ReturnType<typeof setTimeout> | null = null;
         let rafId: number | null = null;

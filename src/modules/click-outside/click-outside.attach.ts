@@ -1,5 +1,7 @@
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
+
 export type ClickOutsideTarget = Element | string | (() => Element | null | undefined) | null | undefined;
 
 export type ClickOutsideIgnore =
@@ -19,13 +21,13 @@ export interface ClickOutsideOptions {
     /**
      * Callback triggered when an interaction occurs outside the element and ignored targets.
      */
-    handler: ClickOutsideHandler;
+    onOutsideClick: ClickOutsideHandler;
 
     /**
      * Whether the click-outside detection is currently active.
      * @default true
      */
-    enabled?: boolean;
+    enabled?: boolean | (() => boolean);
 
     /**
      * Element(s), selector(s), or predicate function to exclude from outside click detection.
@@ -64,8 +66,6 @@ export interface ClickOutsideOptions {
      */
     delay?: number;
 }
-
-export type ClickOutsideSource = ClickOutsideHandler | ClickOutsideOptions;
 
 const DEFAULT_EVENTS: ClickOutsideEventName[] = ["click"];
 
@@ -227,15 +227,15 @@ function getDeepActiveElement(): Element | null {
  *
  * @example
  * ```svelte
- * <!-- Simple handler shortcut -->
- * <div {@attach clickOutside(() => isOpen = false)}>
+ * <!-- Simple usage -->
+ * <div {@attach clickOutside({ onOutsideClick: () => (isOpen = false) })}>
  *     Dropdown Content
  * </div>
  *
  * <!-- Comprehensive options -->
  * <div {@attach clickOutside({
- *     handler: (detail) => console.log("Outside click on", detail.target),
- *     enabled: isMenuOpen,
+ *     onOutsideClick: (detail) => console.log("Outside click on", detail.target),
+ *     enabled: () => isMenuOpen,
  *     ignore: ["#toggle-button", ".modal-portal"],
  *     detectIframe: true
  * })}>
@@ -244,13 +244,10 @@ function getDeepActiveElement(): Element | null {
  * ```
  */
 export function clickOutside<T extends HTMLElement | SVGElement = HTMLElement>(
-    source: ClickOutsideSource
+    options: ClickOutsideOptions
 ): Attachment<T> {
-    const options: ClickOutsideOptions =
-        typeof source === "function" ? { handler: source } : (source ?? ({} as ClickOutsideOptions));
-
     const {
-        handler,
+        onOutsideClick,
         enabled = true,
         ignore,
         events = DEFAULT_EVENTS,
@@ -260,11 +257,10 @@ export function clickOutside<T extends HTMLElement | SVGElement = HTMLElement>(
         delay = 0,
     } = options;
 
-    if (!enabled || !handler) {
-        return () => () => {};
-    }
-
     return (container: T) => {
+        if (!(resolveGetter(enabled) ?? true) || !onOutsideClick) {
+            return () => {};
+        }
         let isUnmounted = false;
         let timerId: ReturnType<typeof setTimeout> | null = null;
         let iframeTimerId: ReturnType<typeof setTimeout> | null = null;
@@ -314,7 +310,7 @@ export function clickOutside<T extends HTMLElement | SVGElement = HTMLElement>(
 
             resetPointerDownState();
 
-            handler({
+            onOutsideClick({
                 target: targetElement,
                 event,
                 container,
@@ -335,7 +331,7 @@ export function clickOutside<T extends HTMLElement | SVGElement = HTMLElement>(
 
                 const activeEl = getDeepActiveElement();
                 if (activeEl instanceof HTMLIFrameElement && !isElementInside(activeEl, container, ignore)) {
-                    handler({
+                    onOutsideClick({
                         target: activeEl,
                         event,
                         container,

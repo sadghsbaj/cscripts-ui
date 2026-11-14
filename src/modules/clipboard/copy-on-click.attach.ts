@@ -1,5 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
 import { copyToClipboard } from "./clipboard.utils";
 
 export type CopySource = string | (() => string | Promise<string>) | HTMLElement | SVGElement;
@@ -59,7 +60,7 @@ export interface CopyOnClickOptions {
      * Whether the attachment is active.
      * @default true
      */
-    enabled?: boolean;
+    enabled?: boolean | (() => boolean);
 }
 
 const NATIVE_CLICKABLE_SELECTOR =
@@ -165,11 +166,11 @@ async function resolveCopyText(
  *
  * @example
  * ```svelte
- * <!-- Static string shorthand -->
- * <button {@attach copyOnClick("npm install @package")}>Copy</button>
+ * <!-- Static string -->
+ * <button {@attach copyOnClick({ text: "npm install @package" })}>Copy</button>
  *
- * <!-- Dynamic getter shorthand -->
- * <button {@attach copyOnClick(() => generateToken())}>Copy Token</button>
+ * <!-- Dynamic getter -->
+ * <button {@attach copyOnClick({ text: () => generateToken() })}>Copy Token</button>
  *
  * <!-- Full options with callbacks and custom feedback duration -->
  * <button {@attach copyOnClick({
@@ -179,17 +180,7 @@ async function resolveCopyText(
  * })}>Copy</button>
  * ```
  */
-export function copyOnClick(
-    sourceOrOptions?: CopySource | CopyOnClickOptions
-): Attachment<HTMLElement | SVGElement> {
-    const options: CopyOnClickOptions =
-        typeof sourceOrOptions === "string" ||
-        typeof sourceOrOptions === "function" ||
-        sourceOrOptions instanceof HTMLElement ||
-        sourceOrOptions instanceof SVGElement
-            ? { text: sourceOrOptions }
-            : (sourceOrOptions ?? {});
-
+export function copyOnClick(options?: CopyOnClickOptions): Attachment<HTMLElement | SVGElement> {
     const {
         text,
         feedbackDuration = 2000,
@@ -200,13 +191,12 @@ export function copyOnClick(
         keyboard = true,
         ignoreDisabled = true,
         enabled = true,
-    } = options;
-
-    if (!enabled) {
-        return () => () => {};
-    }
+    } = options ?? {};
 
     return (node) => {
+        if (!(resolveGetter(enabled) ?? true)) {
+            return () => {};
+        }
         let feedbackTimerId: ReturnType<typeof setTimeout> | null = null;
         let isUnmounted = false;
 

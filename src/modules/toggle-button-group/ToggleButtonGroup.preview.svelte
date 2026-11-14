@@ -47,7 +47,7 @@ ${closeScript}
         color="accent"
         iconOnly
         aria-label="Bold"
-        {@attach tooltip("Bold")}
+        {@attach tooltip({ text: "Bold" })}
     >
         <ToggleButtonIcon icon={Bold} />
         <HitArea size="lg" />
@@ -60,7 +60,7 @@ ${closeScript}
         color="accent"
         iconOnly
         aria-label="Italic"
-        {@attach tooltip("Italic")}
+        {@attach tooltip({ text: "Italic" })}
     >
         <ToggleButtonIcon icon={Italic} />
         <HitArea size="lg" />
@@ -73,7 +73,7 @@ ${closeScript}
         color="accent"
         iconOnly
         aria-label="Underline"
-        {@attach tooltip("Underline")}
+        {@attach tooltip({ text: "Underline" })}
     >
         <ToggleButtonIcon icon={Underline} />
         <HitArea size="lg" />
@@ -131,7 +131,7 @@ ${closeScript}
                 color="accent"
                 iconOnly
                 aria-label="Bold"
-                {@attach tooltip("Bold")}
+                {@attach tooltip({ text: "Bold" })}
             >
                 <ToggleButtonIcon icon={Bold} />
                 <HitArea size="lg" />
@@ -144,7 +144,7 @@ ${closeScript}
                 color="accent"
                 iconOnly
                 aria-label="Italic"
-                {@attach tooltip("Italic")}
+                {@attach tooltip({ text: "Italic" })}
             >
                 <ToggleButtonIcon icon={Italic} />
                 <HitArea size="lg" />
@@ -157,7 +157,7 @@ ${closeScript}
                 color="accent"
                 iconOnly
                 aria-label="Underline"
-                {@attach tooltip("Underline")}
+                {@attach tooltip({ text: "Underline" })}
             >
                 <ToggleButtonIcon icon={Underline} />
                 <HitArea size="lg" />

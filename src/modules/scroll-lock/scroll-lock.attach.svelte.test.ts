@@ -27,8 +27,8 @@ describe("scrollLock Svelte 5 Element Attachment", () => {
         expect("scrollLocked" in container.dataset).toBe(false);
     });
 
-    test("does not apply data-scroll-locked when enabled is false via boolean shorthand", async () => {
-        const attach = scrollLock(false);
+    test("does not apply data-scroll-locked when enabled is false", async () => {
+        const attach = scrollLock({ enabled: false });
         const cleanup = attach(container);
         await tick();
 
@@ -39,7 +39,7 @@ describe("scrollLock Svelte 5 Element Attachment", () => {
 
     test("responds reactively to getter function and updates dataset dynamically", async () => {
         let isLocked = $state(false);
-        const attach = scrollLock(() => isLocked);
+        const attach = scrollLock({ enabled: () => isLocked });
         const cleanup = attach(container);
         await tick();
 
@@ -75,7 +75,7 @@ describe("scrollLock Svelte 5 Element Attachment", () => {
     });
 
     test("does not prevent default when enabled is false", async () => {
-        const attach = scrollLock(false);
+        const attach = scrollLock({ enabled: false });
         const cleanup = attach(container);
         await tick();
 

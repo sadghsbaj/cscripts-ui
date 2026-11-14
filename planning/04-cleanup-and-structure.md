@@ -4,12 +4,6 @@
 
 ---
 
-## A. Module-Standards, Tokens & Attachments
-
-1. **Attachments:** Signaturen einzeln prüfen und auf `enabled?: boolean | (() => boolean)` via `resolveGetter` vereinheitlichen.
-
----
-
 ## B. Duplizierungen & Shared CSS
 
 1. **`Button` & `ToggleButton` (`Icon`, `Label`, `Group`):**

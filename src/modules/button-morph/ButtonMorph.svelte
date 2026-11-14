@@ -62,7 +62,7 @@ Architectural Notes:
     {...rest}
     {@attach morph.attachRoot}
     {@attach clickOutside({
-        handler: morph.handleOutsideClick,
+        onOutsideClick: morph.handleOutsideClick,
         enabled: morph.isOutsideClickActive,
     })}
     class={["cs-button-morph", className]}

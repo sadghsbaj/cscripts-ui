@@ -54,8 +54,8 @@
             size="xs"
             iconOnly
             aria-label="Copy code"
-            {@attach copyOnClick(trimmedCode)}
-            {@attach tooltip("Copy code")}
+            {@attach copyOnClick({ text: trimmedCode })}
+            {@attach tooltip({ text: "Copy code" })}
         >
             <CopyIcon />
             <HitArea size="md" />

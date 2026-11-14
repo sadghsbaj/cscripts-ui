@@ -181,8 +181,8 @@ describe("utils AST helpers", () => {
     describe("hasTooltipAttachment", () => {
         it("detects tooltip attachments on elements", () => {
             const parsed = parseSnippet(`
-                <Button {@attach tooltip("Settings")} />
                 <Button {@attach tooltip({ text: "Settings" })} />
+                <Button {@attach tooltip({ target: "settings-tooltip" })} />
                 <Button {@attach customTooltip("Settings")} />
                 <Button tooltip="Settings" />
                 <Button />

@@ -1,5 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
 import { readFromClipboard } from "./clipboard.utils";
 
 export type PasteTarget = HTMLInputElement | HTMLTextAreaElement | HTMLElement;
@@ -86,7 +87,7 @@ export interface PasteOnClickOptions {
      * Whether the attachment is active.
      * @default true
      */
-    enabled?: boolean;
+    enabled?: boolean | (() => boolean);
 }
 
 const NATIVE_CLICKABLE_SELECTOR =
@@ -238,15 +239,15 @@ function insertTextIntoContentEditable(element: HTMLElement, text: string, mode:
  *
  * @example
  * ```svelte
- * <!-- Shorthand: Paste into target input reference -->
+ * <!-- Paste into target input reference -->
  * <input bind:this={inputEl} bind:value={apiKey} />
- * <button {@attach pasteOnClick(inputEl)}>Paste</button>
+ * <button {@attach pasteOnClick({ target: inputEl })}>Paste</button>
  *
- * <!-- Shorthand: Lazy dynamic getter for conditional inputs -->
- * <button {@attach pasteOnClick(() => inputEl)}>Paste</button>
+ * <!-- Lazy dynamic getter for conditional inputs -->
+ * <button {@attach pasteOnClick({ target: () => inputEl })}>Paste</button>
  *
- * <!-- Shorthand: Custom callback processor -->
- * <button {@attach pasteOnClick((event) => handleImport(event.text))}>Import</button>
+ * <!-- Custom callback processor -->
+ * <button {@attach pasteOnClick({ target: (event) => handleImport(event.text) })}>Import</button>
  *
  * <!-- Full options with replace mode -->
  * <button {@attach pasteOnClick({
@@ -256,14 +257,7 @@ function insertTextIntoContentEditable(element: HTMLElement, text: string, mode:
  * })}>Replace All</button>
  * ```
  */
-export function pasteOnClick(
-    targetOrOptions?: PasteSource | PasteOnClickOptions
-): Attachment<HTMLElement | SVGElement> {
-    const options: PasteOnClickOptions =
-        typeof targetOrOptions === "function" || targetOrOptions instanceof HTMLElement
-            ? { target: targetOrOptions }
-            : (targetOrOptions ?? {});
-
+export function pasteOnClick(options?: PasteOnClickOptions): Attachment<HTMLElement | SVGElement> {
     const {
         target,
         mode = "insert",
@@ -277,13 +271,12 @@ export function pasteOnClick(
         keyboard = true,
         ignoreDisabled = true,
         enabled = true,
-    } = options;
-
-    if (!enabled) {
-        return () => () => {};
-    }
+    } = options ?? {};
 
     return (node) => {
+        if (!(resolveGetter(enabled) ?? true)) {
+            return () => {};
+        }
         let feedbackTimerId: ReturnType<typeof setTimeout> | null = null;
         let isUnmounted = false;
 

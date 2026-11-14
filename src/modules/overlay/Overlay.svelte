@@ -71,7 +71,7 @@ Architectural Notes:
     out:overlayExit
     popover="manual"
     {@attach topLayer()}
-    {@attach scrollLock(lockScroll)}
+    {@attach scrollLock({ enabled: () => lockScroll })}
     onpointerdown={handlePointerDown}
     onclick={handleClick}
     class={["cs-overlay", className]}

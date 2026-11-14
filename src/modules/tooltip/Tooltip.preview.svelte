@@ -29,7 +29,7 @@ ${closeScript}
     size="md"
     iconOnly
     aria-label="Add item"
-    {@attach tooltip("Add item")}
+    {@attach tooltip({ text: "Add item" })}
 >
     <ButtonIcon icon={Plus} />
     <HitArea size="md" />
@@ -83,7 +83,7 @@ ${closeScript}
             size="md"
             iconOnly
             aria-label="Add item"
-            {@attach tooltip("Add item")}
+            {@attach tooltip({ text: "Add item" })}
         >
             <ButtonIcon icon={Plus} />
             <HitArea size="md" />
@@ -94,7 +94,7 @@ ${closeScript}
             size="md"
             iconOnly
             aria-label="Delete"
-            {@attach tooltip("Delete")}
+            {@attach tooltip({ text: "Delete" })}
         >
             <ButtonIcon icon={Trash2} />
             <HitArea size="md" />
@@ -105,7 +105,7 @@ ${closeScript}
             size="md"
             iconOnly
             aria-label="Settings"
-            {@attach tooltip("Settings")}
+            {@attach tooltip({ text: "Settings" })}
         >
             <ButtonIcon icon={Settings} />
             <HitArea size="md" />
@@ -116,7 +116,7 @@ ${closeScript}
             size="md"
             iconOnly
             aria-label="Share"
-            {@attach tooltip("Share")}
+            {@attach tooltip({ text: "Share" })}
         >
             <ButtonIcon icon={Share2} />
             <HitArea size="md" />

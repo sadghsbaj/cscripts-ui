@@ -1,5 +1,7 @@
 import type { Attachment } from "svelte/attachments";
 
+import { resolveGetter } from "../../utils/resolve-getter.ts";
+
 export interface ScrollLockOptions {
     /**
      * Whether the scroll lock is active.
@@ -28,12 +30,6 @@ export interface ScrollLockOptions {
      */
     dataAttribute?: boolean;
 }
-
-export type ScrollLockSource =
-    | boolean
-    | ScrollLockOptions
-    | (() => boolean | ScrollLockOptions | undefined)
-    | undefined;
 
 /**
  * Checks whether an element is currently able to scroll in any direction.
@@ -119,39 +115,19 @@ function hasScrollableAncestor(
 }
 
 /**
- * Resolves current options from a polymorphic source.
+ * Resolves current options with defaults.
  */
-function resolveOptions(source: ScrollLockSource): {
+function resolveOptions(options?: ScrollLockOptions): {
     enabled: boolean;
     allowScrollableChildren: boolean;
     isScrollable?: (element: HTMLElement) => boolean | undefined;
     dataAttribute: boolean;
 } {
-    const raw = typeof source === "function" ? source() : source;
-
-    if (typeof raw === "boolean") {
-        return {
-            allowScrollableChildren: true,
-            dataAttribute: true,
-            enabled: raw,
-        };
-    }
-
-    if (!raw) {
-        return {
-            allowScrollableChildren: true,
-            dataAttribute: true,
-            enabled: true,
-        };
-    }
-
-    const enabledValue = typeof raw.enabled === "function" ? raw.enabled() : (raw.enabled ?? true);
-
     return {
-        allowScrollableChildren: raw.allowScrollableChildren ?? true,
-        dataAttribute: raw.dataAttribute ?? true,
-        enabled: enabledValue,
-        isScrollable: raw.isScrollable,
+        allowScrollableChildren: options?.allowScrollableChildren ?? true,
+        dataAttribute: options?.dataAttribute ?? true,
+        enabled: resolveGetter(options?.enabled) ?? true,
+        isScrollable: options?.isScrollable,
     };
 }
 
@@ -170,8 +146,8 @@ function resolveOptions(source: ScrollLockSource): {
  *     ...
  * </div>
  *
- * <!-- Boolean shorthand -->
- * <div {@attach scrollLock(isModalOpen)}>
+ * <!-- Reactive enabled state -->
+ * <div {@attach scrollLock({ enabled: () => isModalOpen })}>
  *     ...
  * </div>
  *
@@ -184,18 +160,18 @@ function resolveOptions(source: ScrollLockSource): {
  * </div>
  * ```
  */
-export function scrollLock(source?: ScrollLockSource): Attachment<HTMLElement> {
+export function scrollLock(options?: ScrollLockOptions): Attachment<HTMLElement> {
     return (node: HTMLElement): (() => void) => {
         function handleWheel(event: WheelEvent): void {
             if (event.defaultPrevented) return;
 
-            const options = resolveOptions(source);
-            if (!options.enabled) return;
+            const resolved = resolveOptions(options);
+            if (!resolved.enabled) return;
 
             const target = event.target instanceof Element ? event.target : null;
             const canScroll =
-                options.allowScrollableChildren &&
-                hasScrollableAncestor(target, node, event.deltaY, event.deltaX, options.isScrollable);
+                resolved.allowScrollableChildren &&
+                hasScrollableAncestor(target, node, event.deltaY, event.deltaX, resolved.isScrollable);
 
             if (!canScroll) {
                 event.preventDefault();
@@ -207,13 +183,13 @@ export function scrollLock(source?: ScrollLockSource): Attachment<HTMLElement> {
         function handleTouchMove(event: TouchEvent): void {
             if (event.defaultPrevented) return;
 
-            const options = resolveOptions(source);
-            if (!options.enabled) return;
+            const resolved = resolveOptions(options);
+            if (!resolved.enabled) return;
 
             const target = event.target instanceof Element ? event.target : null;
             const canScroll =
-                options.allowScrollableChildren &&
-                hasScrollableAncestor(target, node, 0, 0, options.isScrollable);
+                resolved.allowScrollableChildren &&
+                hasScrollableAncestor(target, node, 0, 0, resolved.isScrollable);
 
             if (!canScroll) {
                 event.preventDefault();
@@ -227,8 +203,8 @@ export function scrollLock(source?: ScrollLockSource): Attachment<HTMLElement> {
 
         const cleanupRoot = $effect.root(() => {
             $effect(() => {
-                const options = resolveOptions(source);
-                if (options.enabled && options.dataAttribute) {
+                const resolved = resolveOptions(options);
+                if (resolved.enabled && resolved.dataAttribute) {
                     node.dataset.scrollLocked = "";
                 } else {
                     delete node.dataset.scrollLocked;

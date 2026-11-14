@@ -48,7 +48,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             input.addEventListener("input", inputSpy);
             input.addEventListener("change", changeSpy);
 
-            const attach = pasteOnClick(input);
+            const attach = pasteOnClick({ target: input });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -71,7 +71,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             container.append(input, btn);
 
             let dynamicRef: HTMLInputElement | null = null;
-            const attach = pasteOnClick(() => dynamicRef);
+            const attach = pasteOnClick({ target: () => dynamicRef });
             const cleanup = attach(btn);
 
             // Set ref later (simulating lazy Svelte bind:this inside {#if})
@@ -163,7 +163,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             textarea.setSelectionRange(7, 7);
 
             clipboardText = "line 2";
-            const attach = pasteOnClick(textarea);
+            const attach = pasteOnClick({ target: textarea });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -205,7 +205,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             container.append(editableDiv, btn);
 
             clipboardText = " Extra";
-            const attach = pasteOnClick(editableDiv);
+            const attach = pasteOnClick({ target: editableDiv });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -226,7 +226,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
 
             const callback = vi.fn((_event: PasteOnClickSuccessEvent) => {});
             clipboardText = "json-payload-data";
-            const attach = pasteOnClick(callback);
+            const attach = pasteOnClick({ target: callback });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -279,7 +279,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             container.append(btn);
 
             const callback = vi.fn((_event: PasteOnClickSuccessEvent) => {});
-            const attach = pasteOnClick(callback);
+            const attach = pasteOnClick({ target: callback });
             const cleanup = attach(btn);
 
             // 1. First trigger empty state
@@ -559,7 +559,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             const input = document.createElement("input");
             container.append(customDiv, input);
 
-            const attach = pasteOnClick(input);
+            const attach = pasteOnClick({ target: input });
             const cleanup = attach(customDiv);
 
             const enterEvent = new KeyboardEvent("keydown", {
@@ -582,7 +582,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             const input = document.createElement("input");
             container.append(customSpan, input);
 
-            const attach = pasteOnClick(input);
+            const attach = pasteOnClick({ target: input });
             const cleanup = attach(customSpan);
 
             const spaceEvent = new KeyboardEvent("keydown", {
@@ -605,7 +605,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             const input = document.createElement("input");
             container.append(editableDiv, input);
 
-            const attach = pasteOnClick(input);
+            const attach = pasteOnClick({ target: input });
             const cleanup = attach(editableDiv);
 
             const spaceEvent = new KeyboardEvent("keydown", {
@@ -655,7 +655,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             const input = document.createElement("input");
             container.append(btn, input);
 
-            const attach = pasteOnClick(input);
+            const attach = pasteOnClick({ target: input });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -676,7 +676,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             wrapper.append(btn);
             container.append(wrapper, input);
 
-            const attach = pasteOnClick(input);
+            const attach = pasteOnClick({ target: input });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(
@@ -696,7 +696,7 @@ describe("pasteOnClick Svelte 5 Element Attachment", () => {
             const btn = document.createElement("button");
             container.append(input, btn);
 
-            const attach = pasteOnClick(input);
+            const attach = pasteOnClick({ target: input });
             const cleanup = attach(btn);
 
             btn.dispatchEvent(

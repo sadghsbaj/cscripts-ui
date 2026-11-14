@@ -17,7 +17,7 @@ describe("title-attribute ESLint rules", () => {
                 valid: [
                     {
                         // Svelte component using tooltip attachment instead
-                        code: '<button {@attach tooltip("Save changes")}>Save</button>',
+                        code: '<button {@attach tooltip({ text: "Save changes" })}>Save</button>',
                         filename: "src/Component.svelte",
                     },
                     {

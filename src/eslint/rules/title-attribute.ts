@@ -16,7 +16,7 @@ export const noTitleAttributeRule: Rule.RuleModule = {
         },
         messages: {
             forbiddenTitleAttribute:
-                'The native "title" attribute is forbidden. Use the "tooltip" attachment (e.g. \'{@attach tooltip("...")}\' from "cs/svelte/tooltip") instead for styled, accessible tooltips.',
+                'The native "title" attribute is forbidden. Use the "tooltip" attachment (e.g. \'{@attach tooltip({ text: "..." })}\' from "cs/svelte/tooltip") instead for styled, accessible tooltips.',
         },
         schema: [],
     },

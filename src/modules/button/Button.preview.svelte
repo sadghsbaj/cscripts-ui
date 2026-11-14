@@ -77,7 +77,7 @@ ${closeScript}
     size="md"
     iconOnly
     aria-label="Settings"
-    {@attach tooltip("Settings")}
+    {@attach tooltip({ text: "Settings" })}
 >
     <ButtonIcon icon={Settings} />
     <HitArea size="md" />
@@ -176,7 +176,7 @@ ${closeScript}
             <ButtonIcon icon={ArrowRight} />
         </Button>
 
-        <Button variant="tertiary" size="md" iconOnly aria-label="Settings" {@attach tooltip("Settings")}>
+        <Button variant="tertiary" size="md" iconOnly aria-label="Settings" {@attach tooltip({ text: "Settings" })}>
             <ButtonIcon icon={Settings} />
             <HitArea size="md" />
         </Button>

@@ -25,7 +25,7 @@
     let isOpen = $state(false);
 ${closeScript}
 
-<div {@attach clickOutside(() => (isOpen = false))}>
+<div {@attach clickOutside({ onOutsideClick: () => (isOpen = false) })}>
     <button onclick={() => (isOpen = !isOpen)}>Toggle</button>
     {#if isOpen}
         <div>Click outside this wrapper to close</div>
@@ -39,7 +39,7 @@ ${closeScript}
 {#if isOpen}
     <div
         {@attach clickOutside({
-            handler: () => (isOpen = false),
+            onOutsideClick: () => (isOpen = false),
             ignore: triggerEl,
         })}
     >
@@ -49,7 +49,7 @@ ${closeScript}
 
     const ignoreSelectorCode = `<div
     {@attach clickOutside({
-        handler: () => (isOpen = false),
+        onOutsideClick: () => (isOpen = false),
         ignore: [triggerEl, ".safe-zone"],
     })}
 >
@@ -71,7 +71,7 @@ ${closeScript}
     >
         <div
             class="flex-center flex-col gap-3 w-full max-w-xs"
-            {@attach clickOutside(() => (isBasicOpen = false))}
+            {@attach clickOutside({ onOutsideClick: () => (isBasicOpen = false) })}
         >
             <ToggleButton variant="soft" color="accent" size="md" bind:pressed={isBasicOpen}>
                 <ToggleButtonLabel>{isBasicOpen ? "Close" : "Open"}</ToggleButtonLabel>
@@ -103,7 +103,7 @@ ${closeScript}
                 <div
                     class="w-full h-12 flex-center border border-dashed border-base-300 dark:border-base-700 rounded-2xl squircle-soft text-xs font-medium text-strong select-none"
                     {@attach clickOutside({
-                        handler: () => (isIgnoreElementOpen = false),
+                        onOutsideClick: () => (isIgnoreElementOpen = false),
                         ignore: triggerButtonEl,
                     })}
                 >
@@ -137,7 +137,7 @@ ${closeScript}
                 <div
                     class="w-full h-12 flex-center border border-dashed border-base-300 dark:border-base-700 rounded-2xl squircle-soft text-xs font-medium text-strong select-none"
                     {@attach clickOutside({
-                        handler: () => (isSelectorOpen = false),
+                        onOutsideClick: () => (isSelectorOpen = false),
                         ignore: [selectorTriggerEl, ".safe-zone"],
                     })}
                 >

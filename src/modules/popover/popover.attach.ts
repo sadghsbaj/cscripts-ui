@@ -15,39 +15,49 @@
 
 import type { Attachment } from "svelte/attachments";
 
-export type PopoverTriggerOptions =
-    | {
-          target: string;
-          mode?: "auto";
-          /**
-           * Interaction event used to open/toggle the popover:
-           * - "pointerdown": Opens immediately on mouse down for desktop (ideal for menus, selects, split-buttons),
-           *   falling back gracefully to click on touch to preserve touch scrolling.
-           * - "click": Standard activation on pointerup / click release.
-           * @default "pointerdown"
-           */
-          triggerOn?: "pointerdown" | "click";
-      }
-    | {
-          target: string;
-          mode: "manual";
-          triggerOn?: never;
-      }
-    | {
-          target: string;
-          mode: "hint";
-          triggerOn?: never;
-          /**
-           * Native `interest-delay` shorthand: `"<open> <close>"`.
-           * @default "400ms 150ms"
-           */
-          delay?: string;
-          /**
-           * Whether pressing the trigger (pointer or `Enter` / `Space`) dismisses the popover.
-           * @default true
-           */
-          dismissOnPress?: boolean;
-      };
+import { resolveGetter } from "../../utils/resolve-getter.ts";
+
+type PopoverTriggerBaseOptions = {
+    target: string;
+    /**
+     * Whether the trigger attachment is active.
+     * @default true
+     */
+    enabled?: boolean | (() => boolean);
+};
+
+export type PopoverTriggerOptions = PopoverTriggerBaseOptions &
+    (
+        | {
+              mode?: "auto";
+              /**
+               * Interaction event used to open/toggle the popover:
+               * - "pointerdown": Opens immediately on mouse down for desktop (ideal for menus, selects, split-buttons),
+               *   falling back gracefully to click on touch to preserve touch scrolling.
+               * - "click": Standard activation on pointerup / click release.
+               * @default "pointerdown"
+               */
+              triggerOn?: "pointerdown" | "click";
+          }
+        | {
+              mode: "manual";
+              triggerOn?: never;
+          }
+        | {
+              mode: "hint";
+              triggerOn?: never;
+              /**
+               * Native `interest-delay` shorthand: `"<open> <close>"`.
+               * @default "400ms 150ms"
+               */
+              delay?: string;
+              /**
+               * Whether pressing the trigger (pointer or `Enter` / `Space`) dismisses the popover.
+               * @default true
+               */
+              dismissOnPress?: boolean;
+          }
+    );
 
 type HintOptions = Extract<PopoverTriggerOptions, { mode: "hint" }>;
 
@@ -352,6 +362,10 @@ function bindHint(node: HTMLElement, options: HintOptions): () => void {
 
 export function popoverTrigger(options: PopoverTriggerOptions): Attachment<HTMLElement> {
     return (node) => {
+        if (!(resolveGetter(options.enabled) ?? true)) {
+            return () => {};
+        }
+
         node.style.setProperty("anchor-name", `--anchor-${options.target}`);
 
         let unbind: (() => void) | undefined;

@@ -14,7 +14,7 @@
             iconOnly
             aria-label="Theme wechseln"
             onclick={() => theme.toggle()}
-            {@attach tooltip(`Theme: ${theme.resolved}`)}
+            {@attach tooltip({ text: `Theme: ${theme.resolved}` })}
         >
             <ButtonIcon icon={theme.resolvedIcon} />
             <HitArea size="md" />
