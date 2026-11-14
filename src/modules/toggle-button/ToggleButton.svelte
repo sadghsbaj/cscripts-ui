@@ -12,6 +12,7 @@ Architectural Notes:
     import type { ToggleButtonProps } from "./index.ts";
 
     let {
+        ref = $bindable(null),
         variant,
         color,
         size,
@@ -45,6 +46,7 @@ Architectural Notes:
 </script>
 
 <button
+    bind:this={ref}
     {...rest}
     type="button"
     aria-pressed={isPressed}

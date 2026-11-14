@@ -13,12 +13,13 @@ Architectural Notes:
 <script lang="ts">
     import { getScrollAreaContext, type ScrollAreaContentProps } from "./index.ts";
 
-    let { class: className, children, ...rest }: ScrollAreaContentProps = $props();
+    let { ref = $bindable(null), class: className, children, ...rest }: ScrollAreaContentProps = $props();
 
     const scrollArea = getScrollAreaContext();
 </script>
 
 <div
+    bind:this={ref}
     {...rest}
     {@attach scrollArea.attachContent}
     class={["cs-scroll-area-content", className]}

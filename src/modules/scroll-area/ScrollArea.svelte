@@ -19,6 +19,7 @@ Architectural Notes:
     import { ScrollAreaManager } from "./scroll-area-state.internal.svelte.ts";
 
     let {
+        ref = $bindable(null),
         size,
         direction,
         scrollbar = "hover",
@@ -45,6 +46,7 @@ Architectural Notes:
 </script>
 
 <div
+    bind:this={ref}
     {...rest}
     class={["cs-scroll-area", className]}
     data-size={size}

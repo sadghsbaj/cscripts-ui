@@ -13,6 +13,7 @@ Architectural Notes:
     import { setToggleButtonGroupContext, type ToggleButtonGroupProps } from "./index.ts";
 
     let {
+        ref = $bindable(null),
         type,
         value = $bindable(),
         allowDeselect = false,
@@ -51,6 +52,7 @@ Architectural Notes:
 </script>
 
 <div
+    bind:this={ref}
     role="group"
     {...rest}
     class={["cs-toggle-button-group", className]}

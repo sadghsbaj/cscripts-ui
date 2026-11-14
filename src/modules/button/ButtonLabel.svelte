@@ -12,10 +12,10 @@ Architectural Notes:
 <script lang="ts">
     import type { ButtonLabelProps } from "./index.ts";
 
-    let { class: className, children, ...rest }: ButtonLabelProps = $props();
+    let { ref = $bindable(null), class: className, children, ...rest }: ButtonLabelProps = $props();
 </script>
 
-<span {...rest} class={["cs-button-label", className]}>
+<span bind:this={ref} {...rest} class={["cs-button-label", className]}>
     {@render children?.()}
 </span>
 

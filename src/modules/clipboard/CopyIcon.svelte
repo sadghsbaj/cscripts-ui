@@ -17,6 +17,7 @@ Architectural Notes:
     import type { CopyIconProps } from "./index.ts";
 
     let {
+        ref = $bindable(null),
         status,
         copied,
         error,
@@ -31,6 +32,7 @@ Architectural Notes:
 </script>
 
 <span
+    bind:this={ref}
     {...rest}
     aria-hidden="true"
     class={["cs-copy-icon", className]}

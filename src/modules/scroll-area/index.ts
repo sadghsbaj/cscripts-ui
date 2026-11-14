@@ -15,12 +15,15 @@ export type ScrollAreaDirection = (typeof SCROLL_AREA_DIRECTIONS)[number];
 export type ScrollAreaScrollbar = (typeof SCROLL_AREA_SCROLLBARS)[number];
 
 export interface ScrollAreaProps extends HTMLAttributes<HTMLDivElement> {
+    ref?: HTMLDivElement | null;
     size: ScrollAreaSize;
     direction: ScrollAreaDirection;
     scrollbar?: ScrollAreaScrollbar;
     overshoot?: boolean;
 }
 
-export type ScrollAreaContentProps = HTMLAttributes<HTMLDivElement>;
+export type ScrollAreaContentProps = HTMLAttributes<HTMLDivElement> & {
+    ref?: HTMLDivElement | null;
+};
 
 export const [getScrollAreaContext, setScrollAreaContext, hasScrollAreaContext] = createContext<ScrollAreaManager>();

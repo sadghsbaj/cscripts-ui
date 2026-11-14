@@ -7,6 +7,7 @@ export const OVERLAY_VARIANTS = ["blur", "dim", "solid", "transparent"] as const
 export type OverlayVariant = (typeof OVERLAY_VARIANTS)[number];
 
 export interface OverlayProps extends Omit<HTMLAttributes<HTMLDivElement>, "popover"> {
+    ref?: HTMLDivElement | null;
     variant: OverlayVariant;
     /**
      * Whether to prevent background scrolling outside scrollable overlay content.

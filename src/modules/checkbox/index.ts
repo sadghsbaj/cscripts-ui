@@ -9,6 +9,7 @@ export type CheckboxVariant = (typeof CHECKBOX_VARIANTS)[number];
 export type CheckboxSize = (typeof CHECKBOX_SIZES)[number];
 
 export interface CheckboxProps extends Omit<HTMLInputAttributes, "size" | "type"> {
+    ref?: HTMLInputElement | null;
     variant: CheckboxVariant;
     size: CheckboxSize;
     checked?: boolean;

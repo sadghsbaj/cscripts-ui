@@ -9,11 +9,22 @@ Architectural Notes:
 <script lang="ts">
     import type { ButtonProps } from "./index.ts";
 
-    let { variant, negative, size, as = "button", iconOnly, class: className, children, ...rest }: ButtonProps = $props();
+    let {
+        ref = $bindable(null),
+        variant,
+        negative,
+        size,
+        as = "button",
+        iconOnly,
+        class: className,
+        children,
+        ...rest
+    }: ButtonProps = $props();
 </script>
 
 <svelte:element
     this={as}
+    bind:this={ref}
     type={as === "button" ? "button" : undefined}
     {...rest}
     class={["cs-button", className]}

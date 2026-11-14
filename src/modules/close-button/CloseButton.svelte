@@ -11,10 +11,11 @@ Architectural Notes:
 
     import type { CloseButtonProps } from "./index.ts";
 
-    let { variant, size, class: className, children, ...rest }: CloseButtonProps = $props();
+    let { ref = $bindable(null), variant, size, class: className, children, ...rest }: CloseButtonProps = $props();
 </script>
 
 <button
+    bind:this={ref}
     aria-label="Close"
     {...rest}
     type="button"

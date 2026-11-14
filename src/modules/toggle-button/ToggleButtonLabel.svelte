@@ -12,10 +12,10 @@ Architectural Notes:
 <script lang="ts">
     import type { ToggleButtonLabelProps } from "./index.ts";
 
-    let { class: className, children, ...rest }: ToggleButtonLabelProps = $props();
+    let { ref = $bindable(null), class: className, children, ...rest }: ToggleButtonLabelProps = $props();
 </script>
 
-<span {...rest} class={["cs-toggle-button-label", className]}>
+<span bind:this={ref} {...rest} class={["cs-toggle-button-label", className]}>
     {@render children?.()}
 </span>
 

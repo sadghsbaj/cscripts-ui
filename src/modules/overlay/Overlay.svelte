@@ -21,6 +21,7 @@ Architectural Notes:
     import { topLayer } from "./top-layer.attach.ts";
 
     let {
+        ref = $bindable(null),
         variant,
         lockScroll = true,
         class: className,
@@ -65,6 +66,7 @@ Architectural Notes:
 </script>
 
 <div
+    bind:this={ref}
     {...rest}
     out:overlayExit
     popover="manual"

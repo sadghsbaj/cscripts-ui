@@ -14,7 +14,7 @@ Architectural Notes:
     const uid = $props.id();
     const patternId = `cs-background-pattern-${uid}`;
 
-    let { variant, size, class: className, ...rest }: BackgroundPatternProps = $props();
+    let { ref = $bindable(null), variant, size, class: className, ...rest }: BackgroundPatternProps = $props();
 
     // Live container size, used to emulate CSS `background-repeat: round`
     let width = $state(0);
@@ -40,6 +40,7 @@ Architectural Notes:
 </script>
 
 <svg
+    bind:this={ref}
     {...rest}
     bind:clientWidth={width}
     bind:clientHeight={height}

@@ -20,6 +20,7 @@ Architectural Notes:
     import { setButtonMorphContext, type ButtonMorphProps } from "./index.ts";
 
     let {
+        ref = $bindable(null),
         value = $bindable(),
         defaultValue,
         guardDelay = DEFAULT_GUARD_DELAY_MS,
@@ -57,6 +58,7 @@ Architectural Notes:
 </script>
 
 <div
+    bind:this={ref}
     {...rest}
     {@attach morph.attachRoot}
     {@attach clickOutside({

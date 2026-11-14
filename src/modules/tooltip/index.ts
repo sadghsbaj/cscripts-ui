@@ -21,6 +21,7 @@ export type TooltipIconConfig =
  * and global warmup acceleration (`:root[data-hint-warm]`).
  */
 export interface TooltipProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover" | "role"> {
+    ref?: HTMLDivElement | null;
     id: string;
     text?: string;
     icon?: TooltipIconConfig;
@@ -28,6 +29,7 @@ export interface TooltipProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" 
 }
 
 export type TooltipTextProps = HTMLAttributes<HTMLSpanElement> & {
+    ref?: HTMLSpanElement | null;
     text?: string;
 };
 
@@ -42,5 +44,6 @@ export interface TooltipIconProps extends Omit<SVGAttributes<SVGSVGElement>, "ch
 }
 
 export type TooltipKbdProps = HTMLAttributes<HTMLElement> & {
+    ref?: HTMLElement | null;
     key?: string;
 };

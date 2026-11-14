@@ -13,6 +13,7 @@ export type CopyIconStatus = (typeof COPY_ICON_STATUSES)[number];
 export type PasteIconStatus = (typeof PASTE_ICON_STATUSES)[number];
 
 export interface CopyIconProps extends Omit<HTMLAttributes<HTMLSpanElement>, "children"> {
+    ref?: HTMLSpanElement | null;
     /**
      * Optional explicit status override when not driven automatically by a parent `copyOnClick` attachment.
      */
@@ -32,6 +33,7 @@ export interface CopyIconProps extends Omit<HTMLAttributes<HTMLSpanElement>, "ch
 }
 
 export interface PasteIconProps extends Omit<HTMLAttributes<HTMLSpanElement>, "children"> {
+    ref?: HTMLSpanElement | null;
     /**
      * Optional explicit status override when not driven automatically by a parent `pasteOnClick` attachment.
      */

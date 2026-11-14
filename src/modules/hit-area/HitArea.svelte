@@ -15,10 +15,10 @@ Architectural Notes:
 <script lang="ts">
     import type { HitAreaProps } from "./index.ts";
 
-    let { size, class: className, ...rest }: HitAreaProps = $props();
+    let { ref = $bindable(null), size, class: className, ...rest }: HitAreaProps = $props();
 </script>
 
-<span {...rest} aria-hidden="true" class={["cs-hit-area", className]} data-size={size}></span>
+<span bind:this={ref} {...rest} aria-hidden="true" class={["cs-hit-area", className]} data-size={size}></span>
 
 <style>
     @layer components.primitive {

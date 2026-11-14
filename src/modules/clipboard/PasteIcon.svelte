@@ -17,6 +17,7 @@ Architectural Notes:
     import type { PasteIconProps } from "./index.ts";
 
     let {
+        ref = $bindable(null),
         status,
         pasted,
         empty,
@@ -33,6 +34,7 @@ Architectural Notes:
 </script>
 
 <span
+    bind:this={ref}
     {...rest}
     aria-hidden="true"
     class={["cs-paste-icon", className]}

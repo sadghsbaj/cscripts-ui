@@ -14,6 +14,8 @@ export type ButtonMorphItemState = (typeof BUTTON_MORPH_ITEM_STATES)[number];
 export type ButtonMorphResetReason = (typeof BUTTON_MORPH_RESET_REASONS)[number];
 
 export interface ButtonMorphProps extends HTMLAttributes<HTMLDivElement> {
+    ref?: HTMLDivElement | null;
+
     /**
      * Currently active state key matching one of the child `<ButtonMorphItem value="...">` slots.
      */
@@ -58,6 +60,8 @@ export interface ButtonMorphProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export interface ButtonMorphItemProps extends HTMLAttributes<HTMLDivElement> {
+    ref?: HTMLDivElement | null;
+
     /**
      * Unique state key identifying this morph slot.
      */

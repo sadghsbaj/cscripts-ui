@@ -6,10 +6,10 @@ Automatically fades out when adjacent toggle buttons are active (`aria-pressed="
 <script lang="ts">
     import type { ToggleButtonGroupSeparatorProps } from "./index.ts";
 
-    let { class: className, ...rest }: ToggleButtonGroupSeparatorProps = $props();
+    let { ref = $bindable(null), class: className, ...rest }: ToggleButtonGroupSeparatorProps = $props();
 </script>
 
-<span role="separator" aria-hidden="true" {...rest} class={["cs-toggle-button-group-separator", className]}></span>
+<span bind:this={ref} role="separator" aria-hidden="true" {...rest} class={["cs-toggle-button-group-separator", className]}></span>
 
 <style>
     @layer components.composite {

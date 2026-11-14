@@ -23,7 +23,7 @@ Architectural Notes:
     import TooltipKbd from "./TooltipKbd.svelte";
     import TooltipText from "./TooltipText.svelte";
 
-    let { id, text, icon, shortcut, class: className, children, ...rest }: TooltipProps = $props();
+    let { ref = $bindable(null), id, text, icon, shortcut, class: className, children, ...rest }: TooltipProps = $props();
 
     const resolvedIcon = $derived(
         typeof icon === "function"
@@ -36,7 +36,7 @@ Architectural Notes:
     const shortcuts = $derived(Array.isArray(shortcut) ? shortcut : shortcut ? [shortcut] : []);
 </script>
 
-<Popover {...rest} {id} popover="hint" width="content" placement="top" role="tooltip" class={["cs-tooltip", className]}>
+<Popover bind:ref {...rest} {id} popover="hint" width="content" placement="top" role="tooltip" class={["cs-tooltip", className]}>
     {#if children}
         {@render children()}
     {:else}

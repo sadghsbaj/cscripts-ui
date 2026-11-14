@@ -21,10 +21,13 @@ export type ToggleButtonGroupTypeProps =
 
 export type ToggleButtonGroupProps = HTMLAttributes<HTMLDivElement> &
     ToggleButtonGroupTypeProps & {
+        ref?: HTMLDivElement | null;
         orientation?: "horizontal" | "vertical";
     };
 
-export type ToggleButtonGroupSeparatorProps = Omit<HTMLAttributes<HTMLSpanElement>, "children">;
+export type ToggleButtonGroupSeparatorProps = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
+    ref?: HTMLSpanElement | null;
+};
 
 export interface ToggleButtonGroupContext {
     isSelected(itemValue: string | undefined): boolean;

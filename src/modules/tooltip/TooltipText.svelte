@@ -9,10 +9,10 @@ Architectural Notes:
 <script lang="ts">
     import type { TooltipTextProps } from "./index.ts";
 
-    let { text, class: className, children, ...rest }: TooltipTextProps = $props();
+    let { ref = $bindable(null), text, class: className, children, ...rest }: TooltipTextProps = $props();
 </script>
 
-<span {...rest} class={["cs-tooltip-text", className]}>
+<span bind:this={ref} {...rest} class={["cs-tooltip-text", className]}>
     {#if children}
         {@render children()}
     {:else if text}

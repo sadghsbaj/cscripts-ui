@@ -13,7 +13,7 @@ Architectural Notes:
 <script lang="ts">
     import { getButtonMorphContext, type ButtonMorphItemProps } from "./index.ts";
 
-    let { value, class: className, children, ...rest }: ButtonMorphItemProps = $props();
+    let { ref = $bindable(null), value, class: className, children, ...rest }: ButtonMorphItemProps = $props();
 
     const morph = getButtonMorphContext();
     const state = $derived(morph.getItemState(value));
@@ -21,6 +21,7 @@ Architectural Notes:
 </script>
 
 <div
+    bind:this={ref}
     {...rest}
     {@attach morph.attachItem(value)}
     class={["cs-button-morph-item", className]}

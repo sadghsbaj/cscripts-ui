@@ -31,6 +31,7 @@ Architectural Notes:
     import { type CheckboxProps } from ".";
 
     let {
+        ref = $bindable(null),
         variant,
         size,
         checked = $bindable(),
@@ -45,6 +46,7 @@ Architectural Notes:
 </script>
 
 <input
+    bind:this={ref}
     {...rest}
     type="checkbox"
     bind:checked

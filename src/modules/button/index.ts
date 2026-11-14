@@ -33,16 +33,19 @@ export type ButtonVariantProps =
       };
 
 export type ButtonProps = (
-    | (Omit<HTMLButtonAttributes, "color" | "size"> & { as?: "button" })
-    | (Omit<HTMLAnchorAttributes, "color" | "size"> & { as: "a" })
-    | ((Omit<HTMLLabelAttributes, "color" | "size"> & { as: "label" }) & InterestAttributes)
+    | (Omit<HTMLButtonAttributes, "color" | "size"> & { as?: "button"; ref?: HTMLButtonElement | null })
+    | (Omit<HTMLAnchorAttributes, "color" | "size"> & { as: "a"; ref?: HTMLAnchorElement | null })
+    | ((Omit<HTMLLabelAttributes, "color" | "size"> & { as: "label"; ref?: HTMLLabelElement | null }) &
+          InterestAttributes)
 ) &
     ButtonVariantProps & {
         size: ButtonSize;
         iconOnly?: boolean;
     };
 
-export type ButtonLabelProps = HTMLAttributes<HTMLSpanElement>;
+export type ButtonLabelProps = HTMLAttributes<HTMLSpanElement> & {
+    ref?: HTMLSpanElement | null;
+};
 
 export type ButtonIconComponentProps = Omit<SVGAttributes<SVGSVGElement>, "children" | "color"> &
     Record<string, unknown> & {

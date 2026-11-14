@@ -9,6 +9,7 @@ export type CloseButtonVariant = (typeof CLOSE_BUTTON_VARIANTS)[number];
 export type CloseButtonSize = (typeof CLOSE_BUTTON_SIZES)[number];
 
 export interface CloseButtonProps extends Omit<HTMLButtonAttributes, "type"> {
+    ref?: HTMLButtonElement | null;
     variant: CloseButtonVariant;
     size: CloseButtonSize;
 }

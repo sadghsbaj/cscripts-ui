@@ -25,6 +25,7 @@ export type ToggleButtonStateProps =
 
 export type ToggleButtonProps = Omit<HTMLButtonAttributes, "color" | "size" | "value"> &
     ToggleButtonStateProps & {
+        ref?: HTMLButtonElement | null;
         variant: ToggleButtonVariant;
         color: ToggleButtonColor;
         size: ToggleButtonSize;
@@ -32,7 +33,9 @@ export type ToggleButtonProps = Omit<HTMLButtonAttributes, "color" | "size" | "v
         onclick?: MouseEventHandler<HTMLButtonElement>;
     };
 
-export type ToggleButtonLabelProps = HTMLAttributes<HTMLSpanElement>;
+export type ToggleButtonLabelProps = HTMLAttributes<HTMLSpanElement> & {
+    ref?: HTMLSpanElement | null;
+};
 
 export type ToggleButtonIconComponentProps = Omit<SVGAttributes<SVGSVGElement>, "children"> &
     Record<string, unknown> & {

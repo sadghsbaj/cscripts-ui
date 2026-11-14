@@ -15,6 +15,7 @@ export type BackgroundPatternVariant = (typeof BACKGROUND_PATTERN_VARIANTS)[numb
 export type BackgroundPatternSize = (typeof BACKGROUND_PATTERN_SIZES)[number];
 
 export interface BackgroundPatternProps extends Omit<SVGAttributes<SVGSVGElement>, "children"> {
+    ref?: SVGSVGElement | null;
     variant: BackgroundPatternVariant;
     size: BackgroundPatternSize;
 }

@@ -10,10 +10,10 @@ Architectural Notes:
 <script lang="ts">
     import type { TooltipKbdProps } from "./index.ts";
 
-    let { key, class: className, children, ...rest }: TooltipKbdProps = $props();
+    let { ref = $bindable(null), key, class: className, children, ...rest }: TooltipKbdProps = $props();
 </script>
 
-<kbd {...rest} class={["cs-tooltip-kbd", className]}>
+<kbd bind:this={ref} {...rest} class={["cs-tooltip-kbd", className]}>
     {#if children}
         {@render children()}
     {:else if key}

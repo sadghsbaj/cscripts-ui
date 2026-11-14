@@ -24,6 +24,7 @@ Architectural Notes:
     import { type PopoverProps } from ".";
 
     let {
+        ref = $bindable(null),
         id,
         placement,
         width,
@@ -37,6 +38,7 @@ Architectural Notes:
 </script>
 
 <div
+    bind:this={ref}
     {...rest}
     {id}
     {popover}
