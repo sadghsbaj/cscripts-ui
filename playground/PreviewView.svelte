@@ -44,12 +44,12 @@
     const CONTROLS_IDLE_MS = 2200;
 
     const modules = import.meta.glob<SvelteModule>(
-        ["../src/svelte/modules/**/*.preview.svelte", "../src/svelte/work/**/*.preview.svelte"],
+        ["../src/modules/**/*.preview.svelte", "../src/work/**/*.preview.svelte"],
         { eager: true }
     );
 
     function categoryFromPath(path: string): PreviewCategory {
-        return path.includes("/svelte/work/") ? "work" : "modules";
+        return path.includes("/work/") ? "work" : "modules";
     }
 
     const previews: PreviewItem[] = Object.entries(modules)

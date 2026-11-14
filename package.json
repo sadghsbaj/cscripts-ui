@@ -4,7 +4,7 @@
     "private": true,
     "sideEffects": [
         "**/*.css",
-        "./src/svelte/theme.svelte.ts"
+        "./src/modules/theme/theme.svelte.ts"
     ],
     "scripts": {
         "dev": "bunx --bun vite",
@@ -23,18 +23,15 @@
             "default": "./src/css/index.css"
         },
         "./assets/*": "./src/assets/*",
+        "./work/assets/*": "./src/work/assets/*",
         "./uno": "./src/uno/index.ts",
-        "./svelte/theme": {
-            "svelte": "./src/svelte/theme.svelte.ts",
-            "default": "./src/svelte/theme.svelte.ts"
-        },
         "./svelte/work": {
-            "svelte": "./src/svelte/work/index.ts",
-            "default": "./src/svelte/work/index.ts"
+            "svelte": "./src/work/index.ts",
+            "default": "./src/work/index.ts"
         },
         "./svelte/*": {
-            "svelte": "./src/svelte/modules/*/index.ts",
-            "default": "./src/svelte/modules/*/index.ts"
+            "svelte": "./src/modules/*/index.ts",
+            "default": "./src/modules/*/index.ts"
         },
         "./eslint": "./src/eslint/index.ts"
     },

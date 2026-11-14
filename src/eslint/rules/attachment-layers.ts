@@ -45,7 +45,7 @@ export const attachmentLayerRule: Rule.RuleModule = {
 
     create(context: Rule.RuleContext): Rule.RuleListener {
         const filename = context.filename ?? "";
-        if (!filename.includes(".attach.css") || !filename.includes("svelte/modules/")) return {};
+        if (!filename.includes(".attach.css") || !filename.includes("modules/")) return {};
 
         return {
             Program(node: unknown): void {

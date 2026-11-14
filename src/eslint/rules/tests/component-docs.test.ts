@@ -26,7 +26,7 @@ My Button component description.
 </script>
 <button>{@render children?.()}</button>
 `,
-                        filename: "src/svelte/modules/button/Button.svelte",
+                        filename: "src/modules/button/Button.svelte",
                     },
                     {
                         // Component in work/ folder with @component
@@ -36,7 +36,7 @@ Work App Header
 -->
 <header></header>
 `,
-                        filename: "src/svelte/work/app-layout/WorkAppHeader.svelte",
+                        filename: "src/work/app-layout/WorkAppHeader.svelte",
                     },
                     {
                         // Other svelte files (e.g. playground, App.svelte) are exempt
@@ -48,7 +48,7 @@ Work App Header
                     {
                         // Missing comment in components/
                         code: ["<script>", "    let { text } = $props();", "</script>", "<div>{text}</div>"].join("\n"),
-                        filename: "src/svelte/modules/card/Card.svelte",
+                        filename: "src/modules/card/Card.svelte",
                         errors: [{ messageId: "missingComponentComment" }],
                     },
                     {
@@ -56,7 +56,7 @@ Work App Header
                         code: `<!-- Just a normal comment -->
 <div>Content</div>
 `,
-                        filename: "src/svelte/work/WorkTest.svelte",
+                        filename: "src/work/WorkTest.svelte",
                         errors: [{ messageId: "missingComponentComment" }],
                     },
                 ],

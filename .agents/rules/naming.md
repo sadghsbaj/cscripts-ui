@@ -18,7 +18,7 @@ trigger: always_on
 
 <patterns>
   <files_and_folders>
-    - Module folders (`src/svelte/modules/<name>/`): `kebab-case` (`button/`, `toggle-button/`, `click-outside/`).
+    - Module folders (`src/modules/<name>/`): `kebab-case` (`button/`, `toggle-button/`, `click-outside/`).
     - Suffix order: `<name>[.internal][.<kind>].<ext>`.
     - UI Component: `PascalCase.svelte` (`Button.svelte`, `ToggleButtonIcon.svelte`).
     - Preview: `PascalCase.preview.svelte` (`Button.preview.svelte`).

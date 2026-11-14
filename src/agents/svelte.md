@@ -4,9 +4,9 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 
 ## 1. Component Architecture Philosophy
 
-- **UI Components & Interactive Primitives (`../svelte/modules/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte/<primitive>`. Primitives use a clean compound architecture with colocated CSS and require explicit prop configuration (`variant`, `size`, and `color` where applicable) without implicit fallback defaults:
-    1. **Discover available primitives:** Check `../svelte/modules/<name>/index.ts` to see exported components, attachments, and types.
-    2. **Inspect implementation & conventions:** Read the specific `../svelte/modules/<name>/` files before using or building primitives.
+- **UI Components & Interactive Primitives (`../modules/`):** NEVER build standard UI controls or primitives from scratch before checking existing `cs/svelte/<primitive>`. Primitives use a clean compound architecture with colocated CSS and require explicit prop configuration (`variant`, `size`, and `color` where applicable) without implicit fallback defaults:
+    1. **Discover available primitives:** Check `../modules/<name>/index.ts` to see exported components, attachments, and types.
+    2. **Inspect implementation & conventions:** Read the specific `../modules/<name>/` files before using or building primitives.
 - **Floating UI, Triggers & Motion (`cs/svelte/popover`, `cs/svelte/tooltip`):** All anchored floating surfaces (tooltips, dropdown menus, context menus, custom popovers) MUST build upon `<Popover>`, wired to their trigger via `{@attach popoverTrigger({ target })}`. NEVER hand-roll `popovertarget`, `interestfor`, `anchor-name`, hover timers, or open/close listeners.
     - **Trigger Modes (`popoverTrigger`, single source of truth for all trigger behavior):**
         - `mode: "auto"` (default): Native `popovertarget` toggle. `triggerOn: "pointerdown"` (default) opens instantly on primary mouse press, the right choice for menus, dropdowns, selects, comboboxes and split-button chevrons because opening is reversible and needs no cancel gesture. Touch and keyboard always use the native click path so touch scrolling never opens a menu. Use `triggerOn: "click"` for anything that should be cancellable by dragging off (e.g. confirmations).
@@ -14,7 +14,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
         - `mode: "hint"`: Hover and focus driven (`interestfor`) with optional `delay` (`"<open> <close>"`) and `dismissOnPress`. Already hardened: programmatic focus restoration (e.g. returning to the window after a click) never opens it, only hover or keyboard focus (`:focus-visible`) does. It dismisses on press, `Enter` / `Space` and scroll, re-arms on leave or blur, and shares a warmup window so adjacent triggers open instantly. NEVER re-implement any of this.
     - **Tooltips (`{@attach tooltip(...)}`):** A thin layer on `popoverTrigger({ mode: "hint" })` that mounts the `<Tooltip>` surface and manages `aria-describedby`. Fix trigger behavior in `popover.attach.ts` (covered by `popover.attach.test.ts`), never in the tooltip attachment.
     - **Default Spring Choreography (`animate = true`):** `<Popover>` provides a physics-driven directional entrance and exit (`--cs-spring-snappy`, `@starting-style`, scale and blur). It derives `--popover-dir-x`, `--popover-dir-y` and `--popover-origin` from `placement`, so the surface emerges from and recedes toward its anchor.
-    - **Token Overrides for Custom Feel:** Do NOT write custom transition selectors or `@keyframes`. To tailor motion (e.g. compact micro-surfaces like `<Tooltip />`), override the `--popover-anim-*` custom properties (`distance`, `scale-start`, `scale-exit`, `blur-start`, `blur-exit`, `dur-in`, `dur-fade-in`, `dur-blur-in`, `dur-out`). Read `../svelte/modules/popover/Popover.svelte` for the current defaults and `../svelte/modules/tooltip/Tooltip.svelte` for an override example.
+    - **Token Overrides for Custom Feel:** Do NOT write custom transition selectors or `@keyframes`. To tailor motion (e.g. compact micro-surfaces like `<Tooltip />`), override the `--popover-anim-*` custom properties (`distance`, `scale-start`, `scale-exit`, `blur-start`, `blur-exit`, `dur-in`, `dur-fade-in`, `dur-blur-in`, `dur-out`). Read `../modules/popover/Popover.svelte` for the current defaults and `../modules/tooltip/Tooltip.svelte` for an override example.
     - **Opt-Out for Bespoke Transitions:** Only set `animate={false}` when implementing a completely custom, non-spring transition system.
 - **Button State Morphing (`cs/svelte/button-morph`):** When morphing between different buttons, actions, or state transitions (e.g. inline delete confirmation flows, multi-step actions, morphing between `<Button>`, `<ToggleButton>`, and `<CloseButton>`):
     - ALWAYS use `<ButtonMorph bind:value={state}>` with `<ButtonMorphItem value="...">` slots instead of manual `{#if}` swaps or ad-hoc CSS transitions.
@@ -29,7 +29,7 @@ All paths below are relative to `./node_modules/cs/src/agents/`.
 Svelte 5.29+ replaces legacy `use:action` with **Attachments** (https://svelte.dev/docs/svelte/@attach). NEVER write `use:myAction`.
 
 - **How it works:** An attachment is a function receiving the DOM element and optionally returning a cleanup function. It automatically re-runs when reactive state read inside it changes.
-- **Library Attachments:** Read the respective folders in `../svelte/modules/` (such as `scroll-fade`, `fade-mask`, `tooltip`, or `clipboard`) to discover built-in attachments before writing custom DOM logic:
+- **Library Attachments:** Read the respective folders in `../modules/` (such as `scroll-fade`, `fade-mask`, `tooltip`, or `clipboard`) to discover built-in attachments before writing custom DOM logic:
     - **Clipboard (`cs/svelte/clipboard`):** NEVER write manual `navigator.clipboard` calls, custom `copied = $state(false)` timers, or manual `<Copy />` / `<Check />` icon toggles. Always pair `{@attach copyOnClick(...)}` with `<CopyIcon />` and `{@attach pasteOnClick(...)}` with `<PasteIcon />` inside `<Button>` / `<ToggleButton>` (the icons automatically animate via CSS data attributes). For imperative script-level clipboard access outside UI triggers, use `copyToClipboard()` and `readFromClipboard()` from `cs/svelte/clipboard`.
 - **Syntax Example:**
     ```svelte
@@ -83,7 +83,7 @@ NEVER abuse `$effect` to synchronize state (e.g., reading state A inside `$effec
 
 ## 3. Theme, Browser Storage & Build Configuration (`cs/svelte/theme`, `cs/svelte/browser-storage` & `cs/vite`)
 
-### A. Browser Storage (`cs/svelte/browser-storage` — `../svelte/modules/browser-storage/index.ts`)
+### A. Browser Storage (`cs/svelte/browser-storage` — `../modules/browser-storage/index.ts`)
 
 Local HTML applications opened via `file://` in Chromium/Edge share a **single global `localStorage` / `sessionStorage` bucket**. Direct access to native `localStorage` or `sessionStorage` is strictly forbidden by ESLint (`browser-storage/no-native-storage`).
 

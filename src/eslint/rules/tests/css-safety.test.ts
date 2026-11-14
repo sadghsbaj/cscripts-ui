@@ -34,7 +34,7 @@ describe("css-safety ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/overlay/Overlay.svelte",
+                        filename: "src/modules/overlay/Overlay.svelte",
                     },
                     {
                         // Different nested blocks do not interfere with each other
@@ -52,7 +52,7 @@ describe("css-safety ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/overlay/Overlay.svelte",
+                        filename: "src/modules/overlay/Overlay.svelte",
                     },
                     {
                         // Comments and custom properties are ignored
@@ -69,7 +69,7 @@ describe("css-safety ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/overlay/Overlay.svelte",
+                        filename: "src/modules/overlay/Overlay.svelte",
                     },
                 ],
                 invalid: [
@@ -85,7 +85,7 @@ describe("css-safety ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/overlay/Overlay.svelte",
+                        filename: "src/modules/overlay/Overlay.svelte",
                         errors: [{ messageId: "vendorPrefixAfterStandard" }],
                     },
                     {
@@ -101,7 +101,7 @@ describe("css-safety ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/overlay/Overlay.svelte",
+                        filename: "src/modules/overlay/Overlay.svelte",
                         errors: [{ messageId: "vendorPrefixAfterStandard" }],
                     },
                 ],
@@ -152,7 +152,7 @@ describe("css-safety ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/toggle-button/ToggleButton.svelte",
+                        filename: "src/modules/toggle-button/ToggleButton.svelte",
                     },
                     {
                         // Non-neutral color-mix in oklch is allowed
@@ -166,7 +166,7 @@ describe("css-safety ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/button/Button.svelte",
+                        filename: "src/modules/button/Button.svelte",
                     },
                 ],
                 invalid: [
@@ -181,7 +181,7 @@ describe("css-safety ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/toggle-button/ToggleButton.svelte",
+                        filename: "src/modules/toggle-button/ToggleButton.svelte",
                         errors: [{ messageId: "oklchNeutralMix" }],
                     },
                 ],

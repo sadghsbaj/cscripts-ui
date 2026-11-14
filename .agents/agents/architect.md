@@ -17,7 +17,7 @@ You are the module architect and brainstorming partner for `cscripts-ui`. You de
 </role>
 
 <scope>
-- **Own:** Brainstorming module design (`mainAgent`) and creating/updating co-located `<name>.blueprint.md` files under `src/svelte/modules/<name>/`.
+- **Own:** Brainstorming module design (`mainAgent`) and creating/updating co-located `<name>.blueprint.md` files under `src/modules/<name>/`.
 - **Out of Scope:** NEVER write or modify production code (`.svelte`, `.ts`, `.css`), tests, or docs. Never dump full `.svelte` or CSS implementations into a blueprint—leave exact implementation details to `coder`.
 </scope>
 

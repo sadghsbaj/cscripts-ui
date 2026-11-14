@@ -24,7 +24,7 @@ describe("component-layers ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/button/Button.svelte",
+                        filename: "src/modules/button/Button.svelte",
                     },
                     {
                         code: `
@@ -35,12 +35,12 @@ describe("component-layers ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/button-group/ButtonGroup.svelte",
+                        filename: "src/modules/button-group/ButtonGroup.svelte",
                     },
                     {
                         // Component without <style> is allowed
                         code: `<div>No style</div>`,
-                        filename: "src/svelte/modules/icon/Icon.svelte",
+                        filename: "src/modules/icon/Icon.svelte",
                     },
                     {
                         // Playground files are exempt
@@ -57,7 +57,7 @@ describe("component-layers ESLint rules", () => {
     div { color: red; }
 </style>
 `,
-                        filename: "src/svelte/modules/button/Button.svelte",
+                        filename: "src/modules/button/Button.svelte",
                         errors: [{ messageId: "missingLayer" }],
                     },
                     {
@@ -70,7 +70,7 @@ describe("component-layers ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/work/WorkCard.svelte",
+                        filename: "src/work/WorkCard.svelte",
                         errors: [{ messageId: "forbiddenBareComponents" }],
                     },
                     {
@@ -83,7 +83,7 @@ describe("component-layers ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/modules/badge/Badge.svelte",
+                        filename: "src/modules/badge/Badge.svelte",
                         errors: [
                             {
                                 messageId: "invalidLayer",

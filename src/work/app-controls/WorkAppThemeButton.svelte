@@ -10,7 +10,7 @@ Architectural Notes:
     import { Button, ButtonIcon } from "../../modules/button/index.ts";
     import { HitArea } from "../../modules/hit-area/index.ts";
     import { tooltip } from "../../modules/tooltip/tooltip.attach.svelte.ts";
-    import { GERMAN_THEME_LABELS, theme } from "../../theme.svelte.ts";
+    import { GERMAN_THEME_LABELS, theme } from "../../modules/theme/index.ts";
     import type { WorkAppThemeButtonProps } from "./index.ts";
 
     let {

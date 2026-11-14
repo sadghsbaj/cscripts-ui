@@ -22,7 +22,7 @@ describe("attachment-layers ESLint rules", () => {
     }
 }
 `,
-                        filename: "src/svelte/modules/fade-mask/fade-mask.attach.css",
+                        filename: "src/modules/fade-mask/fade-mask.attach.css",
                     },
                     {
                         // Non-attachment CSS files are exempt
@@ -42,7 +42,7 @@ describe("attachment-layers ESLint rules", () => {
     mask-repeat: no-repeat;
 }
 `,
-                        filename: "src/svelte/modules/fade-mask/fade-mask.attach.css",
+                        filename: "src/modules/fade-mask/fade-mask.attach.css",
                         errors: [{ messageId: "missingAttachmentLayer" }],
                     },
                     {
@@ -52,7 +52,7 @@ describe("attachment-layers ESLint rules", () => {
     .cs-fade-mask { color: red; }
 }
 `,
-                        filename: "src/svelte/modules/fade-mask/fade-mask.attach.css",
+                        filename: "src/modules/fade-mask/fade-mask.attach.css",
                         errors: [{ messageId: "missingAttachmentLayer" }],
                     },
                 ],

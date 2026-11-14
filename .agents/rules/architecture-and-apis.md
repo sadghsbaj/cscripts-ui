@@ -13,14 +13,14 @@ globs: "**/src/**, **/playground/**"
 
 <principles>
   - Keep this rule strictly generic. NEVER reference specific modules so the rule remains valid as modules evolve.
-  - Organize by vertical slices (`src/svelte/modules/<name>/`), never by horizontal technical buckets (`components/` vs `attachments/` vs `utils/`).
+  - Organize by vertical slices (`src/modules/<name>/`), never by horizontal technical buckets (`components/` vs `attachments/` vs `utils/`).
   - CSS-First interaction: rely on native browser pseudo-classes (`:hover`, `:active`, `:focus-visible`) rather than JS interaction state abstractions.
   - Simplicity over matrices: avoid generic `variant × color` matrices; default to `accent`/`base` and add targeted semantic flags only where warranted.
 </principles>
 
 <patterns>
   <module_boundaries>
-    - Each module lives in `src/svelte/modules/<name>/` with `index.ts` as its sole public entry point.
+    - Each module lives in `src/modules/<name>/` with `index.ts` as its sole public entry point.
     - Modules MUST NOT import from other modules' internals (no cross-module coupling).
     - Truly cross-module CSS mechanics belong in `src/css/shared/`; module-specific internal helpers use `.internal.` in the same module folder.
   </module_boundaries>

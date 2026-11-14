@@ -24,7 +24,7 @@ export const componentCommentRule: Rule.RuleModule = {
     create(context: Rule.RuleContext): Rule.RuleListener {
         const filename = context.filename ?? "";
         if (
-            (!filename.includes("svelte/modules/") && !filename.includes("svelte/work/")) ||
+            (!filename.includes("modules/") && !filename.includes("work/")) ||
             filename.endsWith(".preview.svelte")
         ) {
             return {};

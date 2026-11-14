@@ -4,8 +4,8 @@
 </script>
 
 <script lang="ts">
-    import { CHECKBOX_SIZES } from "../../../src/svelte/modules/checkbox";
-    import Checkbox from "../../../src/svelte/modules/checkbox/Checkbox.svelte";
+    import { CHECKBOX_SIZES } from "../../../src/modules/checkbox";
+    import Checkbox from "../../../src/modules/checkbox/Checkbox.svelte";
 </script>
 
 <div class="size-full flex-center flex flex-col gap-4">

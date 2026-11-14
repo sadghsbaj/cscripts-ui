@@ -14,8 +14,8 @@ import { shouldSkipFile } from "./utils.ts";
 function isBrowserStorageInternalFile(context: Rule.RuleContext): boolean {
     const filename = (context.filename ?? "").replaceAll("\\", "/");
     return (
-        filename.includes("/svelte/modules/browser-storage/") ||
-        filename.startsWith("src/svelte/modules/browser-storage/")
+        filename.includes("/modules/browser-storage/") ||
+        filename.startsWith("src/modules/browser-storage/")
     );
 }
 
