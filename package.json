@@ -32,10 +32,9 @@
             "svelte": "./src/svelte/work/index.ts",
             "default": "./src/svelte/work/index.ts"
         },
-        "./svelte/explanations/*": "./src/svelte/explanations/*",
         "./svelte/*": {
-            "svelte": "./src/svelte/primitives/*/index.ts",
-            "default": "./src/svelte/primitives/*/index.ts"
+            "svelte": "./src/svelte/modules/*/index.ts",
+            "default": "./src/svelte/modules/*/index.ts"
         },
         "./eslint": "./src/eslint/index.ts"
     },

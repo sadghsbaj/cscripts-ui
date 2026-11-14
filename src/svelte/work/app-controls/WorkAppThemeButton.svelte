@@ -7,9 +7,9 @@ Architectural Notes:
 - Automated Reactive State: Cycles through theme modes on click (`theme.cycle()`) and renders the matching mode icon (`theme.icon`).
 -->
 <script lang="ts">
-    import { Button, ButtonIcon } from "../../primitives/button/index.ts";
-    import { HitArea } from "../../primitives/hit-area/index.ts";
-    import { tooltip } from "../../primitives/tooltip/tooltip.attach.svelte.ts";
+    import { Button, ButtonIcon } from "../../modules/button/index.ts";
+    import { HitArea } from "../../modules/hit-area/index.ts";
+    import { tooltip } from "../../modules/tooltip/tooltip.attach.svelte.ts";
     import { GERMAN_THEME_LABELS, theme } from "../../theme.svelte.ts";
     import type { WorkAppThemeButtonProps } from "./index.ts";
 

@@ -10,7 +10,7 @@ Architectural Notes:
 - Standalone Primitiv: Place inside `<WorkAppHeaderSegment island>` or any custom container.
 -->
 <script lang="ts">
-    import { tooltip } from "../../primitives/tooltip/tooltip.attach.svelte.ts";
+    import { tooltip } from "../../modules/tooltip/tooltip.attach.svelte.ts";
     import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusDotProps } from "./index.ts";
 
     let {

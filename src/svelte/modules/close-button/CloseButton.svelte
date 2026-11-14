@@ -5,7 +5,6 @@ Compact dismiss/close trigger (`<CloseButton />`) with a subordinate `text-weak`
 
 Architectural Notes:
 - Defaults & Resets: Requires explicit `size` and `variant` props (`data-size`, `data-variant`).
-  See `../../explanations/component-defaults-and-globals.md`
 -->
 <script lang="ts">
     import { X } from "@lucide/svelte";
@@ -53,7 +52,6 @@ Architectural Notes:
              * ELASTIC SURFACE (::before)
              * ---------------------------------------------------------
              * Decouples visual surface from icon for squash-and-stretch.
-             * See ../../explanations/elastic-surfaces.md
              * ========================================================= */
             &::before {
                 content: "";
@@ -89,7 +87,6 @@ Architectural Notes:
              * ACTIVE STATES (Pointer vs. Keyboard)
              * ---------------------------------------------------------
              * Interaction modality split (spring squash vs uniform scale).
-             * See ../../explanations/elastic-surfaces.md
              * ========================================================= */
             &:active {
                 color: var(--_fg-hover, var(--_fg));
@@ -181,7 +178,6 @@ Architectural Notes:
                 --_bg-hover: var(--cs-color-base-soft);
             }
 
-            /* Elevated hover physics (Light vs. Dark): See ../../explanations/elevated-hover-physics.md */
             &[data-variant="elevated"] {
                 --_bg: var(--cs-color-elevated);
                 --_bg-hover: var(--cs-color-elevated-hover);

@@ -24,9 +24,7 @@ Architectural Notes:
   dark-mode surfaces align directly with the outer squircle contour. The error state seamlessly transitions
   into an inset negative ring, leaving native `outline` completely unconstrained for `:focus-visible`.
 - Defaults & Resets: Requires explicit `variant` and `size` props with no implicit fallbacks.
-  See `../../explanations/component-defaults-and-globals.md`
-- Elevated Hover Physics (Light vs. Dark):
-  Follows `../../explanations/elevated-hover-physics.md` (shadow lift in light mode, surface luminance step-up in dark mode).
+- Elevated Hover Physics (Light vs. Dark): Shadow lift in light mode, surface luminance step-up in dark mode.
 -->
 
 <script lang="ts">
@@ -131,7 +129,6 @@ Architectural Notes:
                 --_bg-hover: var(--cs-color-base-soft-hover);
             }
 
-            /* Hover Physics (Light vs. Dark): See ../../explanations/elevated-hover-physics.md */
             &[data-variant="elevated"] {
                 --_bg: var(--cs-color-elevated);
                 --_bg-hover: var(--cs-color-elevated-hover);

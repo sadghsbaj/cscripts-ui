@@ -4,7 +4,6 @@ Backgroundpattern component (SVG based).
 
 Architectural Notes:
 - Defaults & Resets: Requires explicit `variant` and `size` props.
-  See `../../explanations/component-defaults-and-globals.md`
 - Tile shapes live in `BackgroundPatternVariants.svelte`, styling lives in CSS variables below.
 -->
 <script lang="ts">
@@ -71,7 +70,6 @@ Architectural Notes:
          * ANCHOR CONTEXT AUTO-ESTABLISHMENT (:has)
          * ---------------------------------------------------------
          * Automatically establishes a containing block for host bounds.
-         * See ../../explanations/anchor-context-auto-establishment.md
          * ========================================================= */
         :global(:has(> .cs-background-pattern)) {
             contain: layout;

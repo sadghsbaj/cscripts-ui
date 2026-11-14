@@ -6,7 +6,6 @@ and safe pointer-dismiss handling for modals, dialogs, sheets, and full-screen t
 
 Architectural Notes:
 - Defaults: Requires explicit `variant` prop (`data-variant`).
-  See `../../explanations/component-defaults-and-globals.md`
 - Native Top Layer: Automatically promoted to Top Layer via `{@attach topLayer()}` without z-index collisions.
 - Dismiss Ergonomics: Pairs `pointerdown` and `click` on the backdrop to prevent accidental closures
   when dragging or selecting text inside child elements.

@@ -13,8 +13,8 @@ Architectural Notes:
 <script lang="ts">
     import { Info } from "@lucide/svelte";
 
-    import { HitArea } from "../../primitives/hit-area/index.ts";
-    import { tooltip } from "../../primitives/tooltip/tooltip.attach.svelte.ts";
+    import { HitArea } from "../../modules/hit-area/index.ts";
+    import { tooltip } from "../../modules/tooltip/tooltip.attach.svelte.ts";
     import type { WorkAppSignatureProps } from "./index.ts";
 
     let { text = "Entwickelt von Colin Schäfer", class: className, ...rest }: WorkAppSignatureProps = $props();

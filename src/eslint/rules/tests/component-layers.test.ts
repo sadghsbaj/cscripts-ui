@@ -24,7 +24,7 @@ describe("component-layers ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/primitives/button/Button.svelte",
+                        filename: "src/svelte/modules/button/Button.svelte",
                     },
                     {
                         code: `
@@ -35,12 +35,12 @@ describe("component-layers ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/primitives/button-group/ButtonGroup.svelte",
+                        filename: "src/svelte/modules/button-group/ButtonGroup.svelte",
                     },
                     {
                         // Component without <style> is allowed
                         code: `<div>No style</div>`,
-                        filename: "src/svelte/primitives/icon/Icon.svelte",
+                        filename: "src/svelte/modules/icon/Icon.svelte",
                     },
                     {
                         // Playground files are exempt
@@ -57,7 +57,7 @@ describe("component-layers ESLint rules", () => {
     div { color: red; }
 </style>
 `,
-                        filename: "src/svelte/primitives/button/Button.svelte",
+                        filename: "src/svelte/modules/button/Button.svelte",
                         errors: [{ messageId: "missingLayer" }],
                     },
                     {
@@ -83,7 +83,7 @@ describe("component-layers ESLint rules", () => {
     }
 </style>
 `,
-                        filename: "src/svelte/primitives/badge/Badge.svelte",
+                        filename: "src/svelte/modules/badge/Badge.svelte",
                         errors: [
                             {
                                 messageId: "invalidLayer",

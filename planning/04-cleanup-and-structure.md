@@ -29,9 +29,9 @@ Status: **Abgeschlossen** (Prioritäten & Richtung stehen)
 ---
 
 ## D. Strukturelle Umstellungen (aus Thema 1–3)
-1. **Ordner & Suffixe:** `src/svelte/primitives/` → `src/svelte/modules/` (`package.json` anpassen); interne Dateien mit `.internal.` markieren.
+1. **Ordner & Suffixe:** `src/svelte/primitives/` → `src/svelte/modules/` (`package.json` anpassen); interne Dateien mit `.internal.` markieren; `src/svelte/explanations/` (inkl. `package.json`-Export) entfernen.
 2. **Doku & ESLint:** `<!-- @component -->` aus `.svelte` auslagern in `*.docs.md`; `src/eslint/rules/component-docs.ts` entsprechend umbauen.
 3. **Previews:** `playground/previews/` als `*.preview.svelte` co-located in die Module ziehen (`import.meta.glob`).
-4. **Tokens & Vars:** Statusfarben auf `positive / caution / negative` (ohne `info`); `--_` durch `--cs-<module>-*` ersetzen; `ref = $bindable()` bei Root-Components ergänzen.
+4. **Tokens & Vars:** ~~Statusfarben auf `positive / caution / negative` (ohne `info`)~~ *(erledigt)*; `--_` durch `--cs-<module>-*` ersetzen; `ref = $bindable()` bei Root-Components ergänzen.
 5. **Attachments:** Signaturen einzeln durchgehen (`enabled?: boolean | (() => boolean)` via `resolveGetter`).
 6. **Agents & MCP:** `src/agents/` verschlanken, `.agents/rules/` + `AGENTS.md` + Sub-Agents (`docs-maintainer`, `consistency-reviewer`, `preview-builder`, optional `mcp-maintainer`) + `src/mcp/` aufbauen.

@@ -26,7 +26,7 @@ My Button component description.
 </script>
 <button>{@render children?.()}</button>
 `,
-                        filename: "src/svelte/primitives/button/Button.svelte",
+                        filename: "src/svelte/modules/button/Button.svelte",
                     },
                     {
                         // Component in work/ folder with @component
@@ -48,7 +48,7 @@ Work App Header
                     {
                         // Missing comment in components/
                         code: ["<script>", "    let { text } = $props();", "</script>", "<div>{text}</div>"].join("\n"),
-                        filename: "src/svelte/primitives/card/Card.svelte",
+                        filename: "src/svelte/modules/card/Card.svelte",
                         errors: [{ messageId: "missingComponentComment" }],
                     },
                     {

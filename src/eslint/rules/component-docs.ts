@@ -23,7 +23,7 @@ export const componentCommentRule: Rule.RuleModule = {
 
     create(context: Rule.RuleContext): Rule.RuleListener {
         const filename = context.filename ?? "";
-        if (!filename.includes("svelte/primitives/") && !filename.includes("svelte/work/")) {
+        if (!filename.includes("svelte/modules/") && !filename.includes("svelte/work/")) {
             return {};
         }
 

@@ -32,7 +32,7 @@ describe("clipboard ESLint rules", () => {
                     {
                         // Allowed inside clipboard.utils.ts implementation itself
                         code: 'await navigator.clipboard.writeText("abc"); document.execCommand("copy");',
-                        filename: "src/svelte/primitives/clipboard/clipboard.utils.ts",
+                        filename: "src/svelte/modules/clipboard/clipboard.utils.ts",
                     },
                 ],
                 invalid: [
