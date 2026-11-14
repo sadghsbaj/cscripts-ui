@@ -4,15 +4,6 @@
 
 ---
 
-## B. Duplizierungen & Shared CSS
-
-1. **`Button` & `ToggleButton` (`Icon`, `Label`, `Group`):**
-   - Gemeinsame CSS-Basis in `src/css/shared/` anlegen (Group-Radius/Separator-Logik, Icon-/Label-Slots); kein gegenseitiges Importieren, kein Copy-Paste.
-2. **`CopyIcon` & `PasteIcon` (`src/modules/clipboard/`):**
-   - Gemeinsame Sparkle-/Animation-Logik co-located in `sparkle.internal.svelte` (oder shared CSS) auslagern.
-
----
-
 ## C. API-Fixes & Doku-Basis
 
 1. **`ToggleButton` API & Logik:** State- und Group-API (`pressed`, `ToggleButtonGroup`) sauber neu durchdenken und vereinheitlichen.
