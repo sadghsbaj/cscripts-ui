@@ -26,7 +26,7 @@ Architectural Notes:
     let {
         id,
         placement,
-        size,
+        width,
         offset = "8px",
         popover = "auto",
         animate = true,
@@ -41,7 +41,7 @@ Architectural Notes:
     {id}
     {popover}
     class={["cs-popover", className]}
-    data-size={size}
+    data-width={width}
     data-placement={placement}
     data-animate={animate ? "" : undefined}
     style:--popover-anchor={`--anchor-${id}`}
@@ -80,17 +80,17 @@ Architectural Notes:
         }
 
         /* =========================================================
-        * SIZES
+        * WIDTHS
         * ========================================================= */
-        .cs-popover[data-size="content"] {
+        .cs-popover[data-width="content"] {
             inline-size: max-content;
         }
 
-        .cs-popover[data-size="anchor"] {
+        .cs-popover[data-width="anchor"] {
             inline-size: anchor-size(inline);
         }
 
-        .cs-popover[data-size="min-anchor"] {
+        .cs-popover[data-width="min-anchor"] {
             inline-size: max-content;
             min-inline-size: anchor-size(inline);
         }

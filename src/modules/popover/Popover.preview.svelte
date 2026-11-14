@@ -5,11 +5,11 @@
 
 <script lang="ts">
     import { Button, ButtonLabel } from "cs/svelte/button";
-    import { Popover, popoverTrigger, type PopoverPlacement, type PopoverSize } from "cs/svelte/popover";
+    import { Popover, popoverTrigger, type PopoverPlacement, type PopoverWidth } from "cs/svelte/popover";
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     const placements: PopoverPlacement[] = ["top", "bottom", "left", "right"];
-    const sizes: PopoverSize[] = ["content", "anchor", "min-anchor"];
+    const widths: PopoverWidth[] = ["content", "anchor", "min-anchor"];
 
     const closeScript = ["</", "script>"].join("");
 
@@ -25,30 +25,30 @@ ${closeScript}
 <Popover
     id="demo-popover"
     placement="bottom"
-    size="content"
+    width="content"
     class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs text-main"
 >
     Popover content anchored to the trigger.
 </Popover>`;
 
-    const placementsCode = `<Popover id="popover-top" placement="top" size="content">...</Popover>
-<Popover id="popover-bottom" placement="bottom" size="content">...</Popover>
-<Popover id="popover-left" placement="left" size="content">...</Popover>
-<Popover id="popover-right" placement="right" size="content">...</Popover>`;
+    const placementsCode = `<Popover id="popover-top" placement="top" width="content">...</Popover>
+<Popover id="popover-bottom" placement="bottom" width="content">...</Popover>
+<Popover id="popover-left" placement="left" width="content">...</Popover>
+<Popover id="popover-right" placement="right" width="content">...</Popover>`;
 
-    const sizesCode = `<Popover id="popover-content" placement="bottom" size="content">...</Popover>
-<Popover id="popover-anchor" placement="bottom" size="anchor">...</Popover>
-<Popover id="popover-min-anchor" placement="bottom" size="min-anchor">...</Popover>`;
+    const widthsCode = `<Popover id="popover-content" placement="bottom" width="content">...</Popover>
+<Popover id="popover-anchor" placement="bottom" width="anchor">...</Popover>
+<Popover id="popover-min-anchor" placement="bottom" width="min-anchor">...</Popover>`;
 
     const modesCode = `<Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "offset-popover" })}>
     <ButtonLabel>Offset 24px</ButtonLabel>
 </Button>
-<Popover id="offset-popover" placement="top" size="content" offset="24px">...</Popover>
+<Popover id="offset-popover" placement="top" width="content" offset="24px">...</Popover>
 
 <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "hint-popover", mode: "hint" })}>
     <ButtonLabel>Hover (Hint)</ButtonLabel>
 </Button>
-<Popover id="hint-popover" popover="hint" placement="bottom" size="content">...</Popover>`;
+<Popover id="hint-popover" popover="hint" placement="bottom" width="content">...</Popover>`;
 </script>
 
 <div class="flex flex-col gap-10">
@@ -65,7 +65,7 @@ ${closeScript}
         <Popover
             id="popover-basic-demo"
             placement="bottom"
-            size="content"
+            width="content"
             class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
         >
             <div class="flex flex-col gap-1">
@@ -88,7 +88,7 @@ ${closeScript}
             <Popover
                 id="popover-placement-{placement}"
                 {placement}
-                size="content"
+                width="content"
                 class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
             >
                 <div class="flex flex-col gap-1">
@@ -100,28 +100,28 @@ ${closeScript}
     </PreviewSection>
 
     <PreviewSection
-        title="Sizes"
+        title="Widths"
         description="Compare content width, exact anchor width, and min-anchor width side by side."
-        code={sizesCode}
+        code={widthsCode}
     >
         <div class="flex-wrap flex-center gap-4">
-            {#each sizes as size (size)}
-                <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: `popover-size-${size}` })}>
-                    <ButtonLabel>Size: {size}</ButtonLabel>
+            {#each widths as width (width)}
+                <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: `popover-width-${width}` })}>
+                    <ButtonLabel>Width: {width}</ButtonLabel>
                 </Button>
 
                 <Popover
-                    id="popover-size-{size}"
+                    id="popover-width-{width}"
                     placement="bottom"
-                    {size}
+                    {width}
                     class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
                 >
                     <div class="flex flex-col gap-1">
-                        <span class="font-600 text-strong">{size}</span>
+                        <span class="font-600 text-strong">{width}</span>
                         <span class="text-weak">
-                            {#if size === "content"}
+                            {#if width === "content"}
                                 Fits content
-                            {:else if size === "anchor"}
+                            {:else if width === "anchor"}
                                 Matches trigger width even with longer text
                             {:else}
                                 At least trigger width, expands for wider content
@@ -140,7 +140,7 @@ ${closeScript}
         <Popover
             id="popover-offset-demo"
             placement="top"
-            size="content"
+            width="content"
             offset="24px"
             class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
         >
@@ -161,7 +161,7 @@ ${closeScript}
             id="popover-hint-demo"
             popover="hint"
             placement="bottom"
-            size="content"
+            width="content"
             class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
         >
             <div class="flex flex-col gap-1">

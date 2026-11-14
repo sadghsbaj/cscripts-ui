@@ -19,8 +19,8 @@ export const POPOVER_PLACEMENTS = [
 ] as const;
 export type PopoverPlacement = (typeof POPOVER_PLACEMENTS)[number];
 
-export const POPOVER_SIZES = ["content", "anchor", "min-anchor"] as const;
-export type PopoverSize = (typeof POPOVER_SIZES)[number];
+export const POPOVER_WIDTHS = ["content", "anchor", "min-anchor"] as const;
+export type PopoverWidth = (typeof POPOVER_WIDTHS)[number];
 
 export interface PopoverProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover"> {
     id: string;
@@ -28,6 +28,6 @@ export interface PopoverProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" 
     /** Whether to enable built-in directional spring animation. Defaults to `true`. */
     animate?: boolean;
     placement: PopoverPlacement;
-    size: PopoverSize;
+    width: PopoverWidth;
     offset?: string;
 }

@@ -3,7 +3,7 @@
 Lightweight tooltip surface container primitive (`<Tooltip />`) built on top of `<Popover popover="hint">`.
 
 Architectural Notes:
-- Fixed Surface: Uses `size="content"` and default `placement="top"`. All dynamic positioning,
+- Fixed Surface: Uses `width="content"` and default `placement="top"`. All dynamic positioning,
   offsets, delays, and trigger attachments are driven externally by the `tooltip` attachment
   (`tooltip.attach.svelte.ts`) to keep the container minimal and unopinionated.
 - Sizing & Centering: Enforces `block-size: 26px` with zero vertical padding, allowing flexbox
@@ -36,7 +36,7 @@ Architectural Notes:
     const shortcuts = $derived(Array.isArray(shortcut) ? shortcut : shortcut ? [shortcut] : []);
 </script>
 
-<Popover {...rest} {id} popover="hint" size="content" placement="top" role="tooltip" class={["cs-tooltip", className]}>
+<Popover {...rest} {id} popover="hint" width="content" placement="top" role="tooltip" class={["cs-tooltip", className]}>
     {#if children}
         {@render children()}
     {:else}
