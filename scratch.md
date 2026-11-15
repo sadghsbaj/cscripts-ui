@@ -12,6 +12,12 @@
 
 - textarea maybe auch contenteditable artiges ding für Platzhalter und sowas
 
+- geile charts
+
+- text morph
+
+- geile zahlen animationen
+
 ## Checkbox:
 
 Group? x
@@ -21,3 +27,4 @@ Headless CheckboxGroup nur für Verhalten? x
 Animationen in alle Richtungen geil machen x
 Doku anpassen x
 dot in der mitte von chekbox bei indeterminate x
+indetermiante select all bug
