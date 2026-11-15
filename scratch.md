@@ -27,4 +27,4 @@ Headless CheckboxGroup nur für Verhalten? x
 Animationen in alle Richtungen geil machen x
 Doku anpassen x
 dot in der mitte von chekbox bei indeterminate x
-indetermiante select all bug
+indetermiante select all bug x
