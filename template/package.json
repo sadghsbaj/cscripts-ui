@@ -8,7 +8,9 @@
         "build": "bunx --bun vite build",
         "preview": "bunx --bun vite preview",
         "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
-        "lint": "eslint ."
+        "lint": "eslint .",
+        "sync:agents": "cs-sync-agents",
+        "postinstall": "bun run sync:agents"
     },
     "engines": {
         "npm": "DO_NOT_USE_NPM_USE_BUN",

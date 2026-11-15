@@ -2,6 +2,9 @@
     "name": "cs",
     "type": "module",
     "private": true,
+    "bin": {
+        "cs-sync-agents": "./src/cli/sync-agents.ts"
+    },
     "sideEffects": [
         "**/*.css",
         "./src/modules/theme/theme.svelte.ts"

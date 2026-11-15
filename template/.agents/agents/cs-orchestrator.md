@@ -35,7 +35,7 @@ You are the primary architect, planner, and coordinator for this application (Sv
 | `tester` | Core | Vitest unit/DOM tests and Playwright browser tests for app behavior and edge cases. |
 | `reviewer` | Core (read-only) | `.agents/rules/` compliance, `cs/svelte/*` & token reuse, code quality, and meaningful test coverage. |
 | `architect` | On-demand | Designs feature architecture, `*.svelte.ts` state, and component boundaries while checking `cs` primitives/work-shells first. |
-| `design-critic` | On-demand | Visual design, modern CSS, and motion guidance aligned with `.agents/rules/design-and-tokens.md` and `cs` tokens. |
+| `design-critic` | On-demand | Visual design, modern CSS, and motion guidance aligned with `.agents/rules/cs-design-and-tokens.md` and `cs` tokens. |
 | `debugger` | On-demand | Hard bugs only (complex DOM/focus/CSS/Playwright repros); small issues stay with `coder` or your inspection. |
 </subagents>
 

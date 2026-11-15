@@ -25,7 +25,7 @@ globs: "**/*.ts, **/*.svelte, **/*.css"
 
   <eslint_and_naming>
     - **Custom Rules (`cs/eslint`):** Run `bun run lint` to verify. Whenever an unfamiliar custom rule triggers, inspect `./node_modules/cs/src/eslint/rules/` for its exact rationale and fix.
-    - **Naming Conventions:** Follow `naming.md` for all file suffixes (`PascalCase.svelte`, `kebab-case.ts`, `kebab-case.svelte.ts`, `kebab-case.attach.ts`), CSS tokens, `data-*` attributes, and canonical terminology.
+    - **Naming Conventions:** Follow `cs-naming.md` for all file suffixes (`PascalCase.svelte`, `kebab-case.ts`, `kebab-case.svelte.ts`, `kebab-case.attach.ts`), CSS tokens, `data-*` attributes, and canonical terminology.
   </eslint_and_naming>
 
   <clean_code>

@@ -22,7 +22,7 @@ You are the application architect and brainstorming partner. You design clean fe
 </scope>
 
 <workflow>
-1. Read `.agents/rules/` (`svelte.md`, `naming.md`, `design-and-tokens.md`, and `work.md` for internal tools).
+1. Read `.agents/rules/` (`cs-svelte.md`, `cs-naming.md`, `cs-design-and-tokens.md`, and `cs-work.md` for internal tools).
 2. Check `./node_modules/cs/src/modules/` and `./node_modules/cs/src/work/` first so existing `cs/svelte/*` components, attachments, and `cs/svelte/work` shells are reused instead of reinvented.
 3. Inspect existing `src/core/`, `src/features/`, and `src/shared/` files (read-only) to match app conventions.
 4. In direct brainstorming mode, explore trade-offs with the user constructively without forcing unrequested abstractions.

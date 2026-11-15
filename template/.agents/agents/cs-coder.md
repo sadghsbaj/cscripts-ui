@@ -22,7 +22,7 @@ You are the implementation specialist for this application (Svelte 5 Runes, `cs`
 </scope>
 
 <workflow>
-1. Read `.agents/rules/` (`code-style.md`, `svelte.md`, `naming.md`, `design-and-tokens.md`, and `work.md` when applicable).
+1. Read `.agents/rules/` (`cs-code-style.md`, `cs-svelte.md`, `cs-naming.md`, `cs-design-and-tokens.md`, and `cs-work.md` when applicable).
 2. Before using any `cs` API, read `./node_modules/cs/src/modules/<name>/<name>.docs.md` (or `./node_modules/cs/src/work/<submodule>/<submodule>.docs.md` for `cs/svelte/work`).
 3. Implement cleanly using Svelte 5 runes, strict TypeScript, `cs/svelte/*` primitives, `--cs-*` tokens, and UnoCSS shortcuts/utilities.
 4. Run `bun run check` and `bun run lint` after edits and fix any errors you introduce.
