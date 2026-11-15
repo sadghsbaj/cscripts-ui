@@ -21,7 +21,7 @@
 ## Checkbox:
 
 Group? x
-invalid style
+invalid style x
 Logik erweitern wie bei ToggleButton x
 Headless CheckboxGroup nur für Verhalten? x
 Animationen in alle Richtungen geil machen x
