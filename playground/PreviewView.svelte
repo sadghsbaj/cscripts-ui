@@ -272,9 +272,9 @@
         border-right-width: 0;
         opacity: 0;
         transition:
-            width 280ms var(--cs-ease-cubic-out),
-            opacity 200ms var(--cs-ease-cubic-out),
-            border-right-width 280ms var(--cs-ease-cubic-out);
+            width var(--cs-dur-280) var(--cs-ease-effect),
+            opacity var(--cs-dur-200) var(--cs-ease-effect),
+            border-right-width var(--cs-dur-280) var(--cs-ease-effect);
     }
 
     .cs-playground-sidebar[data-open] {
@@ -292,8 +292,8 @@
         opacity: 0;
         transform: translateY(-4px);
         transition:
-            opacity 260ms var(--cs-ease-cubic-out),
-            transform 260ms var(--cs-ease-cubic-out);
+            opacity var(--cs-dur-enter-sm) var(--cs-ease-effect),
+            transform var(--cs-dur-enter-sm) var(--cs-ease-effect);
         pointer-events: none;
     }
 
