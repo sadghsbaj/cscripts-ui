@@ -331,8 +331,8 @@
 
                 /* Error ring & soft tint apply only when inactive so checked states inherit the top-lit solid highlight */
                 &:not(:checked, :indeterminate) {
-                    --cs-checkbox-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 45%, transparent);
-                    --cs-checkbox-shadow-hover: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 65%, transparent);
+                    --cs-checkbox-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 25%, transparent);
+                    --cs-checkbox-shadow-hover: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 36%, transparent);
                     --cs-checkbox-bg: var(--cs-color-negative-soft);
                     --cs-checkbox-bg-hover: var(--cs-color-negative-soft-hover);
                 }
