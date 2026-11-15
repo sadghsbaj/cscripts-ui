@@ -66,7 +66,10 @@
     let checked = $state(false);
 ${closeScript}
 
-<Checkbox variant="soft" size="md" bind:checked />`;
+<label class="flex items-center gap-3 text-sm text-main select-none">
+    <Checkbox variant="soft" size="md" bind:checked />
+    <span>Accept terms and conditions</span>
+</label>`;
 
     const variantsCode = `<Checkbox variant="soft" size="md" />
 <Checkbox variant="elevated" size="md" />`;

@@ -77,13 +77,16 @@ For custom tri-state cycling, update both your bound state and `event.currentTar
     }
 </script>
 
-<Checkbox
-    variant="soft"
-    size="md"
-    bind:checked
-    bind:indeterminate
-    onchange={handleChange}
-/>
+<label class="inline-flex items-center gap-2">
+    <Checkbox
+        variant="soft"
+        size="md"
+        bind:checked
+        bind:indeterminate
+        onchange={handleChange}
+    />
+    <span>Select all</span>
+</label>
 ```
 
 ## State Transition Motion
@@ -94,7 +97,8 @@ For custom tri-state cycling, update both your bound state and `event.currentTar
 ## Behavior & Quirks
 - **Zero-wrapper flat DOM:** Renders a native `<input type="checkbox">` and an adjacent sibling `<svg>` positioned via CSS Anchor Positioning (`anchor-name` / `position-anchor`)—no wrapper `<span>` is emitted.
 - **Persistent SVG paths:** Checkmark, single continuous dash, and morph paths remain mounted so all state transitions animate smoothly without DOM teardown.
-- **Press hit-area preservation:** On `:active`, the input scales to `0.9` while its `::before` pseudo-element counter-scales by `calc(1 / 0.85)` to prevent edge clicks from dropping.
+- **No `<HitArea />` or expanded hit area (use `<label>`):** `<Checkbox>` renders a native void `<input type="checkbox">` with zero wrapper DOM, so `<HitArea />` cannot be passed as a child. It intentionally avoids extra wrapper elements or `40px`–`48px` pseudo-element hit areas so the library does not split into a dual-track hit-area architecture or reserve pseudo-elements for hit-target expansion. Because checkboxes always sit alongside descriptive text, wrap `<Checkbox>` and its label text in a `<label>` (or associate them via `for`/`id`) so clicking the label toggles the control and provides the full hit target.
+- **Active press jitter guard:** On `:active`, the input scales to `0.9` while its `::before` pseudo-element counter-scales by `calc(1 / 0.85)` (~6% net margin). This is strictly a small `:active` subpixel-jitter guard to prevent edge clicks from dropping during press shrink, not an expanded hit target.
 - **Disabled state:** Uses colorless `--cs-color-disabled-*` tokens and dims the anchored icon to `opacity: 0.5`.
 - **`CheckboxGroup` integration:** When rendered inside `<CheckboxGroup>` with a `value` prop, `<Checkbox>` automatically registers as a group item and derives `checked`, `name`, `disabled`, and `invalid` from group context (with item-level `name`, `disabled`, and `invalid` overriding/combining as documented in `checkbox-group.docs.md`).
 - **Scroll containers & CSS Anchor Positioning:** Inside custom scroll containers whose nearest `position: relative` ancestor sits outside the scroller, place a `position: relative` wrapper inside the scroll viewport so the anchored `.cs-checkbox-icon` tracks scroll offset accurately.
