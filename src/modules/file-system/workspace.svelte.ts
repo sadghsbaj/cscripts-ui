@@ -8,23 +8,12 @@ import {
 	DEFAULT_BOOT_CONCURRENCY,
 	DEFAULT_INDEX_FLUSH_MS,
 	DEFAULT_MAX_FLUSH_WAIT_MS,
-	type BootCheckMode,
-	type CachedIndexEntry,
-	type CacheCollectionConfig,
-	type CollectionIndexConfig,
-	type CompanionStatus,
-	type CorruptEntry,
-	type HealOptions,
-	type HealReport,
-	type SyncProgress,
 } from "./cache-engine.internal.ts";
 import { FsError, isFsError } from "./errors.ts";
 import {
 	BrowserFsBackend,
 	DEFAULT_MAX_FILE_BYTES,
 	sha256Hex,
-	type FileRevision,
-	type FsBackend,
 } from "./fs-backend.internal.ts";
 import {
 	IdbHandleStore,
@@ -44,16 +33,12 @@ import {
 	FsLogger,
 	getEmergencyLogs as getEmergencyLogsInternal,
 	recordEmergencyLog,
-	type EmergencyLogEntry,
-	type FsLogEntry,
-	type FsLogLevel,
-	type FsLogRotationOptions,
-	type ReadLogsOptions,
 } from "./logger.internal.ts";
 import {
 	assertNonOverlappingTemplates,
 	createPathTemplate,
 	DEFAULT_SYSTEM_DIR,
+	isIgnoredPath,
 	normalizeRelativePath,
 	validateRelativePath,
 	type PathIgnoreRule,
@@ -61,35 +46,53 @@ import {
 	type PathValidationOptions,
 } from "./path-template.ts";
 import { checkFileSystemSupport, type FileSystemSupportReport } from "./support.ts";
-import {
-	WriteQueue,
-	type BackupOptions,
-	type LockRetryOptions,
-} from "./write-queue.internal.ts";
+import type {
+	BackupOptions,
+	BootCheckMode,
+	CacheCollectionConfig,
+	CachedIndexEntry,
+	CollectionIndexConfig,
+	CompanionStatus,
+	CorruptEntry,
+	EmergencyLogEntry,
+	FileRevision,
+	FsBackend,
+	FsLogEntry,
+	FsLogLevel,
+	FsLogRotationOptions,
+	HealOptions,
+	HealReport,
+	IdbHandleStoreLike,
+	LockRetryOptions,
+	ReadLogsOptions,
+	SyncProgress,
+} from "./types.ts";
+import { WriteQueue } from "./write-queue.internal.ts";
 
 export type {
+	BackupOptions,
 	BootCheckMode,
 	BootResult,
 	CachedIndexEntry,
 	CollectionIndexConfig,
 	CompanionStatus,
 	CorruptEntry,
-	HealMode,
-	HealOptions,
-	HealReport,
-	SyncProgress,
-} from "./cache-engine.internal.ts";
-export type { FileRevision, FsBackend } from "./fs-backend.internal.ts";
-export type {
 	EmergencyLogEntry,
+	FileRevision,
+	FsBackend,
 	FsLogEntry,
 	FsLogEvent,
 	FsLogInput,
 	FsLogLevel,
 	FsLogRotationOptions,
+	HealMode,
+	HealOptions,
+	HealReport,
+	IdbHandleStoreLike,
+	LockRetryOptions,
 	ReadLogsOptions,
-} from "./logger.internal.ts";
-export type { BackupOptions, LockRetryOptions } from "./write-queue.internal.ts";
+	SyncProgress,
+} from "./types.ts";
 
 export const MOUNT_STATUSES = [
 	"unlinked",
@@ -130,12 +133,15 @@ export interface SingletonConfig<TData> {
 	pathOptions?: PathValidationOptions;
 }
 
-export interface SingletonDefinition<TData> {
+export interface ErasedSingletonDefinition {
 	readonly kind: "singleton";
 	readonly path: string;
-	readonly adapter: FileAdapter<TData>;
 	readonly template: PathTemplate;
 	readonly pathOptions?: PathValidationOptions;
+}
+
+export interface SingletonDefinition<TData> extends ErasedSingletonDefinition {
+	readonly adapter: FileAdapter<TData>;
 }
 
 export interface CompanionConfig {
@@ -153,20 +159,24 @@ export interface CollectionConfig<TData, TProjected = TData> {
 	index?: CollectionIndexConfig<TData, TProjected>;
 }
 
-export interface CollectionDefinition<
-	TData,
-	TProjected = TData,
-	TParams extends Record<string, string> = Record<string, string>,
-	THasIndex extends boolean = boolean,
-> {
+export interface ErasedCollectionDefinition {
 	readonly kind: "collection";
 	readonly pattern: string;
-	readonly adapter: FileAdapter<TData>;
 	readonly template: PathTemplate;
 	readonly companion?: {
 		readonly pattern: string;
 		readonly template: PathTemplate;
 	};
+	readonly hasIndex: boolean;
+}
+
+export interface CollectionDefinition<
+	TData,
+	TProjected = TData,
+	TParams extends Record<string, string> = Record<string, string>,
+	THasIndex extends boolean = boolean,
+> extends ErasedCollectionDefinition {
+	readonly adapter: FileAdapter<TData>;
 	readonly index?: CollectionIndexConfig<TData, TProjected>;
 	readonly hasIndex: THasIndex;
 	readonly _paramsBrand?: TParams;
@@ -343,13 +353,8 @@ export interface MutationSettledContext extends MutationContext {
 export type RevalidateOnFocusOption = boolean | { minIntervalMs?: number };
 
 export interface WorkspaceConfig<
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	TSingletons extends Record<string, SingletonDefinition<any>> = Record<string, never>,
-	TCollections extends Record<
-		string,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		CollectionDefinition<any, any, Record<string, string>, boolean>
-	> = Record<string, never>,
+	TSingletons extends Record<string, ErasedSingletonDefinition> = Record<string, never>,
+	TCollections extends Record<string, ErasedCollectionDefinition> = Record<string, never>,
 > {
 	namespace?: string;
 	storageKey?: string;
@@ -380,7 +385,7 @@ export interface WorkspaceConfig<
 	onSyncProgress?: (progress: SyncProgress) => void;
 	onLog?: (entry: FsLogEntry) => void;
 	backend?: FsBackend;
-	idbStore?: IdbHandleStore;
+	idbStore?: IdbHandleStoreLike;
 	indexedDb?: IDBFactory;
 	showDirectoryPicker?: (options?: PickDirectoryOptions) => Promise<FileSystemDirectoryHandle>;
 	createBackend?: (handle: FileSystemDirectoryHandle) => FsBackend;
@@ -404,13 +409,8 @@ type CollectionHandleMap<TCollections> = {
 };
 
 export interface Workspace<
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	TSingletons extends Record<string, SingletonDefinition<any>> = Record<string, never>,
-	TCollections extends Record<
-		string,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		CollectionDefinition<any, any, Record<string, string>, boolean>
-	> = Record<string, never>,
+	TSingletons extends Record<string, ErasedSingletonDefinition> = Record<string, never>,
+	TCollections extends Record<string, ErasedCollectionDefinition> = Record<string, never>,
 > {
 	readonly namespace: string;
 	readonly systemDir: string;
@@ -488,6 +488,7 @@ type PendingMutation =
 			fromPath: string;
 			toPath: string;
 			toParams: Record<string, string>;
+			projected?: unknown;
 	  };
 
 interface ConflictTarget {
@@ -629,7 +630,6 @@ function applyPendingMutations(
 	confirmed: readonly CachedIndexEntry[],
 	mutations: readonly PendingMutation[],
 	collectionName: string,
-	indexConfig: CollectionIndexConfig<unknown, unknown>,
 ): CachedIndexEntry[] {
 	const relevant = mutations.filter((m) => m.collection === collectionName && m.kind !== "pending");
 	if (relevant.length === 0) {
@@ -661,14 +661,11 @@ function applyPendingMutations(
 			const existing = map.get(mutation.fromPath);
 			map.delete(mutation.fromPath);
 			if (existing) {
-				const projected = indexConfig.project
-					? indexConfig.project(existing.data, mutation.toParams)
-					: existing.data;
 				map.set(mutation.toPath, {
 					...existing,
 					path: mutation.toPath,
 					params: mutation.toParams,
-					data: projected,
+					data: mutation.projected ?? existing.data,
 				});
 			}
 		}
@@ -688,25 +685,15 @@ function assertNotSystemPath(path: string, systemDir: string): void {
 }
 
 export function createWorkspace<
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	TSingletons extends Record<string, SingletonDefinition<any>> = Record<string, never>,
-	TCollections extends Record<
-		string,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		CollectionDefinition<any, any, Record<string, string>, boolean>
-	> = Record<string, never>,
+	TSingletons extends Record<string, ErasedSingletonDefinition> = Record<string, never>,
+	TCollections extends Record<string, ErasedCollectionDefinition> = Record<string, never>,
 >(config: WorkspaceConfig<TSingletons, TCollections>): Workspace<TSingletons, TCollections> {
 	return defineWorkspace(config);
 }
 
 export function defineWorkspace<
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	TSingletons extends Record<string, SingletonDefinition<any>> = Record<string, never>,
-	TCollections extends Record<
-		string,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		CollectionDefinition<any, any, Record<string, string>, boolean>
-	> = Record<string, never>,
+	TSingletons extends Record<string, ErasedSingletonDefinition> = Record<string, never>,
+	TCollections extends Record<string, ErasedCollectionDefinition> = Record<string, never>,
 >(config: WorkspaceConfig<TSingletons, TCollections>): Workspace<TSingletons, TCollections> {
 	const namespace = resolveWorkspaceNamespace(config.namespace);
 	const systemDir = normalizeRelativePath(config.systemDir ?? DEFAULT_SYSTEM_DIR);
@@ -807,6 +794,7 @@ export function defineWorkspace<
 	let cacheEngine: CacheEngine | null = null;
 	let directoryHandle: PermissionAwareDirectoryHandle | null = null;
 	let destroyed = false;
+	let mountEpoch = 0;
 	let activeAbortController: AbortController | null = null;
 	let lastRevalidateAt = 0;
 	let mutationSeq = 0;
@@ -882,7 +870,15 @@ export function defineWorkspace<
 		return `conflict-${conflictSeq}`;
 	}
 
-	function setTrackedDoc(path: string, revision: FileRevision, data: unknown): void {
+	function setTrackedDoc(
+		path: string,
+		revision: FileRevision,
+		data: unknown,
+		epoch = mountEpoch,
+	): void {
+		if (epoch !== mountEpoch) {
+			return;
+		}
 		if (trackedDocs.has(path)) {
 			trackedDocs.delete(path);
 		} else if (trackedDocs.size >= MAX_TRACKED_DOCS) {
@@ -894,11 +890,17 @@ export function defineWorkspace<
 		trackedDocs.set(path, { revision, data: cloneSnapshot(data) });
 	}
 
-	function removeTrackedDoc(path: string): void {
+	function removeTrackedDoc(path: string, epoch = mountEpoch): void {
+		if (epoch !== mountEpoch) {
+			return;
+		}
 		trackedDocs.delete(path);
 	}
 
-	function refreshConfirmedSnapshot(collectionName?: string): void {
+	function refreshConfirmedSnapshot(collectionName?: string, epoch = mountEpoch): void {
+		if (epoch !== mountEpoch) {
+			return;
+		}
 		if (!cacheEngine) {
 			confirmedEntries = {};
 			corruptEntries = [];
@@ -957,17 +959,28 @@ export function defineWorkspace<
 			bootConcurrency: config.bootConcurrency ?? DEFAULT_BOOT_CONCURRENCY,
 			indexFlushMs: config.indexFlushMs ?? DEFAULT_INDEX_FLUSH_MS,
 			maxFlushWaitMs: config.maxFlushWaitMs ?? DEFAULT_MAX_FLUSH_WAIT_MS,
+			readOnly: mode === "read",
 			logger,
 		});
 
 		backend = nextBackend;
 		writeQueue = nextQueue;
 		cacheEngine = nextCache;
-		logger.setBackend(nextBackend, nextQueue);
+		if (mode !== "read") {
+			logger.setBackend(nextBackend, nextQueue);
+		} else {
+			logger.setBackend(undefined, undefined);
+		}
 	}
 
 	if (config.backend) {
 		initializeEngine(config.backend);
+	}
+
+	function assertWritable(): void {
+		if (mode === "read") {
+			throw new FsError("PERMISSION_DENIED", "Workspace is mounted in read-only mode.");
+		}
 	}
 
 	function assertMounted(): { backend: FsBackend; writeQueue: WriteQueue; cacheEngine: CacheEngine } {
@@ -993,8 +1006,12 @@ export function defineWorkspace<
 		error: unknown,
 		fallbackMessage: string,
 		context?: MutationContext,
+		epoch = mountEpoch,
 	): FsError {
 		const fsError = toFsError(error, fallbackMessage);
+		if (epoch !== mountEpoch) {
+			return fsError;
+		}
 		if (fsError.code === "HANDLE_STALE") {
 			mountStatus = "stale";
 		} else if (fsError.code === "PERMISSION_DENIED" || fsError.code === "PERMISSION_REQUIRED") {
@@ -1105,18 +1122,19 @@ export function defineWorkspace<
 		signal?: AbortSignal,
 	): Promise<FileRevision> {
 		const jsonLike = adapter as Partial<JsonFileAdapter<unknown>>;
-		const mode = jsonLike.migrationWriteBack ?? "lazy";
+		const writeBackMode = jsonLike.migrationWriteBack ?? "lazy";
 		logger.log({
 			level: "info",
 			event: "migration",
 			path,
-			message: `Document migrated (${mode} write-back)${fromVersion !== undefined ? ` from v${fromVersion}` : ""}.`,
+			message: `Document migrated (${writeBackMode} write-back)${fromVersion !== undefined ? ` from v${fromVersion}` : ""}.`,
 		});
 
-		if (mode !== "eager") {
+		if (writeBackMode !== "eager" || mode === "read") {
 			return revision;
 		}
 
+		assertWritable();
 		const encoded = toUint8Array(await adapter.encode(data, { path }));
 		const written = await activeQueue.write(path, encoded, {
 			expectedRevision: revision,
@@ -1314,7 +1332,10 @@ export function defineWorkspace<
 		});
 	}
 
-	async function runBootCheck(activeCache: CacheEngine): Promise<void> {
+	async function runBootCheck(epoch: number, activeCache: CacheEngine): Promise<void> {
+		if (epoch !== mountEpoch) {
+			return;
+		}
 		activeAbortController?.abort();
 		const controller = new AbortController();
 		activeAbortController = controller;
@@ -1322,14 +1343,22 @@ export function defineWorkspace<
 			await activeCache.boot({
 				signal: controller.signal,
 				onProgress: (progress) => {
+					if (epoch !== mountEpoch) {
+						return;
+					}
 					syncProgress = progress;
 					config.onSyncProgress?.(progress);
 				},
 			});
-			refreshConfirmedSnapshot();
+			if (epoch !== mountEpoch) {
+				return;
+			}
+			refreshConfirmedSnapshot(undefined, epoch);
 			lastError = null;
 		} finally {
-			syncProgress = null;
+			if (epoch === mountEpoch) {
+				syncProgress = null;
+			}
 			if (activeAbortController === controller) {
 				activeAbortController = null;
 			}
@@ -1340,6 +1369,7 @@ export function defineWorkspace<
 		if (destroyed) {
 			return mountStatus;
 		}
+		const epoch = mountEpoch;
 		if (config.backend) {
 			if (mountStatus === "unlinked") {
 				initializeEngine(config.backend);
@@ -1349,9 +1379,12 @@ export function defineWorkspace<
 				const activeCache = cacheEngine;
 				await withActivity("restoring", async () => {
 					try {
-						await runBootCheck(activeCache);
+						await runBootCheck(epoch, activeCache);
 					} catch (error) {
-						handleInfrastructureError(error, "Workspace boot check failed.");
+						if (epoch !== mountEpoch) {
+							return;
+						}
+						handleInfrastructureError(error, "Workspace boot check failed.", undefined, epoch);
 					}
 				});
 			}
@@ -1366,6 +1399,9 @@ export function defineWorkspace<
 		return withActivity("restoring", async () => {
 			try {
 				const handle = (await idbStore.loadHandle()) as PermissionAwareDirectoryHandle | null;
+				if (epoch !== mountEpoch) {
+					return mountStatus;
+				}
 				if (!handle) {
 					mountStatus = "unlinked";
 					return mountStatus;
@@ -1375,6 +1411,9 @@ export function defineWorkspace<
 				const permission = handle.queryPermission
 					? await handle.queryPermission({ mode })
 					: "granted";
+				if (epoch !== mountEpoch) {
+					return mountStatus;
+				}
 
 				if (permission !== "granted") {
 					mountStatus = "needs-permission";
@@ -1396,10 +1435,16 @@ export function defineWorkspace<
 					event: "mount",
 					message: "Workspace restored and ready.",
 				});
-				await runBootCheck(cacheEngine as CacheEngine);
+				await runBootCheck(epoch, cacheEngine as CacheEngine);
+				if (epoch !== mountEpoch) {
+					return mountStatus;
+				}
 				return mountStatus;
 			} catch (error) {
-				handleInfrastructureError(error, "Failed to restore workspace handle.");
+				if (epoch !== mountEpoch) {
+					return mountStatus;
+				}
+				handleInfrastructureError(error, "Failed to restore workspace handle.", undefined, epoch);
 				return mountStatus;
 			}
 		});
@@ -1436,10 +1481,15 @@ export function defineWorkspace<
 		}
 
 		return withActivity("restoring", async () => {
+			mountEpoch += 1;
+			const epoch = mountEpoch;
 			try {
 				directoryHandle = pickedHandle as PermissionAwareDirectoryHandle;
 				if (idbStore) {
 					await idbStore.saveHandle(pickedHandle);
+				}
+				if (epoch !== mountEpoch) {
+					return mountStatus;
 				}
 				const nextBackend = config.createBackend
 					? config.createBackend(pickedHandle)
@@ -1452,10 +1502,10 @@ export function defineWorkspace<
 					event: "mount",
 					message: `Mounted directory "${pickedHandle.name}".`,
 				});
-				await runBootCheck(cacheEngine as CacheEngine);
+				await runBootCheck(epoch, cacheEngine as CacheEngine);
 				return mountStatus;
 			} catch (error) {
-				handleInfrastructureError(error, "Failed to initialize mounted directory.");
+				handleInfrastructureError(error, "Failed to initialize mounted directory.", undefined, epoch);
 				return mountStatus;
 			}
 		});
@@ -1472,10 +1522,14 @@ export function defineWorkspace<
 			mountStatus = "unsupported";
 			return mountStatus;
 		}
+		const epoch = mountEpoch;
 
 		let handle = directoryHandle;
 		if (!handle) {
 			handle = (await idbStore.loadHandle()) as PermissionAwareDirectoryHandle | null;
+			if (epoch !== mountEpoch) {
+				return mountStatus;
+			}
 			directoryHandle = handle;
 		}
 		if (!handle) {
@@ -1488,6 +1542,9 @@ export function defineWorkspace<
 				const permission = handle.requestPermission
 					? await handle.requestPermission({ mode })
 					: "granted";
+				if (epoch !== mountEpoch) {
+					return mountStatus;
+				}
 
 				if (permission !== "granted") {
 					mountStatus = "needs-permission";
@@ -1510,16 +1567,23 @@ export function defineWorkspace<
 					event: "permission",
 					message: "Directory permission granted.",
 				});
-				await runBootCheck(cacheEngine as CacheEngine);
+				await runBootCheck(epoch, cacheEngine as CacheEngine);
+				if (epoch !== mountEpoch) {
+					return mountStatus;
+				}
 				return mountStatus;
 			} catch (error) {
-				handleInfrastructureError(error, "Failed to request directory access.");
+				if (epoch !== mountEpoch) {
+					return mountStatus;
+				}
+				handleInfrastructureError(error, "Failed to request directory access.", undefined, epoch);
 				return mountStatus;
 			}
 		});
 	}
 
 	async function forget(): Promise<void> {
+		mountEpoch += 1;
 		activeAbortController?.abort();
 		activeAbortController = null;
 		cacheEngine?.destroy();
@@ -1560,6 +1624,7 @@ export function defineWorkspace<
 
 	async function heal(options?: HealOptions): Promise<HealReport> {
 		const { cacheEngine: activeCache } = assertMounted();
+		const epoch = mountEpoch;
 		activeAbortController?.abort();
 		const controller = new AbortController();
 		activeAbortController = controller;
@@ -1586,14 +1651,21 @@ export function defineWorkspace<
 						options?.onProgress?.(progress);
 					},
 				});
-				refreshConfirmedSnapshot();
-				lastError = null;
+				refreshConfirmedSnapshot(undefined, epoch);
+				if (epoch === mountEpoch) {
+					lastError = null;
+				}
 				return report;
 			} catch (error) {
-				throw handleInfrastructureError(error, "Workspace heal failed.");
+				if (isFsError(error) && error.code === "ABORTED") {
+					throw error;
+				}
+				throw handleInfrastructureError(error, "Workspace heal failed.", undefined, epoch);
 			} finally {
 				options?.signal?.removeEventListener("abort", onExternalAbort);
-				syncProgress = null;
+				if (epoch === mountEpoch) {
+					syncProgress = null;
+				}
 				if (activeAbortController === controller) {
 					activeAbortController = null;
 				}
@@ -1606,6 +1678,7 @@ export function defineWorkspace<
 		resolution: ConflictResolution,
 		customDoc?: unknown,
 	): Promise<WriteResult | void> {
+		assertWritable();
 		const conflict = unresolvedConflicts.find((item) => item.id === conflictId);
 		const target = conflictTargets.get(conflictId);
 		if (!conflict || !target) {
@@ -1614,14 +1687,19 @@ export function defineWorkspace<
 			});
 		}
 
-		const { writeQueue: activeQueue, cacheEngine: activeCache } = assertMounted();
+		const {
+			backend: activeBackend,
+			writeQueue: activeQueue,
+			cacheEngine: activeCache,
+		} = assertMounted();
+		const epoch = mountEpoch;
 
 		if (resolution === "keep-remote") {
 			unresolvedConflicts = unresolvedConflicts.filter((item) => item.id !== conflictId);
 			conflictTargets.delete(conflictId);
 
 			if (conflict.remote !== undefined && conflict.remoteRevision !== null) {
-				setTrackedDoc(conflict.path, conflict.remoteRevision, conflict.remote);
+				setTrackedDoc(conflict.path, conflict.remoteRevision, conflict.remote, epoch);
 				if (target.collection && conflict.params) {
 					await activeCache.upsertEntry(
 						target.collection,
@@ -1631,17 +1709,19 @@ export function defineWorkspace<
 						conflict.remote,
 						target.companionStatus,
 					);
-					refreshConfirmedSnapshot(target.collection);
+					refreshConfirmedSnapshot(target.collection, epoch);
 				}
 			} else {
-				removeTrackedDoc(conflict.path);
+				removeTrackedDoc(conflict.path, epoch);
 				if (target.collection) {
 					await activeCache.removeEntry(target.collection, conflict.path);
-					refreshConfirmedSnapshot(target.collection);
+					refreshConfirmedSnapshot(target.collection, epoch);
 				}
 			}
 
-			lastError = null;
+			if (epoch === mountEpoch) {
+				lastError = null;
+			}
 			return undefined;
 		}
 
@@ -1663,8 +1743,11 @@ export function defineWorkspace<
 					maxFileBytes: config.maxFileBytes,
 				});
 				const revision = await withHash(rawRevision, encoded);
+				if (epoch !== mountEpoch) {
+					return { path: conflict.path, revision };
+				}
 
-				setTrackedDoc(conflict.path, revision, docToWrite);
+				setTrackedDoc(conflict.path, revision, docToWrite, epoch);
 				unresolvedConflicts = unresolvedConflicts.filter((item) => item.id !== conflictId);
 				conflictTargets.delete(conflictId);
 
@@ -1677,10 +1760,12 @@ export function defineWorkspace<
 						docToWrite,
 						target.companionStatus,
 					);
-					refreshConfirmedSnapshot(target.collection);
+					refreshConfirmedSnapshot(target.collection, epoch);
 				}
 
-				lastError = null;
+				if (epoch === mountEpoch) {
+					lastError = null;
+				}
 				logger.log({
 					level: "info",
 					event: "write",
@@ -1690,7 +1775,56 @@ export function defineWorkspace<
 
 				return { path: conflict.path, revision };
 			} catch (error) {
-				throw handleInfrastructureError(error, `Failed to resolve conflict "${conflictId}".`);
+				if (isFsError(error) && error.code === "CONFLICT" && epoch === mountEpoch) {
+					let remoteDecoded: Awaited<ReturnType<typeof decodeWithRevision>>;
+					try {
+						remoteDecoded = await decodeWithRevision(
+							activeBackend,
+							conflict.path,
+							target.adapter,
+						);
+					} catch {
+						remoteDecoded = null;
+					}
+					if (epoch === mountEpoch) {
+						const nextRemote = remoteDecoded?.data;
+						const nextRemoteRevision = remoteDecoded?.revision ?? null;
+						const nextDiff =
+							remoteDecoded !== null
+								? target.adapter.diff
+									? target.adapter.diff(docToWrite, remoteDecoded.data)
+									: diffJson(docToWrite, remoteDecoded.data, config.diffOptions)
+								: null;
+						const nextThreeWay =
+							remoteDecoded !== null
+								? target.adapter.merge
+									? target.adapter.merge(conflict.base, docToWrite, remoteDecoded.data)
+									: mergeJson3Way(
+											conflict.base,
+											docToWrite,
+											remoteDecoded.data,
+											config.diffOptions,
+										)
+								: undefined;
+						const refreshedConflict: ConflictDetails = {
+							...conflict,
+							local: docToWrite,
+							remote: nextRemote,
+							remoteRevision: nextRemoteRevision,
+							diffLocalToRemote: nextDiff,
+							threeWay: nextThreeWay,
+						};
+						unresolvedConflicts = unresolvedConflicts.map((item) =>
+							item.id === conflictId ? refreshedConflict : item,
+						);
+					}
+				}
+				throw handleInfrastructureError(
+					error,
+					`Failed to resolve conflict "${conflictId}".`,
+					undefined,
+					epoch,
+				);
 			}
 		});
 	}
@@ -1722,6 +1856,7 @@ export function defineWorkspace<
 
 			async read(options) {
 				const { backend: activeBackend, writeQueue: activeQueue } = assertMounted();
+				const epoch = mountEpoch;
 				return withActivity("reading", async () => {
 					try {
 						const decoded = await decodeWithRevision(
@@ -1731,7 +1866,7 @@ export function defineWorkspace<
 							options?.signal,
 						);
 						if (!decoded) {
-							removeTrackedDoc(def.path);
+							removeTrackedDoc(def.path, epoch);
 							return null;
 						}
 						const finalRevision = decoded.migrated
@@ -1745,8 +1880,10 @@ export function defineWorkspace<
 									options?.signal,
 								)
 							: decoded.revision;
-						setTrackedDoc(def.path, finalRevision, decoded.data);
-						lastError = null;
+						setTrackedDoc(def.path, finalRevision, decoded.data, epoch);
+						if (epoch === mountEpoch) {
+							lastError = null;
+						}
 						return {
 							path: def.path,
 							data: decoded.data,
@@ -1757,13 +1894,20 @@ export function defineWorkspace<
 							warnings: decoded.warnings,
 						};
 					} catch (error) {
-						throw handleInfrastructureError(error, `Failed to read singleton "${name}".`);
+						throw handleInfrastructureError(
+							error,
+							`Failed to read singleton "${name}".`,
+							undefined,
+							epoch,
+						);
 					}
 				});
 			},
 
 			async write(data, options) {
+				assertWritable();
 				const { backend: activeBackend, writeQueue: activeQueue } = assertMounted();
+				const epoch = mountEpoch;
 				const context: MutationContext = {
 					operation: "write",
 					singleton: name,
@@ -1791,6 +1935,9 @@ export function defineWorkspace<
 							signal: options?.signal,
 							target: { adapter: def.adapter, singleton: name },
 						});
+						if (epoch !== mountEpoch) {
+							return result;
+						}
 
 						lastError = null;
 						logger.log({
@@ -1810,15 +1957,20 @@ export function defineWorkspace<
 							error,
 							`Failed to write singleton "${name}".`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -1827,7 +1979,9 @@ export function defineWorkspace<
 			},
 
 			async update(updater, options) {
+				assertWritable();
 				const { backend: activeBackend, writeQueue: activeQueue } = assertMounted();
+				const epoch = mountEpoch;
 				const context: MutationContext = {
 					operation: "update",
 					singleton: name,
@@ -1844,10 +1998,13 @@ export function defineWorkspace<
 							def.adapter,
 							options?.signal,
 						);
+						if (epoch !== mountEpoch) {
+							throw new FsError("ABORTED", "Workspace was unmounted.");
+						}
 						if (current) {
-							setTrackedDoc(def.path, current.revision, current.data);
+							setTrackedDoc(def.path, current.revision, current.data, epoch);
 						} else {
-							removeTrackedDoc(def.path);
+							removeTrackedDoc(def.path, epoch);
 						}
 						const nextData = await updater(current ? current.data : null);
 						const expectedRevision =
@@ -1867,6 +2024,9 @@ export function defineWorkspace<
 							signal: options?.signal,
 							target: { adapter: def.adapter, singleton: name },
 						});
+						if (epoch !== mountEpoch) {
+							return result;
+						}
 
 						lastError = null;
 						config.onMutationSettled?.({
@@ -1880,15 +2040,20 @@ export function defineWorkspace<
 							error,
 							`Failed to update singleton "${name}".`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -1902,7 +2067,9 @@ export function defineWorkspace<
 			},
 
 			async delete(options) {
+				assertWritable();
 				const { writeQueue: activeQueue } = assertMounted();
+				const epoch = mountEpoch;
 				const context: MutationContext = {
 					operation: "delete",
 					singleton: name,
@@ -1922,7 +2089,10 @@ export function defineWorkspace<
 							expectedRevision,
 							backup: options?.backup,
 						});
-						removeTrackedDoc(def.path);
+						if (epoch !== mountEpoch) {
+							return;
+						}
+						removeTrackedDoc(def.path, epoch);
 						lastError = null;
 						logger.log({
 							level: "info",
@@ -1936,15 +2106,20 @@ export function defineWorkspace<
 							error,
 							`Failed to delete singleton "${name}".`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -1973,6 +2148,24 @@ export function defineWorkspace<
 			return def.companion.template;
 		}
 
+		async function resolveExistingCompanionStatus(
+			activeBackend: FsBackend,
+			activeCache: CacheEngine,
+			path: string,
+			params: Record<string, string>,
+		): Promise<CompanionStatus | undefined> {
+			if (!def.companion) {
+				return undefined;
+			}
+			const cached = activeCache.getEntry(name, path)?.companionStatus;
+			if (cached !== undefined) {
+				return cached;
+			}
+			return (await activeBackend.exists(def.companion.template.build(params)))
+				? "present"
+				: "missing";
+		}
+
 		const baseHandle: BaseCollectionHandle<unknown, Record<string, string>> = {
 			name,
 			pattern: def.pattern,
@@ -1980,6 +2173,7 @@ export function defineWorkspace<
 			async read(params, options) {
 				const { backend: activeBackend, writeQueue: activeQueue, cacheEngine: activeCache } =
 					assertMounted();
+				const epoch = mountEpoch;
 				const path = def.template.build(params);
 				return withActivity("reading", async () => {
 					try {
@@ -1990,7 +2184,7 @@ export function defineWorkspace<
 							options?.signal,
 						);
 						if (!decoded) {
-							removeTrackedDoc(path);
+							removeTrackedDoc(path, epoch);
 							return null;
 						}
 						let finalRevision = decoded.revision;
@@ -2004,19 +2198,39 @@ export function defineWorkspace<
 								decoded.fromVersion,
 								options?.signal,
 							);
+							if (epoch !== mountEpoch) {
+								return {
+									path,
+									data: decoded.data,
+									revision: finalRevision,
+									meta: decoded.meta,
+									migrated: decoded.migrated,
+									fromVersion: decoded.fromVersion,
+									warnings: decoded.warnings,
+								};
+							}
 							if (def.hasIndex) {
+								const companionStatus = await resolveExistingCompanionStatus(
+									activeBackend,
+									activeCache,
+									path,
+									params,
+								);
 								await activeCache.upsertEntry(
 									name,
 									path,
 									params,
 									finalRevision,
 									decoded.data,
+									companionStatus,
 								);
-								refreshConfirmedSnapshot(name);
+								refreshConfirmedSnapshot(name, epoch);
 							}
 						}
-						setTrackedDoc(path, finalRevision, decoded.data);
-						lastError = null;
+						setTrackedDoc(path, finalRevision, decoded.data, epoch);
+						if (epoch === mountEpoch) {
+							lastError = null;
+						}
 						return {
 							path,
 							data: decoded.data,
@@ -2027,14 +2241,16 @@ export function defineWorkspace<
 							warnings: decoded.warnings,
 						};
 					} catch (error) {
-						throw handleInfrastructureError(error, `Failed to read "${path}".`);
+						throw handleInfrastructureError(error, `Failed to read "${path}".`, undefined, epoch);
 					}
 				});
 			},
 
 			async write(params, data, options) {
+				assertWritable();
 				const { backend: activeBackend, writeQueue: activeQueue, cacheEngine: activeCache } =
 					assertMounted();
+				const epoch = mountEpoch;
 				const path = def.template.build(params);
 				const context: MutationContext = {
 					operation: "write",
@@ -2057,6 +2273,12 @@ export function defineWorkspace<
 							options?.expectedRevision !== undefined
 								? options.expectedRevision
 								: (trackedDocs.get(path)?.revision ?? activeCache.getRevision(name, path));
+						const existingCompanionStatus = await resolveExistingCompanionStatus(
+							activeBackend,
+							activeCache,
+							path,
+							params,
+						);
 
 						const result = await performConflictAwareWrite({
 							activeBackend,
@@ -2068,15 +2290,30 @@ export function defineWorkspace<
 							policy: options?.conflictPolicy ?? defaultConflictPolicy,
 							backup: options?.backup,
 							signal: options?.signal,
-							target: { adapter: def.adapter, collection: name, params },
+							target: {
+								adapter: def.adapter,
+								collection: name,
+								params,
+								companionStatus: existingCompanionStatus,
+							},
 						});
+						if (epoch !== mountEpoch) {
+							return result;
+						}
 
 						if (def.hasIndex) {
 							const committedData = result.merged
 								? (trackedDocs.get(path)?.data ?? data)
 								: data;
-							await activeCache.upsertEntry(name, path, params, result.revision, committedData);
-							refreshConfirmedSnapshot(name);
+							await activeCache.upsertEntry(
+								name,
+								path,
+								params,
+								result.revision,
+								committedData,
+								existingCompanionStatus,
+							);
+							refreshConfirmedSnapshot(name, epoch);
 						}
 
 						lastError = null;
@@ -2097,15 +2334,20 @@ export function defineWorkspace<
 							error,
 							`Failed to write "${path}".`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -2114,7 +2356,10 @@ export function defineWorkspace<
 			},
 
 			async writeRaw(params, fileOrBytes, options) {
-				const { writeQueue: activeQueue } = assertMounted();
+				assertWritable();
+				const { backend: activeBackend, writeQueue: activeQueue, cacheEngine: activeCache } =
+					assertMounted();
+				const epoch = mountEpoch;
 				const path = def.template.build(params);
 				const context: MutationContext = {
 					operation: "writeRaw",
@@ -2141,6 +2386,46 @@ export function defineWorkspace<
 							signal: options?.signal,
 						});
 						const revision = await withHash(rawRevision, bytes);
+						if (epoch !== mountEpoch) {
+							return { path, revision };
+						}
+
+						removeTrackedDoc(path, epoch);
+						if (def.hasIndex) {
+							const fileName = path.split("/").at(-1) ?? path;
+							const rawFile =
+								fileOrBytes instanceof File
+									? fileOrBytes
+									: new File([new Uint8Array(bytes)], fileName, {
+											lastModified: revision.lastModified,
+										});
+							try {
+								const decoded = await def.adapter.decode({
+									path,
+									file: rawFile,
+									readBytes: async () => bytes,
+									readText: async () => new TextDecoder().decode(bytes),
+								});
+								const existingCompanionStatus = await resolveExistingCompanionStatus(
+									activeBackend,
+									activeCache,
+									path,
+									params,
+								);
+								await activeCache.upsertEntry(
+									name,
+									path,
+									params,
+									revision,
+									decoded.data,
+									existingCompanionStatus,
+								);
+							} catch {
+								await activeCache.removeEntry(name, path);
+							}
+							refreshConfirmedSnapshot(name, epoch);
+						}
+
 						lastError = null;
 						logger.log({
 							level: "info",
@@ -2155,15 +2440,20 @@ export function defineWorkspace<
 							error,
 							`Failed to write raw file "${path}".`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -2172,9 +2462,11 @@ export function defineWorkspace<
 			},
 
 			async writeWithCompanion(params, data, companionFile, options) {
+				assertWritable();
 				const companionTemplate = requireCompanionTemplate();
 				const { backend: activeBackend, writeQueue: activeQueue, cacheEngine: activeCache } =
 					assertMounted();
+				const epoch = mountEpoch;
 				const path = def.template.build(params);
 				const companionPath = companionTemplate.build(params);
 				const context: MutationContext = {
@@ -2195,36 +2487,97 @@ export function defineWorkspace<
 
 				const task = withActivity("writing", async (): Promise<WriteResult> => {
 					try {
-						// Write companion BEFORE primary record so a failed companion never leaves a dangling record.
-						const companionBytes = await rawInputToUint8Array(companionFile);
-						await activeQueue.write(companionPath, companionBytes, {
-							backup: options?.backup,
-							maxFileBytes: config.maxFileBytes,
-							signal: options?.signal,
-						});
+						// Validate/encode primary record before writing companion so invalid data never overwrites companion.
+						toUint8Array(await def.adapter.encode(data, { path }));
 
+						const policy = options?.conflictPolicy ?? defaultConflictPolicy;
 						const expectedRevision =
 							options?.expectedRevision !== undefined
 								? options.expectedRevision
 								: (trackedDocs.get(path)?.revision ?? activeCache.getRevision(name, path));
 
-						const result = await performConflictAwareWrite({
-							activeBackend,
-							activeQueue,
-							path,
-							adapter: def.adapter,
-							data,
-							expectedRevision,
-							policy: options?.conflictPolicy ?? defaultConflictPolicy,
-							backup: options?.backup,
-							signal: options?.signal,
-							target: {
+						let conflictPrechecked = false;
+						if (policy !== "last-write-wins") {
+							const effectiveExpected =
+								expectedRevision === undefined ? null : expectedRevision;
+							const currentStat = await activeBackend.stat(path);
+							let mismatch =
+								(effectiveExpected === null && currentStat !== null) ||
+								(effectiveExpected !== null &&
+									(currentStat === null ||
+										currentStat.size !== effectiveExpected.size ||
+										currentStat.lastModified !== effectiveExpected.lastModified));
+							if (
+								!mismatch &&
+								effectiveExpected !== null &&
+								effectiveExpected.hash !== undefined &&
+								currentStat !== null
+							) {
+								const currentRead = await activeBackend.readBytes(path, {
+									maxFileBytes: config.maxFileBytes,
+									signal: options?.signal,
+								});
+								const currentHash = await sha256Hex(currentRead.bytes);
+								mismatch = currentHash !== effectiveExpected.hash;
+							}
+							conflictPrechecked = mismatch;
+						}
+
+						const companionBytes = await rawInputToUint8Array(companionFile);
+						let result: WriteResult;
+						if (conflictPrechecked) {
+							result = await performConflictAwareWrite({
+								activeBackend,
+								activeQueue,
+								path,
 								adapter: def.adapter,
-								collection: name,
-								params,
-								companionStatus: "present",
-							},
-						});
+								data,
+								expectedRevision,
+								policy,
+								backup: options?.backup,
+								signal: options?.signal,
+								target: {
+									adapter: def.adapter,
+									collection: name,
+									params,
+									companionStatus: "present",
+								},
+							});
+							if (result.merged) {
+								await activeQueue.write(companionPath, companionBytes, {
+									backup: options?.backup,
+									maxFileBytes: config.maxFileBytes,
+									signal: options?.signal,
+								});
+							}
+						} else {
+							// Write companion BEFORE primary record so a failed companion never leaves a dangling record.
+							await activeQueue.write(companionPath, companionBytes, {
+								backup: options?.backup,
+								maxFileBytes: config.maxFileBytes,
+								signal: options?.signal,
+							});
+							result = await performConflictAwareWrite({
+								activeBackend,
+								activeQueue,
+								path,
+								adapter: def.adapter,
+								data,
+								expectedRevision,
+								policy,
+								backup: options?.backup,
+								signal: options?.signal,
+								target: {
+									adapter: def.adapter,
+									collection: name,
+									params,
+									companionStatus: "present",
+								},
+							});
+						}
+						if (epoch !== mountEpoch) {
+							return result;
+						}
 
 						if (def.hasIndex) {
 							const committedData = result.merged
@@ -2238,7 +2591,7 @@ export function defineWorkspace<
 								committedData,
 								"present",
 							);
-							refreshConfirmedSnapshot(name);
+							refreshConfirmedSnapshot(name, epoch);
 						}
 
 						lastError = null;
@@ -2259,15 +2612,20 @@ export function defineWorkspace<
 							error,
 							`Failed to write "${path}" with companion.`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -2308,8 +2666,10 @@ export function defineWorkspace<
 			},
 
 			async update(params, updater, options) {
+				assertWritable();
 				const { backend: activeBackend, writeQueue: activeQueue, cacheEngine: activeCache } =
 					assertMounted();
+				const epoch = mountEpoch;
 				const path = def.template.build(params);
 				const context: MutationContext = {
 					operation: "update",
@@ -2327,14 +2687,23 @@ export function defineWorkspace<
 							def.adapter,
 							options?.signal,
 						);
+						if (epoch !== mountEpoch) {
+							throw new FsError("ABORTED", "Workspace was unmounted.");
+						}
 						if (current) {
-							setTrackedDoc(path, current.revision, current.data);
+							setTrackedDoc(path, current.revision, current.data, epoch);
 						} else {
-							removeTrackedDoc(path);
+							removeTrackedDoc(path, epoch);
 						}
 
 						const nextData = await updater(current ? current.data : null);
-						if (def.hasIndex) {
+						const existingCompanionStatus = await resolveExistingCompanionStatus(
+							activeBackend,
+							activeCache,
+							path,
+							params,
+						);
+						if (def.hasIndex && epoch === mountEpoch) {
 							updatePendingMutation(mutId, {
 								id: mutId,
 								kind: "upsert",
@@ -2342,6 +2711,7 @@ export function defineWorkspace<
 								path,
 								params,
 								projected: projectDoc(nextData, params),
+								companionStatus: existingCompanionStatus,
 							});
 						}
 
@@ -2360,15 +2730,30 @@ export function defineWorkspace<
 							policy: options?.conflictPolicy ?? defaultConflictPolicy,
 							backup: options?.backup,
 							signal: options?.signal,
-							target: { adapter: def.adapter, collection: name, params },
+							target: {
+								adapter: def.adapter,
+								collection: name,
+								params,
+								companionStatus: existingCompanionStatus,
+							},
 						});
+						if (epoch !== mountEpoch) {
+							return result;
+						}
 
 						if (def.hasIndex) {
 							const committedData = result.merged
 								? (trackedDocs.get(path)?.data ?? nextData)
 								: nextData;
-							await activeCache.upsertEntry(name, path, params, result.revision, committedData);
-							refreshConfirmedSnapshot(name);
+							await activeCache.upsertEntry(
+								name,
+								path,
+								params,
+								result.revision,
+								committedData,
+								existingCompanionStatus,
+							);
+							refreshConfirmedSnapshot(name, epoch);
 						}
 
 						lastError = null;
@@ -2383,15 +2768,20 @@ export function defineWorkspace<
 							error,
 							`Failed to update "${path}".`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -2400,8 +2790,10 @@ export function defineWorkspace<
 			},
 
 			async move(fromParams, toParams, options) {
+				assertWritable();
 				const { backend: activeBackend, writeQueue: activeQueue, cacheEngine: activeCache } =
 					assertMounted();
+				const epoch = mountEpoch;
 				const fromPath = def.template.build(fromParams);
 				const toPath = def.template.build(toParams);
 				const context: MutationContext = {
@@ -2409,6 +2801,11 @@ export function defineWorkspace<
 					collection: name,
 					path: toPath,
 				};
+				const prevTracked = trackedDocs.get(fromPath);
+				const projected =
+					prevTracked !== undefined && def.index?.project
+						? def.index.project(prevTracked.data, toParams)
+						: undefined;
 				const mutId = nextMutationId();
 				pushPendingMutation({
 					id: mutId,
@@ -2417,12 +2814,12 @@ export function defineWorkspace<
 					fromPath,
 					toPath,
 					toParams,
+					projected,
 				});
 
 				const task = withActivity("writing", async (): Promise<WriteResult> => {
 					try {
 						const policy = options?.conflictPolicy ?? defaultConflictPolicy;
-						const prevTracked = trackedDocs.get(fromPath);
 						const prevCachedRevision = activeCache.getRevision(name, fromPath);
 						const expectedRevision =
 							policy === "last-write-wins"
@@ -2459,7 +2856,7 @@ export function defineWorkspace<
 											rollbackRev.hash !== undefined || prev.revision.hash === undefined
 												? rollbackRev
 												: { ...rollbackRev, hash: prev.revision.hash };
-										setTrackedDoc(fromPath, preservedRev, prev.data);
+										setTrackedDoc(fromPath, preservedRev, prev.data, epoch);
 									}
 								} catch {
 									// Best-effort rollback.
@@ -2468,14 +2865,18 @@ export function defineWorkspace<
 							}
 						}
 
-						removeTrackedDoc(fromPath);
+						if (epoch !== mountEpoch) {
+							return { path: toPath, revision: newRevision };
+						}
+
+						removeTrackedDoc(fromPath, epoch);
 						let docForIndex = prevTracked?.data;
 						if (docForIndex === undefined && def.hasIndex) {
 							const decoded = await decodeWithRevision(activeBackend, toPath, def.adapter);
 							docForIndex = decoded?.data;
 						}
 						if (docForIndex !== undefined) {
-							setTrackedDoc(toPath, newRevision, docForIndex);
+							setTrackedDoc(toPath, newRevision, docForIndex, epoch);
 						}
 
 						if (def.hasIndex) {
@@ -2490,7 +2891,7 @@ export function defineWorkspace<
 									def.companion ? (companionMoved ? "present" : "missing") : undefined,
 								);
 							}
-							refreshConfirmedSnapshot(name);
+							refreshConfirmedSnapshot(name, epoch);
 						}
 
 						lastError = null;
@@ -2511,15 +2912,20 @@ export function defineWorkspace<
 							error,
 							`Failed to move "${fromPath}" to "${toPath}".`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -2528,8 +2934,10 @@ export function defineWorkspace<
 			},
 
 			async delete(params, options) {
+				assertWritable();
 				const { backend: activeBackend, writeQueue: activeQueue, cacheEngine: activeCache } =
 					assertMounted();
+				const epoch = mountEpoch;
 				const path = def.template.build(params);
 				const context: MutationContext = {
 					operation: "delete",
@@ -2563,10 +2971,14 @@ export function defineWorkspace<
 							}
 						}
 
-						removeTrackedDoc(path);
+						if (epoch !== mountEpoch) {
+							return;
+						}
+
+						removeTrackedDoc(path, epoch);
 						if (def.hasIndex) {
 							await activeCache.removeEntry(name, path);
-							refreshConfirmedSnapshot(name);
+							refreshConfirmedSnapshot(name, epoch);
 						}
 
 						lastError = null;
@@ -2582,15 +2994,20 @@ export function defineWorkspace<
 							error,
 							`Failed to delete "${path}".`,
 							context,
+							epoch,
 						);
-						config.onMutationSettled?.({
-							...context,
-							status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-							error: fsError,
-						});
+						if (epoch === mountEpoch) {
+							config.onMutationSettled?.({
+								...context,
+								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+								error: fsError,
+							});
+						}
 						throw fsError;
 					} finally {
-						removePendingMutation(mutId);
+						if (epoch === mountEpoch) {
+							removePendingMutation(mutId);
+						}
 					}
 				});
 
@@ -2608,9 +3025,13 @@ export function defineWorkspace<
 				const { backend: activeBackend } = assertMounted();
 				const files = await activeBackend.walkFiles("", {
 					systemDir,
+					shouldIgnore: (relativePath) => isIgnoredPath(relativePath, systemDir, config.ignore),
 				});
 				const items: CollectionListItem<Record<string, string>>[] = [];
 				for (const stat of files) {
+					if (isIgnoredPath(stat.path, systemDir, config.ignore)) {
+						continue;
+					}
 					const parsed = def.template.parse(stat.path);
 					if (!parsed) {
 						continue;
@@ -2643,13 +3064,11 @@ export function defineWorkspace<
 			return baseHandle;
 		}
 
-		const indexConfig = def.index;
 		const effectiveEntries = $derived.by(() =>
 			applyPendingMutations(
 				confirmedEntries[name] ?? [],
 				pendingMutations,
 				name,
-				indexConfig,
 			),
 		);
 
@@ -2721,13 +3140,26 @@ export function defineWorkspace<
 		collectionHandles[name] = buildCollectionHandle(name, def);
 	}
 
-	// Browser lifecycle listeners: unload protection & throttled focus revalidation.
+	// Browser lifecycle listeners: unload protection, background flush & throttled focus revalidation.
 	const preventClose = config.preventCloseWhilePending ?? true;
 	const onBeforeUnload = (event: BeforeUnloadEvent): void => {
 		if (destroyed || !preventClose || pendingMutationCount === 0) {
 			return;
 		}
 		event.preventDefault();
+	};
+
+	const flushBufferedCachesAndLogs = async (): Promise<void> => {
+		if (destroyed || mountStatus !== "ready") {
+			return;
+		}
+		await Promise.allSettled([cacheEngine?.flush(), logger.flush()]);
+	};
+
+	const onPageHide = (): void => {
+		void flushBufferedCachesAndLogs().catch(() => {
+			// Best-effort flush on page hide.
+		});
 	};
 
 	const revalidateMinInterval =
@@ -2755,7 +3187,14 @@ export function defineWorkspace<
 	};
 
 	const onVisibilityChange = (): void => {
-		if (typeof document !== "undefined" && document.visibilityState === "visible") {
+		if (typeof document === "undefined") {
+			return;
+		}
+		if (document.visibilityState === "hidden") {
+			void flushBufferedCachesAndLogs().catch(() => {
+				// Best-effort flush when tab is hidden.
+			});
+		} else if (document.visibilityState === "visible") {
 			triggerFocusRevalidate();
 		}
 	};
@@ -2764,11 +3203,12 @@ export function defineWorkspace<
 		if (preventClose) {
 			window.addEventListener("beforeunload", onBeforeUnload);
 		}
+		window.addEventListener("pagehide", onPageHide);
+		if (typeof document !== "undefined") {
+			document.addEventListener("visibilitychange", onVisibilityChange);
+		}
 		if (revalidateMinInterval !== null) {
 			window.addEventListener("focus", triggerFocusRevalidate);
-			if (typeof document !== "undefined") {
-				document.addEventListener("visibilitychange", onVisibilityChange);
-			}
 		}
 	}
 
@@ -2777,6 +3217,7 @@ export function defineWorkspace<
 			return;
 		}
 		destroyed = true;
+		mountEpoch += 1;
 		activeAbortController?.abort();
 		activeAbortController = null;
 		cacheEngine?.destroy();
@@ -2784,6 +3225,7 @@ export function defineWorkspace<
 
 		if (typeof window !== "undefined") {
 			window.removeEventListener("beforeunload", onBeforeUnload);
+			window.removeEventListener("pagehide", onPageHide);
 			window.removeEventListener("focus", triggerFocusRevalidate);
 			if (typeof document !== "undefined") {
 				document.removeEventListener("visibilitychange", onVisibilityChange);

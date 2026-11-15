@@ -6,13 +6,14 @@
 
 `src/modules/file-system/` is split into strict, layered internals (none of which are re-exported through `index.ts`):
 
-- **`fs-backend.internal.ts`**: `FsBackend` abstraction and `BrowserFsBackend` wrapping `FileSystemDirectoryHandle`, `FileSystemFileHandle`, `createWritable()`, and native `move()` with verified copy+SHA-256+delete fallback.
+- **`types.ts`**: Public contract layer (`FsBackend`, `FileRevision`, `HealReport`, `FsLogEntry`, `CacheCollectionConfig`, etc.) imported by both `*.internal.ts` modules and `workspace.svelte.ts` / `index.ts`, ensuring zero `*.internal.*` types leak through `index.ts`.
+- **`fs-backend.internal.ts`**: `FsBackend` implementation (`BrowserFsBackend`) wrapping `FileSystemDirectoryHandle`, `FileSystemFileHandle`, `createWritable()`, and native `move()` with verified copy+SHA-256+delete fallback.
 - **`memory-fs.internal.ts`**: `MemoryFsBackend` deterministic in-memory `FsBackend` for Vitest unit/chaos suites.
 - **`write-queue.internal.ts`**: `WriteQueue` providing per-path FIFO mutexes, optional `navigator.locks` cross-tab coordination, global barriers, `retryOnLock` backoff, OCC revision checks, post-write SHA-256 verification, and bounded `.bak` backups.
 - **`idb-handle-store.internal.ts`**: Zero-dependency native `IndexedDB` handle persistence (`cs-file-system-handles` / `handles` store) and `resolveWorkspaceNamespace()`.
 - **`logger.internal.ts`**: `FsLogger` writing batched JSONL logs to `_cs-fs/logs/` with `1 MiB` / `2000` lines / `5` files rotation plus a capped 50-entry (`64 KiB`) metadata-only `localStorage` emergency ring buffer.
 - **`cache-engine.internal.ts`**: `CacheEngine` managing `_cs-fs/meta.json` and `_cs-fs/index/<collection>/<partition>.json`.
-- **`workspace.svelte.ts`**: Reactive Svelte 5 orchestrator (`$state`, `$state.raw`, `$derived`) binding mount lifecycle, optimistic UI overlay, conflict resolution, and collection/singleton handles.
+- **`workspace.svelte.ts`**: Reactive Svelte 5 orchestrator (`$state`, `$state.raw`, `$derived`) binding mount lifecycle, optimistic UI overlay, conflict resolution, and collection/singleton handles. Uses `ErasedSingletonDefinition` and `ErasedCollectionDefinition` as non-generic base constraints on `WorkspaceConfig` / `Workspace` so per-handle `TData`, `TProjected`, `TParams`, and `THasIndex` types stay preserved without contravariance issues.
 
 ## Mount & Permission State Machine
 
@@ -28,6 +29,7 @@
 3. **`requestAccess()`**: Must be called from a user gesture when `mountStatus === "needs-permission"`. Invokes `handle.requestPermission({ mode })`; on `"granted"` boots engines and transitions to `"ready"`.
 4. **`pick(options?)`**: Calls `showDirectoryPicker`, persists handle in IndexedDB, tears down any prior engine state, boots engines, and transitions to `"ready"`.
 5. **`forget()`**: Deletes persisted handle from IndexedDB, destroys `CacheEngine` / `FsLogger` timers, clears `confirmedEntries` / `pendingMutations`, resets `mountStatus` to `"unlinked"`.
+6. **`mountEpoch` lifecycle guarding**: `mountEpoch` is incremented monotonically on `pick()`, `forget()`, and `destroy()`. Async operations (`pick`, `heal`, `runBootCheck`, reads, mutations, conflict resolution, error handling) capture `const epoch = mountEpoch` at entry and verify `epoch === mountEpoch` before mutating reactive state (`mountStatus`, `confirmedEntries`, `pendingMutations`, `unresolvedConflicts`, `corruptEntries`, `lastError`, `trackedDocs`), preventing stale async completions from corrupting state across remounts or teardown.
 
 ## `WriteQueue` Concurrency & Non-Reentrancy
 

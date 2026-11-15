@@ -1,58 +1,26 @@
 import { FsError, isFsError } from "./errors.ts";
 import { DEFAULT_SYSTEM_DIR, isIgnoredPath } from "./path-template.ts";
+import type {
+	FileRevision,
+	FileStat,
+	FsBackend,
+	FsDirEntry,
+	FsReadOptions,
+	FsWalkOptions,
+	FsWriteOptions,
+} from "./types.ts";
 
 export const DEFAULT_MAX_FILE_BYTES = 100 * 1024 * 1024;
 
-export interface FileRevision {
-	size: number;
-	lastModified: number;
-	hash?: string;
-}
-
-export interface FileStat {
-	path: string;
-	size: number;
-	lastModified: number;
-}
-
-export interface FsDirEntry {
-	name: string;
-	path: string;
-	kind: "file" | "directory";
-}
-
-export interface FsReadOptions {
-	maxFileBytes?: number;
-	signal?: AbortSignal;
-}
-
-export interface FsWriteOptions {
-	maxFileBytes?: number;
-	signal?: AbortSignal;
-}
-
-export interface FsWalkOptions {
-	systemDir?: string;
-	shouldIgnore?: (relativePath: string) => boolean;
-	signal?: AbortSignal;
-}
-
-export interface FsBackend {
-	readBytes(
-		path: string,
-		options?: FsReadOptions,
-	): Promise<{ bytes: Uint8Array; revision: FileRevision }>;
-	readFile(path: string, options?: FsReadOptions): Promise<File>;
-	stat(path: string): Promise<FileStat | null>;
-	writeBytes(path: string, bytes: Uint8Array, options?: FsWriteOptions): Promise<FileRevision>;
-	deleteFile(path: string): Promise<void>;
-	moveFile(fromPath: string, toPath: string): Promise<FileRevision>;
-	exists(path: string): Promise<boolean>;
-	listDir(dirPath: string): Promise<FsDirEntry[]>;
-	walkFiles(dirPath?: string, options?: FsWalkOptions): Promise<FileStat[]>;
-	ensureDir(dirPath: string): Promise<void>;
-	removeDir(dirPath: string, options?: { recursive?: boolean }): Promise<void>;
-}
+export type {
+	FileRevision,
+	FileStat,
+	FsBackend,
+	FsDirEntry,
+	FsReadOptions,
+	FsWalkOptions,
+	FsWriteOptions,
+} from "./types.ts";
 
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
 	// Copy into a standalone ArrayBuffer so SharedArrayBuffer-backed views satisfy BufferSource.

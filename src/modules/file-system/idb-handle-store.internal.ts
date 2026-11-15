@@ -1,5 +1,8 @@
 import { getStoragePrefix } from "../browser-storage/index.ts";
 import { FsError } from "./errors.ts";
+import type { IdbHandleStoreLike } from "./types.ts";
+
+export type { IdbHandleStoreLike } from "./types.ts";
 
 export const DEFAULT_IDB_NAME = "cs-file-system-handles";
 export const DEFAULT_IDB_STORE_NAME = "handles";
@@ -130,7 +133,7 @@ function awaitRequest<T>(request: IDBRequest<T>, action: string): Promise<T> {
 	});
 }
 
-export class IdbHandleStore {
+export class IdbHandleStore implements IdbHandleStoreLike {
 	readonly namespace: string;
 	readonly storageKey: string;
 	readonly key: string;

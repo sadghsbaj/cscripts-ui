@@ -44,10 +44,12 @@ exports:
   - ConflictResolution
   - PickDirectoryOptions
   - SingletonConfig
+  - ErasedSingletonDefinition
   - SingletonDefinition
   - SingletonHandle
   - CompanionConfig
   - CollectionConfig
+  - ErasedCollectionDefinition
   - CollectionDefinition
   - BaseCollectionHandle
   - IndexedCollectionHandle
@@ -114,6 +116,7 @@ exports:
   - FileSystemSupportReport
   - BootCheckMode
   - BootResult
+  - CacheCollectionConfig
   - CachedIndexEntry
   - CollectionIndexConfig
   - CompanionStatus
@@ -121,10 +124,22 @@ exports:
   - HealMode
   - HealOptions
   - HealReport
+  - MetaCollectionManifest
+  - MetaPartitionInfo
   - SyncProgress
+  - WorkspaceMetaFile
   - FileRevision
+  - FileStat
   - FsBackend
+  - FsDirEntry
+  - FsReadOptions
+  - FsWalkOptions
+  - FsWriteOptions
+  - IdbHandleStoreLike
   - EmergencyLogEntry
+  - EmergencyLogInput
+  - FS_LOG_EVENTS
+  - FS_LOG_LEVELS
   - FsLogEntry
   - FsLogEvent
   - FsLogInput
@@ -133,6 +148,9 @@ exports:
   - ReadLogsOptions
   - BackupOptions
   - LockRetryOptions
+  - SafeDeleteOptions
+  - SafeMoveOptions
+  - SafeWriteOptions
 ---
 
 # FileSystem
@@ -147,7 +165,7 @@ Local-first directory workspace for Svelte 5 built on the File System Access API
 2. **Singletons live in the business area, never inside `_cs-fs/`:**
    App-level files such as `settings.json` are declared with `defineSingleton({ path: "settings.json", ... })` in the business root. Declaring a singleton or collection path inside `systemDir` throws `FsError("INVALID_CONFIG")`.
 3. **Single-file `file://` & `MISSING_PREFIX` enforcement:**
-   Standalone `file://` HTML tools share one browser origin bucket for IndexedDB and `localStorage`. `defineWorkspace()` / `createWorkspace()` resolves its namespace from `config.namespace` or `getStoragePrefix()` (from `cs/svelte/browser-storage`). If both are empty, workspace creation immediately throws `FsError("MISSING_PREFIX")` unless a custom `backend` is injected for tests. All operations are zero-worker and make zero external network/asset requests.
+   Standalone `file://` HTML tools share one browser origin bucket for IndexedDB and `localStorage`. `defineWorkspace()` / `createWorkspace()` resolves its namespace from `config.namespace` or `getStoragePrefix()` (from `cs/svelte/browser-storage`). If both are empty, workspace creation immediately throws `FsError("MISSING_PREFIX")` (even when a custom `backend` is injected). All operations are zero-worker and make zero external network/asset requests.
 4. **No overlapping path templates:**
    Every singleton, collection, and companion pattern in a workspace is checked with `assertNonOverlappingTemplates()` at startup; overlapping patterns throw `FsError("INVALID_CONFIG")`.
 
@@ -192,14 +210,25 @@ export const workspace = defineWorkspace({
 	singletons: {
 		settings: defineSingleton({
 			path: "settings.json",
-			adapter: jsonAdapter<Settings>({ version: 1 }),
+			adapter: jsonAdapter<Settings>({
+				version: 1,
+				validate: (raw): raw is Settings =>
+					typeof raw === "object" &&
+					raw !== null &&
+					typeof (raw as Settings).workshopName === "string",
+			}),
 		}),
 	},
 	collections: {
 		orders: defineCollection({
 			pattern: "orders/{year}/{id}.json",
 			paramPatterns: { year: /^\d{4}$/ },
-			adapter: jsonAdapter<Order>({ version: 1 }),
+			adapter: jsonAdapter<Order>({
+				version: 1,
+				// Pass any Standard Schema v1 validator (Zod, Valibot, ArkType) via `schema`
+				// or a runtime type guard via `validate`:
+				schema: orderSchema,
+			}),
 			index: {
 				partitionBy: (params) => params.year,
 				project: (doc) =>
@@ -245,7 +274,8 @@ export const workspace = defineWorkspace({
 - `workspace.requestAccess()`: Calls `requestPermission({ mode })` on an existing handle when `mountStatus === "needs-permission"` and boots if granted.
 - `workspace.forget()`: Clears the persisted handle from IndexedDB, flushes/destroys internal engines, and resets `mountStatus` to `"unlinked"`.
 - `workspace.flush()`: Awaits all queued writes, pending index shard flushes, and log flushes.
-- `workspace.destroy()`: Aborts in-flight operations, stops flush timers, and removes `beforeunload` / `focus` / `visibilitychange` listeners.
+- `workspace.destroy()`: Aborts in-flight operations, stops flush timers, and removes `beforeunload` / `pagehide` / `focus` / `visibilitychange` listeners.
+- **Read-only mode (`mode: "read"`):** Configured on `defineWorkspace({ mode: "read", ... })` (default `"readwrite"`). Requests read-only directory permission, throws `FsError("PERMISSION_DENIED")` on explicit write/mutation operations (`write`, `writeRaw`, `writeWithCompanion`, `delete`, `move`, `resolveConflict`, etc.), skips `migrationWriteBack: "eager"` during `read()` without modifying disk (instead of throwing `PERMISSION_DENIED`), and suppresses all `_cs-fs/` disk writes (index shards, `meta.json`, and JSONL logs).
 
 ## Custom Adapters
 
@@ -341,6 +371,7 @@ Workspace reactive status properties:
 - `health`: `"base"` (`unlinked`), `"negative"` (`stale`, `unsupported`, or `lastError !== null`), `"caution"` (`needs-permission`, `isBusy`, `unresolvedConflictCount > 0`, or `corruptEntries.length > 0`), or `"positive"`.
 - `lastError` & `clearError()`: Captures the most recent `FsError`. Call `workspace.clearError()` after the user acknowledges an error banner to return `health` from `"negative"` to `"positive"`/`"caution"`.
 - `preventCloseWhilePending` (default `true`): Registers a `beforeunload` handler that calls `event.preventDefault()` while `pendingMutationCount > 0`.
+- **Background cache & log flush:** Registers `pagehide` and `visibilitychange` (`"hidden"`) listeners that trigger a best-effort flush of buffered `_cs-fs/` index shards and JSONL logs while `mountStatus === "ready"`.
 - `revalidateOnFocus` (default `false`): When `true` or `{ minIntervalMs }` (default `5000`), runs `heal({ mode: "incremental" })` when the window regains focus or becomes visible.
 
 ## Conflict Resolution
@@ -394,7 +425,7 @@ async function resolveInteractive(
 
 | Code | Meaning |
 | :--- | :--- |
-| `MISSING_PREFIX` | Neither `config.namespace` nor `configureStoragePrefix()` was set before creating a persistent workspace. |
+| `MISSING_PREFIX` | Neither `config.namespace` nor `configureStoragePrefix()` was set before creating a workspace. |
 | `INVALID_CONFIG` | Invalid adapter, overlapping path templates, non-contiguous migrations, or business path inside `systemDir`. |
 | `UNSUPPORTED_ENV` | Browser lacks `showDirectoryPicker` / `indexedDB`, is not a secure context, or running in SSR. |
 | `UNSUPPORTED_SCHEMA_VERSION` | File on disk has a schema version newer than the adapter's `version`. |

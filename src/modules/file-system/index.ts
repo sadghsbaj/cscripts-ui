@@ -3,4 +3,5 @@ export * from "./errors.ts";
 export * from "./json-diff.ts";
 export * from "./path-template.ts";
 export * from "./support.ts";
+export * from "./types.ts";
 export * from "./workspace.svelte.ts";

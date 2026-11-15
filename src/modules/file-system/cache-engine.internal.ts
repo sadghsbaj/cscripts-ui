@@ -1,14 +1,29 @@
-import type { FileAdapter } from "./adapters.ts";
 import { FsError, isFsError, type FsErrorCode } from "./errors.ts";
-import type { FileRevision, FileStat, FsBackend } from "./fs-backend.internal.ts";
 import type { FsLogger } from "./logger.internal.ts";
 import {
 	DEFAULT_SYSTEM_DIR,
 	isIgnoredPath,
 	validatePathSegment,
 	type PathIgnoreRule,
-	type PathTemplate,
 } from "./path-template.ts";
+import type {
+	BootCheckMode,
+	BootResult,
+	CacheCollectionConfig,
+	CachedIndexEntry,
+	CompanionStatus,
+	CorruptEntry,
+	FileRevision,
+	FileStat,
+	FsBackend,
+	HealMode,
+	HealOptions,
+	HealReport,
+	MetaCollectionManifest,
+	MetaPartitionInfo,
+	SyncProgress,
+	WorkspaceMetaFile,
+} from "./types.ts";
 import type { WriteQueue } from "./write-queue.internal.ts";
 
 export const CACHE_FORMAT_VERSION = 1;
@@ -17,88 +32,22 @@ export const DEFAULT_MAX_FLUSH_WAIT_MS = 2000;
 export const DEFAULT_BOOT_CONCURRENCY = 6;
 export const DEFAULT_HEAL_YIELD_EVERY = 50;
 
-export type BootCheckMode = "none" | "cache-only" | "metadata-scan";
-export type HealMode = "incremental" | "full";
-export type CompanionStatus = "present" | "missing" | "orphaned";
-
-export interface CollectionIndexConfig<TData = unknown, TProjected = TData> {
-	project?: (doc: TData, params: Record<string, string>) => TProjected;
-	partitionBy?: (params: Record<string, string>, doc: TData) => string;
-	eagerPartitions?: (partitionKey: string) => boolean;
-}
-
-export interface CacheCollectionConfig<TData = unknown, TProjected = TData> {
-	name: string;
-	template: PathTemplate;
-	adapter: FileAdapter<TData>;
-	companion?: {
-		template: PathTemplate;
-	};
-	index?: CollectionIndexConfig<TData, TProjected>;
-}
-
-export interface CachedIndexEntry<TProjected = unknown> {
-	path: string;
-	params: Record<string, string>;
-	revision: FileRevision;
-	data: TProjected;
-	companionStatus?: CompanionStatus;
-}
-
-export interface MetaPartitionInfo {
-	count: number;
-	updatedAt: string;
-}
-
-export interface MetaCollectionManifest {
-	partitions: Record<string, MetaPartitionInfo>;
-	pathToPartition: Record<string, string>;
-	revisions: Record<string, FileRevision>;
-}
-
-export interface WorkspaceMetaFile {
-	formatVersion: number;
-	lastHealAt: string | null;
-	collections: Record<string, MetaCollectionManifest>;
-}
-
-export interface CorruptEntry {
-	collection: string;
-	path: string;
-	code: FsErrorCode;
-	message: string;
-	cause?: unknown;
-}
-
-export interface SyncProgress {
-	phase: "scanning" | "indexing" | "flushing";
-	processed: number;
-	total: number;
-	currentPath?: string;
-}
-
-export interface HealOptions {
-	mode?: HealMode;
-	signal?: AbortSignal;
-	onProgress?: (progress: SyncProgress) => void;
-	yieldEvery?: number;
-}
-
-export interface HealReport {
-	mode: HealMode;
-	added: number;
-	updated: number;
-	removed: number;
-	unchanged: number;
-	failures: CorruptEntry[];
-	orphanedCompanions: Array<{ collection: string; path: string }>;
-	durationMs: number;
-}
-
-export interface BootResult {
-	healed: boolean;
-	report: HealReport | null;
-}
+export type {
+	BootCheckMode,
+	BootResult,
+	CacheCollectionConfig,
+	CachedIndexEntry,
+	CollectionIndexConfig,
+	CompanionStatus,
+	CorruptEntry,
+	HealMode,
+	HealOptions,
+	HealReport,
+	MetaCollectionManifest,
+	MetaPartitionInfo,
+	SyncProgress,
+	WorkspaceMetaFile,
+} from "./types.ts";
 
 export interface CacheEngineOptions {
 	backend: FsBackend;
@@ -110,6 +59,7 @@ export interface CacheEngineOptions {
 	bootConcurrency?: number;
 	indexFlushMs?: number;
 	maxFlushWaitMs?: number;
+	readOnly?: boolean;
 	logger?: FsLogger;
 }
 
@@ -316,6 +266,7 @@ export class CacheEngine {
 	readonly #bootConcurrency: number;
 	readonly #indexFlushMs: number;
 	readonly #maxFlushWaitMs: number;
+	readonly #readOnly: boolean;
 	readonly #logger?: FsLogger;
 
 	readonly #collections = new Map<string, CacheCollectionConfig<unknown, unknown>>();
@@ -351,6 +302,7 @@ export class CacheEngine {
 			this.#indexFlushMs,
 			options.maxFlushWaitMs ?? DEFAULT_MAX_FLUSH_WAIT_MS,
 		);
+		this.#readOnly = options.readOnly ?? false;
 		this.#logger = options.logger;
 
 		for (const col of options.collections) {
@@ -1339,6 +1291,9 @@ export class CacheEngine {
 		bytes: Uint8Array,
 		directBackend: boolean,
 	): Promise<void> {
+		if (this.#readOnly) {
+			return;
+		}
 		if (directBackend) {
 			await this.#backend.writeBytes(path, bytes);
 		} else {
@@ -1347,6 +1302,9 @@ export class CacheEngine {
 	}
 
 	async #deleteCacheFile(path: string, directBackend: boolean): Promise<void> {
+		if (this.#readOnly) {
+			return;
+		}
 		try {
 			if (directBackend) {
 				await this.#backend.deleteFile(path);

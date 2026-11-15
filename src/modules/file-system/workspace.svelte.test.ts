@@ -447,6 +447,34 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 			expect(ws.mountStatus).toBe("ready");
 		});
 
+		it("restore() does not overwrite unlinked state or mount backend if forget() runs while awaiting loadHandle()", async () => {
+			stubSupportedEnvironment();
+			const grantedHandle = makeFakeDirHandle("vault", { queryPermission: "granted" });
+			const { promise: loadPromise, resolve: resolveLoad } =
+				Promise.withResolvers<FileSystemDirectoryHandle | null>();
+			const idb = createMockIdbStore(grantedHandle);
+			idb.loadHandle = vi.fn(() => loadPromise);
+			const createBackendSpy = vi.fn(() => new MemoryFsBackend());
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "restore-forget-race-ws",
+					idbStore: idb,
+					createBackend: createBackendSpy,
+				}),
+			);
+
+			const restorePromise = ws.restore();
+			await ws.forget();
+			resolveLoad(grantedHandle);
+			const result = await restorePromise;
+
+			expect(result).toBe("unlinked");
+			expect(ws.mountStatus).toBe("unlinked");
+			expect(ws.lastError).toBeNull();
+			expect(createBackendSpy).not.toHaveBeenCalled();
+		});
+
 		it("destroy() detaches focus, visibilitychange, beforeunload listeners and aborts active work", async () => {
 			vi.useFakeTimers();
 			const backend = new MemoryFsBackend();
@@ -1653,6 +1681,696 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 			expect(ws.collections.invoices.entries[0]?.path).toBe("invoices/2026/1.json");
 			expect(ws.collections.invoices.query({ params: { year: "2025" } })).toHaveLength(0);
 			expect(ws.collections.invoices.query({ params: { year: "2026" } })).toHaveLength(1);
+		});
+	});
+
+	describe("10. Milestone 4 Hardening Regressions", () => {
+		it("optimistic move() works with structurally distinct project() both with trackedDocs and from boot shard", async () => {
+			interface NestedDoc {
+				meta: {
+					title: string;
+					amount: number;
+				};
+			}
+			interface DistinctProjected {
+				label: string;
+			}
+			const nestedSchema: StandardSchemaV1<unknown, NestedDoc> = {
+				"~standard": {
+					version: 1,
+					vendor: "test",
+					validate(value: unknown) {
+						if (
+							typeof value === "object" &&
+							value !== null &&
+							typeof (value as NestedDoc).meta?.title === "string" &&
+							typeof (value as NestedDoc).meta?.amount === "number"
+						) {
+							return { value: value as NestedDoc };
+						}
+						return { issues: [{ message: "Invalid NestedDoc" }] };
+					},
+				},
+			};
+
+			const backend = new MemoryFsBackend();
+			const distinctCollection = defineCollection({
+				pattern: "items/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: nestedSchema }),
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+					project: (doc, params): DistinctProjected => ({
+						label: `${params.year}:${doc.meta.title}`,
+					}),
+				},
+			});
+
+			// Case A: trackedDocs has the raw doc (written in current session)
+			const ws1 = trackWorkspace(
+				createWorkspace({
+					namespace: "distinct-project-ws",
+					backend,
+					collections: { items: distinctCollection },
+				}),
+			);
+			await ws1.restore();
+
+			await ws1.collections.items.write(
+				{ year: "2024", id: "a" },
+				{ meta: { title: "Alpha", amount: 100 } },
+			);
+
+			const moveGate1 = createDeferred<void>();
+			const origMove1 = backend.moveFile.bind(backend);
+			const moveSpy1 = vi.spyOn(backend, "moveFile").mockImplementation(async (from, to) => {
+				await moveGate1.promise;
+				return origMove1(from, to);
+			});
+
+			const movePromise1 = ws1.collections.items.move(
+				{ year: "2024", id: "a" },
+				{ year: "2025", id: "a" },
+			);
+			// Optimistic entry should already reflect the new projected label without throwing
+			await vi.waitFor(() => {
+				expect(ws1.collections.items.entries[0]?.path).toBe("items/2025/a.json");
+			});
+			expect(ws1.collections.items.entries[0]?.data).toEqual({ label: "2025:Alpha" });
+			expect(Object.values(ws1.collections.items.entries[0]?.data ?? {})).not.toContain(undefined);
+
+			moveGate1.resolve();
+			await movePromise1;
+			moveSpy1.mockRestore();
+			expect(ws1.collections.items.entries).toHaveLength(1);
+			expect(ws1.collections.items.entries[0]?.data).toEqual({ label: "2025:Alpha" });
+
+			// Persist shard and tear down ws1 so ws2 boots purely from shard without trackedDocs
+			await ws1.flush();
+			ws1.destroy();
+
+			// Case B: entry loaded only from boot shard (trackedDocs is empty)
+			const ws2 = trackWorkspace(
+				createWorkspace({
+					namespace: "distinct-project-ws",
+					backend,
+					collections: { items: distinctCollection },
+				}),
+			);
+			await ws2.restore();
+			expect(ws2.collections.items.entries).toHaveLength(1);
+			expect(ws2.collections.items.entries[0]?.data).toEqual({ label: "2025:Alpha" });
+
+			const moveGate2 = createDeferred<void>();
+			const origMove2 = backend.moveFile.bind(backend);
+			const moveSpy2 = vi.spyOn(backend, "moveFile").mockImplementation(async (from, to) => {
+				await moveGate2.promise;
+				return origMove2(from, to);
+			});
+
+			const movePromise2 = ws2.collections.items.move(
+				{ year: "2025", id: "a" },
+				{ year: "2026", id: "a" },
+			);
+			await vi.waitFor(() => {
+				expect(ws2.collections.items.entries[0]?.path).toBe("items/2026/a.json");
+			});
+			// During in-flight move without trackedDocs, optimistic entry must not throw or corrupt fields
+			expect(ws2.collections.items.entries[0]?.data).toBeDefined();
+			expect(Object.values(ws2.collections.items.entries[0]?.data ?? {})).not.toContain(undefined);
+
+			moveGate2.resolve();
+			await movePromise2;
+			moveSpy2.mockRestore();
+
+			expect(ws2.collections.items.entries).toHaveLength(1);
+			expect(ws2.collections.items.entries[0]?.path).toBe("items/2026/a.json");
+			expect(ws2.collections.items.entries[0]?.data).toEqual({ label: "2026:Alpha" });
+		});
+
+		it("writeWithCompanion() aborts on invalid primary data or primary CONFLICT before overwriting existing companion", async () => {
+			const backend = new MemoryFsBackend();
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				companion: {
+					pattern: "invoices/{year}/{id}.pdf",
+				},
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+				},
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "companion-precheck-ws",
+					backend,
+					conflictPolicy: "detect",
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			const params = { year: "2025", id: "inv-1" };
+			const originalCompanion = new TextEncoder().encode("original-pdf-bytes");
+			await ws.collections.invoices.writeWithCompanion(
+				params,
+				{ id: "inv-1", year: "2025", title: "Valid", amount: 10 },
+				originalCompanion,
+			);
+
+			// 1) Invalid primary data -> VALIDATION_FAILED before overwriting companion
+			const invalidDoc = undefined as unknown as InvoiceDoc;
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.writeWithCompanion(
+						params,
+						invalidDoc,
+						new TextEncoder().encode("overwritten-on-invalid"),
+					),
+				"VALIDATION_FAILED",
+			);
+			const companionAfterInvalid = await backend.readBytes("invoices/2025/inv-1.pdf");
+			expect(new TextDecoder().decode(companionAfterInvalid.bytes)).toBe("original-pdf-bytes");
+
+			// 2) Primary OCC conflict -> CONFLICT before overwriting companion
+			await backend.injectExternalFile(
+				"invoices/2025/inv-1.json",
+				encodeJson({ id: "inv-1", year: "2025", title: "External Edit", amount: 99 }),
+			);
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.writeWithCompanion(
+						params,
+						{ id: "inv-1", year: "2025", title: "Local Edit", amount: 50 },
+						new TextEncoder().encode("overwritten-on-conflict"),
+					),
+				"CONFLICT",
+			);
+			const companionAfterConflict = await backend.readBytes("invoices/2025/inv-1.pdf");
+			expect(new TextDecoder().decode(companionAfterConflict.bytes)).toBe("original-pdf-bytes");
+		});
+
+		it("collection.write() and collection.update() preserve companionStatus: 'present' in entries and persisted shard", async () => {
+			const backend = new MemoryFsBackend();
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				companion: {
+					pattern: "invoices/{year}/{id}.pdf",
+				},
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+				},
+			});
+
+			const ws1 = trackWorkspace(
+				createWorkspace({
+					namespace: "companion-preserve-ws",
+					backend,
+					collections: { invoices },
+				}),
+			);
+			await ws1.restore();
+
+			const params = { year: "2025", id: "c1" };
+			await ws1.collections.invoices.writeWithCompanion(
+				params,
+				{ id: "c1", year: "2025", title: "Initial", amount: 10 },
+				new TextEncoder().encode("pdf-data"),
+			);
+			expect(ws1.collections.invoices.entries[0]?.companionStatus).toBe("present");
+
+			// JSON-only write()
+			await ws1.collections.invoices.write(params, {
+				id: "c1",
+				year: "2025",
+				title: "After Write",
+				amount: 20,
+			});
+			expect(ws1.collections.invoices.entries[0]?.companionStatus).toBe("present");
+
+			// JSON-only update()
+			await ws1.collections.invoices.update(params, (prev) => ({
+				id: prev?.id ?? "c1",
+				year: prev?.year ?? "2025",
+				title: "After Update",
+				amount: 30,
+			}));
+			expect(ws1.collections.invoices.entries[0]?.companionStatus).toBe("present");
+
+			await ws1.flush();
+			ws1.destroy();
+
+			// Verify persisted shard also preserved companionStatus: "present"
+			const ws2 = trackWorkspace(
+				createWorkspace({
+					namespace: "companion-preserve-ws",
+					backend,
+					collections: { invoices },
+				}),
+			);
+			await ws2.restore();
+			expect(ws2.collections.invoices.entries).toHaveLength(1);
+			expect(ws2.collections.invoices.entries[0]?.companionStatus).toBe("present");
+		});
+
+		it("resolveConflict() refreshes unresolvedConflicts on a second CONFLICT and succeeds on retry", async () => {
+			const backend = new MemoryFsBackend();
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "resolve-refresh-ws",
+					backend,
+					conflictPolicy: "detect",
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			const params = { year: "2025", id: "r1" };
+			await ws.collections.invoices.write(params, {
+				id: "r1",
+				year: "2025",
+				title: "Base",
+				amount: 1,
+			});
+
+			// First external edit -> triggers first conflict
+			const extRev1 = await backend.injectExternalFile(
+				"invoices/2025/r1.json",
+				encodeJson({ id: "r1", year: "2025", title: "Remote-1", amount: 2 }),
+			);
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.write(params, {
+						id: "r1",
+						year: "2025",
+						title: "Local",
+						amount: 3,
+					}),
+				"CONFLICT",
+			);
+
+			expect(ws.unresolvedConflicts).toHaveLength(1);
+			const conflictId = ws.unresolvedConflicts[0]?.id ?? "";
+			expect(ws.unresolvedConflicts[0]?.remoteRevision?.lastModified).toBe(extRev1.lastModified);
+
+			// Second external edit while conflict is open
+			const extRev2 = await backend.injectExternalFile(
+				"invoices/2025/r1.json",
+				encodeJson({ id: "r1", year: "2025", title: "Remote-2", amount: 4 }),
+			);
+
+			// First resolve attempt fails with CONFLICT and refreshes conflict details to Remote-2
+			await expectFsErrorCode(
+				() => ws.resolveConflict(conflictId, "keep-local"),
+				"CONFLICT",
+			);
+			expect(ws.unresolvedConflicts).toHaveLength(1);
+			expect(ws.unresolvedConflicts[0]?.remoteRevision?.lastModified).toBe(extRev2.lastModified);
+			expect(ws.unresolvedConflicts[0]?.remote).toEqual({
+				id: "r1",
+				year: "2025",
+				title: "Remote-2",
+				amount: 4,
+			});
+
+			// Second resolve attempt uses refreshed remoteRevision and succeeds
+			await ws.resolveConflict(conflictId, "keep-local");
+			expect(ws.unresolvedConflicts).toHaveLength(0);
+			const finalDoc = await ws.collections.invoices.read(params);
+			expect(finalDoc?.data).toEqual({ id: "r1", year: "2025", title: "Local", amount: 3 });
+		});
+
+		it("forget() increments mountEpoch so an in-flight failing write does not resurrect state or set lastError", async () => {
+			const backend = new MemoryFsBackend();
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+				},
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "forget-epoch-ws",
+					backend,
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			const writeGate = createDeferred<never>();
+			const writeSpy = vi.spyOn(backend, "writeBytes").mockImplementation(async () => {
+				return writeGate.promise;
+			});
+
+			const pendingWrite = ws.collections.invoices.write(
+				{ year: "2025", id: "f1" },
+				{ id: "f1", year: "2025", title: "InFlight", amount: 10 },
+			);
+
+			await vi.waitFor(() => {
+				expect(writeSpy).toHaveBeenCalled();
+			});
+
+			await ws.forget();
+			expect(ws.mountStatus).toBe("unlinked");
+			expect(ws.lastError).toBeNull();
+
+			writeGate.reject(new FsError("IO_FAILED", "Simulated disk failure after forget"));
+			await expectFsErrorCode(() => pendingWrite, "IO_FAILED");
+
+			expect(ws.mountStatus).toBe("unlinked");
+			expect(ws.lastError).toBeNull();
+			expect(ws.collections.invoices.entries).toHaveLength(0);
+		});
+
+		it("heal() ABORTED (via external AbortSignal or superseded heal()) does not set lastError or health = 'negative'", async () => {
+			const backend = new MemoryFsBackend();
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+				},
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "heal-abort-ws",
+					backend,
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			// Gate backend.walkFiles so heal() stays in flight until we abort
+			const walkGate = createDeferred<void>();
+			const origWalk = backend.walkFiles.bind(backend);
+			const walkSpy = vi
+				.spyOn(backend, "walkFiles")
+				.mockImplementation(async (prefix, options) => {
+					await walkGate.promise;
+					if (options?.signal?.aborted) {
+						throw new FsError("ABORTED", "Aborted");
+					}
+					return origWalk(prefix, options);
+				});
+
+			// 1) External AbortSignal
+			const controller = new AbortController();
+			const heal1 = ws.heal({ mode: "full", signal: controller.signal });
+			await vi.waitFor(() => {
+				expect(walkSpy).toHaveBeenCalledTimes(1);
+			});
+			controller.abort();
+			walkGate.resolve();
+
+			await expectFsErrorCode(() => heal1, "ABORTED");
+			expect(ws.lastError).toBeNull();
+			expect(ws.health).not.toBe("negative");
+
+			// 2) Superseded second heal()
+			const walkGate2 = createDeferred<void>();
+			walkSpy.mockImplementationOnce(async (prefix, options) => {
+				await walkGate2.promise;
+				if (options?.signal?.aborted) {
+					throw new FsError("ABORTED", "Superseded");
+				}
+				return origWalk(prefix, options);
+			});
+			walkSpy.mockImplementationOnce(async (prefix, options) => origWalk(prefix, options));
+
+			const supersededHeal = ws.heal({ mode: "full" });
+			await vi.waitFor(() => {
+				expect(walkSpy).toHaveBeenCalledTimes(2);
+			});
+			const winningHeal = ws.heal({ mode: "full" });
+			walkGate2.resolve();
+
+			await expectFsErrorCode(() => supersededHeal, "ABORTED");
+			await winningHeal;
+			expect(ws.lastError).toBeNull();
+			expect(ws.health).not.toBe("negative");
+		});
+
+		it("writeRaw() updates indexed entries, list() respects config.ignore, mode: 'read' blocks mutations & _cs-fs writes, and pagehide/visibilitychange flushes buffers", async () => {
+			// A) writeRaw() updates indexed entries (and removes stale entry on invalid bytes)
+			const backendA = new MemoryFsBackend();
+			const invoicesA = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+				},
+			});
+			const wsA = trackWorkspace(
+				createWorkspace({
+					namespace: "writeraw-index-ws",
+					backend: backendA,
+					ignore: ["ignored"],
+					collections: { invoices: invoicesA },
+				}),
+			);
+			await wsA.restore();
+
+			await wsA.collections.invoices.writeRaw(
+				{ year: "2025", id: "raw1" },
+				encodeJson({ id: "raw1", year: "2025", title: "Raw Title", amount: 42 }),
+			);
+			expect(wsA.collections.invoices.entries).toHaveLength(1);
+			expect(wsA.collections.invoices.entries[0]?.data).toEqual({
+				id: "raw1",
+				year: "2025",
+				title: "Raw Title",
+				amount: 42,
+			});
+
+			// Overwrite with invalid JSON -> stale entry removed from entries
+			await wsA.collections.invoices.writeRaw(
+				{ year: "2025", id: "raw1" },
+				new TextEncoder().encode("{not-valid-json"),
+				{ conflictPolicy: "last-write-wins" },
+			);
+			expect(wsA.collections.invoices.entries).toHaveLength(0);
+
+			// B) collection.list() respects config.ignore
+			await backendA.injectExternalFile(
+				"invoices/ignored/skip.json",
+				encodeJson({ id: "skip", year: "ignored", title: "Skip", amount: 0 }),
+			);
+			await backendA.injectExternalFile(
+				"invoices/2025/keep.json",
+				encodeJson({ id: "keep", year: "2025", title: "Keep", amount: 5 }),
+			);
+			const listed = await wsA.collections.invoices.list();
+			expect(listed.map((item) => item.path)).toEqual([
+				"invoices/2025/keep.json",
+				"invoices/2025/raw1.json",
+			]);
+
+			// C) mode: "read" throws PERMISSION_DENIED on all mutations, skips eager migration write-back, and writes no _cs-fs/ files
+			const backendRead = new MemoryFsBackend();
+			const legacyBytes = encodeJson({
+				id: "m1",
+				year: "2025",
+				title: "Legacy",
+				amount: 10,
+				schemaVersion: 1,
+			});
+			await backendRead.injectExternalFile("invoices/2025/m1.json", legacyBytes);
+			await backendRead.injectExternalFile("settings.json", encodeJson({ theme: "dark", currency: "EUR" }));
+
+			const migratingCollection = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter<InvoiceDoc>({
+					schema: invoiceSchema,
+					version: 2,
+					minVersion: 1,
+					migrationWriteBack: "eager",
+					migrations: {
+						1: (raw) => {
+							const rec = raw as Record<string, unknown>;
+							return {
+								id: String(rec.id),
+								year: String(rec.year),
+								title: `${String(rec.title)}-migrated`,
+								amount: Number(rec.amount),
+							};
+						},
+					},
+				}),
+				companion: {
+					pattern: "invoices/{year}/{id}.pdf",
+				},
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+				},
+			});
+			const settings = defineSingleton({
+				path: "settings.json",
+				adapter: jsonAdapter({ schema: settingsSchema }),
+			});
+
+			const wsRead = trackWorkspace(
+				createWorkspace({
+					namespace: "read-mode-ws",
+					backend: backendRead,
+					mode: "read",
+					collections: { invoices: migratingCollection },
+					singletons: { settings },
+				}),
+			);
+			await wsRead.restore();
+			await wsRead.heal({ mode: "full" });
+
+			// Eager migration write-back must be skipped in read mode: file on disk stays untouched
+			const diskAfterHeal = await backendRead.readBytes("invoices/2025/m1.json");
+			expect(diskAfterHeal.bytes).toEqual(legacyBytes);
+
+			// Reading the legacy v1 doc returns migrated v2 data cleanly without writing back or raising errors
+			const migratedRead = await wsRead.collections.invoices.read({ year: "2025", id: "m1" });
+			expect(migratedRead?.migrated).toBe(true);
+			expect(migratedRead?.data).toEqual({
+				id: "m1",
+				year: "2025",
+				title: "Legacy-migrated",
+				amount: 10,
+				schemaVersion: 2,
+			});
+			expect(wsRead.lastError).toBeNull();
+			expect(wsRead.mountStatus).toBe("ready");
+			const diskAfterRead = await backendRead.readBytes("invoices/2025/m1.json");
+			expect(diskAfterRead.bytes).toEqual(legacyBytes);
+
+			// No _cs-fs/ cache or log files written in read mode
+			const systemFiles = await backendRead.listDir("_cs-fs");
+			expect(systemFiles).toHaveLength(0);
+
+			// All write/mutation methods throw PERMISSION_DENIED
+			await expectFsErrorCode(
+				() =>
+					wsRead.collections.invoices.write(
+						{ year: "2025", id: "x" },
+						{ id: "x", year: "2025", title: "X", amount: 1 },
+					),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() =>
+					wsRead.collections.invoices.update({ year: "2025", id: "m1" }, (doc) => ({
+						id: doc?.id ?? "m1",
+						year: doc?.year ?? "2025",
+						title: doc?.title ?? "M1",
+						amount: doc?.amount ?? 1,
+					})),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() =>
+					wsRead.collections.invoices.move(
+						{ year: "2025", id: "m1" },
+						{ year: "2026", id: "m1" },
+					),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() => wsRead.collections.invoices.delete({ year: "2025", id: "m1" }),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() =>
+					wsRead.collections.invoices.writeRaw(
+						{ year: "2025", id: "x" },
+						encodeJson({ id: "x", year: "2025", title: "X", amount: 1 }),
+					),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() =>
+					wsRead.collections.invoices.writeWithCompanion(
+						{ year: "2025", id: "x" },
+						{ id: "x", year: "2025", title: "X", amount: 1 },
+						new Uint8Array([1, 2, 3]),
+					),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() => wsRead.resolveConflict("any-id", "keep-local"),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() => wsRead.singletons.settings.write({ theme: "light", currency: "USD" }),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() =>
+					wsRead.singletons.settings.update((prev) => ({
+						theme: prev?.theme ?? "dark",
+						currency: prev?.currency ?? "EUR",
+					})),
+				"PERMISSION_DENIED",
+			);
+			await expectFsErrorCode(
+				() => wsRead.singletons.settings.delete(),
+				"PERMISSION_DENIED",
+			);
+
+			// D) pagehide & visibilitychange: hidden trigger best-effort flush of buffered cache/log timers
+			const backendFlush = new MemoryFsBackend();
+			const flushInvoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (params) => params.year ?? "unknown" },
+			});
+			const wsFlush = trackWorkspace(
+				createWorkspace({
+					namespace: "lifecycle-flush-ws",
+					backend: backendFlush,
+					collections: {
+						invoices: flushInvoices,
+					},
+				}),
+			);
+			await wsFlush.restore();
+
+			await wsFlush.collections.invoices.write(
+				{ year: "2025", id: "p1" },
+				{ id: "p1", year: "2025", title: "PageHide", amount: 10 },
+			);
+			// Debounce timer hasn't fired yet -> cache shard should not be on disk yet
+			expect(await backendFlush.listDir("_cs-fs/index")).toHaveLength(0);
+
+			window.dispatchEvent(new Event("pagehide"));
+			await vi.waitFor(async () => {
+				const indexFiles = await backendFlush.listDir("_cs-fs/index");
+				expect(indexFiles.length).toBeGreaterThan(0);
+			});
+
+			// Now write another entry and trigger visibilitychange -> hidden
+			await wsFlush.collections.invoices.write(
+				{ year: "2025", id: "p2" },
+				{ id: "p2", year: "2025", title: "VisHidden", amount: 20 },
+			);
+			Object.defineProperty(document, "visibilityState", {
+				value: "hidden",
+				configurable: true,
+			});
+			document.dispatchEvent(new Event("visibilitychange"));
+			await vi.waitFor(async () => {
+				const logs = await backendFlush.listDir("_cs-fs/logs");
+				expect(logs.length).toBeGreaterThan(0);
+			});
+			Object.defineProperty(document, "visibilityState", {
+				value: "visible",
+				configurable: true,
+			});
 		});
 	});
 });

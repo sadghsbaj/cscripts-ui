@@ -1,23 +1,23 @@
 import { FsError, isFsError } from "./errors.ts";
-import {
-	sha256Hex,
-	type FileRevision,
-	type FsBackend,
-	type FsWriteOptions,
-} from "./fs-backend.internal.ts";
+import { sha256Hex } from "./fs-backend.internal.ts";
 import { DEFAULT_SYSTEM_DIR, normalizeRelativePath } from "./path-template.ts";
+import type {
+	BackupOptions,
+	FileRevision,
+	FsBackend,
+	LockRetryOptions,
+	SafeDeleteOptions,
+	SafeMoveOptions,
+	SafeWriteOptions,
+} from "./types.ts";
 
-export interface LockRetryOptions {
-	maxRetries?: number;
-	baseDelayMs?: number;
-	maxDelayMs?: number;
-}
-
-export interface BackupOptions {
-	enabled?: boolean;
-	maxBackupsPerFile?: number;
-	maxBackupAgeDays?: number;
-}
+export type {
+	BackupOptions,
+	LockRetryOptions,
+	SafeDeleteOptions,
+	SafeMoveOptions,
+	SafeWriteOptions,
+} from "./types.ts";
 
 export interface WriteQueueOptions {
 	systemDir?: string;
@@ -26,24 +26,6 @@ export interface WriteQueueOptions {
 	retryOnLock?: boolean | LockRetryOptions;
 	verifyAfterWrite?: boolean;
 	backup?: BackupOptions;
-}
-
-export interface SafeWriteOptions extends FsWriteOptions {
-	expectedRevision?: FileRevision | null;
-	backup?: boolean;
-	verifyAfterWrite?: boolean;
-	retryOnLock?: boolean | LockRetryOptions;
-}
-
-export interface SafeDeleteOptions {
-	expectedRevision?: FileRevision | null;
-	backup?: boolean;
-	retryOnLock?: boolean | LockRetryOptions;
-}
-
-export interface SafeMoveOptions {
-	expectedRevision?: FileRevision | null;
-	retryOnLock?: boolean | LockRetryOptions;
 }
 
 const DEFAULT_RETRY_OPTIONS: Required<LockRetryOptions> = {

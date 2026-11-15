@@ -4,57 +4,33 @@ import {
 	setLocalStorageJson,
 } from "../browser-storage/index.ts";
 import { encodeJsonlLines, jsonlAdapter } from "./adapters.ts";
-import { isFsError, type FsErrorCode } from "./errors.ts";
-import type { FsBackend } from "./fs-backend.internal.ts";
+import { isFsError } from "./errors.ts";
 import { DEFAULT_SYSTEM_DIR } from "./path-template.ts";
+import {
+	FS_LOG_LEVELS,
+	type EmergencyLogEntry,
+	type EmergencyLogInput,
+	type FsBackend,
+	type FsLogEntry,
+	type FsLogInput,
+	type FsLogLevel,
+	type FsLogRotationOptions,
+	type ReadLogsOptions,
+} from "./types.ts";
 import type { WriteQueue } from "./write-queue.internal.ts";
 
-export const FS_LOG_LEVELS = ["debug", "info", "warn", "error"] as const;
-export type FsLogLevel = (typeof FS_LOG_LEVELS)[number];
-
-export const FS_LOG_EVENTS = [
-	"mount",
-	"permission",
-	"read",
-	"write",
-	"move",
-	"delete",
-	"conflict",
-	"heal",
-	"migration",
-	"cache",
-	"warn",
-	"error",
-] as const;
-export type FsLogEvent = (typeof FS_LOG_EVENTS)[number];
-
-export interface FsLogEntry {
-	ts: string;
-	seq: number;
-	level: FsLogLevel;
-	event: FsLogEvent;
-	path?: string;
-	durationMs?: number;
-	code?: FsErrorCode;
-	message: string;
-	meta?: Record<string, unknown>;
-}
-
-export interface FsLogInput {
-	level: FsLogLevel;
-	event: FsLogEvent;
-	message: string;
-	path?: string;
-	durationMs?: number;
-	code?: FsErrorCode;
-	meta?: Record<string, unknown>;
-}
-
-export interface FsLogRotationOptions {
-	maxBytes?: number;
-	maxLines?: number;
-	maxFiles?: number;
-}
+export {
+	FS_LOG_EVENTS,
+	FS_LOG_LEVELS,
+	type EmergencyLogEntry,
+	type EmergencyLogInput,
+	type FsLogEntry,
+	type FsLogEvent,
+	type FsLogInput,
+	type FsLogLevel,
+	type FsLogRotationOptions,
+	type ReadLogsOptions,
+} from "./types.ts";
 
 export interface FsLoggerOptions {
 	namespace: string;
@@ -65,29 +41,6 @@ export interface FsLoggerOptions {
 	backend?: FsBackend;
 	writeQueue?: WriteQueue;
 	onLog?: (entry: FsLogEntry) => void;
-}
-
-export interface ReadLogsOptions {
-	limit?: number;
-	level?: FsLogLevel;
-}
-
-export interface EmergencyLogEntry {
-	ts: string;
-	level: FsLogLevel;
-	event: FsLogEvent;
-	code?: FsErrorCode;
-	path?: string;
-	message: string;
-}
-
-export interface EmergencyLogInput {
-	ts?: string;
-	level: FsLogLevel;
-	event: FsLogEvent;
-	code?: FsErrorCode;
-	path?: string;
-	message: string;
 }
 
 export const DEFAULT_LOG_LEVEL: FsLogLevel = "info";
