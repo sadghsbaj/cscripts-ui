@@ -73,10 +73,11 @@
 <style>
     @layer components.primitive {
         .cs-toggle-button {
-            /* When releasing (pressed -> unpressed), transform uses a slower 300ms quad-in curve
-             * while opacity fades in 140ms so ::after settles at scale(0.55) invisibly, giving
-             * the next press pop-in full spring distance without an abrupt visual collapse. */
-            --cs-toggle-button-transition-pressed: transform 300ms var(--cs-ease-quad-in), opacity 140ms linear;
+            /* When releasing (pressed -> unpressed), transform uses a slower exit curve
+             * while opacity fades faster so ::after settles at scale(0.55) invisibly, giving
+             * the next press pop-in full distance without an abrupt visual collapse. */
+            --cs-toggle-button-transition-pressed:
+                transform var(--cs-dur-200) var(--cs-ease-exit), opacity var(--cs-dur-exit-sm) var(--cs-ease-effect);
 
             /* Bridge module hooks to shared button-control variables */
             --cs-button-control-height: var(--cs-toggle-button-height, var(--cs-button-control-size-height));
@@ -184,7 +185,9 @@
 
             &[aria-pressed="true"] {
                 --cs-toggle-button-fg: var(--cs-toggle-button-soft-fg);
-                --cs-toggle-button-transition-pressed: transform 550ms var(--cs-spring-snappy), opacity 90ms linear;
+                --cs-toggle-button-transition-pressed:
+                    transform var(--cs-dur-enter-sm) var(--cs-ease-enter),
+                    opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
 
                 &::after {
                     opacity: 1;
