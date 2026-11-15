@@ -38,8 +38,8 @@
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-soft);
             transition:
-                color 200ms var(--cs-ease-quad-out),
-                scale 200ms var(--cs-ease-expo-out);
+                color var(--cs-dur-effect) var(--cs-ease-effect),
+                scale var(--cs-dur-effect) var(--cs-ease-effect);
 
             /* =========================================================
              * ELASTIC SURFACE (::before)
@@ -56,9 +56,9 @@
                 corner-shape: inherit;
                 box-shadow: var(--cs-close-button-shadow, none);
                 transition:
-                    background-color 200ms var(--cs-ease-quad-out),
-                    box-shadow 200ms var(--cs-ease-quad-out),
-                    scale 600ms var(--cs-spring-release); /* CSS linear() transition */
+                    background-color var(--cs-dur-effect) var(--cs-ease-effect),
+                    box-shadow var(--cs-dur-effect) var(--cs-ease-effect),
+                    scale var(--cs-dur-squash) var(--cs-ease-squash); /* CSS linear() transition */
             }
 
             @media (hover: hover) {
@@ -83,14 +83,17 @@
              * ========================================================= */
             &:active {
                 color: var(--cs-close-button-fg-hover, var(--cs-close-button-fg));
+                transition:
+                    color var(--cs-dur-effect) var(--cs-ease-effect),
+                    scale var(--cs-dur-press) var(--cs-ease-press);
 
                 &::before {
                     background-color: var(--cs-close-button-bg-hover);
                     box-shadow: var(--cs-close-button-shadow-active, none);
                     transition:
-                        background-color 140ms var(--cs-ease-quad-out),
-                        box-shadow 140ms var(--cs-ease-quad-out),
-                        scale 140ms var(--cs-ease-quad-out);
+                        background-color var(--cs-dur-press) var(--cs-ease-press),
+                        box-shadow var(--cs-dur-press) var(--cs-ease-press),
+                        scale var(--cs-dur-press) var(--cs-ease-press);
                 }
 
                 &:not(:focus-visible)::before {
@@ -104,7 +107,7 @@
                 /* Recedes the cross glyph on press to enhance physical tactile depth */
                 > :global(.cs-close-button-icon) {
                     scale: 0.9;
-                    transition: scale 140ms var(--cs-ease-quad-out);
+                    transition: scale var(--cs-dur-press) var(--cs-ease-press);
                 }
             }
 
@@ -120,7 +123,7 @@
                 width: calc(100% / 3 * 2);
                 height: calc(100% / 3 * 2);
                 stroke-width: 2.5;
-                transition: scale 600ms var(--cs-spring-release);
+                transition: scale var(--cs-dur-squash) var(--cs-ease-squash);
                 pointer-events: none;
             }
 

@@ -27,8 +27,8 @@
                     transparent
                 );
                 transition:
-                    opacity 150ms var(--cs-ease-quad-out),
-                    background-color 150ms var(--cs-ease-quad-out);
+                    opacity var(--cs-dur-effect) var(--cs-ease-effect),
+                    background-color var(--cs-dur-effect) var(--cs-ease-effect);
             }
         }
 

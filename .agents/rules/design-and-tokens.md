@@ -49,7 +49,7 @@ globs: "**/src/**, **/playground/**"
   </typography_and_icons>
 
   <motion>
-    - **Curves & Springs:** Always use easing curves and `linear()` springs from `src/css/foundation/easings.css`.
+    - **Curves & Springs:** Always use easing curves and `linear()` springs from `src/css/foundation/motion.css`.
     - **Role-Based Durations:** Recurring control transitions (e.g. surface hover/press, overlay enter/exit) MUST share role-based duration tokens so equivalent interactions feel identical across modules. Choreographed micro-animations (SVG draws, particle bursts, morph sequences) may use local timings.
     - **Cadence:** High-frequency interactions stay fast and snappy; infrequent actions may be more expressive. Prefer GPU-friendly properties (`transform`, `scale`, `opacity`, `filter`).
   </motion>
@@ -59,7 +59,7 @@ globs: "**/src/**, **/playground/**"
   - No raw `border` used where `box-shadow` / surface elevation belongs.
   - Chromatic `-solid` interactive surfaces apply `--cs-shadow-solid` / `--cs-shadow-solid-active`.
   - Disabled states use semantic colorless `--cs-color-disabled-*` tokens rather than opacity-only dimming.
-  - Transitions use `easings.css` curves and consistent role durations (no arbitrary `180ms` vs `200ms` drift on standard states).
+  - Transitions use `motion.css` curves and consistent role durations (no arbitrary `180ms` vs `200ms` drift on standard states).
   - Compact controls `< 1936px²` include hit-area expansion.
   - Component styles live in plain CSS under the proper `@layer` (no UnoCSS classes inside library primitives).
 </checklist>

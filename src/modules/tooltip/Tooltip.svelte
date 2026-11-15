@@ -54,10 +54,10 @@
             --cs-popover-anim-scale-start: 0.88;
             --cs-popover-anim-blur-start: 2.5px;
             --cs-popover-anim-blur-exit: 1.5px;
-            --cs-popover-anim-dur-in: 260ms;
-            --cs-popover-anim-dur-fade-in: 110ms;
-            --cs-popover-anim-dur-blur-in: 120ms;
-            --cs-popover-anim-dur-out: 100ms;
+            --cs-popover-anim-dur-in: var(--cs-dur-enter-sm);
+            --cs-popover-anim-dur-fade-in: var(--cs-dur-effect-fast);
+            --cs-popover-anim-dur-blur-in: var(--cs-dur-120);
+            --cs-popover-anim-dur-out: var(--cs-dur-exit-sm);
 
             gap: 6px;
             align-items: center;

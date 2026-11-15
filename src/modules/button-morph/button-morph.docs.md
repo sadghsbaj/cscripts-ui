@@ -52,6 +52,11 @@ Extends `HTMLAttributes<HTMLDivElement>`.
 - On `ButtonMorph`: `data-direction="forward" | "backward"`, `data-measured`, `data-transitioning`, `data-guarded`.
 - On `ButtonMorphItem`: `data-value={value}`, `data-state="active" | "exiting" | "inactive"`.
 
+### CSS Custom Properties
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `--cs-button-morph-spring` | `linear(0, 0.075 2.5%, ..., 1)` | Viscous spring timing curve (~1.8% cushion settle) used for the `350ms` `width` and `height` morph transitions on `.cs-button-morph[data-measured]`. |
+
 ## Examples
 
 ```svelte

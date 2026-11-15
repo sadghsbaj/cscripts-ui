@@ -41,9 +41,9 @@
             opacity: 0.6;
             user-select: none;
             transition:
-                opacity 150ms var(--cs-ease-quad-out),
-                color 200ms var(--cs-ease-quad-out),
-                background-color 200ms var(--cs-ease-quad-out);
+                opacity var(--cs-dur-effect) var(--cs-ease-effect),
+                color var(--cs-dur-effect) var(--cs-ease-effect),
+                background-color var(--cs-dur-effect) var(--cs-ease-effect);
             cursor: default;
 
             @media (hover: hover) {

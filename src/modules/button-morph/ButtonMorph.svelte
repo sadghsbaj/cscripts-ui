@@ -81,6 +81,21 @@
              * ========================================================= */
             --cs-button-morph-enter-y: 3px;
             --cs-button-morph-exit-y: -3px;
+            --cs-button-morph-spring: linear(
+                0,
+                0.075 2.5%,
+                0.245 6%,
+                0.535 12%,
+                0.765 18%,
+                0.91 24%,
+                0.985 30%,
+                1.012 36%,
+                1.018 43%,
+                1.014 52%,
+                1.007 64%,
+                1.002 78%,
+                1
+            );
 
             isolation: isolate;
             position: relative;
@@ -105,7 +120,7 @@
              *    `--cs-button-morph-height`. Without `minmax(0, 1fr)`, a wider incoming
              *    button's intrinsic `min-content` width would immediately blow
              *    out the grid track to the right on frame 0.
-             * 2. `--cs-spring-morph` (350ms) provides tactile initial friction
+             * 2. `--cs-button-morph-spring` (350ms) provides tactile initial friction
              *    and a gentle ~1.4% settle so the eye can comfortably track
              *    the pill morphing and pushing adjacent layout siblings.
              * ========================================================= */
@@ -115,8 +130,8 @@
                 width: var(--cs-button-morph-width);
                 height: var(--cs-button-morph-height);
                 transition:
-                    width 350ms var(--cs-spring-morph),
-                    height 350ms var(--cs-spring-morph);
+                    width 350ms var(--cs-button-morph-spring),
+                    height 350ms var(--cs-button-morph-spring);
             }
 
             /* =========================================================

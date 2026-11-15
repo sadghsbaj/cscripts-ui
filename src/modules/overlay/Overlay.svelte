@@ -120,8 +120,8 @@
             opacity: 1;
             transition:
                 opacity 220ms var(--cs-ease-expo-out),
-                backdrop-filter 420ms var(--cs-spring-morph),
-                -webkit-backdrop-filter 420ms var(--cs-spring-morph),
+                backdrop-filter 420ms var(--cs-ease-quart-out),
+                -webkit-backdrop-filter 420ms var(--cs-ease-quart-out),
                 display 420ms allow-discrete,
                 overlay 420ms allow-discrete;
         }

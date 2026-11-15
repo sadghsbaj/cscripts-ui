@@ -3,6 +3,26 @@
    ========================================================================== */
 
 :root {
+    /* Layer 1: Primitive Duration Scale */
+    --cs-dur-40: 40ms;
+    --cs-dur-60: 60ms;
+    --cs-dur-80: 80ms;
+    --cs-dur-100: 100ms;
+    --cs-dur-120: 120ms;
+    --cs-dur-140: 140ms;
+    --cs-dur-160: 160ms;
+    --cs-dur-180: 180ms;
+    --cs-dur-200: 200ms;
+    --cs-dur-240: 240ms;
+    --cs-dur-260: 260ms;
+    --cs-dur-280: 280ms;
+    --cs-dur-320: 320ms;
+    --cs-dur-380: 380ms;
+    --cs-dur-440: 440ms;
+    --cs-dur-500: 500ms;
+    --cs-dur-600: 600ms;
+
+    /* Layer 1: Primitive Easings & Springs */
     --cs-ease-sine-in: cubic-bezier(0.12, 0, 0.39, 0);
     --cs-ease-sine-out: cubic-bezier(0.61, 1, 0.88, 1);
     --cs-ease-sine-in-out: cubic-bezier(0.37, 0, 0.63, 1);
@@ -28,10 +48,10 @@
     --cs-ease-back-out: cubic-bezier(0.34, 1.56, 0.64, 1);
     --cs-ease-back-in-out: cubic-bezier(0.68, -0.6, 0.32, 1.6);
 
-    /* 1. Bouncy Spring (~28% overshoot):
-       Ideal for tactile press-releases (small scale deltas like 0.96 -> 1),
+    /* 1. Bouncy Squash Spring (~28% overshoot):
+       Ideal for tactile squash-and-stretch press-releases (small scale deltas like 0.96 -> 1),
        switches, and playful micro-interactions. */
-    --cs-spring-release: linear(
+    --cs-spring-squash: linear(
         0,
         0.012,
         0.049 2%,
@@ -69,25 +89,26 @@
         1
     );
 
-    /* 3. Viscous Morph Spring (~1.8% cushion settle, responsive start):
-       Provides an immediate, perceptible lift in the first ~30ms, transitions
-       smoothly across the primary travel, and preserves the gentle ~1.4%
-       cushion settle at the end without a jarring whip-snap. */
-    --cs-spring-morph: linear(
-        0,
-        0.075 2.5%,
-        0.245 6%,
-        0.535 12%,
-        0.765 18%,
-        0.91 24%,
-        0.985 30%,
-        1.012 36%,
-        1.018 43%,
-        1.014 52%,
-        1.007 64%,
-        1.002 78%,
-        1
-    );
+    /* Layer 2: Semantic Motion Roles — Effects (Non-Spatial) */
+    --cs-dur-effect-fast: var(--cs-dur-100);
+    --cs-dur-effect: var(--cs-dur-160);
+    --cs-ease-effect: var(--cs-ease-quad-out);
+
+    /* Layer 2: Semantic Motion Roles — Tactile Controls */
+    --cs-dur-press: var(--cs-dur-140);
+    --cs-ease-press: var(--cs-ease-quad-out);
+    --cs-dur-squash: var(--cs-dur-600);
+    --cs-ease-squash: var(--cs-spring-squash);
+
+    /* Layer 2: Semantic Motion Roles — Floating & Overlay Surfaces */
+    --cs-dur-enter-sm: var(--cs-dur-260);
+    --cs-dur-exit-sm: var(--cs-dur-100);
+    --cs-dur-enter-md: var(--cs-dur-380);
+    --cs-dur-exit-md: var(--cs-dur-120);
+    --cs-dur-enter-lg: var(--cs-dur-440);
+    --cs-dur-exit-lg: var(--cs-dur-180);
+    --cs-ease-enter: var(--cs-spring-snappy);
+    --cs-ease-exit: var(--cs-ease-quad-in);
 
     /* Squash & Stretch Physics Tokens */
     --cs-squash-subtle: 1.035 0.94;
@@ -118,19 +139,17 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    html:not([data-reduce-motion]) {
-        &::view-transition-old(root) {
-            animation: VT-out 320ms var(--cs-ease-quad-out) forwards;
-        }
+    ::view-transition-old(root) {
+        animation: VT-out var(--cs-dur-320) var(--cs-ease-quad-out) forwards;
+    }
 
-        &::view-transition-new(root) {
-            animation: VT-in 320ms var(--cs-ease-quad-out) forwards;
-        }
+    ::view-transition-new(root) {
+        animation: VT-in var(--cs-dur-320) var(--cs-ease-quad-out) forwards;
+    }
 
-        &::view-transition-old(root),
-        &::view-transition-new(root) {
-            mix-blend-mode: normal;
-        }
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        mix-blend-mode: normal;
     }
 }
 

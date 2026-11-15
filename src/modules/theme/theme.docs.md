@@ -56,5 +56,5 @@ Reactive Svelte 5 theme manager (`theme` singleton and `ThemeManager` class) coo
 
 ## Behavior & Quirks
 - **FOUC prevention:** Cooperates with the inline boot script injected by `cs/vite`, reading `document.documentElement.dataset.theme` on hydration.
-- **View Transitions:** Uses `document.startViewTransition` when supported and `prefers-reduced-motion` / `data-reduce-motion` is not set, temporarily setting `data-theme-switching` on `<html>` to pause element CSS transitions during the snapshot.
+- **View Transitions:** Uses `document.startViewTransition` when supported and `prefers-reduced-motion` is not set, temporarily setting `data-theme-switching` on `<html>` to pause element CSS transitions during the snapshot.
 - **SSR safety:** Mutative methods no-op when `typeof window === "undefined"`.

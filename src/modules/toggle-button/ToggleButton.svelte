@@ -107,8 +107,8 @@
                 transform: scale(0.55);
                 transition:
                     var(--cs-toggle-button-transition-pressed),
-                    background-color 200ms var(--cs-ease-quad-out),
-                    scale 600ms var(--cs-spring-release);
+                    background-color var(--cs-dur-effect) var(--cs-ease-effect),
+                    scale var(--cs-dur-squash) var(--cs-ease-squash);
                 pointer-events: none;
             }
 
@@ -130,8 +130,8 @@
                     background-color: var(--cs-toggle-button-bg-pressed-hover);
                     transition:
                         var(--cs-toggle-button-transition-pressed),
-                        background-color 140ms var(--cs-ease-quad-out),
-                        scale 140ms var(--cs-ease-quad-out);
+                        background-color var(--cs-dur-press) var(--cs-ease-press),
+                        scale var(--cs-dur-press) var(--cs-ease-press);
                 }
 
                 &:not(:focus-visible)::after {

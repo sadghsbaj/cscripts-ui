@@ -278,7 +278,7 @@
             }
 
             :global(.cs-work-location-marker) {
-                transition: scale 340ms var(--cs-spring-release) var(--cs-work-app-intro-lock-delay);
+                transition: scale 340ms var(--cs-spring-squash) var(--cs-work-app-intro-lock-delay);
             }
         }
 
@@ -302,7 +302,8 @@
             width: 100%;
 
             .cs-work-app-intro:is([data-phase="lock"], [data-phase="brand"], [data-phase="curtain"]) & {
-                animation: cs-work-app-intro-figure-lock 380ms var(--cs-ease-expo-out) var(--cs-work-app-intro-lock-delay);
+                animation: cs-work-app-intro-figure-lock 380ms var(--cs-ease-expo-out)
+                    var(--cs-work-app-intro-lock-delay);
             }
         }
 

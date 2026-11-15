@@ -40,8 +40,8 @@
             border: none;
             border-radius: var(--cs-radius-full);
             transition:
-                scale 200ms var(--cs-ease-cubic-out),
-                background-color 200ms var(--cs-ease-quad-out);
+                scale var(--cs-dur-effect) var(--cs-ease-effect),
+                background-color var(--cs-dur-effect) var(--cs-ease-effect);
             cursor: default;
 
             @media (hover: hover) {
@@ -77,7 +77,7 @@
                 inset: 0;
                 background-color: inherit;
                 border-radius: inherit;
-                transition: background-color 200ms var(--cs-ease-quad-out);
+                transition: background-color var(--cs-dur-effect) var(--cs-ease-effect);
                 pointer-events: none;
             }
 

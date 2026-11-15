@@ -215,10 +215,10 @@
             --cs-popover-scale-exit: var(--cs-popover-anim-scale-exit, 0.95);
             --cs-popover-blur-start: var(--cs-popover-anim-blur-start, 3.5px);
             --cs-popover-blur-exit: var(--cs-popover-anim-blur-exit, 2px);
-            --cs-popover-dur-in: var(--cs-popover-anim-dur-in, 380ms);
-            --cs-popover-dur-fade-in: var(--cs-popover-anim-dur-fade-in, 160ms);
-            --cs-popover-dur-blur-in: var(--cs-popover-anim-dur-blur-in, 190ms);
-            --cs-popover-dur-out: var(--cs-popover-anim-dur-out, 120ms);
+            --cs-popover-dur-in: var(--cs-popover-anim-dur-in, var(--cs-dur-enter-md));
+            --cs-popover-dur-fade-in: var(--cs-popover-anim-dur-fade-in, var(--cs-dur-effect));
+            --cs-popover-dur-blur-in: var(--cs-popover-anim-dur-blur-in, calc(var(--cs-dur-enter-md) * 0.5));
+            --cs-popover-dur-out: var(--cs-popover-anim-dur-out, var(--cs-dur-exit-md));
 
             opacity: 0;
             filter: blur(var(--cs-popover-blur-exit));
@@ -227,10 +227,10 @@
             scale: var(--cs-popover-scale-exit);
 
             transition:
-                opacity var(--cs-popover-dur-out) var(--cs-ease-quad-in),
-                scale var(--cs-popover-dur-out) var(--cs-ease-quad-in),
-                translate var(--cs-popover-dur-out) var(--cs-ease-quad-in),
-                filter calc(var(--cs-popover-dur-out) * 0.8) var(--cs-ease-quad-in),
+                opacity var(--cs-popover-dur-out) var(--cs-ease-exit),
+                scale var(--cs-popover-dur-out) var(--cs-ease-exit),
+                translate var(--cs-popover-dur-out) var(--cs-ease-exit),
+                filter calc(var(--cs-popover-dur-out) * 0.8) var(--cs-ease-exit),
                 display var(--cs-popover-dur-out) allow-discrete,
                 overlay var(--cs-popover-dur-out) allow-discrete;
         }
@@ -242,10 +242,10 @@
             scale: 1;
 
             transition:
-                opacity var(--cs-popover-dur-fade-in) var(--cs-ease-quart-out),
-                filter var(--cs-popover-dur-blur-in) var(--cs-ease-quart-out),
-                scale var(--cs-popover-dur-in) var(--cs-spring-snappy),
-                translate var(--cs-popover-dur-in) var(--cs-spring-snappy),
+                opacity var(--cs-popover-dur-fade-in) var(--cs-ease-effect),
+                filter var(--cs-popover-dur-blur-in) var(--cs-ease-effect),
+                scale var(--cs-popover-dur-in) var(--cs-ease-enter),
+                translate var(--cs-popover-dur-in) var(--cs-ease-enter),
                 display var(--cs-popover-dur-in) allow-discrete,
                 overlay var(--cs-popover-dur-in) allow-discrete;
         }
