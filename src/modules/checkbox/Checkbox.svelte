@@ -41,7 +41,8 @@
     stroke-linejoin="round"
 >
     <path class="cs-checkbox-check" d="M4 12l5 5L20 6" pathLength="1" />
-    <path class="cs-checkbox-dash" d="M5 12h14" pathLength="1" />
+    <path class="cs-checkbox-dash" d="M12 12H5" pathLength="1" />
+    <path class="cs-checkbox-dash" d="M12 12H19" pathLength="1" />
 </svg>
 
 <style>
@@ -62,9 +63,9 @@
             box-shadow: var(--cs-checkbox-shadow, none);
 
             transition:
-                background-color 140ms var(--cs-ease-quad-out),
-                box-shadow 140ms var(--cs-ease-quad-out),
-                scale 120ms var(--cs-ease-quad-out);
+                background-color var(--cs-dur-press) var(--cs-ease-press),
+                box-shadow var(--cs-dur-press) var(--cs-ease-press),
+                scale var(--cs-dur-120) var(--cs-ease-press);
 
             /* =========================================================
             * SIZES
@@ -187,14 +188,14 @@
             translate: -50% -50%;
             scale: 0.7;
             transition:
-                opacity 80ms var(--cs-ease-quad-out),
-                scale 80ms var(--cs-ease-quad-out);
+                opacity var(--cs-dur-80) var(--cs-ease-effect),
+                scale var(--cs-dur-80) var(--cs-ease-effect);
             pointer-events: none;
 
             & path {
                 stroke-dasharray: 1;
                 stroke-dashoffset: 1;
-                transition: stroke-dashoffset 100ms var(--cs-ease-quad-out);
+                transition: stroke-dashoffset var(--cs-dur-effect-fast) var(--cs-ease-effect);
             }
         }
 
@@ -204,13 +205,13 @@
         /* 1. Indeterminate: Draws horizontal dash while checkmark remains retracted */
         .cs-checkbox:indeterminate + .cs-checkbox-icon .cs-checkbox-dash {
             stroke-dashoffset: 0;
-            transition: stroke-dashoffset 160ms var(--cs-ease-cubic-out);
+            transition: stroke-dashoffset var(--cs-dur-140) var(--cs-ease-quart-out);
         }
 
         /* 2. Checked: Draws checkmark while dash remains retracted */
         .cs-checkbox:checked:not(:indeterminate) + .cs-checkbox-icon .cs-checkbox-check {
             stroke-dashoffset: 0;
-            transition: stroke-dashoffset 200ms var(--cs-ease-cubic-out);
+            transition: stroke-dashoffset var(--cs-dur-140) var(--cs-ease-quart-out);
         }
 
         /* 3. Active Icon Container: Snaps visibility immediately to prioritize vector drawing */
