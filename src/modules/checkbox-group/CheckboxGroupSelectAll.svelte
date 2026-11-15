@@ -34,8 +34,8 @@
     {size}
     {...rest}
     class={["cs-checkbox-group-select-all", className]}
-    checked={group ? group.isAllSelected : false}
-    indeterminate={group ? group.isIndeterminate : false}
+    bind:checked={() => (group ? group.isAllSelected : false), () => {}}
+    bind:indeterminate={() => (group ? group.isIndeterminate : false), () => {}}
     disabled={Boolean(disabled || group?.disabled)}
     invalid={invalid ?? group?.invalid}
     onchange={handleSelectAllChange}

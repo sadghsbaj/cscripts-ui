@@ -569,5 +569,58 @@ describe("CheckboxGroup Svelte 5 Component", () => {
 
             unmount(instance);
         });
+
+        test.each([
+            { label: "partial selection", initial: ["a"] },
+            { label: "empty selection", initial: [] as string[] },
+        ])(
+            "clicking SelectAll then unchecking a child updates SelectAll to indeterminate ($label)",
+            ({ initial }) => {
+                let value = $state<string[]>([...initial]);
+
+                const instance = mount(CheckboxGroupTestHost, {
+                    target: container,
+                    props: {
+                        items: defaultItems,
+                        selectAll: {},
+                        get value() {
+                            return value;
+                        },
+                        set value(next: string[]) {
+                            value = next;
+                        },
+                    },
+                });
+                flushSync();
+
+                const selectAll = getSelectAll();
+                const itemB = getItem("b");
+                expect(selectAll).not.toBeNull();
+                expect(itemB).not.toBeNull();
+
+                // Step 2: Click SelectAll so all enabled items become selected
+                selectAll?.click();
+                flushSync();
+                expect(value).toEqual(["a", "b", "c"]);
+                expect(selectAll?.checked).toBe(true);
+                expect(selectAll?.indeterminate).toBe(false);
+
+                // Step 3: Click one child <Checkbox> to uncheck it
+                itemB?.click();
+                flushSync();
+
+                // Step 4: Assert SelectAll.checked === false, SelectAll.indeterminate === true, and value excludes "b"
+                expect(value).toEqual(["a", "c"]);
+                expect({
+                    checked: selectAll?.checked,
+                    indeterminate: selectAll?.indeterminate,
+                }).toEqual({
+                    checked: false,
+                    indeterminate: true,
+                });
+
+                unmount(instance);
+            },
+        );
     });
 });
