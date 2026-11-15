@@ -7,8 +7,12 @@
         "dev": "bunx --bun vite",
         "build": "bunx --bun vite build",
         "preview": "bunx --bun vite preview",
-        "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
-        "lint": "eslint .",
+        "check": "bunx --bun svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+        "test": "bunx --bun vitest run",
+        "test:watch": "bunx --bun vitest",
+        "test:e2e": "bunx --bun playwright test",
+        "format": "bunx prettier --write .",
+        "lint": "bunx --bun eslint .",
         "sync:agents": "cs-sync-agents",
         "postinstall": "bun run sync:agents"
     },
@@ -18,21 +22,24 @@
     },
     "devDependencies": {
         "@ianvs/prettier-plugin-sort-imports": "latest",
+        "@playwright/test": "latest",
         "@sveltejs/vite-plugin-svelte": "latest",
         "@tsconfig/svelte": "latest",
         "@types/node": "latest",
+        "eslint": "latest",
+        "happy-dom": "latest",
+        "lightningcss": "latest",
         "prettier": "latest",
         "prettier-plugin-css-order": "latest",
         "prettier-plugin-svelte": "latest",
         "svelte": "latest",
         "svelte-check": "latest",
+        "terser": "latest",
         "typescript": "~6.0.2",
         "unocss": "latest",
         "vite": "latest",
-        "lightningcss": "latest",
-        "terser": "latest",
         "vite-plugin-html": "latest",
-        "eslint": "latest"
+        "vitest": "latest"
     },
     "dependencies": {
         "cs": "github:sadghsbaj/cscripts-ui"

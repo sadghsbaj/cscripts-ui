@@ -15,7 +15,8 @@ const target = document.getElementById("app");
 if (!target) throw new Error("Missing #app mount target");
 
 const isLab = import.meta.env.DEV && window.location.pathname.startsWith("/lab");
-const Root = isLab ? (await import("./lab/LabView.svelte")).default : (await import("./App.svelte")).default;
+const rootModule = isLab ? await import("./lab/LabView.svelte") : await import("./App.svelte");
+const Root = rootModule.default;
 
 const app = mount(Root, { target });
 
