@@ -9,3 +9,5 @@
 - checkbox auch analg zur togglebutton etwas erweitern logisch?
 
 - dur tokens festlegne und regeln dazu?
+
+- overshoot kompeltt etnfernen nervt iwie nur
