@@ -10,6 +10,7 @@ import { componentLayersConfig } from "./component-layers.ts";
 import { cssSafetyConfigs } from "./css-safety.ts";
 import { overlayConfig } from "./overlay.ts";
 import { scrollAreaConfig } from "./scroll-area.ts";
+import { segmentedControlConfig } from "./segmented-control.ts";
 import { titleAttributeConfig } from "./title-attribute.ts";
 import { toggleButtonGroupConfig } from "./toggle-button-group.ts";
 import { toggleButtonConfig } from "./toggle-button.ts";
@@ -34,6 +35,7 @@ export {
     scrollAreaScrollFadeOnContentRule,
     scrollAreaStructureRule,
 } from "./scroll-area.ts";
+export { segmentedControlConfig, segmentedControlStructureRule } from "./segmented-control.ts";
 export { noTitleAttributeRule, titleAttributeConfig } from "./title-attribute.ts";
 export {
     toggleButtonGroupConfig,
@@ -59,6 +61,7 @@ export const customRulesConfigs: Linter.Config[] = [
     toggleButtonConfig,
     toggleButtonGroupConfig,
     scrollAreaConfig,
+    segmentedControlConfig,
     componentLayersConfig,
     ...cssSafetyConfigs,
     attachmentLayersConfig,
