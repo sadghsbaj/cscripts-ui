@@ -1,16 +1,23 @@
 - tooltip und popvoer sytem nochmal leicht umbauen ohne mode nur mit triggerOn
 
-- checkbox invalid styling noch etwas weniger aggressiv
+## Modules
 
-- checkbox auch analg zur togglebutton etwas erweitern logisch?
+- rovingfocus
 
-- segmented control switch(anticipaton spring) rovingfocus
+- segmented control
+
+- switch(anticipaton spring) + group
+
+- textinput
+
+- textarea maybe auch contenteditable artiges ding für Platzhalter und sowas
 
 ## Checkbox:
 
-Group?
+Group? x
 invalid style
-Logik erweitern wie bei ToggleButton
-Headless CheckboxGroup nur für Verhalten?
-Animationen in alle Richtungen geil machen
-Doku anpassen
+Logik erweitern wie bei ToggleButton x
+Headless CheckboxGroup nur für Verhalten? x
+Animationen in alle Richtungen geil machen x
+Doku anpassen x
+dot in der mitte von chekbox bei indeterminate x
