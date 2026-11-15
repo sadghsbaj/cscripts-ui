@@ -6,9 +6,13 @@
     import { HitArea } from "cs/svelte/hit-area";
     import { ScrollArea, ScrollAreaContent } from "cs/svelte/scroll-area";
     import { scrollFade } from "cs/svelte/scroll-fade";
+    import {
+        SegmentedControl,
+        SegmentedControlIcon,
+        SegmentedControlItem,
+        SegmentedControlLabel,
+    } from "cs/svelte/segmented-control";
     import { theme, THEME_ICONS, type ThemeMode } from "cs/svelte/theme";
-    import { ToggleButton, ToggleButtonIcon, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
     import { tooltip } from "cs/svelte/tooltip";
 
     import {
@@ -179,19 +183,16 @@
         onfocusout={() => (isFocusedControls = false)}
     >
         {#if activePreviewItem?.docs}
-            <div class="rounded-full bg-elevated p-0.5 shadow-sm border border-base-soft">
-                <ToggleButtonGroup type="single" bind:value={viewMode} aria-label="View mode">
-                    <ToggleButton value="preview" variant="ghost" color="accent" size="sm">
-                        <ToggleButtonIcon icon={Eye} />
-                        <ToggleButtonLabel>Preview</ToggleButtonLabel>
-                    </ToggleButton>
-                    <ToggleButtonGroupSeparator />
-                    <ToggleButton value="docs" variant="ghost" color="accent" size="sm">
-                        <ToggleButtonIcon icon={BookOpen} />
-                        <ToggleButtonLabel>Docs</ToggleButtonLabel>
-                    </ToggleButton>
-                </ToggleButtonGroup>
-            </div>
+            <SegmentedControl size="md" width="equal" bind:value={viewMode} aria-label="View mode">
+                <SegmentedControlItem value="preview">
+                    <SegmentedControlIcon icon={Eye} />
+                    <SegmentedControlLabel>Preview</SegmentedControlLabel>
+                </SegmentedControlItem>
+                <SegmentedControlItem value="docs">
+                    <SegmentedControlIcon icon={BookOpen} />
+                    <SegmentedControlLabel>Docs</SegmentedControlLabel>
+                </SegmentedControlItem>
+            </SegmentedControl>
         {/if}
 
         <Button
