@@ -26,7 +26,9 @@ Extends `Omit<HTMLInputAttributes, "size" | "type">`.
 | `variant` | `CheckboxVariant` | Yes | — | Surface style: `"soft" \| "elevated"`. |
 | `size` | `CheckboxSize` | Yes | — | T-shirt size: `"xs"` (12px), `"sm"` (16px), `"md"` (20px), `"lg"` (24px), `"xl"` (28px). |
 | `checked` | `boolean` | No | `undefined` | `$bindable` checked state. |
+| `onCheckedChange` | `(checked: boolean) => void` | No | `undefined` | Fires with the next `checked` state after `onchange` only when `checked` changes. |
 | `indeterminate` | `boolean` | No | `undefined` | `$bindable` indeterminate state (draws a horizontal dash instead of a checkmark). |
+| `onIndeterminateChange` | `(indeterminate: boolean) => void` | No | `undefined` | Fires with the next `indeterminate` state after `onchange` only when `indeterminate` changes. |
 | `invalid` | `boolean` | No | `undefined` | Sets `aria-invalid="true"` and applies negative ring/fill styling. |
 | `ref` | `HTMLInputElement \| null` | No | `null` | `$bindable` reference to the `<input>` element. |
 

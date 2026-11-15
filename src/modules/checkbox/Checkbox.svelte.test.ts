@@ -278,4 +278,150 @@ describe("Checkbox Svelte 5 Component", () => {
 
         unmount(instance);
     });
+
+    test("onCheckedChange fires with (true) and (false) on user toggle without bind:checked", () => {
+        const onCheckedChange = vi.fn();
+
+        const instance = mount(Checkbox, {
+            target: container,
+            props: {
+                variant: "soft",
+                size: "md",
+                onCheckedChange,
+            },
+        });
+        flushSync();
+
+        const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+        expect(input).not.toBeNull();
+        expect(input?.checked).toBe(false);
+
+        input?.click();
+        flushSync();
+        expect(input?.checked).toBe(true);
+        expect(onCheckedChange).toHaveBeenCalledTimes(1);
+        expect(onCheckedChange).toHaveBeenLastCalledWith(true);
+
+        input?.click();
+        flushSync();
+        expect(input?.checked).toBe(false);
+        expect(onCheckedChange).toHaveBeenCalledTimes(2);
+        expect(onCheckedChange).toHaveBeenLastCalledWith(false);
+
+        unmount(instance);
+    });
+
+    test("clicking an indeterminate checkbox clears indeterminate and fires onIndeterminateChange(false) and onCheckedChange(true)", () => {
+        const onCheckedChange = vi.fn();
+        const onIndeterminateChange = vi.fn();
+
+        const instance = mount(Checkbox, {
+            target: container,
+            props: {
+                variant: "soft",
+                size: "md",
+                checked: false,
+                indeterminate: true,
+                onCheckedChange,
+                onIndeterminateChange,
+            },
+        });
+        flushSync();
+
+        const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+        expect(input).not.toBeNull();
+        expect(input?.checked).toBe(false);
+        expect(input?.indeterminate).toBe(true);
+
+        input?.click();
+        flushSync();
+        expect(input?.checked).toBe(true);
+        expect(input?.indeterminate).toBe(false);
+        expect(onCheckedChange).toHaveBeenCalledTimes(1);
+        expect(onCheckedChange).toHaveBeenLastCalledWith(true);
+        expect(onIndeterminateChange).toHaveBeenCalledTimes(1);
+        expect(onIndeterminateChange).toHaveBeenLastCalledWith(false);
+
+        unmount(instance);
+    });
+
+    test("tri-state onchange from checked to indeterminate fires onCheckedChange(false) and onIndeterminateChange(true)", () => {
+        const onCheckedChange = vi.fn();
+        const onIndeterminateChange = vi.fn();
+
+        const instance = mount(Checkbox, {
+            target: container,
+            props: {
+                variant: "soft",
+                size: "md",
+                checked: true,
+                indeterminate: false,
+                onCheckedChange,
+                onIndeterminateChange,
+                onchange: (event: Event & { currentTarget: HTMLInputElement }) => {
+                    event.currentTarget.checked = false;
+                    event.currentTarget.indeterminate = true;
+                },
+            },
+        });
+        flushSync();
+
+        const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+        expect(input).not.toBeNull();
+        expect(input?.checked).toBe(true);
+        expect(input?.indeterminate).toBe(false);
+
+        input?.click();
+        flushSync();
+        expect(input?.checked).toBe(false);
+        expect(input?.indeterminate).toBe(true);
+        expect(onCheckedChange).toHaveBeenCalledTimes(1);
+        expect(onCheckedChange).toHaveBeenLastCalledWith(false);
+        expect(onIndeterminateChange).toHaveBeenCalledTimes(1);
+        expect(onIndeterminateChange).toHaveBeenLastCalledWith(true);
+
+        unmount(instance);
+    });
+
+    test("does not fire onCheckedChange or onIndeterminateChange when its respective value did not change", () => {
+        const onCheckedChange = vi.fn();
+        const onIndeterminateChange = vi.fn();
+
+        const instance = mount(Checkbox, {
+            target: container,
+            props: {
+                variant: "soft",
+                size: "md",
+                checked: false,
+                indeterminate: false,
+                onCheckedChange,
+                onIndeterminateChange,
+                onchange: (event: Event & { currentTarget: HTMLInputElement }) => {
+                    event.currentTarget.checked = false;
+                    event.currentTarget.indeterminate = true;
+                },
+            },
+        });
+        flushSync();
+
+        const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+        expect(input).not.toBeNull();
+
+        // unchecked -> indeterminate: checked stays false, indeterminate becomes true
+        input?.click();
+        flushSync();
+        expect(input?.checked).toBe(false);
+        expect(input?.indeterminate).toBe(true);
+        expect(onCheckedChange).not.toHaveBeenCalled();
+        expect(onIndeterminateChange).toHaveBeenCalledTimes(1);
+        expect(onIndeterminateChange).toHaveBeenLastCalledWith(true);
+
+        // Clicking again: onchange keeps checked = false and indeterminate = true -> neither fires
+        input?.click();
+        flushSync();
+        expect(onCheckedChange).not.toHaveBeenCalled();
+        expect(onIndeterminateChange).toHaveBeenCalledTimes(1);
+
+        unmount(instance);
+    });
 });

@@ -6,7 +6,9 @@
         variant,
         size,
         checked = $bindable(),
+        onCheckedChange,
         indeterminate = $bindable(),
+        onIndeterminateChange,
         invalid,
         class: className,
         onchange,
@@ -113,11 +115,25 @@
         return () => cancelMorph();
     });
     function handleChange(event: Event & { currentTarget: EventTarget & HTMLInputElement }): void {
+        const prevChecked = Boolean(checked);
+        const prevIndeterminate = Boolean(indeterminate);
+
         // Run consumer onchange before syncing bindable state so tri-state handlers can
         // update target.checked/indeterminate without an intermediate checked microtask.
         onchange?.(event);
-        checked = event.currentTarget.checked;
-        indeterminate = event.currentTarget.indeterminate;
+
+        const nextChecked = event.currentTarget.checked;
+        const nextIndeterminate = event.currentTarget.indeterminate;
+
+        checked = nextChecked;
+        indeterminate = nextIndeterminate;
+
+        if (nextChecked !== prevChecked) {
+            onCheckedChange?.(nextChecked);
+        }
+        if (nextIndeterminate !== prevIndeterminate) {
+            onIndeterminateChange?.(nextIndeterminate);
+        }
     }
 </script>
 
