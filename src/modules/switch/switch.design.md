@@ -44,5 +44,5 @@ Single recessed `soft` track surface (`variant` / `data-variant` omitted; switch
    - Anchored to the origin edge: expands rightward when unchecked (`left` anchored) and leftward when checked (`right` anchored).
    - **Timing Lockstep:** Both `translate` and `width` MUST share `var(--cs-dur-press)` (`140ms`) + `var(--cs-ease-press)` while pressed (via local `--cs-switch-thumb-dur` / `--cs-switch-thumb-ease` overrides) so the trailing edge stays mathematically pinned with zero wobble.
 2. **Release / Toggle (`:checked` transition):**
-   - `:active` clears, restoring `translate` to `var(--cs-dur-280)` with `var(--cs-spring-snappy)` (~4% overshoot) while `width` settles back to resting size in `var(--cs-dur-press)` (`140ms`).
+   - `:active` clears, restoring `translate` to `var(--cs-dur-180)` with `var(--cs-ease-quart-out)` (crisp, zero-overshoot magnetic lock-in right after the `140ms` `+14%` anticipation settles) while `width` settles back to resting size in `var(--cs-dur-press)` (`140ms`).
    - Reduced motion: Handled globally by foundation CSS (`prefers-reduced-motion`).

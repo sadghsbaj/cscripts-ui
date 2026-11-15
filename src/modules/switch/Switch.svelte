@@ -50,8 +50,8 @@
             --cs-switch-radius: calc(var(--cs-switch-height) / 2);
             --cs-switch-thumb-bg: #fff;
             --cs-switch-thumb-shadow: 0 1px 3px rgb(0 0 0 / 0.18), 0 1px 1px rgb(0 0 0 / 0.08);
-            --cs-switch-thumb-dur: var(--cs-dur-280);
-            --cs-switch-thumb-ease: var(--cs-spring-snappy);
+            --cs-switch-thumb-dur: var(--cs-dur-180);
+            --cs-switch-thumb-ease: var(--cs-ease-quart-out);
             --cs-switch-dir: 1;
 
             position: relative;

@@ -96,10 +96,10 @@ Referencing `src/modules/switch/switch.design.md` as the source of truth:
   - **Press Anticipation (`:active:not(:disabled)`):**
     - Thumb stretches `+14%` (`calc(var(--cs-switch-thumb-width) * 1.14)`) along the travel axis via `width` (preserving pill corner geometry without border-radius distortion).
     - **Edge-Anchored Expansion Mechanics (GPU `translate` + `--cs-switch-dir`):** Pin `inset-inline-start: var(--cs-switch-pad)` permanently and drive horizontal travel via `translate: calc(var(--cs-switch-thumb-x, 0px) * var(--cs-switch-dir)) 0` (flipping sign with `--cs-switch-dir: -1` under `:dir(rtl)`). On `:checked:active`, `--cs-switch-thumb-x` is `calc(var(--cs-switch-width) - var(--cs-switch-pad) * 2 - var(--cs-switch-thumb-width) * 1.14)`.
-    - **Timing Lockstep:** `.cs-switch` sets `--cs-switch-thumb-dur: var(--cs-dur-280)` and `--cs-switch-thumb-ease: var(--cs-spring-snappy)`, which `::after` uses for `translate`. On `:active:not(:disabled)`, `--cs-switch-thumb-dur` and `--cs-switch-thumb-ease` are overridden to `var(--cs-dur-press)` and `var(--cs-ease-press)` so `translate` and `width` move in exact lockstep during `:checked:active` (zero right-edge wobble).
+    - **Timing Lockstep:** `.cs-switch` sets `--cs-switch-thumb-dur: var(--cs-dur-180)` and `--cs-switch-thumb-ease: var(--cs-ease-quart-out)`, which `::after` uses for `translate`. On `:active:not(:disabled)`, `--cs-switch-thumb-dur` and `--cs-switch-thumb-ease` are overridden to `var(--cs-dur-press)` and `var(--cs-ease-press)` so `translate` and `width` move in exact lockstep during `:checked:active` (zero right-edge wobble).
   - **Toggle / Release (`:checked` transition):**
     - Thumb glides across the track while settling back to its resting `width`.
-    - Timing: `var(--cs-dur-280)` with `var(--cs-spring-snappy)` for `translate`, and `var(--cs-dur-press)` + `var(--cs-ease-press)` for `width` / `background-color` / `box-shadow` / `opacity`.
+    - Timing: `var(--cs-dur-180)` with `var(--cs-ease-quart-out)` for `translate`, and `var(--cs-dur-press)` + `var(--cs-ease-press)` for `width` / `background-color` / `box-shadow` / `opacity`.
 
 ---
 
@@ -116,4 +116,4 @@ Referencing `src/modules/switch/switch.design.md` as the source of truth:
 
 ### Open Questions for Review
 1. **Thumb Travel Property (`inset-inline-start` vs `translate`):** Prefer Option A (`inset-inline-start` for automatic RTL with zero `:dir(rtl)` selector) or Option B (`translate` + `--cs-switch-dir` for compositor-only travel)?
-2. **Toggle Spring Curve:** Use the shared `var(--cs-spring-snappy)` (~4% overshoot) from `motion.css` for consistency, or define a scoped `--cs-switch-spring` (~8–10% overshoot) for a stronger physical detent feel?
+2. **Toggle Curve:** Use the shared `var(--cs-ease-quart-out)` (zero overshoot) from `motion.css` for consistency, or define a scoped `--cs-switch-spring` (~8–10% overshoot) for a stronger physical detent feel?
