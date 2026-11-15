@@ -203,9 +203,13 @@ export class ButtonMorphManager implements ButtonMorphContext {
     direction: ButtonMorphDirection = $state("forward");
     exitingValue: string | null = $state(null);
     surfaceFrom: ButtonMorphSurface | null = $state(null);
-    surfaceTo: ButtonMorphSurface | null = $state(null);
+    #surfaceToRest: ButtonMorphSurface | null = $state(null);
+    #surfaceToHover: ButtonMorphSurface | null = $state(null);
 
     readonly isMeasured = $derived(this.width !== null && this.height !== null);
+    readonly surfaceTo: ButtonMorphSurface | null = $derived(
+        this.isPointerHovered ? this.#surfaceToHover : this.#surfaceToRest,
+    );
 
     #currentValue: string;
     #rootEl: HTMLElement | null = null;
@@ -453,13 +457,15 @@ export class ButtonMorphManager implements ButtonMorphContext {
         this.#lastChangeAt = performance.now();
         this.direction = this.#resolveDirection(prevValue, nextValue);
 
-        // Snapshot both resting surfaces so the shell can morph one continuous body (color + shadow)
-        // while the individual button surfaces are hidden for the duration of the transition.
+        // Snapshot the outgoing surface in its current hover state and both resting/hovered incoming
+        // surfaces so `--cs-button-morph-to-*` can track pointerenter/pointerleave live mid-morph.
         const fromNode = this.#itemNodes[prevValue];
         const toNode = this.#itemNodes[nextValue];
         const isHovered = this.isPointerHovered || Boolean(this.#rootEl?.matches?.(":hover"));
-        this.surfaceFrom = fromNode ? readButtonSurface(fromNode) : null;
-        this.surfaceTo = toNode ? readButtonSurface(toNode, isHovered) : null;
+        this.isPointerHovered = isHovered;
+        this.surfaceFrom = fromNode ? readButtonSurface(fromNode, isHovered) : null;
+        this.#surfaceToRest = toNode ? readButtonSurface(toNode, false) : null;
+        this.#surfaceToHover = toNode ? readButtonSurface(toNode, true) : null;
 
         if (nextDims) {
             this.width = nextDims.width;
@@ -508,6 +514,9 @@ export class ButtonMorphManager implements ButtonMorphContext {
         this.isGuarded = false;
         this.isPointerHovered = false;
         this.exitingValue = null;
+        this.surfaceFrom = null;
+        this.#surfaceToRest = null;
+        this.#surfaceToHover = null;
     }
 
     /**

@@ -512,6 +512,175 @@ describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
         });
     });
 
+    describe("Hover Surface Continuity", () => {
+        interface MockSurfacePair {
+            rest: { bg: string; shadow: string; corner: string };
+            hover: { bg: string; shadow: string; corner: string };
+        }
+
+        function mockSurfaceStyles(surfaces: Map<Element, MockSurfacePair>): void {
+            vi.spyOn(window, "getComputedStyle").mockImplementation((element: Element, pseudo?: string | null) => {
+                const pair = surfaces.get(element);
+                const isHovered = element instanceof HTMLElement && "morphHover" in element.dataset;
+                const active = pair ? (isHovered ? pair.hover : pair.rest) : undefined;
+
+                return {
+                    backgroundColor: active?.bg ?? "",
+                    boxShadow: active?.shadow ?? "",
+                    content: pseudo === "::after" ? "none" : '""',
+                    opacity: "1",
+                    getPropertyValue: (name: string) => (name === "corner-shape" ? (active?.corner ?? "") : ""),
+                } as unknown as CSSStyleDeclaration;
+            });
+        }
+
+        function createSurfaceMap(): Map<Element, MockSurfacePair> {
+            return new Map<Element, MockSurfacePair>([
+                [
+                    idleBtn,
+                    {
+                        rest: { bg: "rgb(10 10 10)", shadow: "none", corner: "superellipse(1.2)" },
+                        hover: { bg: "rgb(20 20 20)", shadow: "0 1px 2px black", corner: "superellipse(1.3)" },
+                    },
+                ],
+                [
+                    confirmBtn,
+                    {
+                        rest: { bg: "rgb(200 0 0)", shadow: "0 1px 2px black", corner: "superellipse(1.5)" },
+                        hover: { bg: "rgb(230 0 0)", shadow: "0 2px 6px black", corner: "superellipse(1.6)" },
+                    },
+                ],
+            ]);
+        }
+
+        test("should capture hovered surfaceFrom and sync isPointerHovered when root is hovered via pointerenter", () => {
+            mockSurfaceStyles(createSurfaceMap());
+            const { morph, setValue, cleanup } = createMorph();
+
+            rootEl.dispatchEvent(new PointerEvent("pointerenter"));
+            expect(morph.isPointerHovered).toBe(true);
+
+            setValue("confirm");
+
+            expect(morph.isPointerHovered).toBe(true);
+            expect(morph.surfaceFrom).toEqual({
+                background: "rgb(20 20 20)",
+                shadow: "0 1px 2px black",
+                corner: 1.3,
+            });
+            expect(morph.surfaceTo).toEqual({
+                background: "rgb(230 0 0)",
+                shadow: "0 2px 6px black",
+                corner: 1.6,
+            });
+
+            cleanup();
+        });
+
+        test("should capture hovered surfaceFrom and sync isPointerHovered when root matches :hover at transition start", () => {
+            mockSurfaceStyles(createSurfaceMap());
+            const { morph, setValue, cleanup } = createMorph();
+
+            vi.spyOn(rootEl, "matches").mockImplementation((selector) => selector === ":hover");
+            expect(morph.isPointerHovered).toBe(false);
+
+            setValue("confirm");
+
+            expect(morph.isPointerHovered).toBe(true);
+            expect(morph.surfaceFrom).toEqual({
+                background: "rgb(20 20 20)",
+                shadow: "0 1px 2px black",
+                corner: 1.3,
+            });
+            expect(morph.surfaceTo).toEqual({
+                background: "rgb(230 0 0)",
+                shadow: "0 2px 6px black",
+                corner: 1.6,
+            });
+
+            cleanup();
+        });
+
+        test("should switch surfaceTo live from hovered to resting on pointerleave mid-morph", () => {
+            mockSurfaceStyles(createSurfaceMap());
+            const { morph, setValue, cleanup } = createMorph();
+
+            rootEl.dispatchEvent(new PointerEvent("pointerenter"));
+            setValue("confirm");
+
+            expect(morph.isTransitioning).toBe(true);
+            expect(morph.surfaceTo).toEqual({
+                background: "rgb(230 0 0)",
+                shadow: "0 2px 6px black",
+                corner: 1.6,
+            });
+
+            vi.advanceTimersByTime(80);
+            rootEl.dispatchEvent(new PointerEvent("pointerleave"));
+
+            expect(morph.isPointerHovered).toBe(false);
+            expect(morph.surfaceTo).toEqual({
+                background: "rgb(200 0 0)",
+                shadow: "0 1px 2px black",
+                corner: 1.5,
+            });
+
+            cleanup();
+        });
+
+        test("should switch surfaceTo live from resting to hovered on pointerenter mid-morph", () => {
+            mockSurfaceStyles(createSurfaceMap());
+            const { morph, setValue, cleanup } = createMorph();
+
+            setValue("confirm");
+
+            expect(morph.isPointerHovered).toBe(false);
+            expect(morph.isTransitioning).toBe(true);
+            expect(morph.surfaceFrom).toEqual({
+                background: "rgb(10 10 10)",
+                shadow: "none",
+                corner: 1.2,
+            });
+            expect(morph.surfaceTo).toEqual({
+                background: "rgb(200 0 0)",
+                shadow: "0 1px 2px black",
+                corner: 1.5,
+            });
+
+            vi.advanceTimersByTime(80);
+            rootEl.dispatchEvent(new PointerEvent("pointerenter"));
+
+            expect(morph.isPointerHovered).toBe(true);
+            expect(morph.surfaceTo).toEqual({
+                background: "rgb(230 0 0)",
+                shadow: "0 2px 6px black",
+                corner: 1.6,
+            });
+
+            cleanup();
+        });
+
+        test("should clear surfaceFrom and surfaceTo on destroy() / root teardown", () => {
+            mockSurfaceStyles(createSurfaceMap());
+            const { morph, setValue, cleanup } = createMorph();
+
+            rootEl.dispatchEvent(new PointerEvent("pointerenter"));
+            setValue("confirm");
+
+            expect(morph.surfaceFrom).not.toBeNull();
+            expect(morph.surfaceTo).not.toBeNull();
+
+            morph.destroy();
+
+            expect(morph.surfaceFrom).toBeNull();
+            expect(morph.surfaceTo).toBeNull();
+            expect(morph.isPointerHovered).toBe(false);
+            expect(morph.isTransitioning).toBe(false);
+
+            cleanup();
+        });
+    });
+
     describe("Auto-Reset (Timeout, Hover Pause, Outside Click & Escape)", () => {
         test("should automatically reset to defaultValue after resetTimeout and pause while pointer is hovered", () => {
             let current = "idle";
