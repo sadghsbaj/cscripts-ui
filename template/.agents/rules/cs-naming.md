@@ -24,6 +24,7 @@ trigger: always_on
     - Attachment: `kebab-case.attach.ts` (`click-outside.attach.ts`).
     - Reactive Svelte state/runes: `kebab-case.svelte.ts` (`session.svelte.ts`, `filters.svelte.ts`).
     - Plain TypeScript / barrel: `kebab-case.ts` (`index.ts`, `utils.ts`).
+    - Design spec: `kebab-case.design.md` (`dashboard.design.md`).
     - CSS files: `kebab-case.css` (`layout.css`).
     - Tests: `*.test.ts` or `*.svelte.test.ts`.
     - Internal files: `.internal.` infix before kind/extension (`RowActions.internal.svelte`, `focus-helper.internal.attach.ts`).

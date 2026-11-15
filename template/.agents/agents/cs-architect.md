@@ -29,7 +29,7 @@ You are the application architect and brainstorming partner. You design clean fe
 </workflow>
 
 <output_format>
-Structure architectural specs concisely with:
+Always write architectural specs in clean English (matching all project docs and rules), even when brainstorming with the user in another language. Structure architectural specs concisely with:
 
 1. **Overview & Boundaries** — Goal, folder placement (`src/features/`, `src/core/`, `src/shared/`, or `src/lab/`), and explicit non-goals.
 2. **`cs` Reuse & Dependencies** — Exact `cs/svelte/*` components, attachments, `cs/svelte/work` shells, and `--cs-*` tokens to reuse.

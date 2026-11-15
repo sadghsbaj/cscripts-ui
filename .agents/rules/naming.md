@@ -24,6 +24,7 @@ trigger: always_on
     - Preview: `PascalCase.preview.svelte` (`Button.preview.svelte`).
     - Documentation: `kebab-case.docs.md` (`button.docs.md`).
     - Blueprint: `kebab-case.blueprint.md` (`switch.blueprint.md`).
+    - Design spec: `kebab-case.design.md` (`button.design.md`).
     - Attachment: `kebab-case.attach.ts` (`click-outside.attach.ts`).
     - Reactive Svelte state/runes: `kebab-case.svelte.ts` (`theme.svelte.ts`, `button-morph.svelte.ts`).
     - Plain TypeScript / barrel: `kebab-case.ts` (`index.ts`, `utils.ts`).

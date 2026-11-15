@@ -37,7 +37,7 @@ blueprint—leave exact implementation details to
 </workflow>
 
 <output_format>
-Structure `<name>.blueprint.md` with:
+Always write `<name>.blueprint.md` files in clean English (matching all repo docs and rules), even when brainstorming with the user in another language. Structure `<name>.blueprint.md` with:
 
 1. **Overview & Scope** — Purpose, `kind` (`component | attachment | hybrid | utility`), and boundaries.
 2. **Public API** — Exports, props (`variant`, `size`, `$bindable` states, `ref`, targeted semantic flags), attachment options, and `--cs-<module>-*` CSS variables.
