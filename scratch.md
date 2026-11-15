@@ -8,11 +8,28 @@
 - select
 - combobox
 - contextmenu
+- toast
+- nlp parser
+- chip
+- badges
+- color picker
+- eml logik signaturen
+- eml wizard
+- allgemeine eml logik eigene outlook email logik für work
+- excel parsing maybe zentraler einfacher? excel zu json json zu excel mit formatierung und co
+- Cards
+- KI integrationen clean dargstellt
+- Dokumentationsseite fleixble Bausteine factory pattern
+- filesystem chooser verwalter element
+- pdf viewer
+- verschlüsselte seiten im filesystem
+- auth system in fs
 
 - textinput x
-- textarea maybe auch contenteditable artiges ding für Platzhalter und sowas
+- textarea maybe
+- contenteditable artiges ding für Platzhalter und sowas
 
-- geile charts
+- geile charts animiert
 - text morph
 - geile zahlen animationen
 
