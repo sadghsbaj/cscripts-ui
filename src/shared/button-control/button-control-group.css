@@ -10,6 +10,11 @@
             --cs-button-control-squash-active: 0.97;
             --cs-button-control-focus-scale-active: 0.97;
             border-radius: var(--cs-button-control-group-inner-radius);
+
+            /* Lift focus ring above later-DOM siblings' opaque/pressed surfaces and z-index: 1 separators. */
+            &:focus-visible {
+                z-index: 2;
+            }
         }
 
         /* Filtered :nth-child(... of .cs-button-control) ignores auxiliary DOM nodes/separators. */
