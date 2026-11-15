@@ -44,7 +44,7 @@ globs: "**/*.svelte, **/*.css, **/*.html"
     - **Foundation Token Sources (`./node_modules/cs/src/css/foundation/`):**
       - `color-semantics.css` & `color-primitives.css`: Surface (`canvas`, `elevated`, `sunken`), text (`text-strong|main|weak|weaker`), and semantic palettes.
       - `shapes.css`: `--cs-radius-*`, `--cs-shadow-*`, and `--cs-squircle*`.
-      - `easings.css`, `container.css`, `typography.css`: Motion curves/springs, container widths, and type scale.
+      - `motion.css`, `container.css`, `typography.css`: Motion curves, springs, semantic durations, container widths, and type scale.
     - **UnoCSS Sources (`./node_modules/cs/src/uno/`):** `rules/` (`colors.ts`, `shapes.ts`, `scrollbar.ts`, `typography.ts`), `shortcuts/` (`typography.ts`, `layout.ts`, `dots.ts`), and `variants/interaction.ts`.
     - **Automated Foundation Behaviors:** `reset.css` sets `16px`, `font-400`, `1.5` line-height, and `--cs-color-text-main`; `disabled.css` handles `:disabled`, `[aria-disabled="true"]`, and `[data-disabled]`; `focus.css` handles `:focus-visible` rings; `presetCS` `hover:` and `active:` exclude disabled/busy states and guard `hover:` with `@media (hover: hover) and (pointer: fine)`. Scrollbars are styled globally (`scrollbar-sm|md|lg`, `no-scrollbar`, `scrollbar-none`).
   </cascade_and_tokens>
@@ -61,7 +61,7 @@ globs: "**/*.svelte, **/*.css, **/*.html"
     - **Inline-First:** Use inline morphing or inline editing for confirmations and renames. Reserve fullscreen modals for heavy media or wide-table focus views.
     - **Cards & Tables:** Make entire entity cards clickable rather than adding redundant "Open" buttons; show 1–2 essential values and disclose secondary details via hover/popovers. Separate table rows with whitespace/elevated islands rather than borders; allow horizontal scroll + expand view on wide tables.
     - **Touch Targets (`< 1936px²`):** Interactive controls under `1936px²` (e.g., compact icon buttons, checkboxes) require a `<HitArea />` child (see `./node_modules/cs/src/modules/hit-area/hit-area.docs.md`).
-    - **Motion:** Use `200ms var(--cs-ease-quad-out)` for color/shadow/bg; `--cs-spring-release` only for small press scale deltas; `--cs-spring-snappy` for morphs, switches, and popovers; `--cs-ease-expo-out` / `--cs-ease-cubic-out` for drawers/panels. Never put `margin` or parent `gap` on collapsing elements.
+    - **Motion:** Default to the predefined semantic duration (`--cs-dur-*`) and easing (`--cs-ease-*`) tokens in `motion.css` (inspect `./node_modules/cs/src/css/foundation/motion.css`) for standard transitions and animations; use app-local timings/curves for specialized, one-off choreography. Never put `margin` or parent `gap` on collapsing elements.
   </ux_and_motion>
 </patterns>
 
