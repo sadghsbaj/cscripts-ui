@@ -2,7 +2,7 @@ import { mount, unmount } from "svelte";
 import type { Attachment } from "svelte/attachments";
 
 import type { TooltipIconConfig } from ".";
-import { resolveGetter } from "../../utils/resolve-getter.ts";
+import { resolveGetter } from "../../shared/resolve-getter.ts";
 import { popoverTrigger, type PopoverPlacement } from "../popover";
 import Tooltip from "./Tooltip.svelte";
 

@@ -1,6 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
-import { resolveGetter } from "../../utils/resolve-getter.ts";
+import { resolveGetter } from "../../shared/resolve-getter.ts";
 import "./scroll-fade.attach.css";
 
 export const SCROLL_FADE_DIRECTIONS = ["vertical", "horizontal", "both"] as const;

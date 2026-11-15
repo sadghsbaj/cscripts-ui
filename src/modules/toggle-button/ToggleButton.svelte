@@ -1,5 +1,5 @@
 <script lang="ts">
-    import "../../css/shared/button-control.css";
+    import "../../shared/button-control/button-control.css";
     import { getToggleButtonGroupContext, hasToggleButtonGroupContext } from "../toggle-button-group/index.ts";
     import type { ToggleButtonProps } from "./index.ts";
 

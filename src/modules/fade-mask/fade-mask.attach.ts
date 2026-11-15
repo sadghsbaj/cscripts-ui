@@ -1,6 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
-import { resolveGetter } from "../../utils/resolve-getter.ts";
+import { resolveGetter } from "../../shared/resolve-getter.ts";
 import "./fade-mask.attach.css";
 
 export const FADE_MASK_VARIANTS = ["radial", "top", "bottom", "left", "right", "block", "inline"] as const;

@@ -1,6 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
-import { resolveGetter } from "../../utils/resolve-getter.ts";
+import { resolveGetter } from "../../shared/resolve-getter.ts";
 
 export type ClickOutsideTarget = Element | string | (() => Element | null | undefined) | null | undefined;
 

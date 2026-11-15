@@ -1,5 +1,5 @@
 <script lang="ts">
-    import "../../css/shared/button-control.css";
+    import "../../shared/button-control/button-control.css";
     import type { ToggleButtonIconProps } from "./index.ts";
 
     let { icon: Icon, class: className, ...rest }: ToggleButtonIconProps = $props();

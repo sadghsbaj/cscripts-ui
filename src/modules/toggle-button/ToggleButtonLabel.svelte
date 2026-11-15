@@ -1,5 +1,5 @@
 <script lang="ts">
-    import "../../css/shared/button-control.css";
+    import "../../shared/button-control/button-control.css";
     import type { ToggleButtonLabelProps } from "./index.ts";
 
     let { ref = $bindable(null), class: className, children, ...rest }: ToggleButtonLabelProps = $props();

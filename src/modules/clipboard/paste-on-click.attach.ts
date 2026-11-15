@@ -1,6 +1,6 @@
 import type { Attachment } from "svelte/attachments";
 
-import { resolveGetter } from "../../utils/resolve-getter.ts";
+import { resolveGetter } from "../../shared/resolve-getter.ts";
 import { readFromClipboard } from "./clipboard.utils";
 
 export type PasteTarget = HTMLInputElement | HTMLTextAreaElement | HTMLElement;
