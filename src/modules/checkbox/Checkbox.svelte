@@ -365,7 +365,7 @@
         }
 
         /* Mirrors global disabled state (disabled.css only targets the input host, not its anchor sibling) */
-        .cs-checkbox:disabled + .cs-checkbox-icon {
+        .cs-checkbox:disabled:is(:checked, :indeterminate) + .cs-checkbox-icon {
             opacity: 0.5;
         }
 
