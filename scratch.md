@@ -6,14 +6,11 @@
 
 - segmented control switch(anticipaton spring) rovingfocus
 
-Checkbox:
+## Checkbox:
 
+Group?
 invalid style
-
 Logik erweitern wie bei ToggleButton
-
 Headless CheckboxGroup nur für Verhalten?
-
 Animationen in alle Richtungen geil machen
-
 Doku anpassen
