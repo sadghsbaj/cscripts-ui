@@ -73,6 +73,8 @@
             & > :global(.cs-toggle-button) {
                 --cs-toggle-button-squash-active: 1;
                 --cs-toggle-button-focus-scale-active: 1;
+                --cs-button-control-squash-active: 1;
+                --cs-button-control-focus-scale-active: 1;
 
                 & > :global(:is(.cs-toggle-button-icon, .cs-toggle-button-label)) {
                     scale: 1;
