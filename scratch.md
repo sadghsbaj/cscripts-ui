@@ -6,4 +6,14 @@
 
 - segmented control switch(anticipaton spring) rovingfocus
 
-dash bei chekcbox biem verhsciwndnen nciht anch innen sondner nach außen aufkösen wie biem öffnen quasi
+Checkbox:
+
+invalid style
+
+Logik erweitern wie bei ToggleButton
+
+Headless CheckboxGroup nur für Verhalten?
+
+Animationen in alle Richtungen geil machen
+
+Doku anpassen
