@@ -60,7 +60,7 @@ globs: "**/*.svelte, **/*.css, **/*.html"
   <ux_and_motion>
     - **Inline-First:** Use inline morphing or inline editing for confirmations and renames. Reserve fullscreen modals for heavy media or wide-table focus views.
     - **Cards & Tables:** Make entire entity cards clickable rather than adding redundant "Open" buttons; show 1–2 essential values and disclose secondary details via hover/popovers. Separate table rows with whitespace/elevated islands rather than borders; allow horizontal scroll + expand view on wide tables.
-    - **Touch Targets (`< 1936px²`):** Interactive controls under `1936px²` (e.g., compact icon buttons, checkboxes) require a `<HitArea />` child (see `./node_modules/cs/src/modules/hit-area/hit-area.docs.md`).
+    - **Touch Targets (`< 1936px²`):** Container controls under `1936px²` (e.g., compact icon buttons, close buttons) require a `<HitArea />` child (see `./node_modules/cs/src/modules/hit-area/hit-area.docs.md`). Void `<input>` controls (e.g., `<Checkbox />` or other native `<input>` controls) cannot host `<HitArea />` and intentionally omit expanded hit areas—always pair them with clickable descriptive text inside a `<label>` (or associate via `for`/`id`) so the label provides the full hit surface.
     - **Motion:** Default to the predefined semantic duration (`--cs-dur-*`) and easing (`--cs-ease-*`) tokens in `motion.css` (inspect `./node_modules/cs/src/css/foundation/motion.css`) for standard transitions and animations; use app-local timings/curves for specialized, one-off choreography. Never put `margin` or parent `gap` on collapsing elements.
   </ux_and_motion>
 </patterns>
@@ -71,4 +71,5 @@ globs: "**/*.svelte, **/*.css, **/*.html"
   - MUST NOT use raw gray/zinc shades for text colors or manual `disabled:opacity-50` / `enabled:hover:` / `:focus-visible` overrides.
   - MUST NOT leave native `<select>` or unstyled browser form widgets in the UI.
   - MUST NOT invent fake app headers or cliché icon-top-left feature cards unless requested.
+  - MUST NOT nest `<HitArea />` inside void `<input>` controls or build custom wrapper/pseudo-element hit areas around them; make their accompanying text a clickable `<label>`.
 </constraints>

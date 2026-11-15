@@ -37,7 +37,9 @@ globs: "**/src/**, **/playground/**"
   <sizing_and_layout>
     - **Units:** Use direct `px` values (no `rem`, no global component-height size tokens). Container max-widths live in `container.css`.
     - **`size` Scales:** Primary controls use `xs..xl`; effects/modifiers use `sm..lg`. `size` is semantic per component class (e.g. `md` on a compact control is smaller than `md` on an action control), calibrated so matching `size` levels look proportional together.
-    - **Hit Area:** Interactive controls below `1936px²` total surface area require a `<HitArea />` unless tight layout constraints justify an explicit exception.
+    - **Hit Area:**
+      - **Container controls (`<button>`, `<a>`):** Controls below `1936px²` total surface area require a `<HitArea />` child unless tight layout constraints justify an explicit exception.
+      - **Void HTML controls (e.g. `<input>` checks/toggles):** Intentionally omit expanded hit areas even when below `1936px²`. Never add wrapper DOM or `40px`–`48px` pseudo-element hit areas (which splits hit handling into a dual-track architecture and consumes pseudo-elements; tiny `:active` press-jitter guards remain acceptable). Pair void controls with descriptive text inside a clickable `<label>` for the full target surface.
     - **CSS Layers:** Library modules use plain CSS inside `@layer` (`foundation`, `attachments`, `components.primitive`, `components.composite`). UnoCSS is for layouting in previews and consuming apps, not inside library component stylesheets.
   </sizing_and_layout>
 
@@ -60,7 +62,7 @@ globs: "**/src/**, **/playground/**"
   - Chromatic `-solid` interactive surfaces apply `--cs-shadow-solid` / `--cs-shadow-solid-active`.
   - Disabled states use semantic colorless `--cs-color-disabled-*` tokens rather than opacity-only dimming.
   - Transitions use `motion.css` semantic duration and easing tokens (or intentionally scoped local timings for one-off choreography) rather than arbitrary drift on standard states.
-  - Compact controls `< 1936px²` include hit-area expansion.
+  - Compact container controls `< 1936px²` include `<HitArea />` expansion; void `<input>` controls omit wrapper/pseudo hit areas and pair with clickable `<label>`s.
   - Component styles live in plain CSS under the proper `@layer` (no UnoCSS classes inside library primitives).
 </checklist>
 
@@ -69,4 +71,5 @@ globs: "**/src/**, **/playground/**"
   - MUST NOT use `info` status tokens or add `positive`/`caution`/`negative` variants where semantically unwarranted.
   - MUST NOT duplicate global `:focus-visible`, `disabled`, or `prefers-reduced-motion` rules inside individual modules.
   - MUST NOT apply `text-trim` to headings, descriptions, or multi-line text.
+  - MUST NOT wrap void `<input>` controls in extra container DOM or build expanded hit areas via pseudo-elements; rely on clickable `<label>` pairing instead.
 </constraints>
