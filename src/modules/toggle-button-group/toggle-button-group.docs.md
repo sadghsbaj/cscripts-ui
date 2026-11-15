@@ -23,7 +23,7 @@ exports:
 # ToggleButtonGroup
 
 ## Overview
-Composite container (`<ToggleButtonGroup />`) that coordinates single- or multi-selection across child `<ToggleButton value="..." />` items with unified outer pill corners, shared press-squash neutralization in fixed single-select mode, and optional `<ToggleButtonGroupSeparator />` dividers.
+Composite container (`<ToggleButtonGroup />`) that coordinates single- or multi-selection across child `<ToggleButton value="..." />` items with unified outer pill corners, stationary surface press feedback (scaling inner content inward instead of squashing adjacent edges), and optional `<ToggleButtonGroupSeparator />` dividers.
 
 ## API
 
@@ -78,5 +78,5 @@ Extends `Omit<HTMLAttributes<HTMLSpanElement>, "children">`. Renders a zero-widt
 ```
 
 ## Behavior & Quirks
-- **Fixed-selection press feedback:** When `type="single"` and `allowDeselect` is `false`, clicking the already-selected button is a no-op and its active squash scale is neutralized (`1`) so it doesn't feel clickable.
+- **Group press feedback:** Surface squash and focus scale (`--cs-toggle-button-squash-active: 1`, `--cs-toggle-button-focus-scale-active: 1`) are neutralized across all grouped items so adjacent edges stay flush, while inner content (`.cs-toggle-button-icon`, `.cs-toggle-button-label`) scales inward (`0.94`) on `:active:not(:disabled)`. Under `data-fixed-selection` (`type="single"` with `allowDeselect={false}`), clicking an already-selected item is a no-op and keeps inner-content `scale: 1` as well.
 - **Smart separator visibility:** `<ToggleButtonGroupSeparator />` automatically fades out when either neighbor is pressed, hovered, active, or focused—and re-emerges in the active color when *both* adjacent buttons are pressed (in `type="multiple"`).

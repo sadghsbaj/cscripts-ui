@@ -69,11 +69,26 @@
         .cs-toggle-button-group {
             --cs-button-control-group-inner-radius: var(--cs-toggle-button-group-inner-radius, var(--cs-radius-none));
 
+            /* Keep outer surface stationary on all group items so adjacent segments stay flush. */
+            & > :global(.cs-toggle-button) {
+                --cs-toggle-button-squash-active: 1;
+                --cs-toggle-button-focus-scale-active: 1;
+
+                & > :global(:is(.cs-toggle-button-icon, .cs-toggle-button-label)) {
+                    scale: 1;
+                    transition: scale var(--cs-dur-effect) var(--cs-ease-effect);
+                }
+
+                &:active:not(:disabled) > :global(:is(.cs-toggle-button-icon, .cs-toggle-button-label)) {
+                    scale: 0.94;
+                    transition: scale var(--cs-dur-press) var(--cs-ease-press);
+                }
+            }
+
             /* In fixed single-selection mode (segmented control), clicking the already-active
-             * item is a no-op. Neutralizing press squash prevents confusing interactivity cues. */
-            &[data-fixed-selection] > :global(.cs-toggle-button[aria-pressed="true"]) {
-                --cs-button-control-squash-active: 1;
-                --cs-button-control-focus-scale-active: 1;
+             * item is a no-op. Keep inner content stationary on press. */
+            &[data-fixed-selection] > :global(.cs-toggle-button[aria-pressed="true"]:active) > :global(:is(.cs-toggle-button-icon, .cs-toggle-button-label)) {
+                scale: 1;
             }
         }
     }
