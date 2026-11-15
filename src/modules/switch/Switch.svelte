@@ -156,19 +156,23 @@
                 );
             }
 
-            &:active:not(:disabled) {
-                /* Match translate timing to width press timing so :checked:active stays edge-locked */
-                --cs-switch-thumb-dur: var(--cs-dur-press);
-                --cs-switch-thumb-ease: var(--cs-ease-press);
+            /* Scope press anticipation to fine hover pointers: on touch devices (Android Chrome),
+               :active latches ~64ms past touchend/click, causing thumb width to settle after the 180ms translate finishes */
+            @media (hover: hover) and (pointer: fine) {
+                &:active:not(:disabled) {
+                    /* Match translate timing to width press timing so :checked:active stays edge-locked */
+                    --cs-switch-thumb-dur: var(--cs-dur-press);
+                    --cs-switch-thumb-ease: var(--cs-ease-press);
 
-                &::after {
-                    width: calc(var(--cs-switch-thumb-width) * 1.14);
-                }
+                    &::after {
+                        width: calc(var(--cs-switch-thumb-width) * 1.14);
+                    }
 
-                &:checked {
-                    --cs-switch-thumb-x: calc(
-                        var(--cs-switch-width) - var(--cs-switch-pad) * 2 - var(--cs-switch-thumb-width) * 1.14
-                    );
+                    &:checked {
+                        --cs-switch-thumb-x: calc(
+                            var(--cs-switch-width) - var(--cs-switch-pad) * 2 - var(--cs-switch-thumb-width) * 1.14
+                        );
+                    }
                 }
             }
 
