@@ -6,7 +6,6 @@ import { buttonMorphConfig } from "./button-morph.ts";
 import { buttonConfig } from "./button.ts";
 import { clipboardConfig } from "./clipboard.ts";
 import { closeButtonConfig } from "./close-button.ts";
-import { componentDocsConfig } from "./component-docs.ts";
 import { componentLayersConfig } from "./component-layers.ts";
 import { cssSafetyConfigs } from "./css-safety.ts";
 import { overlayConfig } from "./overlay.ts";
@@ -26,7 +25,6 @@ export {
 } from "./button-morph.ts";
 export { clipboardConfig, noNativeClipboardRule, preferClipboardIconsRule } from "./clipboard.ts";
 export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
-export { componentCommentRule, componentDocsConfig } from "./component-docs.ts";
 export { componentLayersConfig, componentLayersRule } from "./component-layers.ts";
 export { cssSafetyConfigs, noOklchNeutralMixRule, vendorPrefixOrderRule } from "./css-safety.ts";
 export { overlayConfig, overlayPreferFocusTrapOnContentRule } from "./overlay.ts";
@@ -61,7 +59,6 @@ export const customRulesConfigs: Linter.Config[] = [
     toggleButtonConfig,
     toggleButtonGroupConfig,
     scrollAreaConfig,
-    componentDocsConfig,
     componentLayersConfig,
     ...cssSafetyConfigs,
     attachmentLayersConfig,
