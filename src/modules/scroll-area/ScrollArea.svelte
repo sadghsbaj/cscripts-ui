@@ -1,6 +1,5 @@
 <script lang="ts">
     import { setScrollAreaContext, type ScrollAreaProps } from "./index.ts";
-    import ScrollAreaOvershoot from "./ScrollAreaOvershoot.internal.svelte";
     import { ScrollAreaManager } from "./scroll-area-state.internal.svelte.ts";
 
     let {
@@ -8,7 +7,6 @@
         size,
         direction,
         scrollbar = "hover",
-        overshoot = true,
         class: className,
         children,
         ...rest
@@ -18,7 +16,6 @@
         getSize: () => size,
         getDirection: () => direction,
         getScrollbar: () => scrollbar,
-        getOvershoot: () => overshoot,
     });
 
     setScrollAreaContext(scrollArea);
@@ -41,10 +38,6 @@
     data-both-scrollable={scrollArea.canScrollY && scrollArea.canScrollX ? "" : undefined}
 >
     {@render children?.()}
-
-    {#if overshoot}
-        <ScrollAreaOvershoot />
-    {/if}
 
     {#each ["vertical", "horizontal"] as const as axis (axis)}
         {let isVisible = $derived(

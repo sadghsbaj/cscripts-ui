@@ -21,7 +21,7 @@ exports:
 # ScrollArea
 
 ## Overview
-Composite scroll container (`<ScrollArea />` + `<ScrollAreaContent />`) that hides native OS scrollbars while preserving native scroll physics, rendering GPU-accelerated overlay scrollbars and boundary overshoot indicators in the outer wrapper.
+Composite scroll container (`<ScrollArea />` + `<ScrollAreaContent />`) that hides native OS scrollbars while preserving native scroll physics, rendering GPU-accelerated overlay scrollbars in the outer wrapper.
 
 ## API
 
@@ -33,7 +33,6 @@ Extends `HTMLAttributes<HTMLDivElement>`.
 | `size` | `ScrollAreaSize` | Yes | — | Track/thumb thickness: `"sm"` (6px), `"md"` (8px), `"lg"` (12px). |
 | `direction` | `ScrollAreaDirection` | Yes | — | Scrollable axes: `"vertical" \| "horizontal" \| "both"`. |
 | `scrollbar` | `ScrollAreaScrollbar` | No | `"hover"` | Visibility mode: `"hover" \| "scroll" \| "always" \| "never"`. |
-| `overshoot` | `boolean` | No | `true` | Enables boundary overshoot glow indicators and `overscroll-behavior: contain`. |
 | `ref` | `HTMLDivElement \| null` | No | `null` | `$bindable` reference to the outer wrapper `<div>`. |
 
 ### `ScrollAreaContent` Props
@@ -42,7 +41,7 @@ Extends `HTMLAttributes<HTMLDivElement>`.
 
 ### `data-*` Attributes
 - On `ScrollArea`: `data-size`, `data-scrollbar`, `data-scrolling`, `data-dragging`, `data-both-scrollable`.
-- On `ScrollAreaContent`: `data-direction`, `data-overshoot`.
+- On `ScrollAreaContent`: `data-direction`.
 
 ### CSS Custom Properties
 | Variable | Default | Description |
@@ -68,5 +67,5 @@ Extends `HTMLAttributes<HTMLDivElement>`.
 ```
 
 ## Behavior & Quirks
-- **Outer chrome separation:** Scrollbars and overshoot indicators render as siblings of `<ScrollAreaContent />` inside `<ScrollArea />`, so applying `scrollFade` to `<ScrollAreaContent />` never clips the scrollbar near edges.
+- **Outer chrome separation:** Scrollbars render as siblings of `<ScrollAreaContent />` inside `<ScrollArea />`, so applying `scrollFade` to `<ScrollAreaContent />` never clips the scrollbar near edges.
 - **Explicit container height:** Like any overflow container, `<ScrollArea />` needs a constrained height/width (e.g. `h-64` or `flex-1 min-h-0`) to scroll.

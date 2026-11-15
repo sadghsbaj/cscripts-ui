@@ -19,7 +19,6 @@ export interface ScrollAreaProps extends HTMLAttributes<HTMLDivElement> {
     size: ScrollAreaSize;
     direction: ScrollAreaDirection;
     scrollbar?: ScrollAreaScrollbar;
-    overshoot?: boolean;
 }
 
 export type ScrollAreaContentProps = HTMLAttributes<HTMLDivElement> & {

@@ -1,6 +1,6 @@
 /**
  * Enforces compound structure, class placement, and `scrollFade` attachment usage on `<ScrollArea>` components:
- * - `require-structure`: Ensures `<ScrollArea>` contains `<ScrollAreaContent>`, `<ScrollAreaContent>` is used inside `<ScrollArea>`, and `<ScrollAreaOvershoot>` is not mounted manually.
+ * - `require-structure`: Ensures `<ScrollArea>` contains `<ScrollAreaContent>`, and `<ScrollAreaContent>` is used inside `<ScrollArea>`.
  * - `no-outer-content-classes`: Forbids padding (`p-*`), gap/space (`gap-*`, `space-*`), and manual overflow/scrollbar utilities on the outer `<ScrollArea>` wrapper (they belong on `<ScrollAreaContent>`).
  * - `scroll-fade-on-content`: Warns when `{@attach scrollFade(...)}` is placed on `<ScrollArea>` instead of `<ScrollAreaContent>`, or when its `direction` conflicts with `<ScrollArea direction="...">`.
  */
@@ -131,8 +131,6 @@ export const scrollAreaStructureRule: Rule.RuleModule = {
         messages: {
             missingContent: "<ScrollArea> must contain a <ScrollAreaContent> child.",
             orphanedContent: "<ScrollAreaContent> must be used inside a <ScrollArea> component.",
-            manualOvershoot:
-                '<ScrollAreaOvershoot> is rendered internally by <ScrollArea>; configure it via the "overshoot" prop on <ScrollArea> instead.',
         },
         schema: [],
     },
@@ -154,11 +152,6 @@ export const scrollAreaStructureRule: Rule.RuleModule = {
                     context.report({
                         node: node.startTag as unknown as Rule.Node,
                         messageId: "orphanedContent",
-                    });
-                } else if (name === "ScrollAreaOvershoot" && !context.filename?.endsWith("ScrollArea.svelte")) {
-                    context.report({
-                        node: node.startTag as unknown as Rule.Node,
-                        messageId: "manualOvershoot",
                     });
                 }
             },

@@ -12,7 +12,6 @@
     {@attach scrollArea.attachContent}
     class={["cs-scroll-area-content", className]}
     data-direction={scrollArea.direction}
-    data-overshoot={scrollArea.overshoot ? "" : undefined}
 >
     {@render children?.()}
 </div>
@@ -30,10 +29,6 @@
 
             &::-webkit-scrollbar {
                 display: none;
-            }
-
-            &[data-overshoot] {
-                overscroll-behavior: contain;
             }
 
             &[data-direction="vertical"] {

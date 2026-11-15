@@ -2,10 +2,8 @@ import type { Attachment } from "svelte/attachments";
 
 import type { ScrollAreaDirection, ScrollAreaScrollbar, ScrollAreaSize } from "./index.ts";
 
-export type OvershootEdge = "top" | "bottom" | "left" | "right";
 export type ScrollbarAxis = "vertical" | "horizontal";
 
-const OVERSHOOT_EDGES: readonly OvershootEdge[] = ["top", "bottom", "left", "right"];
 const MIN_THUMB_SIZE = 28;
 const TRACK_START_INSET = 3;
 const TRACK_END_INSET = 3;
@@ -15,15 +13,12 @@ const TRACK_SIZE_PX: Record<ScrollAreaSize, number> = {
     md: 8,
     lg: 12,
 };
-const BOUNDARY_TOLERANCE = 2;
 const SCROLL_IDLE_DELAY_MS = 700;
-const OVERSHOOT_RELEASE_DELAY_MS = 220;
 
 export interface ScrollAreaStateOptions {
     getSize: () => ScrollAreaSize;
     getDirection: () => ScrollAreaDirection;
     getScrollbar: () => ScrollAreaScrollbar;
-    getOvershoot: () => boolean;
 }
 
 /**
@@ -31,12 +26,7 @@ export interface ScrollAreaStateOptions {
  *
  * Architectural Notes:
  * - Native Scroll Preservation: All scrolling happens natively on `.cs-scroll-area-content`.
- *   JavaScript only observes scroll metrics to drive custom overlay thumb transforms and
- *   GTK4-style boundary overshoot indicators via CSS custom properties.
- * - Hold-and-Release Overshoot: Instead of a per-frame decay loop (which causes visible size
- *   oscillation between discrete mouse wheel ticks), wheel impulses accumulate up to `1` and
- *   hold steady until `OVERSHOOT_RELEASE_DELAY_MS` after the last wheel tick, delegating smooth
- *   interpolation entirely to CSS transitions on `opacity` and `scale`.
+ *   JavaScript only observes scroll metrics to drive custom overlay thumb transforms.
  */
 export class ScrollAreaManager {
     readonly #options: ScrollAreaStateOptions;
@@ -50,13 +40,6 @@ export class ScrollAreaManager {
     isScrolling = $state(false);
     draggingAxis: ScrollbarAxis | null = $state(null);
 
-    overshootValues: Record<OvershootEdge, number> = $state({
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-    });
-
     #contentEl: HTMLElement | null = null;
     #maxScrollTop = 0;
     #maxScrollLeft = 0;
@@ -66,12 +49,6 @@ export class ScrollAreaManager {
     #dragStartScroll = 0;
     #animationFrameId: number | null = null;
     #scrollingTimer: ReturnType<typeof setTimeout> | null = null;
-    #overshootTimers: Record<OvershootEdge, ReturnType<typeof setTimeout> | null> = {
-        top: null,
-        bottom: null,
-        left: null,
-        right: null,
-    };
 
     constructor(options: ScrollAreaStateOptions) {
         this.#options = options;
@@ -89,59 +66,12 @@ export class ScrollAreaManager {
         return this.#options.getScrollbar();
     }
 
-    get overshoot(): boolean {
-        return this.#options.getOvershoot();
-    }
-
     get isVertical(): boolean {
         return this.direction === "vertical" || this.direction === "both";
     }
 
     get isHorizontal(): boolean {
         return this.direction === "horizontal" || this.direction === "both";
-    }
-
-    get activeOvershootEdges(): OvershootEdge[] {
-        const edges: OvershootEdge[] = [];
-        if (this.isVertical) {
-            edges.push("top", "bottom");
-        }
-        if (this.isHorizontal) {
-            edges.push("left", "right");
-        }
-        return edges;
-    }
-
-    #setOvershoot(edge: OvershootEdge, value: number): void {
-        const rounded = Math.round(value * 1000) / 1000;
-        if (this.overshootValues[edge] === rounded) return;
-        this.overshootValues[edge] = rounded;
-    }
-
-    #clearOvershoot(edge: OvershootEdge): void {
-        const timer = this.#overshootTimers[edge];
-        if (timer !== null) {
-            clearTimeout(timer);
-            this.#overshootTimers[edge] = null;
-        }
-        this.#setOvershoot(edge, 0);
-    }
-
-    #triggerOvershoot(edge: OvershootEdge, rawDelta: number): void {
-        const impulse = Math.min(1, Math.max(0.25, Math.abs(rawDelta) / 120));
-        const target = Math.min(1, Math.max(0.45, this.overshootValues[edge] + impulse * 0.45));
-        const next = this.overshootValues[edge] > 0 ? this.overshootValues[edge] * 0.5 + target * 0.5 : target;
-        this.#setOvershoot(edge, next);
-
-        const existingTimer = this.#overshootTimers[edge];
-        if (existingTimer !== null) {
-            clearTimeout(existingTimer);
-        }
-
-        this.#overshootTimers[edge] = setTimeout(() => {
-            this.#overshootTimers[edge] = null;
-            this.#setOvershoot(edge, 0);
-        }, OVERSHOOT_RELEASE_DELAY_MS);
     }
 
     updateMetrics = (): void => {
@@ -182,19 +112,10 @@ export class ScrollAreaManager {
             this.thumbYSize = thumbHeight;
             this.thumbYOffset =
                 maxScrollTop > 0 ? Math.round((clampedScrollTop / maxScrollTop) * maxThumbTop * 100) / 100 : 0;
-
-            if (clampedScrollTop > BOUNDARY_TOLERANCE && this.overshootValues.top > 0) {
-                this.#clearOvershoot("top");
-            }
-            if (clampedScrollTop < maxScrollTop - BOUNDARY_TOLERANCE && this.overshootValues.bottom > 0) {
-                this.#clearOvershoot("bottom");
-            }
         } else {
             this.#maxThumbTop = 0;
             this.thumbYSize = 0;
             this.thumbYOffset = 0;
-            if (this.overshootValues.top > 0) this.#clearOvershoot("top");
-            if (this.overshootValues.bottom > 0) this.#clearOvershoot("bottom");
         }
 
         if (canScrollX) {
@@ -211,19 +132,10 @@ export class ScrollAreaManager {
             this.thumbXSize = thumbWidth;
             this.thumbXOffset =
                 maxScrollLeft > 0 ? Math.round((clampedScrollLeft / maxScrollLeft) * maxThumbLeft * 100) / 100 : 0;
-
-            if (clampedScrollLeft > BOUNDARY_TOLERANCE && this.overshootValues.left > 0) {
-                this.#clearOvershoot("left");
-            }
-            if (clampedScrollLeft < maxScrollLeft - BOUNDARY_TOLERANCE && this.overshootValues.right > 0) {
-                this.#clearOvershoot("right");
-            }
         } else {
             this.#maxThumbLeft = 0;
             this.thumbXSize = 0;
             this.thumbXOffset = 0;
-            if (this.overshootValues.left > 0) this.#clearOvershoot("left");
-            if (this.overshootValues.right > 0) this.#clearOvershoot("right");
         }
     };
 
@@ -244,60 +156,6 @@ export class ScrollAreaManager {
         }, SCROLL_IDLE_DELAY_MS);
 
         this.scheduleUpdate();
-    };
-
-    handleWheel = (event: WheelEvent): void => {
-        // Disregard wheel gestures cancelled or consumed by child controls (e.g. overlays, sliders, editors).
-        if (event.defaultPrevented || !this.overshoot || !this.#contentEl) return;
-        const el = this.#contentEl;
-
-        // Ignore wheel events that originated inside a nested <ScrollAreaContent />
-        if (event.target instanceof Element && event.target.closest(".cs-scroll-area-content") !== el) {
-            return;
-        }
-
-        // Browsers on Linux/Windows emit vertical deltaY with shiftKey=true during Shift+Wheel horizontal scrolling.
-        const useYAsX = event.deltaX === 0 && event.shiftKey;
-        const deltaX = useYAsX ? event.deltaY : event.deltaX;
-        const deltaY = useYAsX ? 0 : event.deltaY;
-
-        if (this.isVertical && deltaY !== 0) {
-            if (deltaY > 0 && this.overshootValues.top > 0) {
-                this.#clearOvershoot("top");
-            } else if (deltaY < 0 && this.overshootValues.bottom > 0) {
-                this.#clearOvershoot("bottom");
-            }
-
-            const rawScrollTop = el.scrollTop;
-            const maxScrollTop = Math.max(0, el.scrollHeight - el.clientHeight);
-
-            if (maxScrollTop > 1) {
-                if (rawScrollTop <= BOUNDARY_TOLERANCE && deltaY < 0) {
-                    this.#triggerOvershoot("top", deltaY);
-                } else if (rawScrollTop >= maxScrollTop - BOUNDARY_TOLERANCE && deltaY > 0) {
-                    this.#triggerOvershoot("bottom", deltaY);
-                }
-            }
-        }
-
-        if (this.isHorizontal && deltaX !== 0) {
-            if (deltaX > 0 && this.overshootValues.left > 0) {
-                this.#clearOvershoot("left");
-            } else if (deltaX < 0 && this.overshootValues.right > 0) {
-                this.#clearOvershoot("right");
-            }
-
-            const rawScrollLeft = Math.abs(el.scrollLeft);
-            const maxScrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
-
-            if (maxScrollLeft > 1) {
-                if (rawScrollLeft <= BOUNDARY_TOLERANCE && deltaX < 0) {
-                    this.#triggerOvershoot("left", deltaX);
-                } else if (rawScrollLeft >= maxScrollLeft - BOUNDARY_TOLERANCE && deltaX > 0) {
-                    this.#triggerOvershoot("right", deltaX);
-                }
-            }
-        }
     };
 
     handleTrackPointerDown = (axis: ScrollbarAxis, event: PointerEvent): void => {
@@ -397,7 +255,6 @@ export class ScrollAreaManager {
         this.#contentEl = node;
 
         node.addEventListener("scroll", this.handleScroll, { passive: true });
-        node.addEventListener("wheel", this.handleWheel, { passive: true });
 
         let resizeObserver: ResizeObserver | null = null;
         if (typeof ResizeObserver !== "undefined") {
@@ -446,12 +303,7 @@ export class ScrollAreaManager {
                 this.#scrollingTimer = null;
             }
 
-            for (const edge of OVERSHOOT_EDGES) {
-                this.#clearOvershoot(edge);
-            }
-
             node.removeEventListener("scroll", this.handleScroll);
-            node.removeEventListener("wheel", this.handleWheel);
 
             resizeObserver?.disconnect();
             mutationObserver?.disconnect();

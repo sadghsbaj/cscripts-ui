@@ -39,11 +39,6 @@ describe("scroll-area ESLint rules", () => {
                         filename: "src/Component.svelte",
                         errors: [{ messageId: "orphanedContent" }],
                     },
-                    {
-                        code: '<ScrollArea size="md" direction="vertical"><ScrollAreaContent>Items</ScrollAreaContent><ScrollAreaOvershoot /></ScrollArea>',
-                        filename: "src/Component.svelte",
-                        errors: [{ messageId: "manualOvershoot" }],
-                    },
                 ],
             });
         });

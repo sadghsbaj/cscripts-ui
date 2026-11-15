@@ -57,7 +57,7 @@ ${closeScript}
 <div class="flex flex-col gap-10">
     <PreviewHeader
         title="ScrollArea"
-        description="Styled scrollable container with elastic overshoot, directional axes, and scrollbar sizes."
+        description="Styled scrollable container with directional axes and overlay scrollbar sizes."
     />
 
     <PreviewSection title="Vertical Sizes" code={basicCode}>
