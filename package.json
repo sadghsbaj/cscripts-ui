@@ -16,7 +16,6 @@
         "lint": "bunx --bun eslint ."
     },
     "exports": {
-        "./agents/*": "./src/agents/*",
         "./vite": "./src/vite/index.ts",
         "./css": {
             "types": "./src/css/index.d.ts",

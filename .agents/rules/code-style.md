@@ -47,5 +47,4 @@ globs: "**/*.ts, **/*.svelte, **/*.css"
 
 <constraints>
   - MUST NOT use `any`, `!` non-null assertions, `use:action`, `{@const}`, `getContext`/`setContext`, or `document.querySelector`/`getElementById` in `.svelte`.
-  - MUST NOT use `src/agents/` as library-authoring rules (that folder is only for consuming apps and will be trimmed separately).
 </constraints>

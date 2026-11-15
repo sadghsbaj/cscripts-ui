@@ -2,13 +2,11 @@
 
 This project uses the `cs` library for UI, CSS foundation, UnoCSS, and ESLint.
 
-## CRITICAL: Mandatory Reference & Anti-Hallucination Rule
+## Rules & API Verification
 
-1. **Initial Read:** Before writing or modifying any Svelte components, styles, or UnoCSS classes, ALWAYS read:
-    - `./node_modules/cs/src/agents/index.md`
-
-2. **Continuous Verification (Do Not Rely on Memory):**
-   Across longer conversations or multiple tasks, NEVER guess `cs` class names, UnoCSS shortcuts, CSS variables, or component APIs. Regularly re-check `./node_modules/cs/src/agents/index.md` and inspect the linked source files in `./node_modules/cs/src/` whenever you touch a new UI area or get a lint/type error.
+- **General Rules (`.agents/rules/`):** Project-wide design, styling, Svelte 5, code-style, and work-app rules live in `.agents/rules/` and are auto-loaded by Antigravity.
+- **Module APIs (`cs/svelte/*`):** NEVER guess `cs` class names, UnoCSS shortcuts, CSS tokens, or component props. Before using or modifying any module, read `./node_modules/cs/src/modules/<name>/<name>.docs.md` (and `./node_modules/cs/src/work/work.docs.md` for `cs/svelte/work`).
+- **Verification:** Run `bun run typecheck` and `bun run lint` (`bunx --bun eslint .`) after edits.
 
 ## Isolated `/lab` Sandbox
 

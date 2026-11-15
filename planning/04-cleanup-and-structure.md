@@ -4,8 +4,7 @@
 
 ---
 
-## E. `src/agents/` & MCP
+## E. `README.md` & MCP
 
-1. **`src/agents/` verschlanken:** App-seitige Agent-Regeln auf das Nötigste reduzieren und an die aktuelle Modulstruktur anpassen.
-2. **`README.md` aktualisieren:** Veraltete `cs/svelte/...`-Import-Beispiele auf `cs/modules/<module>` / `cs/work` anpassen.
-3. **`src/mcp/` (optional):** MCP-Server für konsumierende Apps aufbauen.
+1. **`README.md` aktualisieren:** Veraltete `cs/svelte/...`-Import-Beispiele auf `cs/modules/<module>` / `cs/work` anpassen.
+2. **`src/mcp/` (optional):** MCP-Server für konsumierende Apps aufbauen.
