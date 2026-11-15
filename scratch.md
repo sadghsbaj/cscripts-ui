@@ -8,8 +8,4 @@
 
 - checkbox auch analg zur togglebutton etwas erweitern logisch?
 
-- vackogrund hvoer bug bei butotnmoreph gefixt aber jettz wen namn hvoer enternt wärhend animaiton hakelig
-
 - dur tokens festlegne und regeln dazu?
-
-- 500er werte in reset css überschreiben mit solid
