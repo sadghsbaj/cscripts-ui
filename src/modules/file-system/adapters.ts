@@ -598,12 +598,20 @@ export function jsonAdapter<TData = unknown>(
 				fromVersion: migratedResult.migrated ? migratedResult.fromVersion : undefined,
 			};
 		},
-		async encode(data) {
+		async encode(data, ctx) {
 			const payload: unknown =
 				options.version !== undefined && isPlainObject(data)
 					? { ...data, [versionField]: options.version }
 					: data;
-			return JSON.stringify(payload, null, indent);
+			const encoded = JSON.stringify(payload, null, indent);
+			if (typeof encoded !== "string") {
+				throw new FsError(
+					"VALIDATION_FAILED",
+					`Value cannot be serialized to JSON for "${ctx.path}"`,
+					{ details: { path: ctx.path } },
+				);
+			}
+			return encoded;
 		},
 		diff(base, target) {
 			return diffJson(base, target, options.diffOptions);
@@ -623,7 +631,11 @@ export function jsonAdapter<TData = unknown>(
 }
 
 export function encodeJsonlLine<T>(item: T): string {
-	return `${JSON.stringify(item)}\n`;
+	const encoded = JSON.stringify(item);
+	if (typeof encoded !== "string") {
+		throw new FsError("VALIDATION_FAILED", "JSONL item cannot be serialized to JSON");
+	}
+	return `${encoded}\n`;
 }
 
 export function encodeJsonlLines<T>(items: readonly T[]): string {

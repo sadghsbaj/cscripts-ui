@@ -649,4 +649,13 @@ describe("adapters: jsonlAdapter", () => {
 		expect(res.data).toEqual([{ id: 1 }]);
 		expect(res.warnings).toHaveLength(1);
 	});
+
+	it("throws VALIDATION_FAILED when encoding undefined with jsonAdapter or encodeJsonlLine", async () => {
+		const adapter = jsonAdapter<Record<string, unknown>>();
+		await expectFsErrorCode(
+			() => adapter.encode(undefined as unknown as Record<string, unknown>, { path: "undef.json" }),
+			"VALIDATION_FAILED",
+		);
+		await expectFsErrorCode(() => encodeJsonlLine(undefined), "VALIDATION_FAILED");
+	});
 });

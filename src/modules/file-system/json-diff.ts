@@ -228,6 +228,9 @@ function resolveArrayKeySelector(
 	if (!arrayKeyBy) {
 		return undefined;
 	}
+	if (segments.length === 0) {
+		return arrayKeyBy.$ ?? arrayKeyBy[""];
+	}
 	const pointer = formatPointer(segments);
 	if (pointer.length > 0 && Object.hasOwn(arrayKeyBy, pointer)) {
 		return arrayKeyBy[pointer];

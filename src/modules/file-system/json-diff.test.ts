@@ -531,4 +531,63 @@ describe("json-diff: applyConflictChoices", () => {
 			"VALIDATION_FAILED",
 		);
 	});
+
+	it("supports diffJson and mergeJson3Way on root-level arrays with arrayKeyBy '$' and ''", () => {
+		const base = [
+			{ id: 1, name: "alpha", count: 1 },
+			{ id: 2, name: "beta", count: 2 },
+		];
+		const local = [
+			{ id: 1, name: "alpha-local", count: 1 },
+			{ id: 2, name: "beta", count: 2 },
+			{ id: 3, name: "gamma", count: 3 },
+		];
+		const remote = [
+			{ id: 1, name: "alpha", count: 10 },
+			{ id: 2, name: "beta-remote", count: 2 },
+		];
+
+		for (const rootKey of ["$", ""] as const) {
+			const diff = diffJson(base, local, { arrayKeyBy: { [rootKey]: "id" } });
+			expect(diff.hasChanges).toBe(true);
+			expect(diff.summary).toEqual({ total: 2, added: 1, removed: 0, changed: 1 });
+			expect(diff.entries.some((e) => e.pointer === "[id=1].name" && e.kind === "changed")).toBe(true);
+			expect(diff.entries.some((e) => e.pointer === "[id=3]" && e.kind === "added")).toBe(true);
+
+			// Clean 3-way merge across non-conflicting fields and additions on root-level array
+			const cleanMerge = mergeJson3Way(base, local, remote, {
+				arrayKeyBy: { [rootKey]: "id" },
+			});
+			expect(cleanMerge.hasConflicts).toBe(false);
+			expect(cleanMerge.merged).toEqual([
+				{ id: 1, name: "alpha-local", count: 10 },
+				{ id: 2, name: "beta-remote", count: 2 },
+				{ id: 3, name: "gamma", count: 3 },
+			]);
+
+			// Conflicting edit on same root-level array item field + applyConflictChoices
+			const remoteConflict = [
+				{ id: 1, name: "alpha-remote", count: 10 },
+				{ id: 2, name: "beta", count: 2 },
+			];
+			const conflictMerge = mergeJson3Way(base, local, remoteConflict, {
+				arrayKeyBy: { [rootKey]: "id" },
+			});
+			expect(conflictMerge.hasConflicts).toBe(true);
+			expect(conflictMerge.conflicts).toHaveLength(1);
+			const conflict = conflictMerge.conflicts[0];
+			expect(conflict).toBeDefined();
+			if (!conflict) throw new Error("Expected conflict");
+			expect(conflict.pointer).toBe("[id=1].name");
+
+			const resolved = applyConflictChoices(conflictMerge, {
+				[conflict.id]: "remote",
+			});
+			expect(resolved).toEqual([
+				{ id: 1, name: "alpha-remote", count: 10 },
+				{ id: 2, name: "beta", count: 2 },
+				{ id: 3, name: "gamma", count: 3 },
+			]);
+		}
+	});
 });
