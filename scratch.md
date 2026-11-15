@@ -1,16 +1,14 @@
-focusc bug bei toglgebuittongroup wird agbeschnitten imimer davor wen nncöhstes element ausgewählt ist
-
 ## Modules
 
 - filesystem basis bauen
 
 - rovingfocus x
-- segmented control
+- segmented control x
 - modal
 - select
 - combobox
 - contextmenu
-- switch(anticipaton spring) + group
+- switch(anticipaton spring) + group x
 
 - textinput
 - textarea maybe auch contenteditable artiges ding für Platzhalter und sowas
