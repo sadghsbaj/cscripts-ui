@@ -1,5 +1,3 @@
-- docs maybe auch in previeow einbauen und auch mit bei docs build
-
 - tooltip und popvoer sytem nochmal leicht umbauen ohne mode nur mit triggerOn
 
 - ScrollOvershoot cleaner machen
