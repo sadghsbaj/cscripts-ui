@@ -1,9 +1,13 @@
 <script lang="ts">
+    import { getSwitchGroupContext, hasSwitchGroupContext } from "../switch-group/switch-group.context.ts";
     import { type SwitchProps } from ".";
 
     let {
         ref = $bindable(null),
         size,
+        value,
+        name,
+        disabled,
         checked = $bindable(),
         onCheckedChange,
         class: className,
@@ -11,11 +15,38 @@
         ...rest
     }: SwitchProps = $props();
 
+    const group = hasSwitchGroupContext() ? getSwitchGroupContext() : undefined;
+    const isGroupItem = $derived(Boolean(group && value !== undefined));
+
+    $effect(() => {
+        if (!group || value === undefined) return;
+        return group.registerItem({
+            value: () => String(value),
+            disabled: () => Boolean(disabled),
+        });
+    });
+
+    const resolvedChecked = $derived(isGroupItem && group ? group.isSelected(String(value)) : Boolean(checked));
+    const resolvedDisabled = $derived(Boolean(disabled || group?.disabled));
+    const resolvedName = $derived(name ?? (isGroupItem ? group?.name : undefined));
+
     function handleChange(event: Event & { currentTarget: EventTarget & HTMLInputElement }): void {
-        const prevChecked = Boolean(checked);
+        const prevChecked = resolvedChecked;
 
         // Run consumer onchange before syncing bindable state so handlers can inspect/adjust target.checked.
         onchange?.(event);
+
+        if (isGroupItem && group) {
+            const itemValue = String(value);
+            group.setSelected(itemValue, event.currentTarget.checked);
+            const committedChecked = group.isSelected(itemValue);
+            // Keep native DOM state aligned if a controlled group rejects the change.
+            event.currentTarget.checked = committedChecked;
+            if (committedChecked !== prevChecked) {
+                onCheckedChange?.(committedChecked);
+            }
+            return;
+        }
 
         const nextChecked = event.currentTarget.checked;
         checked = nextChecked;
@@ -32,9 +63,12 @@
 <input
     bind:this={ref}
     {...rest}
+    {value}
+    name={resolvedName}
+    disabled={resolvedDisabled}
     type="checkbox"
     role="switch"
-    checked={Boolean(checked)}
+    checked={resolvedChecked}
     onchange={handleChange}
     class={["cs-switch", className]}
     data-size={size}
