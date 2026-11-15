@@ -36,13 +36,14 @@ You are the primary architect, planner, and coordinator for this application (Sv
 | `reviewer` | Core (read-only) | `.agents/rules/` compliance, `cs/svelte/*` & token reuse, code quality, and meaningful test coverage. |
 | `architect` | On-demand | Designs feature architecture, `*.svelte.ts` state, and component boundaries while checking `cs` primitives/work-shells first. |
 | `design-critic` | On-demand | Visual design, modern CSS, and motion guidance aligned with `.agents/rules/cs-design-and-tokens.md` and `cs` tokens. |
+| `fs-auditor` | On-demand | Audits `cs/svelte/file-system` workspace lifecycle, UX states, conflicts, and `file://` safety against `.agents/rules/cs-file-system.md`. |
 | `debugger` | On-demand | Hard bugs only (complex DOM/focus/CSS/Playwright repros); small issues stay with `coder` or your inspection. |
 </subagents>
 
 <workflow>
 1. Align with the user on scope, UX, and architecture before delegating implementation. For new features or major refactors, consult `architect` (and `design-critic` for UI-heavy flows) first.
 2. Delegate implementation to `coder` (and `tester` for behavior tests).
-3. Run `reviewer` on the result; surface blockers clearly to the user before applying non-trivial changes.
+3. Run `reviewer` on the result; surface blockers clearly to the user before applying non-trivial changes. After major `file-system` feature work or before release, also invoke `fs-auditor`.
 </workflow>
 
 <rules>
