@@ -424,4 +424,90 @@ describe("Checkbox Svelte 5 Component", () => {
 
         unmount(instance);
     });
+
+    test("renders a single continuous .cs-checkbox-dash path (d='M5 12H19') with no overlapping round caps", () => {
+        const instance = mount(Checkbox, {
+            target: container,
+            props: {
+                variant: "soft",
+                size: "md",
+            },
+        });
+        flushSync();
+
+        const dashPaths = container.querySelectorAll<SVGPathElement>(
+            ":scope svg.cs-checkbox-icon path.cs-checkbox-dash",
+        );
+        expect(dashPaths).toHaveLength(1);
+        expect(dashPaths[0]?.getAttribute("d")).toBe("M5 12H19");
+
+        unmount(instance);
+    });
+
+    test("initial indeterminate mount suppresses data-dash-enter, sets data-settled after rAF, and sets data-dash-enter on unchecked -> indeterminate", () => {
+        const rafQueue: FrameRequestCallback[] = [];
+        vi.stubGlobal(
+            "requestAnimationFrame",
+            vi.fn((cb: FrameRequestCallback) => {
+                rafQueue.push(cb);
+                return rafQueue.length;
+            }),
+        );
+        vi.stubGlobal("cancelAnimationFrame", vi.fn());
+
+        try {
+            const state = $state({ checked: false, indeterminate: true });
+
+            const instance = mount(Checkbox, {
+                target: container,
+                props: {
+                    variant: "soft",
+                    size: "md",
+                    get checked() {
+                        return state.checked;
+                    },
+                    set checked(next: boolean) {
+                        state.checked = next;
+                    },
+                    get indeterminate() {
+                        return state.indeterminate;
+                    },
+                    set indeterminate(next: boolean) {
+                        state.indeterminate = next;
+                    },
+                },
+            });
+            flushSync();
+
+            const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+            expect(input).not.toBeNull();
+            expect(input?.indeterminate).toBe(true);
+            expect(input?.hasAttribute("data-dash-enter")).toBe(false);
+            expect(input?.hasAttribute("data-settled")).toBe(false);
+
+            // Advance the settlement animation frame
+            expect(rafQueue.length).toBeGreaterThan(0);
+            rafQueue.shift()?.(16);
+            flushSync();
+
+            expect(input?.hasAttribute("data-settled")).toBe(true);
+            expect(input?.hasAttribute("data-dash-enter")).toBe(false);
+
+            // Transition indeterminate -> unchecked
+            state.indeterminate = false;
+            flushSync();
+            expect(input?.indeterminate).toBe(false);
+            expect(input?.hasAttribute("data-dash-enter")).toBe(false);
+
+            // Subsequent unchecked -> indeterminate transition sets data-dash-enter
+            state.indeterminate = true;
+            flushSync();
+            expect(input?.indeterminate).toBe(true);
+            expect(input?.hasAttribute("data-dash-enter")).toBe(true);
+
+            unmount(instance);
+        } finally {
+            vi.unstubAllGlobals();
+        }
+    });
 });

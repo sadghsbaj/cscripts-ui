@@ -1,10 +1,14 @@
 <script lang="ts">
+    import { getCheckboxGroupContext, hasCheckboxGroupContext } from "../checkbox-group/checkbox-group.context.ts";
     import { type CheckboxProps } from ".";
 
     let {
         ref = $bindable(null),
         variant,
         size,
+        value,
+        name,
+        disabled,
         checked = $bindable(),
         onCheckedChange,
         indeterminate = $bindable(),
@@ -14,6 +18,23 @@
         onchange,
         ...rest
     }: CheckboxProps = $props();
+
+    const group = hasCheckboxGroupContext() ? getCheckboxGroupContext() : undefined;
+    const isGroupItem = $derived(Boolean(group && value !== undefined));
+
+    $effect(() => {
+        if (!group || value === undefined) return;
+        return group.registerItem({
+            value: () => String(value),
+            disabled: () => Boolean(disabled),
+        });
+    });
+
+    const resolvedChecked = $derived(isGroupItem && group ? group.isSelected(String(value)) : Boolean(checked));
+    const resolvedIndeterminate = $derived(isGroupItem ? false : Boolean(indeterminate));
+    const resolvedDisabled = $derived(Boolean(disabled || (isGroupItem && group?.disabled)));
+    const resolvedName = $derived(name ?? (isGroupItem ? group?.name : undefined));
+    const resolvedInvalid = $derived(invalid ?? (isGroupItem ? group?.invalid : undefined));
 
     const uid = $props.id();
     const anchorName = `--cs-checkbox-${uid}`;
@@ -31,9 +52,14 @@
         return `M${x0} ${y0}L${x1} ${y1}L${x2} ${y2}`;
     }
 
-    const visualState = $derived<VisualState>(indeterminate ? "indeterminate" : checked ? "checked" : "unchecked");
+    const visualState = $derived<VisualState>(
+        resolvedIndeterminate ? "indeterminate" : resolvedChecked ? "checked" : "unchecked",
+    );
 
     let morphActive = $state(false);
+    let dashEnter = $state(false);
+    let settled = $state(false);
+    let settleScheduled = false;
     let morphPath: SVGPathElement | null = null;
     let prevState: VisualState | undefined;
     let currentCoords: Coords = [...CHECK_COORDS];
@@ -46,10 +72,27 @@
     }
 
     $effect(() => {
+        if (settleScheduled) return;
+        settleScheduled = true;
+
+        if (typeof requestAnimationFrame === "function") {
+            const id = requestAnimationFrame(() => {
+                settled = true;
+            });
+            return () => cancelAnimationFrame(id);
+        }
+
+        queueMicrotask(() => {
+            settled = true;
+        });
+    });
+
+    $effect(() => {
         const next = visualState;
 
         if (prevState === undefined) {
             prevState = next;
+            dashEnter = false;
             currentCoords = [...(next === "indeterminate" ? DASH_COORDS : CHECK_COORDS)];
             return () => cancelMorph();
         }
@@ -64,9 +107,12 @@
         if (next === "unchecked" || prev === "unchecked") {
             cancelMorph();
             morphActive = false;
+            dashEnter = prev === "unchecked" && next === "indeterminate" ? settled : false;
             currentCoords = [...(next === "indeterminate" ? DASH_COORDS : CHECK_COORDS)];
             return () => cancelMorph();
         }
+
+        dashEnter = false;
 
         const reducedMotion =
             typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
@@ -115,12 +161,24 @@
         return () => cancelMorph();
     });
     function handleChange(event: Event & { currentTarget: EventTarget & HTMLInputElement }): void {
-        const prevChecked = Boolean(checked);
-        const prevIndeterminate = Boolean(indeterminate);
+        const prevChecked = resolvedChecked;
+        const prevIndeterminate = resolvedIndeterminate;
 
         // Run consumer onchange before syncing bindable state so tri-state handlers can
         // update target.checked/indeterminate without an intermediate checked microtask.
         onchange?.(event);
+
+        if (isGroupItem && group) {
+            const itemValue = String(value);
+            group.setSelected(itemValue, event.currentTarget.checked);
+            const committedChecked = group.isSelected(itemValue);
+            // Keep native DOM state aligned if a controlled group rejects the change.
+            event.currentTarget.checked = committedChecked;
+            if (committedChecked !== prevChecked) {
+                onCheckedChange?.(committedChecked);
+            }
+            return;
+        }
 
         const nextChecked = event.currentTarget.checked;
         const nextIndeterminate = event.currentTarget.indeterminate;
@@ -141,14 +199,19 @@
     bind:this={ref}
     type="checkbox"
     {...rest}
-    checked={Boolean(checked)}
-    indeterminate={Boolean(indeterminate)}
+    {value}
+    name={resolvedName}
+    disabled={resolvedDisabled}
+    checked={resolvedChecked}
+    indeterminate={resolvedIndeterminate}
     onchange={handleChange}
-    aria-invalid={invalid ? "true" : undefined}
+    aria-invalid={resolvedInvalid ? "true" : undefined}
     class={["cs-checkbox", className]}
     data-variant={variant}
     data-size={size}
     data-morph={morphActive ? "" : undefined}
+    data-dash-enter={dashEnter ? "" : undefined}
+    data-settled={settled ? "" : undefined}
     style:anchor-name={anchorName}
 />
 
@@ -164,8 +227,7 @@
     stroke-linejoin="round"
 >
     <path class="cs-checkbox-check" d="M4 12l5 5L20 6" pathLength="1" />
-    <path class="cs-checkbox-dash" d="M12 12H5" pathLength="1" />
-    <path class="cs-checkbox-dash" d="M12 12H19" pathLength="1" />
+    <path class="cs-checkbox-dash" d="M5 12H19" pathLength="1" />
     <path bind:this={morphPath} class="cs-checkbox-morph" d="M5 12L12 12L19 12" />
 </svg>
 
@@ -325,6 +387,15 @@
                     stroke-dashoffset var(--cs-dur-effect-fast) var(--cs-ease-effect);
             }
 
+            & .cs-checkbox-dash {
+                stroke-dasharray: 0 1;
+                stroke-dashoffset: -0.5;
+                transition:
+                    opacity 0s var(--cs-dur-80),
+                    stroke-dasharray var(--cs-dur-effect-fast) var(--cs-ease-effect),
+                    stroke-dashoffset var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            }
+
             & .cs-checkbox-morph {
                 opacity: 0;
                 stroke-dasharray: none;
@@ -339,8 +410,12 @@
         /* 1. Indeterminate: Draws horizontal dash while checkmark fades out first (40ms sequential handoff) */
         .cs-checkbox:indeterminate + .cs-checkbox-icon .cs-checkbox-dash {
             opacity: 1;
+            stroke-dasharray: 1 0;
             stroke-dashoffset: 0;
             transition: opacity 0s var(--cs-dur-40);
+        }
+
+        .cs-checkbox[data-dash-enter]:indeterminate + .cs-checkbox-icon .cs-checkbox-dash {
             animation: cs-checkbox-dash-in var(--cs-dur-140) var(--cs-ease-quart-out) var(--cs-dur-40) backwards;
         }
 
@@ -385,11 +460,23 @@
             opacity: 0.5;
         }
 
+        /* Suppress mount-flush transitions (e.g. SelectAll flipping to indeterminate) until first paint settles */
+        .cs-checkbox:not([data-settled]) {
+            transition: none;
+
+            & + .cs-checkbox-icon,
+            & + .cs-checkbox-icon path {
+                transition: none !important;
+            }
+        }
+
         @keyframes cs-checkbox-dash-in {
             from {
-                stroke-dashoffset: 1;
+                stroke-dasharray: 0 1;
+                stroke-dashoffset: -0.5;
             }
             to {
+                stroke-dasharray: 1 0;
                 stroke-dashoffset: 0;
             }
         }

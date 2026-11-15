@@ -14,6 +14,12 @@
 - **How `handleChange` prevents it:** `Checkbox.svelte` binds `checked={Boolean(checked)}` and `indeterminate={Boolean(indeterminate)}` one-way and registers a single `onchange={handleChange}`. `handleChange` invokes `onchange?.(event)` **first** so tri-state consumers can mutate `event.currentTarget.checked` and `event.currentTarget.indeterminate` synchronously, and only then syncs `checked` and `indeterminate`.
 - **Why `onclick` + `event.preventDefault()` + `queueMicrotask()` fails in Chromium:** Blink executes microtasks *before* C++ post-activation rollback reverts `input.checked` / `input.indeterminate` on a prevented click, so reading or overriding state in `queueMicrotask()` observes the pre-rollback DOM state and gets overwritten by Blink's rollback.
 
+## Dash Path, Mount Settling & Anchor Positioning
+
+- **Single continuous dash path (`d="M5 12H19"`):** Never split the indeterminate dash into two half-paths meeting at `(12, 12)` (`M12 12H5` / `M12 12H19`); overlapping `stroke-linecap="round"` caps create a visible anti-aliased center dot/bulge. Center-out enter and outside-in exit run on a single `pathLength="1"` path via `stroke-dasharray: 0 1; stroke-dashoffset: -0.5` ↔ `1 0; 0`.
+- **Initial mount flash prevention (`data-settled` + `data-dash-enter`):** `settled` flips to `true` via `requestAnimationFrame` after first paint (with `queueMicrotask` fallback), and `.cs-checkbox:not([data-settled])` disables CSS transitions on the input, icon container, and paths so initial `indeterminate` (including `<CheckboxGroupSelectAll>` flipping `false -> true` during the initial `$effect` registration flush) renders settled with zero background-color/box-shadow/dash-in flash. `data-dash-enter` only activates on `unchecked -> indeterminate` after `settled`.
+- **Scroll container containing block for CSS Anchor Positioning:** `.cs-checkbox-icon` uses `position: absolute; top: anchor(center); left: anchor(center);`. If a scroll container's nearest `position: relative` ancestor sits *outside* the scroller (e.g. `.cs-scroll-area` outside `.cs-scroll-area-content`), Chromium anchor scroll compensation can drift during scroll. Keep a `position: relative` wrapper inside the scroll viewport (as done in `playground/PreviewView.svelte`).
+
 ## Regression Safety Net
 
 - **`Checkbox.svelte.test.ts` (Vitest DOM):** Verifies `data-morph` presence/absence across binary and tri-state cycles, `rAF` interpolation, reduced-motion snapping, and `handleChange` ordering.

@@ -254,7 +254,7 @@
                 class="px-6 py-10 md:px-12 md:py-14"
                 {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
             >
-                <div class="w-full max-w-4xl mx-auto flex flex-col gap-10">
+                <div class="relative w-full max-w-4xl mx-auto flex flex-col gap-10">
                     {#if effectiveViewMode === "docs" && activePreviewItem?.docs}
                         <DocsProse markdown={activePreviewItem.docs} />
                     {:else if ActivePreview}
