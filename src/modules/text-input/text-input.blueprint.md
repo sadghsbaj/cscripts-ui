@@ -135,8 +135,7 @@ A dedicated `TextInputAction` is used instead of `<Button>` because inline field
   - `::after` Ring Layer (`position: absolute; inset: 0; border-radius: inherit; corner-shape: inherit; pointer-events: none; z-index: 1`):
     - Resting: `inset 0 0 0 0px transparent`
     - `:focus-within`: `inset 0 0 0 2px var(--cs-color-accent-solid)`
-    - `[data-invalid]`: `1px` negative ring (`light-dark(color-mix(in oklab, var(--cs-color-negative-solid) 45%, transparent), color-mix(in oklab, var(--cs-color-negative-400) 55%, transparent))`, `60%` / `70%` on hover); both `soft` and `elevated` preserve their neutral backgrounds and hover states; icon shifts to `--cs-color-negative-soft-fg`, caret to `--cs-color-negative-solid`, and input text stays `--cs-color-text-strong`.
-    - `[data-invalid]:focus-within`: `inset 0 0 0 2px var(--cs-color-negative-solid)`.
+    - `[data-invalid]`: unconditional `2px` negative ring (`inset 0 0 0 2px var(--cs-color-negative-solid)`) across resting, hover, and `:focus-within`; both `soft` and `elevated` preserve their neutral backgrounds and hover states; icon shifts to `--cs-color-negative-soft-fg`, caret to `--cs-color-negative-solid`, and input text stays `--cs-color-text-strong`.
   - `[data-disabled]`: Uses `--cs-color-disabled-*` tokens (`--cs-disabled-opacity: 1`).
 - **Active / Press:** No scale transform on `.cs-text-input` (prevents caret shift during click/drag selection). `TextInputAction` uses a decoupled `::before` hover/press surface (`position: absolute; inset: 0; z-index: -1; border-radius: inherit; corner-shape: inherit;`): resting `background-color: transparent; scale: 1`, hover `background-color: var(--cs-color-base-soft)` (`@media (hover: hover)`), and `:active:not(:disabled)::before` `background-color: var(--cs-color-base-soft-hover); scale: 0.92` so the icon and `<HitArea size="sm" />` never scale.
 - **Motion Tokens (crisp, non-bouncy):**

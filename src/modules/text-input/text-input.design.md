@@ -21,8 +21,8 @@ The v1 implementation ([TextInput.svelte](file:///home/colin/Main/01_programming
 3. **`TextInputAction` `:active` scales the icon and `<HitArea />`:** Putting `scale: 0.92` directly on `.cs-text-input-action:active` shrinks the SVG glyph itself (which looks jittery) and shrinks `<HitArea />`.
    - **Fix:** Decouple the interactive hover/press surface into `.cs-text-input-action::before` (`isolation: isolate`, `z-index: -1`, `border-radius: inherit`, `corner-shape: inherit`), matching `.cs-button-control::before`. Only `::before` squashes on `:active`; the icon remains rock-steady.
 4. **Stateful icon components (`CopyIcon`, `PasteIcon`) inside `TextInputAction`:** Ensure `TextInputAction` keeps `overflow: visible` (so `CopyIcon`'s `Sparkle` burst is not clipped) and lets child icon components size naturally via `calc(1em + 2px)` (which already resolves to `14 / 14 / 16 / 16 / 18px` from inherited `font-size`, matching `--cs-text-input-icon-size`).
-5. **Dark-mode `invalid` muddiness on `soft`:** Using `--cs-color-negative-soft` (`24%` `negative-500` in `base-950`) on a wide input makes it look heavy/sunken in Dark Mode and washes out the `28%` `1px` inset ring.
-   - **Fix (Ring-First):** Keep the neutral `soft` / `elevated` surface in `invalid` state (no red background fill) and communicate validation errors through a crisp `light-dark()`-balanced `1px` inset ring (`2px` on `:focus-within`), plus `--cs-color-negative-soft-fg` icon and `--cs-color-negative-solid` caret.
+5. **Dark-mode `invalid` muddiness on `soft` & weak resting ring:** Using `--cs-color-negative-soft` on a wide input looks heavy/sunken in Dark Mode, and a `1px` translucent resting ring looks too faint until focused.
+   - **Fix (Solid `2px` Ring-First):** Keep the neutral `soft` / `elevated` surface in `invalid` state (no red background fill) and display the full **`inset 0 0 0 2px var(--cs-color-negative-solid)`** ring unconditionally (resting, hover, and focused), plus `--cs-color-negative-soft-fg` icon and `--cs-color-negative-solid` caret.
 
 ---
 
@@ -78,12 +78,9 @@ Heights and font sizes match `Button` (`xs`–`xl`) 1:1 so `TextInput` and `Butt
 - `.cs-text-input::after` (`position: absolute; inset: 0; border-radius: inherit; corner-shape: inherit; pointer-events: none; z-index: 1;`) transitions `box-shadow` from `inset 0 0 0 0px transparent` to `inset 0 0 0 2px var(--cs-color-accent-solid)` on `:focus-within` (`var(--cs-dur-120) var(--cs-ease-quart-out)`).
 - No `:active` scale on `.cs-text-input` so the text caret never shifts under the pointer.
 
-### Invalid State (`data-invalid` / `aria-invalid="true"`) — Ring-First
-- **Neutral surface preserved:** Both `soft` and `elevated` keep their normal neutral background (`--cs-color-base-soft` / `--cs-color-elevated` and their hover states) instead of tinting the entire wide input with `--cs-color-negative-soft`. This prevents the heavy/sunken red-brown look in Dark Mode and preserves surface hierarchy on `elevated` cards.
-- **Crisp `1px` resting ring (`::after`):** Balanced per color scheme so the hairline stays sharp in both Light and Dark Mode:
-  - Resting: `inset 0 0 0 1px light-dark(color-mix(in oklab, var(--cs-color-negative-solid) 45%, transparent), color-mix(in oklab, var(--cs-color-negative-400) 55%, transparent))`
-  - Hover: `inset 0 0 0 1px light-dark(color-mix(in oklab, var(--cs-color-negative-solid) 60%, transparent), color-mix(in oklab, var(--cs-color-negative-400) 70%, transparent))`
-- **`:focus-within` + `invalid`:** Ring thickens to `inset 0 0 0 2px var(--cs-color-negative-solid)`.
+### Invalid State (`data-invalid` / `aria-invalid="true"`) — Solid `2px` Ring-First
+- **Neutral surface preserved:** Both `soft` and `elevated` keep their normal neutral background (`--cs-color-base-soft` / `--cs-color-elevated` and their hover states) instead of tinting with `--cs-color-negative-soft`.
+- **Unconditional `2px` negative ring (`::after`):** Resting, hover, and `:focus-within` all use `inset 0 0 0 2px var(--cs-color-negative-solid)` — no weak intermediate `1px` state.
 - **Foreground & Caret:** Entered text stays `--cs-color-text-strong`; decorative `.cs-text-input-icon` shifts to `--cs-color-negative-soft-fg`, and `caret-color` shifts to `--cs-color-negative-solid`.
 
 ### Disabled State (`data-disabled`)

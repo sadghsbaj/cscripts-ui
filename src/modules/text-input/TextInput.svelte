@@ -38,7 +38,7 @@
 
     function handleMouseDown(event: MouseEvent & { currentTarget: EventTarget & HTMLDivElement }): void {
         onmousedown?.(event);
-        if (event.target !== ref || disabled || !fieldEl) return;
+        if (event.button !== 0 || event.target !== ref || disabled || !fieldEl || fieldEl.disabled) return;
         // Prevent shell mousedown from blurring an already-focused <input> or flickering the focus ring.
         event.preventDefault();
         fieldEl.focus();
@@ -217,21 +217,8 @@
             &[data-invalid]:not([data-disabled]) {
                 --cs-text-input-icon-fg: var(--cs-color-negative-soft-fg);
                 --cs-text-input-caret: var(--cs-color-negative-solid);
-                --cs-text-input-ring-shadow: inset 0 0 0 1px
-                    light-dark(
-                        color-mix(in oklab, var(--cs-color-negative-solid) 45%, transparent),
-                        color-mix(in oklab, var(--cs-color-negative-400) 55%, transparent)
-                    );
-                --cs-text-input-ring-shadow-hover: inset 0 0 0 1px
-                    light-dark(
-                        color-mix(in oklab, var(--cs-color-negative-solid) 60%, transparent),
-                        color-mix(in oklab, var(--cs-color-negative-400) 70%, transparent)
-                    );
-
-                &:focus-within {
-                    --cs-text-input-ring-shadow: inset 0 0 0 2px var(--cs-color-negative-solid);
-                    --cs-text-input-ring-shadow-hover: inset 0 0 0 2px var(--cs-color-negative-solid);
-                }
+                --cs-text-input-ring-shadow: inset 0 0 0 2px var(--cs-color-negative-solid);
+                --cs-text-input-ring-shadow-hover: inset 0 0 0 2px var(--cs-color-negative-solid);
             }
 
             &[data-disabled] {

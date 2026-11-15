@@ -89,13 +89,6 @@
                 scale: 0.85;
                 visibility: hidden;
                 pointer-events: none;
-                transition:
-                    color var(--cs-dur-effect) var(--cs-ease-effect),
-                    width var(--cs-dur-120) var(--cs-ease-quart-out),
-                    margin-inline var(--cs-dur-120) var(--cs-ease-quart-out),
-                    opacity var(--cs-dur-120) var(--cs-ease-quart-out),
-                    scale var(--cs-dur-120) var(--cs-ease-quart-out),
-                    visibility var(--cs-dur-120) allow-discrete;
             }
 
             :global(.cs-text-input-action:not([data-visible="false"])) + &:not([data-visible="false"]) {

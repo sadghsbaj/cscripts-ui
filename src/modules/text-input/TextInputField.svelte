@@ -56,11 +56,13 @@
             font: inherit;
             color: inherit;
             caret-color: var(--cs-text-input-caret, var(--cs-color-accent-solid));
+            transition: color var(--cs-dur-effect) var(--cs-ease-effect);
             cursor: inherit;
 
             &::placeholder {
                 color: var(--cs-text-input-placeholder-fg, var(--cs-color-text-weak));
                 opacity: 1;
+                transition: color var(--cs-dur-effect) var(--cs-ease-effect);
             }
 
             /* Focus ring is rendered on the .cs-text-input::after shell layer */
