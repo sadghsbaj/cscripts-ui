@@ -4,7 +4,7 @@
 </script>
 
 <script lang="ts">
-    import { Columns3, LayoutGrid, List } from "@lucide/svelte";
+    import { AlignCenter, AlignLeft, AlignRight, Columns3, LayoutGrid, List } from "@lucide/svelte";
     import {
         SEGMENTED_CONTROL_SIZES,
         SegmentedControl,
@@ -17,6 +17,7 @@
 
     let viewMode = $state("list");
     let billingPeriod = $state("monthly");
+    let alignment = $state("left");
 
     let sizeValues = $state<Record<SegmentedControlSize, string>>({
         xs: "day",
@@ -47,7 +48,7 @@
 
     /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
     const defaultCode = `<script lang="ts">
-    import { Columns3, LayoutGrid, List } from "@lucide/svelte";
+    import { AlignCenter, AlignLeft, AlignRight, Columns3, LayoutGrid, List } from "@lucide/svelte";
     import {
         SegmentedControl,
         SegmentedControlIcon,
@@ -57,6 +58,7 @@
 
     let viewMode = $state("list");
     let billingPeriod = $state("monthly");
+    let alignment = $state("left");
 ${closeScript}
 
 <SegmentedControl size="md" bind:value={viewMode} aria-label="View mode">
@@ -80,6 +82,18 @@ ${closeScript}
     </SegmentedControlItem>
     <SegmentedControlItem value="yearly">
         <SegmentedControlLabel>Yearly</SegmentedControlLabel>
+    </SegmentedControlItem>
+</SegmentedControl>`;
+
+    const iconOnlyCode = `<SegmentedControl size="md" bind:value={alignment} aria-label="Text alignment">
+    <SegmentedControlItem value="left" aria-label="Align left">
+        <SegmentedControlIcon icon={AlignLeft} />
+    </SegmentedControlItem>
+    <SegmentedControlItem value="center" aria-label="Align center">
+        <SegmentedControlIcon icon={AlignCenter} />
+    </SegmentedControlItem>
+    <SegmentedControlItem value="right" aria-label="Align right">
+        <SegmentedControlIcon icon={AlignRight} />
     </SegmentedControlItem>
 </SegmentedControl>`;
 
@@ -161,6 +175,24 @@ ${closeScript}
                 </SegmentedControlItem>
             </SegmentedControl>
         </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Icon-Only"
+        description="Icon-only segments omit SegmentedControlLabel and provide an aria-label on each SegmentedControlItem."
+        code={iconOnlyCode}
+    >
+        <SegmentedControl size="md" bind:value={alignment} aria-label="Text alignment">
+            <SegmentedControlItem value="left" aria-label="Align left">
+                <SegmentedControlIcon icon={AlignLeft} />
+            </SegmentedControlItem>
+            <SegmentedControlItem value="center" aria-label="Align center">
+                <SegmentedControlIcon icon={AlignCenter} />
+            </SegmentedControlItem>
+            <SegmentedControlItem value="right" aria-label="Align right">
+                <SegmentedControlIcon icon={AlignRight} />
+            </SegmentedControlItem>
+        </SegmentedControl>
     </PreviewSection>
 
     <PreviewSection
