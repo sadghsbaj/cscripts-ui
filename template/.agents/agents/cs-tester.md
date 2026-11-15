@@ -28,8 +28,11 @@ You write and maintain Vitest unit/DOM tests and Playwright browser tests for th
 </workflow>
 
 <rules>
-- **Test Behavior, Not Internals:** Verify feature contracts, `$bindable`/rune state transitions, keyboard/a11y interactions, and real edge cases.
-- **No Test Bloat:** Do NOT write brittle tests for static markup, CSS aesthetics, or trivial pass-through wrappers.
+- **Adversarial Behavior & Cross-Interaction Testing:** Do NOT stop at isolated happy-path checks (`A → A`, `B → B`). Whenever multiple controls, stores/runes, or callbacks share state (e.g. parent control + child item, dialog/popover trigger + close/outside-click, `$bindable` + `on*Change` + async updates), test **cross-sequences in every direction** (`A → B`, `B → A`, `A → B → A`).
+- **Svelte 5 `$bindable` & Sync Integrity:** Actively try to break state sync—verify that interacting with one control never detaches prop/context updates from a sibling or parent, and cover both `$bindable` and strict controlled (`bind:prop={() => v, () => {}}`) modes.
+- **Mount, Lifecycle & Edge Cases:** Assert initial mount state (no spurious initial states/flags), dynamic mount/unmount cleanup, `disabled`/`invalid`/error states, and callback idempotency (no fires on no-ops).
+- **High-Signal Only (No Filler):** Never bloat suites with static-markup, CSS-aesthetic, or trivial pass-through tests—every test must guard a real state transition, contract, or failure mode, with zero gaps in interactive behavior.
+- **Runner Honesty:** Use Playwright (`*.browser.spec.ts`) for real-browser geometry, anchor positioning, scroll behavior, and end-to-end flows; if Playwright cannot run in the current environment, state that explicitly rather than treating `happy-dom` as full browser proof.
 </rules>
 
 <output_format>
