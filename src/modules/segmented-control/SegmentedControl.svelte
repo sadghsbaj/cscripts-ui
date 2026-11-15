@@ -261,7 +261,10 @@
     @layer components.composite {
         .cs-segmented-control {
             --cs-segmented-control-bg: var(--cs-color-base-soft);
-            --cs-segmented-control-indicator-bg: light-dark(white, var(--cs-color-base-800));
+            --cs-segmented-control-indicator-bg: light-dark(
+                white,
+                color-mix(in oklch, var(--cs-color-base-100) 14%, transparent)
+            );
             --cs-segmented-control-indicator-shadow: light-dark(0 1px 2px rgb(0 0 0 / 0.08), none);
             --cs-segmented-control-fg: var(--cs-color-text-weak);
             --cs-segmented-control-fg-hover: var(--cs-color-text-strong);
@@ -334,7 +337,10 @@
 
             &[data-disabled] {
                 --cs-disabled-opacity: 1;
-                --cs-segmented-control-indicator-bg: var(--cs-color-disabled-bg-elevated);
+                --cs-segmented-control-indicator-bg: light-dark(
+                    var(--cs-color-disabled-bg-elevated),
+                    color-mix(in oklch, var(--cs-color-base-100) 8%, transparent)
+                );
                 --cs-segmented-control-indicator-shadow: none;
             }
 

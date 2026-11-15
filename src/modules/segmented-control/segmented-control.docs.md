@@ -76,7 +76,7 @@ Overridable on `.cs-segmented-control`:
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `--cs-segmented-control-bg` | `var(--cs-color-base-soft)` | Pill track background color. |
-| `--cs-segmented-control-indicator-bg` | `light-dark(white, var(--cs-color-base-800))` | Active indicator fill (`var(--cs-color-disabled-bg-elevated)` when `[data-disabled]`). |
+| `--cs-segmented-control-indicator-bg` | `light-dark(white, color-mix(in oklch, var(--cs-color-base-100) 14%, transparent))` | Active indicator fill (`light-dark(var(--cs-color-disabled-bg-elevated), color-mix(in oklch, var(--cs-color-base-100) 8%, transparent))` when `[data-disabled]`). |
 | `--cs-segmented-control-indicator-shadow` | `light-dark(0 1px 2px rgb(0 0 0 / 0.08), none)` | Active indicator box-shadow (`none` when `[data-disabled]`). |
 | `--cs-segmented-control-fg` | `var(--cs-color-text-weak)` | Inactive item foreground color. |
 | `--cs-segmented-control-fg-hover` | `var(--cs-color-text-strong)` | Inactive item hover foreground color. |

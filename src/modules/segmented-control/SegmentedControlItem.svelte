@@ -84,6 +84,10 @@
             &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
                 --cs-disabled-opacity: 1;
                 color: var(--cs-color-disabled-fg);
+
+                &[data-state="active"] {
+                    color: var(--cs-color-disabled-fg-active);
+                }
             }
         }
 
