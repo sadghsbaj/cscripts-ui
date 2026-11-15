@@ -4,7 +4,7 @@
 
 - switch(anticipaton spring) + group x
 - rovingfocus x
-- segmented control x
+- segmented control x base 800 nochmal vll mit transaprenz mappen besser?!
 - modal
 - select
 - combobox
