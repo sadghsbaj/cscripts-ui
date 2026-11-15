@@ -1,6 +1,6 @@
 ## Modules
 
-- filesystem basis bauen, experte für fs arbeiten specioal coder + special reviewer
+- filesystem basis bauen TESTEN vll playground artige test view oder so auch?
 
 - switch(anticipaton spring) + group x
 - rovingfocus x
@@ -24,6 +24,7 @@
 - pdf viewer
 - verschlüsselte seiten im filesystem
 - auth system in fs
+- diff component
 
 - textinput x
 - textarea maybe
