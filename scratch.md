@@ -1,8 +1,10 @@
+focusc bug bei toglgebuittongroup wird agbeschnitten imimer davor wen nncöhstes element ausgewählt ist
+
 ## Modules
 
 - filesystem basis bauen
 
-- rovingfocus
+- rovingfocus x
 - segmented control
 - switch(anticipaton spring) + group
 
