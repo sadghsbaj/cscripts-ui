@@ -24,7 +24,11 @@
 - `simulateNativeMoveFailure(mode)`: Sets `nativeMoveMode` (`"supported" | "unavailable" | "fail-once" | "always-fail"`). When native move is unavailable or fails, `moveFile()` runs the verified copy + SHA-256 hash check + `deleteFile()` fallback and increments `backend.nativeMoveFallbackCount`.
 
 ### External Mutations & Clock Skew
-- `injectExternalFile(path, bytes, lastModified?)`: Writes directly to `#files` (bypassing `WriteQueue` and `CacheEngine`) to simulate another user/tab creating or modifying a file on an SMB share. Returns `{ size, lastModified }`.
+- `async injectExternalFile(path, bytes, lastModified?)`: Writes directly to `#files` (bypassing `WriteQueue` and `CacheEngine`) to simulate another user/tab creating or modifying a file on an SMB share. Returns `Promise<FileRevision>` (`{ size, lastModified }`).
 - `deleteExternalFile(path)`: Deletes directly from `#files` to simulate external deletion (returns `boolean`).
 - `setExternalMtime(path, lastModified)`: Updates `lastModified` on an existing file without changing its bytes (throws `FsError("NOT_FOUND")` if missing).
 - `clockSkewMs` getter/setter: Simulates NAS/SMB clock skew where file `lastModified` timestamps are in the past or future relative to `Date.now()`. `#nextTimestamp()` guarantees strictly monotonic timestamps per backend instance (`candidate > #lastTimestamp ? candidate : #lastTimestamp + 1`).
+
+## `readFile()` & `removeDir()` Behavior
+- **`readFile()` parity with `readBytes()`:** `readFile(path, options?)` performs the same pre-read checks as `readBytes()`: checks `options?.signal?.aborted` (throwing `FsError("ABORTED")`), calls `this.#consumeFault(path)`, verifies file existence (`FsError("NOT_FOUND")`), and enforces `options?.maxFileBytes ?? this.#maxFileBytes` (`FsError("FILE_TOO_LARGE")`).
+- **`removeDir(dirPath, { recursive })`:** When `!recursive` (default), checks both `#files` and `#dirs` for any entry starting with `${dirPath}/` and throws `FsError("IO_FAILED")` if non-empty (ensuring empty subdirectories still prevent non-recursive removal). When `recursive` is `true`, deletes all matching `#files` and `#dirs` entries.

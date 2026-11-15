@@ -555,6 +555,17 @@ export function defineCollection<
 			}
 		: undefined;
 
+	if (companion) {
+		for (const paramName of template.paramNames) {
+			if (!companion.template.paramNames.includes(paramName)) {
+				throw new FsError(
+					"INVALID_CONFIG",
+					`Companion pattern "${companion.pattern}" must include primary template parameter "{${paramName}}".`,
+				);
+			}
+		}
+	}
+
 	return {
 		kind: "collection",
 		pattern: config.pattern,
@@ -1134,7 +1145,6 @@ export function defineWorkspace<
 			return revision;
 		}
 
-		assertWritable();
 		const encoded = toUint8Array(await adapter.encode(data, { path }));
 		const written = await activeQueue.write(path, encoded, {
 			expectedRevision: revision,
@@ -1156,6 +1166,7 @@ export function defineWorkspace<
 		backup?: boolean;
 		signal?: AbortSignal;
 		target: ConflictTarget;
+		epoch: number;
 	}): Promise<WriteResult> {
 		const {
 			activeBackend,
@@ -1168,6 +1179,7 @@ export function defineWorkspace<
 			backup,
 			signal,
 			target,
+			epoch,
 		} = params;
 
 		const encoded = toUint8Array(await adapter.encode(data, { path }));
@@ -1180,7 +1192,7 @@ export function defineWorkspace<
 				signal,
 			});
 			const revision = await withHash(rawRevision, encoded);
-			setTrackedDoc(path, revision, data);
+			setTrackedDoc(path, revision, data, epoch);
 			return { path, revision };
 		}
 
@@ -1194,7 +1206,7 @@ export function defineWorkspace<
 				signal,
 			});
 			const revision = await withHash(rawRevision, encoded);
-			setTrackedDoc(path, revision, data);
+			setTrackedDoc(path, revision, data, epoch);
 			return { path, revision };
 		} catch (error) {
 			if (!isFsError(error) || error.code !== "CONFLICT") {
@@ -1221,7 +1233,7 @@ export function defineWorkspace<
 					signal,
 				});
 				const revision = await withHash(rawRevision, mergedEncoded);
-				setTrackedDoc(path, revision, mergeResult.merged);
+				setTrackedDoc(path, revision, mergeResult.merged, epoch);
 				return { path, revision, merged: true };
 			}
 
@@ -1238,6 +1250,7 @@ export function defineWorkspace<
 				diffLocalToRemote,
 				threeWay: mergeResult,
 				target,
+				epoch,
 			});
 		}
 
@@ -1264,6 +1277,7 @@ export function defineWorkspace<
 			diffLocalToRemote,
 			threeWay,
 			target,
+			epoch,
 		});
 	}
 
@@ -1276,6 +1290,7 @@ export function defineWorkspace<
 		diffLocalToRemote: JsonDiffResult | null;
 		threeWay?: JsonMergeResult<unknown>;
 		target: ConflictTarget;
+		epoch: number;
 	}): Promise<never> {
 		const conflictId = nextConflictId();
 		const details: ConflictDetails = {
@@ -1293,39 +1308,41 @@ export function defineWorkspace<
 			createdAt: new SvelteDate().toISOString(),
 		};
 
-		conflictTargets.set(conflictId, input.target);
-		unresolvedConflicts = [...unresolvedConflicts, details];
+		if (input.epoch === mountEpoch) {
+			conflictTargets.set(conflictId, input.target);
+			unresolvedConflicts = [...unresolvedConflicts, details];
 
-		if (input.remoteDoc !== undefined && input.remoteRevision !== null) {
-			setTrackedDoc(input.path, input.remoteRevision, input.remoteDoc);
-			if (cacheEngine && input.target.collection && input.target.params) {
-				await cacheEngine.upsertEntry(
-					input.target.collection,
-					input.path,
-					input.target.params,
-					input.remoteRevision,
-					input.remoteDoc,
-					input.target.companionStatus,
-				);
-				refreshConfirmedSnapshot(input.target.collection);
+			if (input.remoteDoc !== undefined && input.remoteRevision !== null) {
+				setTrackedDoc(input.path, input.remoteRevision, input.remoteDoc, input.epoch);
+				if (cacheEngine && input.target.collection && input.target.params) {
+					await cacheEngine.upsertEntry(
+						input.target.collection,
+						input.path,
+						input.target.params,
+						input.remoteRevision,
+						input.remoteDoc,
+						input.target.companionStatus,
+					);
+					refreshConfirmedSnapshot(input.target.collection, input.epoch);
+				}
+			} else {
+				removeTrackedDoc(input.path, input.epoch);
+				if (cacheEngine && input.target.collection) {
+					await cacheEngine.removeEntry(input.target.collection, input.path);
+					refreshConfirmedSnapshot(input.target.collection, input.epoch);
+				}
 			}
-		} else {
-			removeTrackedDoc(input.path);
-			if (cacheEngine && input.target.collection) {
-				await cacheEngine.removeEntry(input.target.collection, input.path);
-				refreshConfirmedSnapshot(input.target.collection);
-			}
+
+			logger.log({
+				level: "warn",
+				event: "conflict",
+				code: "CONFLICT",
+				path: input.path,
+				message: `Write conflict detected for "${input.path}" (${conflictId}).`,
+			});
+
+			config.onMutationConflict?.(details);
 		}
-
-		logger.log({
-			level: "warn",
-			event: "conflict",
-			code: "CONFLICT",
-			path: input.path,
-			message: `Write conflict detected for "${input.path}" (${conflictId}).`,
-		});
-
-		config.onMutationConflict?.(details);
 
 		throw new FsError("CONFLICT", `Conflict detected for "${input.path}".`, {
 			details: { conflictId, path: input.path },
@@ -1478,6 +1495,10 @@ export function defineWorkspace<
 				return mountStatus;
 			}
 			throw handleInfrastructureError(error, "Failed to pick workspace directory.");
+		}
+
+		if (destroyed) {
+			return mountStatus;
 		}
 
 		return withActivity("restoring", async () => {
@@ -1934,6 +1955,7 @@ export function defineWorkspace<
 							backup: options?.backup,
 							signal: options?.signal,
 							target: { adapter: def.adapter, singleton: name },
+							epoch,
 						});
 						if (epoch !== mountEpoch) {
 							return result;
@@ -2023,6 +2045,7 @@ export function defineWorkspace<
 							backup: options?.backup,
 							signal: options?.signal,
 							target: { adapter: def.adapter, singleton: name },
+							epoch,
 						});
 						if (epoch !== mountEpoch) {
 							return result;
@@ -2296,6 +2319,7 @@ export function defineWorkspace<
 								params,
 								companionStatus: existingCompanionStatus,
 							},
+							epoch,
 						});
 						if (epoch !== mountEpoch) {
 							return result;
@@ -2376,9 +2400,11 @@ export function defineWorkspace<
 						const expectedRevision =
 							policy === "last-write-wins"
 								? undefined
-								: (options?.expectedRevision ??
-									trackedDocs.get(path)?.revision ??
-									null);
+								: options?.expectedRevision !== undefined
+									? options.expectedRevision
+									: (trackedDocs.get(path)?.revision ??
+										activeCache?.getRevision(name, path) ??
+										null);
 						const rawRevision = await activeQueue.write(path, bytes, {
 							expectedRevision,
 							backup: options?.backup,
@@ -2542,6 +2568,7 @@ export function defineWorkspace<
 									params,
 									companionStatus: "present",
 								},
+								epoch,
 							});
 							if (result.merged) {
 								await activeQueue.write(companionPath, companionBytes, {
@@ -2551,29 +2578,54 @@ export function defineWorkspace<
 								});
 							}
 						} else {
+							// Snapshot any existing companion so a primary TOCTOU failure can roll it back.
+							let prevCompanionBytes: Uint8Array | null = null;
+							if (await activeBackend.exists(companionPath)) {
+								const prevRead = await activeBackend.readBytes(companionPath, {
+									maxFileBytes: config.maxFileBytes,
+									signal: options?.signal,
+								});
+								prevCompanionBytes = prevRead.bytes;
+							}
 							// Write companion BEFORE primary record so a failed companion never leaves a dangling record.
 							await activeQueue.write(companionPath, companionBytes, {
 								backup: options?.backup,
 								maxFileBytes: config.maxFileBytes,
 								signal: options?.signal,
 							});
-							result = await performConflictAwareWrite({
-								activeBackend,
-								activeQueue,
-								path,
-								adapter: def.adapter,
-								data,
-								expectedRevision,
-								policy,
-								backup: options?.backup,
-								signal: options?.signal,
-								target: {
+							try {
+								result = await performConflictAwareWrite({
+									activeBackend,
+									activeQueue,
+									path,
 									adapter: def.adapter,
-									collection: name,
-									params,
-									companionStatus: "present",
-								},
-							});
+									data,
+									expectedRevision,
+									policy,
+									backup: options?.backup,
+									signal: options?.signal,
+									target: {
+										adapter: def.adapter,
+										collection: name,
+										params,
+										companionStatus: "present",
+									},
+									epoch,
+								});
+							} catch (primaryError) {
+								try {
+									if (prevCompanionBytes !== null) {
+										await activeQueue.write(companionPath, prevCompanionBytes, {
+											maxFileBytes: config.maxFileBytes,
+										});
+									} else {
+										await activeQueue.delete(companionPath);
+									}
+								} catch {
+									// Best-effort rollback: preserve original primary error.
+								}
+								throw primaryError;
+							}
 						}
 						if (epoch !== mountEpoch) {
 							return result;
@@ -2736,6 +2788,7 @@ export function defineWorkspace<
 								params,
 								companionStatus: existingCompanionStatus,
 							},
+							epoch,
 						});
 						if (epoch !== mountEpoch) {
 							return result;

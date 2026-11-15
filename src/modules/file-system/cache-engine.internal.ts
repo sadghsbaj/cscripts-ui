@@ -385,11 +385,19 @@ export class CacheEngine {
 		if (!colShards) return;
 		const manifest = this.#ensureManifest(col.name);
 
+		let needsHeal = false;
 		for (const rawKey of keys) {
 			const key = validatePartitionKey(rawKey);
 			if (colShards.has(key)) continue;
 			if (!Object.prototype.hasOwnProperty.call(manifest.partitions, key)) continue;
-			await this.#loadShardFromDisk(col.name, key);
+			const ok = await this.#loadShardFromDisk(col.name, key);
+			if (!ok) {
+				needsHeal = true;
+			}
+		}
+
+		if (needsHeal) {
+			await this.heal({ mode: "incremental" });
 		}
 	}
 

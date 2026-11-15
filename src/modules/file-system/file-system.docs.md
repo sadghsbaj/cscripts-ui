@@ -206,6 +206,14 @@ interface OrderSummary {
 	status: Order["status"];
 }
 
+const isOrder = (raw: unknown): raw is Order =>
+	typeof raw === "object" &&
+	raw !== null &&
+	typeof (raw as Order).id === "string" &&
+	typeof (raw as Order).year === "string" &&
+	typeof (raw as Order).customer === "string" &&
+	((raw as Order).status === "draft" || (raw as Order).status === "done");
+
 export const workspace = defineWorkspace({
 	singletons: {
 		settings: defineSingleton({
@@ -227,7 +235,7 @@ export const workspace = defineWorkspace({
 				version: 1,
 				// Pass any Standard Schema v1 validator (Zod, Valibot, ArkType) via `schema`
 				// or a runtime type guard via `validate`:
-				schema: orderSchema,
+				validate: isOrder,
 			}),
 			index: {
 				partitionBy: (params) => params.year,
@@ -268,14 +276,41 @@ export const workspace = defineWorkspace({
 {/if}
 ```
 
+### Pre-Mount Support Check (`checkFileSystemSupport`)
+
+```ts
+import { checkFileSystemSupport } from "cs/svelte/file-system";
+
+const report = checkFileSystemSupport();
+if (!report.supported) {
+	// report.status: "supported" | "unsupported-api" | "insecure-context" | "ssr"
+	// report.features: { directoryPicker, nativeMove, indexedDb, webLocks }
+	console.warn("File System Access unavailable:", report.status, report.features);
+}
+```
+
 ### Mount Lifecycle Methods
 - `workspace.restore()`: Loads a persisted `FileSystemDirectoryHandle` from IndexedDB, checks permission (`queryPermission`), and if granted runs boot cache validation/healing and transitions `mountStatus` to `"ready"` (or `"needs-permission"`, `"unlinked"`, `"stale"`, `"unsupported"`).
-- `workspace.pick(options?)`: Opens `window.showDirectoryPicker(options)`, persists the handle in IndexedDB, boots the cache engine, and transitions to `"ready"`.
+- `workspace.pick(options?)`: Opens `window.showDirectoryPicker(options)`, persists the handle in IndexedDB, boots the cache engine, and transitions to `"ready"`. If the user cancels the picker (`AbortError`), `pick()` returns the current `mountStatus` without throwing.
 - `workspace.requestAccess()`: Calls `requestPermission({ mode })` on an existing handle when `mountStatus === "needs-permission"` and boots if granted.
 - `workspace.forget()`: Clears the persisted handle from IndexedDB, flushes/destroys internal engines, and resets `mountStatus` to `"unlinked"`.
 - `workspace.flush()`: Awaits all queued writes, pending index shard flushes, and log flushes.
 - `workspace.destroy()`: Aborts in-flight operations, stops flush timers, and removes `beforeunload` / `pagehide` / `focus` / `visibilitychange` listeners.
 - **Read-only mode (`mode: "read"`):** Configured on `defineWorkspace({ mode: "read", ... })` (default `"readwrite"`). Requests read-only directory permission, throws `FsError("PERMISSION_DENIED")` on explicit write/mutation operations (`write`, `writeRaw`, `writeWithCompanion`, `delete`, `move`, `resolveConflict`, etc.), skips `migrationWriteBack: "eager"` during `read()` without modifying disk (instead of throwing `PERMISSION_DENIED`), and suppresses all `_cs-fs/` disk writes (index shards, `meta.json`, and JSONL logs).
+
+### Handle CRUD API
+- **Singletons (`workspace.singletons.<name>`):**
+  - `read(options?: { signal?: AbortSignal })`: Returns `Promise<ReadResult<TData> | null>` (`{ path, data, revision, meta?, migrated?, fromVersion?, warnings? }`) or `null` when the file does not exist.
+  - `write(data, options?: WriteOperationOptions)`: Encodes and writes `data`, returning `Promise<WriteResult>` (`{ path, revision, merged? }`).
+  - `update(updater: (current: TData | null) => TData | Promise<TData>, options?: WriteOperationOptions)`: Reads the current value (or `null` if missing), runs `updater`, and writes the result with OCC revision tracking.
+  - `exists()`: Returns `Promise<boolean>`.
+  - `delete(options?: DeleteOperationOptions)`: Deletes the singleton file (`Promise<void>`).
+- **Collections (`workspace.collections.<name>`):**
+  - `read(params, options?: { signal?: AbortSignal })`: Returns `Promise<ReadResult<TData> | null>`.
+  - `write(params, data, options?: WriteOperationOptions)`: Encodes and writes the document at `params`, returning `Promise<WriteResult>`.
+  - `update(params, updater: (current: TData | null) => TData | Promise<TData>, options?: WriteOperationOptions)`: Performs a read-modify-write cycle for `params`.
+  - `exists(params)`: Returns `Promise<boolean>`.
+  - `delete(params, options?: DeleteOperationOptions)` & `move(fromParams, toParams, options?: MoveOperationOptions)`: Deletes or moves the primary record (and any paired companion file).
 
 ## Custom Adapters
 
@@ -305,7 +340,7 @@ export const csvAdapter = defineAdapter<string[][]>({
 
 ### Raw Writes & Paired Companion Files
 - `collection.writeRaw(params, fileOrBytes, options?)`: Writes a `File`, `Uint8Array`, or `string` directly without running `adapter.encode()` (useful for binary collections or pre-encoded exports).
-- **Paired `companion` files:** Declare `companion: { pattern: "orders/{year}/{id}.pdf" }` on `defineCollection()`.
+- **Paired `companion` files:** Declare `companion: { pattern: "orders/{year}/{id}.pdf" }` on `defineCollection()` (every parameter in `collection.pattern` must also be present in `companion.pattern`, otherwise `FsError("INVALID_CONFIG")` is thrown).
   - `writeWithCompanion(params, data, companionFile, options?)`: Writes the primary record and its companion file together and updates `companionStatus` (`"present" | "missing" | "orphaned"`).
   - `readCompanion(params, options?)` / `hasCompanion(params)`: Reads or checks the companion binary (`{ path, bytes, file, revision }`).
   - `move(fromParams, toParams)` and `delete(params)` automatically move or delete the paired companion file if present.
@@ -361,18 +396,41 @@ Indexed collections (`defineCollection({ ..., index: ... })`) expose reactive Sv
 - `collection.entries`: Reactive array combining `confirmedEntries` (disk-backed) overlaid with `pendingMutations` (optimistic upserts, moves, deletes). Mutations appear immediately in the UI and roll back per-operation on failure without reverting unrelated concurrent writes.
 - `collection.query(filter?)`: Synchronously filters `collection.entries` by `{ params, where }` or a predicate.
 - `collection.list(filter?)`: Walks disk directly (for unindexed collections or full disk listing).
-- On-demand partitioning: `loadedPartitions()`, `unloadedPartitions()`, `hasUnloadedPartitions()`, `loadPartitions(keys)`, `loadAllPartitions()`.
+- On-demand partitioning: `loadedPartitions()`, `unloadedPartitions()`, `hasUnloadedPartitions()`, `loadPartitions(keys)`, `loadAllPartitions()`. Calling `loadPartitions()` automatically triggers an incremental heal if a lazy shard on disk is missing or corrupt.
 
 Workspace reactive status properties:
 - `mountStatus`: `"unlinked" | "needs-permission" | "ready" | "stale" | "unsupported"`.
 - `activity`: `"idle" | "restoring" | "reading" | "writing" | "healing"`.
 - `isBusy`: `true` when `activity !== "idle" || pendingMutationCount > 0`.
 - `pendingMutationCount`: Number of in-flight optimistic mutations.
+- `syncProgress`: `SyncProgress | null` — live progress (`{ phase, processed, total, currentPath? }`) emitted during `restore()` boot checks and `heal()`.
+- `corruptEntries`: `readonly CorruptEntry[]` — files that failed decode or validation during `restore()` / `heal()`.
 - `health`: `"base"` (`unlinked`), `"negative"` (`stale`, `unsupported`, or `lastError !== null`), `"caution"` (`needs-permission`, `isBusy`, `unresolvedConflictCount > 0`, or `corruptEntries.length > 0`), or `"positive"`.
 - `lastError` & `clearError()`: Captures the most recent `FsError`. Call `workspace.clearError()` after the user acknowledges an error banner to return `health` from `"negative"` to `"positive"`/`"caution"`.
 - `preventCloseWhilePending` (default `true`): Registers a `beforeunload` handler that calls `event.preventDefault()` while `pendingMutationCount > 0`.
 - **Background cache & log flush:** Registers `pagehide` and `visibilitychange` (`"hidden"`) listeners that trigger a best-effort flush of buffered `_cs-fs/` index shards and JSONL logs while `mountStatus === "ready"`.
 - `revalidateOnFocus` (default `false`): When `true` or `{ minIntervalMs }` (default `5000`), runs `heal({ mode: "incremental" })` when the window regains focus or becomes visible.
+
+### Key `WorkspaceConfig` Options & Callbacks
+- **Boot & cache tuning:** `bootCheck` (`"none" | "cache-only" | "metadata-scan"`, default `"metadata-scan"`), `bootConcurrency` (default `6`), `indexFlushMs` (default `250`), `maxFlushWaitMs` (default `2000`).
+- **Write safety:** `useWebLocks` (default `true`), `verifyAfterWrite` (default `false` — re-reads and compares SHA-256 after writes), `backup` (`BackupOptions`: `{ enabled?, maxBackupsPerFile?, maxBackupAgeDays? }`, defaults `5` backups / `30` days).
+- **Lifecycle callbacks:**
+  - `onMutationError?: (error: FsError, context: MutationContext) => void`
+  - `onMutationSettled?: (context: MutationSettledContext) => void` (`status`: `"committed" | "rolled-back" | "conflict"`)
+  - `onSyncProgress?: (progress: SyncProgress) => void`
+
+## Workspace Logging & Diagnostics
+
+`Workspace` writes structured JSONL entries (`FsLogEntry`) to `_cs-fs/logs/` (suppressed when `mode: "read"`) and maintains a capped `localStorage` emergency ring buffer for fatal/pre-mount diagnostics:
+- **Config options:**
+  - `logLevel?: FsLogLevel` (`"debug" | "info" | "warn" | "error"`, default `"info"` — `"read"` events are only logged at `"debug"`).
+  - `logFlushMs?: number` (default `1000` ms).
+  - `logRotation?: FsLogRotationOptions` (`{ maxBytes?, maxLines?, maxFiles? }`, defaults `1 MiB` / `2000` lines / `5` files).
+  - `onLog?: (entry: FsLogEntry) => void`: Real-time callback invoked for each accepted log entry.
+- **Diagnostic methods:**
+  - `workspace.readLogs(options?: ReadLogsOptions)`: Reads persisted JSONL log entries from `_cs-fs/logs/` with optional `{ limit?, level? }` filtering.
+  - `workspace.getEmergencyLogs()`: Returns `EmergencyLogEntry[]` from the `localStorage` emergency ring buffer.
+  - `workspace.clearEmergencyLogs()`: Clears the `localStorage` emergency ring buffer for the workspace namespace.
 
 ## Conflict Resolution
 

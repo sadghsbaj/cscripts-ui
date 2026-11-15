@@ -300,7 +300,7 @@ test.describe("FileSystem real Chromium OPFS, IndexedDB & csSingleFile", () => {
                     const pickedStatus = await wsAlpha.pick();
                     await wsAlpha.singletons.settings.write({ theme: "dark", count: 42 });
                     await wsAlpha.flush();
-                    await wsAlpha.destroy();
+                    wsAlpha.destroy();
 
                     // Verify app-beta cannot see app-alpha's handle
                     const storeBeta = new IdbHandleStore({ namespace: betaNs });
@@ -352,7 +352,7 @@ test.describe("FileSystem real Chromium OPFS, IndexedDB & csSingleFile", () => {
 
                     const restoredAlphaStatus = await wsAlpha2.restore();
                     const alphaData = await wsAlpha2.singletons.settings.read();
-                    await wsAlpha2.destroy();
+                    wsAlpha2.destroy();
 
                     // Verify app-beta is unlinked before its own pick
                     const wsBeta = createWorkspace({
@@ -380,7 +380,7 @@ test.describe("FileSystem real Chromium OPFS, IndexedDB & csSingleFile", () => {
                     await wsBeta.pick();
                     await wsBeta.singletons.settings.write({ theme: "light", count: 99 });
                     await wsBeta.flush();
-                    await wsBeta.destroy();
+                    wsBeta.destroy();
 
                     // Also verify storageKey isolation within the same namespace
                     const altStore = new IdbHandleStore({
@@ -451,7 +451,8 @@ test.describe("FileSystem real Chromium OPFS, IndexedDB & csSingleFile", () => {
                     ]);
 
                     await Promise.all([wsAlpha3.forget(), wsBeta2.forget()]);
-                    await Promise.all([wsAlpha3.destroy(), wsBeta2.destroy()]);
+                    wsAlpha3.destroy();
+                    wsBeta2.destroy();
 
                     return {
                         statusA,
@@ -503,7 +504,7 @@ test.describe("FileSystem real Chromium OPFS, IndexedDB & csSingleFile", () => {
             entryTs,
             `
 import { configureStoragePrefix } from ${JSON.stringify(browserStorageIndex)};
-import { checkFileSystemSupport, FsError } from ${JSON.stringify(path.join(fileSystemDir, "index.ts"))};
+import { checkFileSystemSupport, createWorkspace, FsError } from ${JSON.stringify(path.join(fileSystemDir, "index.ts"))};
 import { IdbHandleStore } from ${JSON.stringify(path.join(fileSystemDir, "idb-handle-store.internal.ts"))};
 import {
     clearEmergencyLogs,
@@ -542,6 +543,11 @@ async function run() {
     clearEmergencyLogs("singlefile-alpha");
     clearEmergencyLogs("singlefile-beta");
 
+    // 4. createWorkspace instantiation + restore() + destroy() inside single-file bundle
+    const ws = createWorkspace({ namespace: "singlefile-alpha" });
+    const wsStatus = await ws.restore();
+    ws.destroy();
+
     (window as unknown as { __csSingleFileResult: unknown }).__csSingleFileResult = {
         protocol: window.location.protocol,
         isSecureContext: window.isSecureContext,
@@ -552,6 +558,7 @@ async function run() {
         logsAlphaCount: logsAlpha.length,
         logsAlphaMessage: logsAlpha[0]?.message ?? null,
         logsBetaCount: logsBeta.length,
+        wsStatus,
     };
 }
 
@@ -633,6 +640,7 @@ void run();
                                 logsAlphaCount: number;
                                 logsAlphaMessage: string | null;
                                 logsBetaCount: number;
+                                wsStatus: string;
                             };
                         }
                     ).__csSingleFileResult,
@@ -650,6 +658,7 @@ void run();
             expect(smokeResult.logsAlphaCount).toBe(1);
             expect(smokeResult.logsAlphaMessage).toBe("alpha failure");
             expect(smokeResult.logsBetaCount).toBe(0);
+            expect(smokeResult.wsStatus).toBe("unlinked");
         } finally {
             rmSync(tempDir, { recursive: true, force: true });
         }

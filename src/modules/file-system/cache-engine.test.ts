@@ -1302,4 +1302,92 @@ describe("cache-engine: hardenings (dirty generations, heal/flush serialization,
 		expect(engine.getEntries<InvoiceDoc>("invoices").map((e) => e.data.id)).toEqual(["inv-disk"]);
 		engine.destroy();
 	});
+
+	it("automatically runs incremental heal() when loadPartitions() encounters a missing or corrupt lazy shard on cache-only boot", async () => {
+		const doc2025: InvoiceDoc = { id: "inv-1", year: "2025", title: "Lazy2025", amount: 150 };
+		const doc2026: InvoiceDoc = { id: "inv-2", year: "2026", title: "Eager2026", amount: 250 };
+
+		// Case 1: missing shard file on disk
+		{
+			const backend = new MemoryFsBackend();
+			const writeQueue = new WriteQueue(backend);
+			await backend.injectExternalFile("invoices/2025/inv-1.json", encodeJsonBytes(doc2025));
+			await backend.injectExternalFile("invoices/2026/inv-2.json", encodeJsonBytes(doc2026));
+
+			const engine1 = new CacheEngine({
+				backend,
+				writeQueue,
+				collections: [makeInvoiceCollection({ eagerYears: ["2026"] })],
+				indexFlushMs: 0,
+			});
+			await engine1.heal({ mode: "full" });
+			engine1.destroy();
+
+			await backend.deleteFile("_cs-fs/index/invoices/2025.json");
+
+			const engine2 = new CacheEngine({
+				backend,
+				writeQueue,
+				collections: [makeInvoiceCollection({ eagerYears: ["2026"] })],
+				bootCheck: "cache-only",
+			});
+			await engine2.boot();
+			expect(engine2.getEntries<InvoiceDoc>("invoices").map((e) => e.data.id)).toEqual(["inv-2"]);
+
+			const healSpy = vi.spyOn(engine2, "heal");
+			await engine2.loadPartitions("invoices", ["2025"]);
+
+			expect(healSpy).toHaveBeenCalledWith({ mode: "incremental" });
+			expect(
+				engine2
+					.getEntries<InvoiceDoc>("invoices")
+					.map((e) => e.data.id)
+					.toSorted((a, b) => a.localeCompare(b)),
+			).toEqual(["inv-1", "inv-2"]);
+			engine2.destroy();
+		}
+
+		// Case 2: corrupt shard JSON on disk
+		{
+			const backend = new MemoryFsBackend();
+			const writeQueue = new WriteQueue(backend);
+			await backend.injectExternalFile("invoices/2025/inv-1.json", encodeJsonBytes(doc2025));
+			await backend.injectExternalFile("invoices/2026/inv-2.json", encodeJsonBytes(doc2026));
+
+			const engine1 = new CacheEngine({
+				backend,
+				writeQueue,
+				collections: [makeInvoiceCollection({ eagerYears: ["2026"] })],
+				indexFlushMs: 0,
+			});
+			await engine1.heal({ mode: "full" });
+			engine1.destroy();
+
+			await backend.injectExternalFile(
+				"_cs-fs/index/invoices/2025.json",
+				new TextEncoder().encode("{corrupt-json"),
+			);
+
+			const engine2 = new CacheEngine({
+				backend,
+				writeQueue,
+				collections: [makeInvoiceCollection({ eagerYears: ["2026"] })],
+				bootCheck: "cache-only",
+			});
+			await engine2.boot();
+			expect(engine2.getEntries<InvoiceDoc>("invoices").map((e) => e.data.id)).toEqual(["inv-2"]);
+
+			const healSpy = vi.spyOn(engine2, "heal");
+			await engine2.loadPartitions("invoices", ["2025"]);
+
+			expect(healSpy).toHaveBeenCalledWith({ mode: "incremental" });
+			expect(
+				engine2
+					.getEntries<InvoiceDoc>("invoices")
+					.map((e) => e.data.id)
+					.toSorted((a, b) => a.localeCompare(b)),
+			).toEqual(["inv-1", "inv-2"]);
+			engine2.destroy();
+		}
+	});
 });

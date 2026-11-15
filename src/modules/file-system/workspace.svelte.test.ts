@@ -2373,4 +2373,199 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 			});
 		});
 	});
+
+	describe("11. Final Fix Regressions", () => {
+		it("writeRaw() falls back to cacheEngine revision after reload/boot and still detects external conflicts", async () => {
+			const backend = new MemoryFsBackend();
+			const invoicesCol = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+				},
+			});
+
+			const ws1 = trackWorkspace(
+				createWorkspace({
+					namespace: "write-raw-rev-fallback",
+					backend,
+					collections: { invoices: invoicesCol },
+				}),
+			);
+			await ws1.restore();
+			await ws1.collections.invoices.write(
+				{ year: "2025", id: "raw-1" },
+				{ id: "raw-1", year: "2025", title: "Initial", amount: 100 },
+			);
+			await ws1.flush();
+			ws1.destroy();
+
+			// Boot a fresh workspace over the same backend: trackedDocs is empty, cacheEngine has the revision
+			const ws2 = trackWorkspace(
+				createWorkspace({
+					namespace: "write-raw-rev-fallback",
+					backend,
+					collections: { invoices: invoicesCol },
+				}),
+			);
+			await ws2.restore();
+
+			const updatedBytes = encodeJson({
+				id: "raw-1",
+				year: "2025",
+				title: "Updated Raw",
+				amount: 250,
+			});
+			const writeRes = await ws2.collections.invoices.writeRaw(
+				{ year: "2025", id: "raw-1" },
+				updatedBytes,
+				{ conflictPolicy: "detect" },
+			);
+			expect(writeRes.path).toBe("invoices/2025/raw-1.json");
+			const readBack = await ws2.collections.invoices.read({ year: "2025", id: "raw-1" });
+			expect(readBack?.data.title).toBe("Updated Raw");
+
+			// Simulate an external edit on disk -> stale writeRaw must still throw CONFLICT
+			await backend.injectExternalFile(
+				"invoices/2025/raw-1.json",
+				encodeJson({ id: "raw-1", year: "2025", title: "External Edit", amount: 999 }),
+			);
+			await expectFsErrorCode(
+				() =>
+					ws2.collections.invoices.writeRaw(
+						{ year: "2025", id: "raw-1" },
+						encodeJson({ id: "raw-1", year: "2025", title: "Stale Raw", amount: 300 }),
+						{ conflictPolicy: "detect" },
+					),
+				"CONFLICT",
+			);
+		});
+
+		it("writeWithCompanion() rolls back existing or newly created companion on TOCTOU primary CONFLICT", async () => {
+			const backend = new MemoryFsBackend();
+			const invoicesCol = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				companion: { pattern: "invoices/{year}/{id}.pdf" },
+				index: {
+					partitionBy: (params) => params.year ?? "unknown",
+				},
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "companion-rollback-ws",
+					backend,
+					collections: { invoices: invoicesCol },
+				}),
+			);
+			await ws.restore();
+
+			// Case A: existing companion "old-pdf" must be restored if primary hits TOCTOU CONFLICT
+			await ws.collections.invoices.writeWithCompanion(
+				{ year: "2025", id: "c1" },
+				{ id: "c1", year: "2025", title: "Original", amount: 10 },
+				new TextEncoder().encode("old-pdf"),
+			);
+
+			const origWriteBytes = backend.writeBytes.bind(backend);
+			let injectTarget: string | null = "invoices/2025/c1.pdf";
+			let injectPrimaryPath = "invoices/2025/c1.json";
+			const writeSpy = vi.spyOn(backend, "writeBytes").mockImplementation(async (path, bytes, opts) => {
+				const rev = await origWriteBytes(path, bytes, opts);
+				if (injectTarget !== null && path === injectTarget) {
+					injectTarget = null;
+					await backend.injectExternalFile(
+						injectPrimaryPath,
+						encodeJson({ id: "external", year: "2025", title: "External TOCTOU", amount: 999 }),
+					);
+				}
+				return rev;
+			});
+
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.writeWithCompanion(
+						{ year: "2025", id: "c1" },
+						{ id: "c1", year: "2025", title: "Local Update", amount: 20 },
+						new TextEncoder().encode("new-pdf"),
+					),
+				"CONFLICT",
+			);
+			const rolledBackPdf = await backend.readBytes("invoices/2025/c1.pdf");
+			expect(new TextDecoder().decode(rolledBackPdf.bytes)).toBe("old-pdf");
+
+			// Case B: no companion existed previously -> newly created companion must be deleted on TOCTOU CONFLICT
+			await ws.collections.invoices.write(
+				{ year: "2025", id: "c2" },
+				{ id: "c2", year: "2025", title: "No Companion Yet", amount: 30 },
+			);
+			injectTarget = "invoices/2025/c2.pdf";
+			injectPrimaryPath = "invoices/2025/c2.json";
+
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.writeWithCompanion(
+						{ year: "2025", id: "c2" },
+						{ id: "c2", year: "2025", title: "Local With New Pdf", amount: 40 },
+						new TextEncoder().encode("brand-new-pdf"),
+					),
+				"CONFLICT",
+			);
+			expect(await backend.exists("invoices/2025/c2.pdf")).toBe(false);
+			writeSpy.mockRestore();
+		});
+
+		it("pick() aborts cleanly without saving handle or creating backend if destroyed while picker() is pending", async () => {
+			stubSupportedEnvironment();
+			const { promise: pickerPromise, resolve: resolvePicker } =
+				Promise.withResolvers<FileSystemDirectoryHandle>();
+			const { promise: pickerCalled, resolve: markPickerCalled } = Promise.withResolvers<void>();
+
+			const idbStore = createMockIdbStore();
+			const saveHandleSpy = vi.spyOn(idbStore, "saveHandle");
+			const createBackendSpy = vi.fn(() => new MemoryFsBackend());
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "pick-destroyed-guard",
+					idbStore,
+					createBackend: createBackendSpy,
+					showDirectoryPicker: () => {
+						markPickerCalled();
+						return pickerPromise;
+					},
+				}),
+			);
+
+			const pickPromise = ws.pick();
+			await pickerCalled;
+
+			ws.destroy();
+			resolvePicker(makeFakeDirHandle("picked-after-destroy"));
+
+			const status = await pickPromise;
+			expect(status).toBe("unlinked");
+			expect(ws.mountStatus).toBe("unlinked");
+			expect(saveHandleSpy).not.toHaveBeenCalled();
+			expect(createBackendSpy).not.toHaveBeenCalled();
+		});
+
+		it("defineCollection() throws FsError(INVALID_CONFIG) when companion.pattern omits a primary template param", () => {
+			let caught: unknown;
+			try {
+				defineCollection({
+					pattern: "orders/{year}/{id}.json",
+					adapter: jsonAdapter({ schema: invoiceSchema }),
+					companion: { pattern: "assets/{id}.pdf" },
+				});
+			} catch (error) {
+				caught = error;
+			}
+			expect(isFsError(caught)).toBe(true);
+			if (isFsError(caught)) {
+				expect(caught.code).toBe("INVALID_CONFIG");
+			}
+		});
+	});
 });

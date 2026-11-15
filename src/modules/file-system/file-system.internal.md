@@ -23,13 +23,15 @@
 2. **`restore()`**: Reads the persisted `FileSystemDirectoryHandle` from `IdbHandleStore`.
    - Missing handle -> `"unlinked"`.
    - `queryPermission({ mode }) === "granted"` -> initializes `BrowserFsBackend`, `WriteQueue`, `CacheEngine`, boots cache, transitions to `"ready"`.
-   - `queryPermission` returns `"prompt"` -> stores handle in memory, transitions to `"needs-permission"`.
-   - `queryPermission` returns `"denied"` -> transitions to `"needs-permission"` (or `"unlinked"` if denied permanently on re-request).
+   - `queryPermission` returns anything other than `"granted"` (`"prompt"` or `"denied"`) -> stores handle in memory and transitions to `"needs-permission"` (never `"unlinked"`).
    - `NotFoundError` / `InvalidStateError` -> transitions to `"stale"` and surfaces `FsError("HANDLE_STALE")`.
-3. **`requestAccess()`**: Must be called from a user gesture when `mountStatus === "needs-permission"`. Invokes `handle.requestPermission({ mode })`; on `"granted"` boots engines and transitions to `"ready"`.
+3. **`requestAccess()`**: Must be called from a user gesture when `mountStatus === "needs-permission"`. Invokes `handle.requestPermission({ mode })`; on `"granted"` boots engines and transitions to `"ready"`; if `permission !== "granted"` (including `"denied"` or `"prompt"`), remains in `"needs-permission"` (never `"unlinked"`).
 4. **`pick(options?)`**: Calls `showDirectoryPicker`, persists handle in IndexedDB, tears down any prior engine state, boots engines, and transitions to `"ready"`.
 5. **`forget()`**: Deletes persisted handle from IndexedDB, destroys `CacheEngine` / `FsLogger` timers, clears `confirmedEntries` / `pendingMutations`, resets `mountStatus` to `"unlinked"`.
-6. **`mountEpoch` lifecycle guarding**: `mountEpoch` is incremented monotonically on `pick()`, `forget()`, and `destroy()`. Async operations (`pick`, `heal`, `runBootCheck`, reads, mutations, conflict resolution, error handling) capture `const epoch = mountEpoch` at entry and verify `epoch === mountEpoch` before mutating reactive state (`mountStatus`, `confirmedEntries`, `pendingMutations`, `unresolvedConflicts`, `corruptEntries`, `lastError`, `trackedDocs`), preventing stale async completions from corrupting state across remounts or teardown.
+6. **`mountEpoch` lifecycle guarding**: `mountEpoch` is incremented monotonically on `pick()`, `forget()`, and `destroy()`. Async operations (`restore`, `requestAccess`, `pick`, `heal`, `runBootCheck`, reads, mutations, conflict resolution, error handling) capture `const epoch = mountEpoch` at entry and verify `epoch === mountEpoch` before mutating reactive state (`mountStatus`, `confirmedEntries`, `pendingMutations`, `unresolvedConflicts`, `corruptEntries`, `lastError`, `trackedDocs`), preventing stale async completions from corrupting state across remounts or teardown.
+7. **`mode: "read"` internal invariants**:
+   - `initializeEngine()` passes `readOnly: mode === "read"` to `CacheEngine` and calls `logger.setBackend(undefined, undefined)` (instead of `logger.setBackend(nextBackend, nextQueue)`) so `_cs-fs/` disk writes for both cache shards/meta and JSONL logs are suppressed.
+   - `maybeWriteBackMigration()` early-returns the existing `revision` when `writeBackMode !== "eager" || mode === "read"` **before** calling `assertWritable()`, allowing read-only workspaces to migrate documents in memory without throwing `FsError("PERMISSION_DENIED")`.
 
 ## `WriteQueue` Concurrency & Non-Reentrancy
 
