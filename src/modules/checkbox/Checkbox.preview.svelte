@@ -19,10 +19,43 @@
     let indeterminateChecked = $state(false);
     let indeterminateActive = $state(true);
 
-    function handleTriStateChange(): void {
+    function applyTriState(
+        event: Event,
+        nextChecked: boolean,
+        nextIndeterminate: boolean,
+    ): void {
+        const target = event.currentTarget as HTMLInputElement;
+        target.checked = nextChecked;
+        target.indeterminate = nextIndeterminate;
+    }
+
+    function handleTriStateChange(event: Event): void {
         triStep = (triStep + 1) % 3;
         indeterminateChecked = triStep === 1;
         indeterminateActive = triStep === 0;
+        applyTriState(event, indeterminateChecked, indeterminateActive);
+    }
+
+    let cycleAStep = $state(0);
+    let cycleAChecked = $state(false);
+    let cycleAIndeterminate = $state(false);
+
+    function handleCycleAChange(event: Event): void {
+        cycleAStep = (cycleAStep + 1) % 3;
+        cycleAChecked = cycleAStep === 2;
+        cycleAIndeterminate = cycleAStep === 1;
+        applyTriState(event, cycleAChecked, cycleAIndeterminate);
+    }
+
+    let cycleBStep = $state(0);
+    let cycleBChecked = $state(false);
+    let cycleBIndeterminate = $state(false);
+
+    function handleCycleBChange(event: Event): void {
+        cycleBStep = (cycleBStep + 1) % 3;
+        cycleBChecked = cycleBStep === 1;
+        cycleBIndeterminate = cycleBStep === 2;
+        applyTriState(event, cycleBChecked, cycleBIndeterminate);
     }
 
     const closeScript = ["</", "script>"].join("");
@@ -124,6 +157,37 @@ ${closeScript}
             <label class="flex items-center gap-2.5 text-sm text-weak select-none">
                 <Checkbox variant="soft" size="md" disabled />
                 <span>Disabled</span>
+            </label>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Tri-state Cycles"
+        description="Click each checkbox to cycle through its three states."
+    >
+        <div class="flex flex-wrap items-center gap-8">
+            <label class="flex items-center gap-2.5 text-sm text-main select-none">
+                <Checkbox
+                    variant="soft"
+                    size="md"
+                    bind:checked={cycleAChecked}
+                    bind:indeterminate={cycleAIndeterminate}
+                    onchange={handleCycleAChange}
+                    aria-label="Unchecked to Indeterminate to Checked"
+                />
+                <span>Unchecked → Indeterminate → Checked</span>
+            </label>
+
+            <label class="flex items-center gap-2.5 text-sm text-main select-none">
+                <Checkbox
+                    variant="soft"
+                    size="md"
+                    bind:checked={cycleBChecked}
+                    bind:indeterminate={cycleBIndeterminate}
+                    onchange={handleCycleBChange}
+                    aria-label="Unchecked to Checked to Indeterminate"
+                />
+                <span>Unchecked → Checked → Indeterminate</span>
             </label>
         </div>
     </PreviewSection>
