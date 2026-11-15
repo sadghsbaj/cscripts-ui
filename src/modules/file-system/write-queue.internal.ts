@@ -126,6 +126,7 @@ export class WriteQueue {
 	readonly #activeTasks = new Set<Promise<unknown>>();
 	#barrierPromise: Promise<void> = Promise.resolve();
 	#barrierCount = 0;
+	#pendingBarrierWaiters = 0;
 	#backupSeq = 0;
 
 	constructor(backend: FsBackend, options?: WriteQueueOptions) {
@@ -146,6 +147,11 @@ export class WriteQueue {
 		return this.withPathLocks([relativePath], fn);
 	}
 
+	/**
+	 * Acquires per-path locks in deterministic sorted order.
+	 * Invariant: Lock callbacks (`fn`) must never re-entrantly invoke the same `WriteQueue`,
+	 * or they will self-deadlock on the path tail or global barrier.
+	 */
 	async withPathLocks<T>(paths: readonly string[], fn: () => Promise<T>): Promise<T> {
 		const uniqueSorted = [...new Set(paths.map((p) => normalizeRelativePath(p)))].toSorted(
 			(a, b) => a.localeCompare(b),
@@ -154,39 +160,45 @@ export class WriteQueue {
 			return fn();
 		}
 
-		// Wait for any active or queued global barrier before registering on #activeTasks.
-		while (this.#barrierCount > 0) {
-			await this.#barrierPromise;
-		}
-
-		const reservations: Array<{
+		this.#pendingBarrierWaiters += 1;
+		let task: Promise<T>;
+		let reservations: Array<{
 			path: string;
 			previous: Promise<void>;
 			nextTail: Promise<void>;
 			release: () => void;
 		}> = [];
 
-		for (const path of uniqueSorted) {
-			const previous = this.#pathTails.get(path) ?? Promise.resolve();
-			const { promise: nextTail, resolve: release } = Promise.withResolvers<void>();
-			this.#pathTails.set(path, nextTail);
-			reservations.push({ path, previous, nextTail, release });
-		}
+		try {
+			// Wait for any active or queued global barrier before registering on #activeTasks.
+			while (this.#barrierCount > 0) {
+				await this.#barrierPromise;
+			}
 
-		const runWithLocks = async (): Promise<T> => {
-			await Promise.all(reservations.map((r) => r.previous));
-			const acquireWebLocks = (index: number): Promise<T> => {
-				const path = uniqueSorted[index];
-				if (path === undefined) {
-					return fn();
-				}
-				return this.#withOptionalWebLock(`path:${path}`, () => acquireWebLocks(index + 1));
+			reservations = uniqueSorted.map((path) => {
+				const previous = this.#pathTails.get(path) ?? Promise.resolve();
+				const { promise: nextTail, resolve: release } = Promise.withResolvers<void>();
+				this.#pathTails.set(path, nextTail);
+				return { path, previous, nextTail, release };
+			});
+
+			const runWithLocks = async (): Promise<T> => {
+				await Promise.all(reservations.map((r) => r.previous));
+				const acquireWebLocks = (index: number): Promise<T> => {
+					const path = uniqueSorted[index];
+					if (path === undefined) {
+						return fn();
+					}
+					return this.#withOptionalWebLock(`path:${path}`, () => acquireWebLocks(index + 1));
+				};
+				return acquireWebLocks(0);
 			};
-			return acquireWebLocks(0);
-		};
 
-		const task = runWithLocks();
-		this.#activeTasks.add(task);
+			task = runWithLocks();
+			this.#activeTasks.add(task);
+		} finally {
+			this.#pendingBarrierWaiters -= 1;
+		}
 
 		try {
 			return await task;
@@ -201,6 +213,11 @@ export class WriteQueue {
 		}
 	}
 
+	/**
+	 * Executes `fn` exclusively after draining all active path tasks and prior barriers.
+	 * Invariant: Lock callbacks (`fn`) must never re-entrantly invoke the same `WriteQueue`,
+	 * or they will self-deadlock on the path tail or global barrier.
+	 */
 	async withGlobalBarrier<T>(fn: () => Promise<T>): Promise<T> {
 		const prevBarrier = this.#barrierPromise;
 		const { promise: currentBarrier, resolve: releaseBarrier } = Promise.withResolvers<void>();
@@ -218,8 +235,22 @@ export class WriteQueue {
 	}
 
 	async flush(): Promise<void> {
-		await this.#barrierPromise;
-		await Promise.allSettled(this.#activeTasks);
+		while (
+			this.#barrierCount > 0 ||
+			this.#pendingBarrierWaiters > 0 ||
+			this.#activeTasks.size > 0
+		) {
+			if (this.#barrierCount > 0) {
+				await this.#barrierPromise;
+			}
+			if (this.#activeTasks.size > 0) {
+				await Promise.allSettled(this.#activeTasks);
+			}
+			if (this.#pendingBarrierWaiters > 0) {
+				// Yield a microtask so barrier waiters can register into #activeTasks.
+				await Promise.resolve();
+			}
+		}
 	}
 
 	async write(
@@ -228,15 +259,17 @@ export class WriteQueue {
 		options?: SafeWriteOptions,
 	): Promise<FileRevision> {
 		const normalized = normalizeRelativePath(relativePath);
-		return this.withPathLock(normalized, () =>
-			this.#withLockRetry(options?.retryOnLock, async () => {
+		return this.withPathLock(normalized, () => {
+			let backupChecked = false;
+			return this.#withLockRetry(options?.retryOnLock, async () => {
 				if (options?.expectedRevision !== undefined) {
 					await this.#assertExpectedRevision(normalized, options.expectedRevision);
 				}
 
 				const shouldBackup = options?.backup ?? this.#backupOptions.enabled;
-				if (shouldBackup) {
+				if (shouldBackup && !backupChecked) {
 					await this.#createBackupIfExists(normalized);
+					backupChecked = true;
 				}
 
 				const shouldVerify = options?.verifyAfterWrite ?? this.#verifyAfterWrite;
@@ -268,26 +301,28 @@ export class WriteQueue {
 				}
 
 				return revision;
-			}),
-		);
+			});
+		});
 	}
 
 	async delete(relativePath: string, options?: SafeDeleteOptions): Promise<void> {
 		const normalized = normalizeRelativePath(relativePath);
-		return this.withPathLock(normalized, () =>
-			this.#withLockRetry(options?.retryOnLock, async () => {
+		return this.withPathLock(normalized, () => {
+			let backupChecked = false;
+			return this.#withLockRetry(options?.retryOnLock, async () => {
 				if (options?.expectedRevision !== undefined) {
 					await this.#assertExpectedRevision(normalized, options.expectedRevision);
 				}
 
 				const shouldBackup = options?.backup ?? this.#backupOptions.enabled;
-				if (shouldBackup) {
+				if (shouldBackup && !backupChecked) {
 					await this.#createBackupIfExists(normalized);
+					backupChecked = true;
 				}
 
 				await this.#backend.deleteFile(normalized);
-			}),
-		);
+			});
+		});
 	}
 
 	async move(

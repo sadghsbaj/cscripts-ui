@@ -73,6 +73,7 @@ describe("write-queue: concurrency & barriers", () => {
 		const gate = Promise.withResolvers<void>();
 		const gatedBackend: FsBackend = {
 			readBytes: (p, o) => backend.readBytes(p, o),
+			readFile: (p, o) => backend.readFile(p, o),
 			stat: (p) => backend.stat(p),
 			deleteFile: (p) => backend.deleteFile(p),
 			moveFile: (f, t) => backend.moveFile(f, t),
@@ -105,6 +106,54 @@ describe("write-queue: concurrency & barriers", () => {
 		expect(flushed).toBe(true);
 		expect(await readText(backend, "one.txt")).toBe("1");
 		expect(await readText(backend, "two.txt")).toBe("2");
+	});
+
+	it("flush() waits for writes queued during an active global barrier to complete after barrier release", async () => {
+		const backend = new MemoryFsBackend();
+		const writeGate = Promise.withResolvers<void>();
+		const gatedBackend: FsBackend = {
+			readBytes: (p, o) => backend.readBytes(p, o),
+			readFile: (p, o) => backend.readFile(p, o),
+			stat: (p) => backend.stat(p),
+			deleteFile: (p) => backend.deleteFile(p),
+			moveFile: (f, t) => backend.moveFile(f, t),
+			exists: (p) => backend.exists(p),
+			listDir: (d) => backend.listDir(d),
+			walkFiles: (d, o) => backend.walkFiles(d, o),
+			ensureDir: (d) => backend.ensureDir(d),
+			removeDir: (d, o) => backend.removeDir(d, o),
+			async writeBytes(path: string, bytes: Uint8Array, options?: FsWriteOptions) {
+				await writeGate.promise;
+				return backend.writeBytes(path, bytes, options);
+			},
+		};
+		const queue = new WriteQueue(gatedBackend, { useWebLocks: false });
+
+		const barrierEntered = Promise.withResolvers<void>();
+		const barrierGate = Promise.withResolvers<void>();
+		const barrierPromise = queue.withGlobalBarrier(async () => {
+			barrierEntered.resolve();
+			await barrierGate.promise;
+		});
+		await barrierEntered.promise;
+
+		const writePromise = queue.write("queued.txt", encode("after-barrier"));
+		let flushResolved = false;
+		const flushPromise = (async () => {
+			await queue.flush();
+			flushResolved = true;
+		})();
+
+		barrierGate.resolve();
+		await barrierPromise;
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(flushResolved).toBe(false);
+
+		writeGate.resolve();
+		await Promise.all([writePromise, flushPromise]);
+		expect(flushResolved).toBe(true);
+		expect(await readText(backend, "queued.txt")).toBe("after-barrier");
 	});
 
 	it("does not deadlock when move() overlaps with withGlobalBarrier() or opposing moves", async () => {
@@ -141,6 +190,7 @@ describe("write-queue: concurrency & barriers", () => {
 
 		const gatedBackend: FsBackend = {
 			readBytes: (p, o) => backend.readBytes(p, o),
+			readFile: (p, o) => backend.readFile(p, o),
 			stat: (p) => backend.stat(p),
 			deleteFile: (p) => backend.deleteFile(p),
 			moveFile: (f, t) => backend.moveFile(f, t),
@@ -211,6 +261,7 @@ describe("write-queue: concurrency & barriers", () => {
 
 		const gatedBackend: FsBackend = {
 			readBytes: (p, o) => backend.readBytes(p, o),
+			readFile: (p, o) => backend.readFile(p, o),
 			stat: (p) => backend.stat(p),
 			deleteFile: (p) => backend.deleteFile(p),
 			moveFile: (f, t) => backend.moveFile(f, t),
@@ -504,6 +555,88 @@ describe("write-queue: OCC revisions, clock skew, move, verification, and backup
 		if (remainingBackup) {
 			expect(await readText(backend, remainingBackup.path)).toBe("v4");
 		}
+	});
+
+	it("does not create duplicate .bak backups when FILE_LOCKED triggers retries", async () => {
+		const backend = new MemoryFsBackend();
+		const queue = new WriteQueue(backend, {
+			useWebLocks: false,
+			backup: { enabled: true },
+			retryOnLock: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 4 },
+		});
+
+		await queue.write("notes/doc.txt", encode("v1"));
+		expect(await backend.listDir("_cs-fs/backups")).toHaveLength(0);
+
+		backend.simulateFileLocked("notes/doc.txt", 2);
+		await queue.write("notes/doc.txt", encode("v2"));
+
+		expect(await readText(backend, "notes/doc.txt")).toBe("v2");
+		const backups = await backend.listDir("_cs-fs/backups");
+		expect(backups).toHaveLength(1);
+		const [backup] = backups;
+		expect(backup).toBeDefined();
+		if (backup) {
+			expect(await readText(backend, backup.path)).toBe("v1");
+		}
+	});
+
+	it("does not create duplicate .bak backups when delete() retries on FILE_LOCKED", async () => {
+		const backend = new MemoryFsBackend();
+		const queue = new WriteQueue(backend, {
+			useWebLocks: false,
+			retryOnLock: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 4 },
+		});
+
+		await queue.write("notes/to-delete.txt", encode("final-v1"));
+		expect(await backend.listDir("_cs-fs/backups")).toHaveLength(0);
+
+		backend.simulateFileLocked("notes/to-delete.txt", 2);
+		await queue.delete("notes/to-delete.txt", { backup: true });
+
+		expect(await backend.exists("notes/to-delete.txt")).toBe(false);
+		const backups = await backend.listDir("_cs-fs/backups");
+		expect(backups).toHaveLength(1);
+		const [backup] = backups;
+		expect(backup).toBeDefined();
+		if (backup) {
+			expect(await readText(backend, backup.path)).toBe("final-v1");
+		}
+	});
+});
+
+describe("memory-fs: readFile & removeDir", () => {
+	it("readFile(path) returns a File with exact basename, content, and lastModified, and enforces maxFileBytes", async () => {
+		const backend = new MemoryFsBackend({ maxFileBytes: 10 });
+		const rev = await backend.writeBytes("nested/report.txt", encode("hello-file"));
+
+		const file = await backend.readFile("nested/report.txt");
+		expect(file).toBeInstanceOf(File);
+		expect(file.name).toBe("report.txt");
+		expect(await file.text()).toBe("hello-file");
+		expect(file.lastModified).toBe(rev.lastModified);
+
+		await expectFsError(
+			backend.readFile("nested/report.txt", { maxFileBytes: 5 }),
+			"FILE_TOO_LARGE",
+		);
+
+		const smallBackend = new MemoryFsBackend({ maxFileBytes: 5 });
+		await smallBackend.writeBytes("nested/big.txt", encode("123456"), { maxFileBytes: 10 });
+		await expectFsError(smallBackend.readFile("nested/big.txt"), "FILE_TOO_LARGE");
+	});
+
+	it("removeDir(dir, { recursive: false }) throws IO_FAILED when dir contains only an empty subdirectory, and succeeds when recursive: true", async () => {
+		const backend = new MemoryFsBackend();
+		await backend.ensureDir("parent/empty-sub");
+
+		await expectFsError(backend.removeDir("parent", { recursive: false }), "IO_FAILED");
+		const parentEntries = await backend.listDir("parent");
+		expect(parentEntries.map((entry) => entry.name)).toEqual(["empty-sub"]);
+
+		await backend.removeDir("parent", { recursive: true });
+		const rootEntries = await backend.listDir("");
+		expect(rootEntries.map((entry) => entry.name)).not.toContain("parent");
 	});
 });
 

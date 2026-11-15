@@ -42,6 +42,7 @@ export interface FsBackend {
 		path: string,
 		options?: FsReadOptions,
 	): Promise<{ bytes: Uint8Array; revision: FileRevision }>;
+	readFile(path: string, options?: FsReadOptions): Promise<File>;
 	stat(path: string): Promise<FileStat | null>;
 	writeBytes(path: string, bytes: Uint8Array, options?: FsWriteOptions): Promise<FileRevision>;
 	deleteFile(path: string): Promise<void>;
@@ -205,10 +206,7 @@ export class BrowserFsBackend implements FsBackend {
 		}
 	}
 
-	async readBytes(
-		path: string,
-		options?: FsReadOptions,
-	): Promise<{ bytes: Uint8Array; revision: FileRevision }> {
+	async readFile(path: string, options?: FsReadOptions): Promise<File> {
 		checkAborted(options?.signal, path);
 		const maxBytes = options?.maxFileBytes ?? this.#maxFileBytes;
 		const { file: handle } = await this.#getFileHandle(path, false);
@@ -228,6 +226,15 @@ export class BrowserFsBackend implements FsBackend {
 				{ details: { path, size: file.size, maxFileBytes: maxBytes } },
 			);
 		}
+
+		return file;
+	}
+
+	async readBytes(
+		path: string,
+		options?: FsReadOptions,
+	): Promise<{ bytes: Uint8Array; revision: FileRevision }> {
+		const file = await this.readFile(path, options);
 
 		try {
 			const buffer = await file.arrayBuffer();

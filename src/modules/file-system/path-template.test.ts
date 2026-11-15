@@ -246,6 +246,29 @@ describe("path-template: PathTemplate build, parse, and overlap checks", () => {
 		expect(multiWithGroup.parse(builtMulti)).toEqual({ kind: "audit", env: "prod" });
 	});
 
+	it("strips outer ^ and $ anchors in paramPatterns and rejects disallowed RegExp flags", () => {
+		const anchored = createPathTemplate("report-{year}.json", {
+			paramPatterns: { year: /^\d{4}$/ },
+		});
+		const built = anchored.build({ year: "2026" });
+		expect(built).toBe("report-2026.json");
+		expect(anchored.parse(built)).toEqual({ year: "2026" });
+		expect(anchored.parse("report-20265.json")).toBeNull();
+		expect(anchored.parse("report-26.json")).toBeNull();
+		captureInvalidPath(() => anchored.build({ year: "26" }));
+
+		for (const pattern of [/\d{4}/g, /\d{4}/y, /\d{4}/i, /\d{4}/m, /\d{4}/u, /\d{4}/v, /\d{4}/s, /[a-z]+/gi]) {
+			try {
+				createPathTemplate("report-{year}.json", {
+					paramPatterns: { year: pattern },
+				});
+				throw new Error(`Expected INVALID_CONFIG for flags "${pattern.flags}"`);
+			} catch (error) {
+				expect(isFsError(error) && error.code === "INVALID_CONFIG").toBe(true);
+			}
+		}
+	});
+
 	it("detects overlapping templates and allows disjoint templates", () => {
 		const a = createPathTemplate("logs/{id}.json");
 		const b = createPathTemplate("logs/latest.json");

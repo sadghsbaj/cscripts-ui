@@ -296,7 +296,30 @@ function escapeRegExp(literal: string): string {
 }
 
 function compileParamRegex(name: string, rawPattern: RegExp | string): RegExp {
-	const source = typeof rawPattern === "string" ? rawPattern : rawPattern.source;
+	if (rawPattern instanceof RegExp && rawPattern.flags.length > 0) {
+		throw new FsError(
+			"INVALID_CONFIG",
+			`Invalid paramPattern for "{${name}}": unsupported RegExp flags "${rawPattern.flags}".`,
+			{
+				details: { param: name, pattern: rawPattern.source, flags: rawPattern.flags },
+			},
+		);
+	}
+
+	let source = typeof rawPattern === "string" ? rawPattern : rawPattern.source;
+	if (source.startsWith("^")) {
+		source = source.slice(1);
+	}
+	if (source.endsWith("$")) {
+		let backslashes = 0;
+		for (let i = source.length - 2; i >= 0 && source[i] === "\\"; i -= 1) {
+			backslashes += 1;
+		}
+		if (backslashes % 2 === 0) {
+			source = source.slice(0, -1);
+		}
+	}
+
 	try {
 		return new RegExp(`^(?:${source})$`);
 	} catch (error) {

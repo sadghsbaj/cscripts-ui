@@ -159,6 +159,36 @@ export class MemoryFsBackend implements FsBackend {
 		});
 	}
 
+	async readFile(path: string, options?: FsReadOptions): Promise<File> {
+		if (options?.signal?.aborted) {
+			throw new FsError("ABORTED", `Read aborted for "${path}".`, {
+				details: { path },
+				cause: options.signal.reason,
+			});
+		}
+		this.#consumeFault(path);
+
+		const entry = this.#files.get(path);
+		if (!entry) {
+			throw new FsError("NOT_FOUND", `File not found: "${path}".`, { details: { path } });
+		}
+
+		const maxBytes = options?.maxFileBytes ?? this.#maxFileBytes;
+		if (Number.isFinite(maxBytes) && entry.bytes.byteLength > maxBytes) {
+			throw new FsError(
+				"FILE_TOO_LARGE",
+				`File "${path}" (${entry.bytes.byteLength} bytes) exceeds maxFileBytes (${maxBytes}).`,
+				{ details: { path, size: entry.bytes.byteLength, maxFileBytes: maxBytes } },
+			);
+		}
+
+		const lastSlash = path.lastIndexOf("/");
+		const basename = lastSlash === -1 ? path : path.slice(lastSlash + 1);
+		return new File([new Uint8Array(entry.bytes)], basename, {
+			lastModified: entry.lastModified,
+		});
+	}
+
 	async readBytes(
 		path: string,
 		options?: FsReadOptions,
@@ -381,6 +411,13 @@ export class MemoryFsBackend implements FsBackend {
 		if (!recursive) {
 			for (const filePath of this.#files.keys()) {
 				if (filePath.startsWith(prefix)) {
+					throw new FsError("IO_FAILED", `Directory "${dirPath}" is not empty.`, {
+						details: { path: dirPath },
+					});
+				}
+			}
+			for (const dir of this.#dirs) {
+				if (dir.startsWith(prefix)) {
 					throw new FsError("IO_FAILED", `Directory "${dirPath}" is not empty.`, {
 						details: { path: dirPath },
 					});
