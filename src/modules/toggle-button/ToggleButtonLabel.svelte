@@ -1,7 +1,3 @@
-<!--
-@component
-Explicit text label wrapper (`<ToggleButtonLabel />`) for `<ToggleButton />` components.
--->
 <script lang="ts">
     import "../../css/shared/button-control.css";
     import type { ToggleButtonLabelProps } from "./index.ts";

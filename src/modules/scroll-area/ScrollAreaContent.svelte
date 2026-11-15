@@ -1,15 +1,3 @@
-<!--
-@component
-Scrollable viewport (`<ScrollAreaContent />`) inside `<ScrollArea />`.
-
-Architectural Notes:
-- Native Scroll Mechanics: Uses native browser overflow scrolling while hiding system
-  scrollbars (`scrollbar-width: none` / `::-webkit-scrollbar`), preserving hardware-accelerated
-  momentum, touch gestures, keyboard navigation, and `scrollIntoView` behavior.
-- Attachment Forwarding: Spreads `{...rest}` directly onto the scrolling viewport element so
-  attachments like `{@attach scrollFade(...)}` mask only the scrolling content without clipping
-  the parent `<ScrollArea />` overlay scrollbars.
--->
 <script lang="ts">
     import { getScrollAreaContext, type ScrollAreaContentProps } from "./index.ts";
 

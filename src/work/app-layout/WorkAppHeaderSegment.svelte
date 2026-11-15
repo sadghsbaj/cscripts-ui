@@ -1,17 +1,3 @@
-<!--
-@component
-Flexible layout segment (`<WorkAppHeaderSegment />`) for positioning custom controls
-inside `<WorkAppHeader />`.
-
-Architectural Notes:
-- Alignment: Requires explicit `align` configuration ('before' | 'start' | 'center' | 'end' | 'after').
-  - 'before': Positioned on the outer left edge before the tool name.
-  - 'start': Positioned after the tool name, before the spacer.
-  - 'center': Geometrically centered to the header container.
-  - 'end': Positioned after the spacer, before the brand badge.
-  - 'after': Positioned on the outer right edge after the brand badge.
-- Island Surface: Optional `renderIsland={true}` applies the tactile elevated pill styling matching the tool identity and brand pills.
--->
 <script lang="ts">
     import type { WorkAppHeaderSegmentProps } from "./index.ts";
 

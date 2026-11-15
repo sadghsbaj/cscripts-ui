@@ -1,8 +1,3 @@
-<!--
-@component
-Animated clipboard paste feedback icon (`<PasteIcon />`) with clipboard-to-checkmark/error
-morphing, empty-clipboard headshake feedback, and micro-sparkle burst particles.
--->
 <script lang="ts">
     import { Check, Clipboard, X } from "@lucide/svelte";
 

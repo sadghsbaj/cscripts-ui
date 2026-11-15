@@ -1,13 +1,3 @@
-<!--
-@component
-Pill-framed Pfleiderer brand badge (`<WorkAppBrand />`) for internal work tools.
-
-Architectural Notes:
-- Header Integration: Automatically rendered on the right edge of `<WorkAppHeader />`, so it does
-  not need to be placed manually in standard layouts. Exported standalone for custom header setups.
-- Visual Framing: Matches the height (`100%`), horizontal padding (`20px`), and squircle pill surface
-  of the tool identity pill in `<WorkAppHeader />` for balanced left/right anchoring.
--->
 <script lang="ts">
     import WorkLogo from "../logo/WorkLogo.svelte";
     import type { WorkAppBrandProps } from "./index.ts";

@@ -1,7 +1,3 @@
-<!--
-@component
-Internal micro-sparkle burst particles (`<Sparkle />`) shared by `<CopyIcon />` and `<PasteIcon />`.
--->
 <script lang="ts">
     import type { ClassValue } from "svelte/elements";
 

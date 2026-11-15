@@ -1,15 +1,3 @@
-<!--
-@component
-Subtle corner creator info indicator (`<WorkAppSignature />`) for internal work tools.
-
-Architectural Notes:
-- Frame Integration: Automatically rendered inside `<WorkAppFrame />` by default (`showSignature = true`),
-  so it does not need to be placed manually in standard layouts. Exported standalone for custom frames.
-- Semantic Info Trigger: Uses a native `<button type="button">` for full accessibility compliance (no non-interactive
-  tabindex warnings) with `cursor: default` and zero click mechanics.
-- 1:1 XS Ghost Base Visuals: Handcrafted 28px squircle with an optically balanced 14px icon (`:global`), soft base hover,
-  and high z-index anchoring to `bottom: 24px; right: 24px;`.
--->
 <script lang="ts">
     import { Info } from "@lucide/svelte";
 

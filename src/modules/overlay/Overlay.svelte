@@ -1,18 +1,3 @@
-<!--
-@component
-Fullscreen backdrop surface primitive (`<Overlay />`) promoted to the browser's native Top Layer
-via the HTML Popover API (`popover="manual"`). Provides visual isolation, surface tint/blur states,
-and safe pointer-dismiss handling for modals, dialogs, sheets, and full-screen takeovers.
-
-Architectural Notes:
-- Defaults: Requires explicit `variant` prop (`data-variant`).
-- Native Top Layer: Automatically promoted to Top Layer via `{@attach topLayer()}` without z-index collisions.
-- Dismiss Ergonomics: Pairs `pointerdown` and `click` on the backdrop to prevent accidental closures
-  when dragging or selecting text inside child elements.
-- Scroll Containment: When `lockScroll` (default `true`) is enabled, traps wheel and touch scroll gestures
-  within scrollable overlay descendants, preventing background scroll chaining without document layout shifts.
-- CSS Hooks: Exposes `data-variant` for zero-specificity styling via `.cs-overlay`.
--->
 <script lang="ts">
     import type { TransitionConfig } from "svelte/transition";
 

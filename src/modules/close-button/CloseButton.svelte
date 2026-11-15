@@ -1,11 +1,3 @@
-<!--
-@component
-Compact dismiss/close trigger (`<CloseButton />`) with a subordinate `text-weak` ->
-`text-strong` visual hierarchy and spring-physics press feedback.
-
-Architectural Notes:
-- Defaults & Resets: Requires explicit `size` and `variant` props (`data-size`, `data-variant`).
--->
 <script lang="ts">
     import { X } from "@lucide/svelte";
 

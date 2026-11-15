@@ -1,8 +1,3 @@
-<!--
-@component
-Subtle neutral divider (`<ToggleButtonGroupSeparator />`) placed between `<ToggleButton />` instances inside a `<ToggleButtonGroup />`.
-Automatically fades out when adjacent toggle buttons are active (`aria-pressed="true"`), hovered, or focused.
--->
 <script lang="ts">
     import type { ToggleButtonGroupSeparatorProps } from "./index.ts";
 

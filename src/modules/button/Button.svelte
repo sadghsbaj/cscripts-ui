@@ -1,8 +1,3 @@
-<!--
-@component
-Primary interactive button primitive (`<Button />`) supporting polymorphic rendering
-(`as="button" | "a" | "label"`), semantic variants, and spring-physics press feedback.
--->
 <script lang="ts">
     import "../../css/shared/button-control.css";
     import type { ButtonProps } from "./index.ts";

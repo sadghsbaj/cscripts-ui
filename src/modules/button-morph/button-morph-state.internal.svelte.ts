@@ -1,10 +1,3 @@
-/**
- * @description Per-instance reactive state and physics controller for `<ButtonMorph />` and `<ButtonMorphItem />`.
- * Manages intrinsic slot dimension caching (`ResizeObserver`), transition shell locking, directional
- * ordering (`forward` / `backward`), accidental double-click protection (`guardDelay`), focus handoff,
- * and hover-aware auto-reset timers.
- */
-
 import { untrack } from "svelte";
 import type { Attachment } from "svelte/attachments";
 

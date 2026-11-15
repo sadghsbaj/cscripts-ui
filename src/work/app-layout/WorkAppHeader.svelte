@@ -1,12 +1,3 @@
-<!--
-@component
-Application header bar (`<WorkAppHeader />`) for internal work tools.
-
-Architectural Notes:
-- Context Integration: Automatically reads `toolName` from the parent `<WorkAppIntro />` context
-  via `getWorkAppIdentity()`, while still allowing an explicit `toolName` prop override.
-- Built-In Brand Badge: Automatically renders `<WorkAppBrand />` on the right edge unless `showBrand={false}` is passed.
--->
 <script lang="ts">
     import { getWorkAppIdentity } from "../app-intro/index.ts";
     import type { WorkAppHeaderProps } from "./index.ts";

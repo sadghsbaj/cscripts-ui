@@ -1,8 +1,3 @@
-<!--
-@component
-SVG map primitive (`<WorkLocation />`) for rendering company plant regions (`arnsberg`, `baruth`,
-`guetersloh`, `leutkirch`, `neumarkt`) with an optional location marker.
--->
 <script lang="ts">
     import { WORK_LOCATIONS, type WorkLocationProps } from "../index.ts";
 

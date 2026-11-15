@@ -1,8 +1,3 @@
-<!--
-@component
-Two-state toggle button primitive (`<ToggleButton />`) supporting standalone `bind:pressed` /
-`onPressedChange` and `<ToggleButtonGroup>` item `value` selection.
--->
 <script lang="ts">
     import "../../css/shared/button-control.css";
     import { getToggleButtonGroupContext, hasToggleButtonGroupContext } from "../toggle-button-group/index.ts";

@@ -1,32 +1,3 @@
-<!--
-@component
-Primitive squircle checkbox component (`<Checkbox />`) supporting multi-axis sizing,
-elastic active press physics, dual-state vector icon drawing, and CSS anchor positioning.
-
-Architectural Notes:
-- Zero-Wrapper Flat Architecture (CSS Anchor Positioning):
-  Instead of wrapping `<input>` and `<svg>` in a container `<span>` (which pollutes DOM
-  and complicates parent flex/grid flow), the checkbox renders a pure native `<input type="checkbox">`
-  with an adjacent sibling `<svg>`. The icon is anchored directly over the input's geometric center via
-  CSS Anchor Positioning (`anchor-name` / `position-anchor: ...; top: anchor(center); left: anchor(center)`).
-- Persistent Dual-Path Vector Transitions:
-  Both the indeterminate dash and the checkmark paths are rendered concurrently in the SVG.
-  Avoiding Svelte `{#if}` template branching prevents destructive DOM element teardown, allowing
-  seamless bidirectional vector drawing transitions (`stroke-dashoffset`) between checked and
-  indeterminate states.
-- Active Press Physics & Subpixel Hit-Area Preservation:
-  When pressed (`:active`), the checkbox contracts tactilely to `scale: 0.9`. To prevent edge clicks
-  from falling out of bounds during scale down, the `::before` pseudo-element applies an inverse
-  counter-scale of `calc(1 / 0.85)` (~1.06 net screen size), completely eliminating pointer-drop
-  glitches and absorbing subpixel mouse jitter without overlapping sibling layout.
-- Borderless Surface Depth & High-Contrast Invalid States:
-  Uses pure `box-shadow` instead of CSS `border` to guarantee that inset hairline shadows on elevated
-  dark-mode surfaces align directly with the outer squircle contour. The error state seamlessly transitions
-  into an inset negative ring, leaving native `outline` completely unconstrained for `:focus-visible`.
-- Defaults & Resets: Requires explicit `variant` and `size` props with no implicit fallbacks.
-- Elevated Hover Physics (Light vs. Dark): Shadow lift in light mode, surface luminance step-up in dark mode.
--->
-
 <script lang="ts">
     import { type CheckboxProps } from ".";
 

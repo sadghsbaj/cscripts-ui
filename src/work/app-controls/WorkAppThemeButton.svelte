@@ -1,11 +1,3 @@
-<!--
-@component
-Pre-configured theme toggle button (`<WorkAppThemeButton />`) for internal work tools.
-
-Architectural Notes:
-- Sizing: Perfectly sized for `<WorkAppHeader>` and `<WorkAppHeaderSegment>` (48px pill matching identity and brand badges).
-- Automated Reactive State: Cycles through theme modes on click (`theme.cycle()`) and renders the matching mode icon (`theme.icon`).
--->
 <script lang="ts">
     import { Button, ButtonIcon } from "../../modules/button/index.ts";
     import { HitArea } from "../../modules/hit-area/index.ts";

@@ -1,14 +1,3 @@
-<!--
-@component
-Cockpit status indicator dot (`<WorkAppStatusDot />`) for displaying connection,
-filesystem, or system state directly as an interactive telemetry dot.
-
-Architectural Notes:
-- Element Structure: The button element itself is the 12px dot (no wrapping span or container).
-- Telemetry: 12px live LED dot with concentric dual-ring halo ping driven by `--cs-ease-cubic-out`.
-- Managed Accessibility: Automatically generates a strict `aria-label` from status and label state.
-- Standalone Primitiv: Place inside `<WorkAppHeaderSegment island>` or any custom container.
--->
 <script lang="ts">
     import { tooltip } from "../../modules/tooltip/tooltip.attach.svelte.ts";
     import { WORK_APP_STATUS_DEFAULTS, type WorkAppStatusDotProps } from "./index.ts";

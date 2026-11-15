@@ -1,7 +1,3 @@
-<!--
-@component
-Internal test host rendering `<ToggleButtonGroup>` with `<ToggleButton>` items for unit tests.
--->
 <script lang="ts">
     import type { MouseEventHandler } from "svelte/elements";
 

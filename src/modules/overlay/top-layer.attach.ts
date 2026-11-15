@@ -1,8 +1,3 @@
-/**
- * @description Svelte 5 DOM attachment that automatically promotes an element with `[popover]`
- * to the browser's Top Layer upon mounting, and cleanly dismisses it upon unmount.
- */
-
 import type { Attachment } from "svelte/attachments";
 
 import { resolveGetter } from "../../utils/resolve-getter.ts";

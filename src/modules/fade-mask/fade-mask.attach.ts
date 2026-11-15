@@ -1,8 +1,3 @@
-/**
- * @description Svelte 5 attachment that applies static alpha fade masks (radial, directional, symmetrical)
- * to HTML and SVG elements using modern CSS oklch gradients.
- */
-
 import type { Attachment } from "svelte/attachments";
 
 import { resolveGetter } from "../../utils/resolve-getter.ts";

@@ -1,18 +1,3 @@
-/**
- * @description Svelte 5 DOM attachment that wires trigger elements to `<Popover />` surfaces.
- * It is the single source of truth for all trigger behavior (the `tooltip` attachment is built on top of it).
- *
- * Modes:
- * - `auto` (default): Native `popovertarget` toggle. With `triggerOn: "pointerdown"` (default) mouse users
- *   open instantly on press while touch and keyboard keep the native click path (preserves touch scrolling).
- * - `manual`: Anchor wiring only. The consumer opens and closes the popover imperatively.
- * - `hint`: Hover and focus driven via native `interestfor`, hardened against unintended opens:
- *   - Programmatic focus restoration (e.g. switching OS windows after a click) never opens the popover,
- *     only pointer hover or keyboard focus (`:focus-visible`) does.
- *   - Dismisses on press, `Enter` / `Space` and scrolling, and re-arms on pointer leave or blur.
- *   - Shares a global warmup window so adjacent triggers open instantly after one closed.
- */
-
 import type { Attachment } from "svelte/attachments";
 
 import { resolveGetter } from "../../utils/resolve-getter.ts";

@@ -1,11 +1,3 @@
-<!--
-@component
-Accessible icon element (`<TooltipIcon icon={...} />`) for `<Tooltip />` overlays.
-
-Architectural Notes:
-- Accessibility: Automatically enforces `aria-hidden="true"` on decorative icons.
-- Optical Sizing: Sized relative to the tooltip `--cs-tooltip-font-size` variable with matching `stroke-width: 2.25`.
--->
 <script lang="ts">
     import type { TooltipIconProps } from "./index.ts";
 

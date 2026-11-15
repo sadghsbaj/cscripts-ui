@@ -1,14 +1,3 @@
-<!--
-@component
-Full-screen 4-act boot choreography wrapper (`<WorkAppIntro />`) for internal work applications.
-
-Architectural Notes:
-- CSS-Driven Staggering: JavaScript only advances high-level `data-phase` states (`cad` -> `lock` -> `brand` -> `curtain` -> `idle`).
-  Per-location delays (`--cs-work-app-intro-cad-delay`, `--cs-work-app-intro-lock-delay`) and progress bar steps are computed purely in CSS via `--cs-work-app-intro-index`.
-- Spatial Depth Handshake: While the intro is active, `.cs-work-app-intro-workspace` holds the wrapped application at `scale: 0.98`.
-  During `curtain`, the overlay zooms out to `1.04` while the workspace scales up to `1.0`. Once `idle` is reached, no transform
-  remains on the workspace so `position: fixed` descendants inside the app behave normally.
--->
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
 

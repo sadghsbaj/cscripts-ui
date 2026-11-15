@@ -1,8 +1,4 @@
 /**
- * @description Clipboard utility functions for copying and reading plain text with non-secure context fallbacks.
- */
-
-/**
  * Copies the specified text to the clipboard.
  * Tries the modern `navigator.clipboard` API first, falling back to legacy textarea selection
  * in non-secure contexts (`http://` LAN or `file://`) while preserving active DOM focus.

@@ -1,7 +1,3 @@
-<!--
-@component
-Accessible icon wrapper (`<ButtonIcon icon={...} />`) for `<Button />` components.
--->
 <script lang="ts">
     import "../../css/shared/button-control.css";
     import type { ButtonIconProps } from "./index.ts";

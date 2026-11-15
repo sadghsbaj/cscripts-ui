@@ -1,25 +1,3 @@
-<!--
-@component
-Low-level floating surface primitive (`<Popover />`) providing the architectural foundation
-for floating UI (tooltips, dropdown menus, context menus, and custom popovers).
-
-Abstracts repetitive boilerplate around the HTML Popover API (`popover="auto" | "hint" | "manual"`)
-and native CSS Anchor Positioning (`position-anchor`, `position-area`, adaptive fallback flips,
-and sizing constraints).
-
-Architectural Notes:
-- Automatic Anchor Linking: Establishes `--anchor-${id}` automatically from its `id`,
-  seamlessly pairing with `popoverTrigger({ target: id })` without manual anchor declarations.
-- Centralized Directional Motion: Ships with built-in spring motion (`animate = true` by default)
-  powered by spatial unit vectors (`--cs-popover-dir-x`, `--cs-popover-dir-y`) and `--cs-popover-origin` derived
-  from `placement`. Consuming surfaces (like Tooltip or dropdown menus) can fine-tune motion by overriding
-  `--cs-popover-anim-*` custom properties or disable it entirely via `animate={false}`.
-- Hint Warmup Acceleration: Applies an author stylesheet rule `:global(:root[data-hint-warm] [interestfor])`
-  with `!important` to force `interest-delay: 0ms` during active hint sessions or within the 300ms cooldown window.
-  Subsequent hint popovers opened while warm inherit `[data-warm]` (suppressing entrance transition) and force
-  active hint popovers into `[data-instant]` (suppressing exit transition) for instant, seamless toolbar scrubbing.
--->
-
 <script lang="ts">
     import { type PopoverProps } from ".";
 

@@ -1,13 +1,3 @@
-<!--
-@component
-SVG tile snippets for every `BackgroundPattern` variant.
-
-Each snippet draws ONE tile inside an SVG `<pattern>`. Styling (color, stroke width,
-dot radius) is intentionally NOT done here but via CSS variables / classes in
-`BackgroundPattern.svelte`:
-- `.cs-background-pattern-stroke` -> stroke with `--cs-background-pattern-line-width`
-- `.cs-background-pattern-dot`    -> fill with `--cs-background-pattern-dot-radius`
--->
 <script module lang="ts">
     /** Geometry handed to every variant snippet (all values in px). */
     export interface BackgroundPatternVariantContext {

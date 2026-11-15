@@ -1,11 +1,3 @@
-<!--
-@component
-Pre-configured help and documentation trigger button (`<WorkAppHelpButton />`) for internal work tools.
-
-Architectural Notes:
-- Sizing: Perfectly sized for `<WorkAppHeader>` and `<WorkAppHeaderSegment>` (48px pill matching identity and brand badges).
-- Neutral Action: Delegates interaction to `onclick` so the consuming application can open an in-app manual modal, drawer, or external documentation link.
--->
 <script lang="ts">
     import { BookOpen } from "@lucide/svelte";
 

@@ -1,17 +1,3 @@
-<!--
-@component
-Composite state-morphing container (`<ButtonMorph />`) that smoothly interpolates geometry,
-surfaces, icons, and labels across multiple `<ButtonMorphItem />` button states.
-
-Architectural Notes:
-- Shared Morph Shell: Synchronizes outer dimensions (`--cs-button-morph-width`, `--cs-button-morph-height`) and
-  locks active/exiting button surfaces during transitions so `::before` backgrounds and
-  `:focus-visible` outlines morph as a single cohesive body.
-- Interaction Safety & Auto-Reset: Includes capture-phase accidental double-click protection
-  (`guardDelay`), automatic keyboard focus handoff, and configurable auto-reset via timeout
-  (hover-paused), outside click (`clickOutside`), or `Escape`.
-- Defaults & Resets: Requires explicit configuration and relies on global foundation focus/outline behaviors.
--->
 <script lang="ts">
     import { untrack } from "svelte";
 

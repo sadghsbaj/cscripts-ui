@@ -1,11 +1,3 @@
-<!--
-@component
-Text label wrapper (`<TooltipText />`) for `<Tooltip />` overlays.
-
-Architectural Notes:
-- Optical Trimming & Truncation: Applies optical cap-height trimming (`text-box: trim-both cap alphabetic`)
-  with `overflow-x: clip; overflow-y: visible;` for vertical alignment without clipping descenders.
--->
 <script lang="ts">
     import type { TooltipTextProps } from "./index.ts";
 

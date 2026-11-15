@@ -1,8 +1,3 @@
-/**
- * @description Svelte 5 attachment that applies dynamic, hardware-accelerated alpha fade masks to scrollable containers.
- * Driven entirely via CSS Scroll-Driven Animations and `@property` lengths on the GPU compositor thread.
- */
-
 import type { Attachment } from "svelte/attachments";
 
 import { resolveGetter } from "../../utils/resolve-getter.ts";

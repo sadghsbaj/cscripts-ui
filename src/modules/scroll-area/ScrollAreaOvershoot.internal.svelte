@@ -1,7 +1,3 @@
-<!--
-@component
-GTK4-style boundary overshoot indicator (`<ScrollAreaOvershoot />`) rendered inside `<ScrollArea />`.
--->
 <script lang="ts">
     import { getScrollAreaContext } from "./index.ts";
 

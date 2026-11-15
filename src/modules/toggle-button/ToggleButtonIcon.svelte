@@ -1,7 +1,3 @@
-<!--
-@component
-Accessible icon wrapper (`<ToggleButtonIcon icon={...} />`) for `<ToggleButton />` components.
--->
 <script lang="ts">
     import "../../css/shared/button-control.css";
     import type { ToggleButtonIconProps } from "./index.ts";

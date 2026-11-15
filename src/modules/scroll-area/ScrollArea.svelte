@@ -1,18 +1,3 @@
-<!--
-@component
-Scroll container wrapper (`<ScrollArea />`) providing custom OS-independent overlay scrollbars
-and GTK4-style boundary overshoot indicators around `<ScrollAreaContent />`.
-
-Architectural Notes:
-- Outer Chrome Separation: Overlay scrollbars and overshoot indicators are mounted inside the
-  stationary `.cs-scroll-area` wrapper rather than inside the scrolling `<ScrollAreaContent />`
-  viewport. This prevents CSS `mask-image` (from `scrollFade`) from clipping the scrollbar
-  near fade edges and eliminates async compositor scroll jitter.
-- GPU Thumb Physics: Scrollbar thumbs use independent `translate` (for 0ms scroll tracking)
-  and `scale` (for smooth 4px -> 8px cross-axis expansion on hover/drag) properties so thumb
-  width transitions never lag behind native scroll positions.
-- Defaults & Resets: Requires explicit `size` and `direction` props with no implicit fallbacks.
--->
 <script lang="ts">
     import { setScrollAreaContext, type ScrollAreaProps } from "./index.ts";
     import ScrollAreaOvershoot from "./ScrollAreaOvershoot.internal.svelte";

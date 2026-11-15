@@ -1,8 +1,3 @@
-<!--
-@component
-Composite container (`<ToggleButtonGroup />`) grouping multiple `<ToggleButton />` instances into
-a cohesive segmented or clustered control bar with coordinated corner radii and physics.
--->
 <script lang="ts">
     import "../../css/shared/button-group.css";
     import { setToggleButtonGroupContext, type ToggleButtonGroupProps } from "./index.ts";

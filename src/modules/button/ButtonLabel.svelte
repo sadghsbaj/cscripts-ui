@@ -1,7 +1,3 @@
-<!--
-@component
-Explicit text label wrapper (`<ButtonLabel />`) for `<Button />` components.
--->
 <script lang="ts">
     import "../../css/shared/button-control.css";
     import type { ButtonLabelProps } from "./index.ts";

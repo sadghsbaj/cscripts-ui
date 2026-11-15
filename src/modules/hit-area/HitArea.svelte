@@ -1,17 +1,3 @@
-<!--
-@component
-Invisible touch/click target expander (`<HitArea />`) that enlarges the interactive
-surface of compact controls (icon buttons, close triggers, checkboxes) to meet mobile
-and accessibility guidelines (40px–48px) without altering visual layout.
-
-Architectural Notes:
-- Defaults: Requires explicit `size` prop (`data-size`).
-- Anchor Containment: Automatically establishes a containing block on host via `:has()`.
-- Explicit DOM vs. Pseudo-elements: Rendered as a dedicated child `<span>` rather
-  than claiming `::before` or `::after` on the parent. This guarantees zero slot
-  collisions—leaving both pseudo-elements unconstrained for elastic surfaces,
-  badges, or physics-driven animations on the host.
--->
 <script lang="ts">
     import type { HitAreaProps } from "./index.ts";
 

@@ -1,8 +1,3 @@
-<!--
-@component
-Animated clipboard feedback icon (`<CopyIcon />`) with copy-to-checkmark/error morphing
-and micro-sparkle burst particles.
--->
 <script lang="ts">
     import { Check, Copy, X } from "@lucide/svelte";
 

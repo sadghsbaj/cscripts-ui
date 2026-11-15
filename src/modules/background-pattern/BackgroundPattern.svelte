@@ -1,11 +1,3 @@
-<!--
-@component
-Backgroundpattern component (SVG based).
-
-Architectural Notes:
-- Defaults & Resets: Requires explicit `variant` and `size` props.
-- Tile shapes live in `BackgroundPatternVariants.internal.svelte`, styling lives in CSS variables below.
--->
 <script lang="ts">
     import * as variants from "./BackgroundPatternVariants.internal.svelte";
     import { BACKGROUND_PATTERN_SPACING, type BackgroundPatternProps } from "./index.ts";
