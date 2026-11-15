@@ -66,8 +66,25 @@
         return lastSlash === -1 ? filePath : filePath.slice(0, lastSlash);
     }
 
+    function pascalToKebab(name: string): string {
+        return name
+            .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
+            .replaceAll(/([A-Z])([A-Z][a-z])/g, "$1-$2")
+            .toLowerCase();
+    }
+
+    function docsPathForPreview(previewPath: string): string {
+        const lastSlash = previewPath.lastIndexOf("/");
+        const dir = lastSlash === -1 ? "" : previewPath.slice(0, lastSlash);
+        const fileName = lastSlash === -1 ? previewPath : previewPath.slice(lastSlash + 1);
+        const stem = pascalToKebab(fileName.replace(/\.preview\.svelte$/, ""));
+        return dir ? `${dir}/${stem}.docs.md` : `${stem}.docs.md`;
+    }
+
+    const docsEntries = Object.entries(docsModules);
+    const docsByPath = new Map<string, string>(docsEntries);
     const docsByDir = new Map<string, string>(
-        Object.entries(docsModules).map(([filePath, markdown]) => [dirFromPath(filePath), markdown])
+        docsEntries.map(([filePath, markdown]) => [dirFromPath(filePath), markdown])
     );
 
     function categoryFromPath(path: string): PreviewCategory {
@@ -80,7 +97,7 @@
             label: module.label,
             category: categoryFromPath(path),
             preview: module.default,
-            docs: docsByDir.get(dirFromPath(path)),
+            docs: docsByPath.get(docsPathForPreview(path)) ?? docsByDir.get(dirFromPath(path)),
         }))
         .toSorted((a, b) => a.label.localeCompare(b.label, "en"));
 
