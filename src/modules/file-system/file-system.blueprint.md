@@ -224,3 +224,36 @@ Typed error class with machine-readable `code`:
 ### 6.3 Documentation (`src/modules/file-system/file-system.docs.md`)
 - Comprehensive guide tailored for both human developers and AI coding assistants: architectural invariants (derived caches vs source of truth, system vs business directory split), quick-start recipes, custom adapter guide (e.g. Excel/CSV), stepwise migration patterns, SMB/Windows caveats (case sensitivity, `~$*` locks, `FILE_LOCKED`), optimistic UI + `clearError()`/`beforeunload` lifecycle, conflict-resolution + `applyConflictChoices` UI wiring, and complete error-code reference.
 
+---
+
+## 7. Implementation Milestones
+
+Each milestone is self-contained and must pass `bun run typecheck`, `bun run lint`, and its dedicated test checks before moving to the next.
+
+### Milestone 1 — Low-Level Kernel, Path Engine & Virtual FS
+- Implement `errors.ts` (`FsError` + complete error taxonomy), `support.ts` (`checkFileSystemSupport`), and `path-template.ts` (Windows/SMB validation, two-tier path length bounds, `validatePathSegment` / `sanitizePathSegment` suggestions, case-sensitive `PathTemplate` build/parse + multi-param delimiter/pattern validation).
+- Implement `fs-backend.internal.ts` (`FsBackend` contract + `BrowserFsBackend`), `memory-fs.internal.ts` (`MemoryFsBackend` with simulated locks, clock skew, stream aborts, and external mutations), and `write-queue.internal.ts` (per-path FIFO mutex, global barrier, `retryOnLock`, verified `move` fallback, bounded backup pruning, OCC on `write`/`delete`).
+- **Exit Check:** Vitest unit & chaos suite passing against `MemoryFsBackend` for path safety, concurrency ordering, stream-abort preservation, lock retries, and clock-skew-safe revisions.
+
+### Milestone 2 — Adapters, Standard Schema, Migrations & JSON Diff/Merge
+- Implement `adapters.ts`: `defineAdapter`, `jsonAdapter` (unversioned vs versioned modes, `UNSUPPORTED_SCHEMA_VERSION`, Standard Schema v1 + type guards, contiguous boot-checked `migrations` chain, pure `migrateDocument`, fail-safe abort on error), and `jsonlAdapter` (`"skip-trailing"` crash-line recovery).
+- Implement `json-diff.ts`: `diffJson` (`segments`, `pointer`, `summary`, `maxDepth`), `arrayKeyBy` entity matching, `unkeyedArrayMode` (`"atomic"` / `"set"`), `mergeJson3Way` (`delete-edit` hard conflict, 2-way fallback), and `applyConflictChoices`.
+- **Exit Check:** Pure Vitest suite verifying migration chains (`v1 -> v2 -> v3`), fail-safe disk non-mutation, JSONL partial recovery, array-identity merges, `"delete-edit"` conflicts, and `applyConflictChoices` deep patching.
+
+### Milestone 3 — Handle Persistence, Logger & Two-Tier Cache / Healing Engine
+- Implement `idb-handle-store.internal.ts` (zero-dep native IndexedDB handle persistence + strict `MISSING_PREFIX` check reading `getStoragePrefix()` from `cs/svelte/browser-storage`).
+- Implement `logger.internal.ts` (`logLevel: "info"` default, batched JSONL appends, `1 MiB` / `2000` lines / `5` files rotation, `readLogs`, capped `50`-entry metadata-only `localStorage` crash ring buffer).
+- Implement `cache-engine.internal.ts` (`_cs-fs/meta.json`, single/partitioned `index/` shards, `path -> partitionKey` cross-partition consistency, `indexFlushMs` + `maxFlushWaitMs` coalescing, boot quick-check modes, Windows/Office `~$*`/`Thumbs.db` ignores, per-file fault-tolerant `heal()` + `HealReport` / `corruptEntries`).
+- **Exit Check:** Vitest integration & scale tests (`1,000+` files, corrupt `meta.json`/`index` recovery, cross-partition date/move cleanup, `heal()` fault isolation, log rotation, `localStorage` fallback).
+
+### Milestone 4 — Reactive Svelte 5 Workspace, Optimistic UI, Public Barrel & Docs
+- Implement `workspace.svelte.ts`: `defineWorkspace`, `defineSingleton`, `defineCollection` (paired `companion` lifecycle, type-safe `list()` vs indexed `query()` + on-demand `loadPartitions`, `revalidateOnFocus`), `confirmedState + pendingMutations` per-op rollback, `unresolvedConflicts` + `resolveConflict`, `beforeunload` guard, reactive `health` / `activity` / `lastError` / `clearError()`, `flush()`, and `destroy()`.
+- Wire public exports in `index.ts` (confirming zero `*.internal.*` exports) and author `file-system.docs.md` for humans and AI consumers.
+- **Exit Check:** Full Vitest suite covering optimistic rollbacks, conflict policies (`"detect"`, `"auto-merge"`, `"last-write-wins"`), `companion` paired moves/deletes/orphans, `$state.raw` reactivity, and lifecycle cleanup.
+
+### Milestone 5 — Real Chromium OPFS, IndexedDB & `csSingleFile` Verification
+- Implement `file-system.browser.spec.ts` wired into `playwright.config.ts` running against Chromium OPFS (`navigator.storage.getDirectory()`) and real `IndexedDB` handle persistence across page reloads.
+- Verify namespace isolation across distinct prefixes, concurrent OPFS writes, native `move()`, large payload handling, and rotated JSONL logs in real Chromium.
+- Smoke-verify bundled `csSingleFile` (`file://`) compatibility (environment check, IDB isolation, zero external fetches/workers).
+- **Exit Check:** `bun run typecheck`, `bun run lint`, `bun run test`, and Playwright Chromium OPFS specs all pass cleanly.
+
