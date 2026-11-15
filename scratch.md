@@ -4,13 +4,12 @@
 
 - switch(anticipaton spring) + group x
 - rovingfocus x
-- segmented control x base 800 nochmal vll mit transaprenz mappen besser?!
 - modal
 - select
 - combobox
 - contextmenu
 
-- textinput
+- textinput x
 - textarea maybe auch contenteditable artiges ding für Platzhalter und sowas
 
 - geile charts
