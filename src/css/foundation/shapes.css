@@ -37,7 +37,7 @@
 }
 
 [data-theme="dark"] {
-    --cs-shadow-elevated: inset 0 1px 0 0 rgb(255 255 255 / 0.12), inset 0 0 0 1px rgb(255 255 255 / 0.05);
+    --cs-shadow-elevated: inset 0 1px 0 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.02);
     --cs-shadow-elevated-hover: var(--cs-shadow-elevated);
     --cs-shadow-sunken:
         inset 0 2px 6px 0 rgb(0 0 0 / 0.65), inset 0 1px 2px 0 rgb(0 0 0 / 0.45),
