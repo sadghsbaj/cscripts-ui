@@ -4,8 +4,8 @@ description: Visual design, modern CSS, and motion specialist for cscripts-ui. A
 mainAgent: true
 subagent: true
 tools:
-  - read_file
-  - run_command
+    - read_file
+    - run_command
 ---
 
 # Design Critic — `cscripts-ui`
