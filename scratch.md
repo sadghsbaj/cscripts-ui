@@ -2,13 +2,13 @@
 
 - filesystem basis bauen
 
+- switch(anticipaton spring) + group x
 - rovingfocus x
 - segmented control x
 - modal
 - select
 - combobox
 - contextmenu
-- switch(anticipaton spring) + group x
 
 - textinput
 - textarea maybe auch contenteditable artiges ding für Platzhalter und sowas
