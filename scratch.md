@@ -1,6 +1,6 @@
 ## Modules
 
-- filesystem basis bauen
+- filesystem basis bauen, experte für fs arbeiten specioal coder + special reviewer
 
 - switch(anticipaton spring) + group x
 - rovingfocus x
