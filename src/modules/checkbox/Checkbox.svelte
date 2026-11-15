@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { getCheckboxGroupContext, hasCheckboxGroupContext } from "../checkbox-group/checkbox-group.context.ts";
     import { type CheckboxProps } from ".";
+    import { getCheckboxGroupContext, hasCheckboxGroupContext } from "../checkbox-group/checkbox-group.context.ts";
 
     let {
         ref = $bindable(null),
@@ -53,7 +53,7 @@
     }
 
     const visualState = $derived<VisualState>(
-        resolvedIndeterminate ? "indeterminate" : resolvedChecked ? "checked" : "unchecked",
+        resolvedIndeterminate ? "indeterminate" : resolvedChecked ? "checked" : "unchecked"
     );
 
     let morphActive = $state(false);
@@ -329,12 +329,16 @@
                 --cs-checkbox-bg-checked: var(--cs-color-negative-solid);
                 --cs-checkbox-bg-checked-hover: var(--cs-color-negative-solid-hover);
 
-                /* Error ring & soft tint apply only when inactive so checked states inherit the top-lit solid highlight */
-                &:not(:checked, :indeterminate) {
-                    --cs-checkbox-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 25%, transparent);
-                    --cs-checkbox-shadow-hover: inset 0 0 0 1px color-mix(in oklab, var(--cs-color-negative-solid) 36%, transparent);
-                    --cs-checkbox-bg: var(--cs-color-negative-soft);
-                    --cs-checkbox-bg-hover: var(--cs-color-negative-soft-hover);
+                /* Error ring applies only when inactive & enabled so checked states keep solid highlight and disabled clears it */
+                &:not(:checked, :indeterminate, :disabled) {
+                    --cs-checkbox-shadow: inset 0 0 0 2px var(--cs-color-negative-solid);
+                    --cs-checkbox-shadow-hover: inset 0 0 0 2px var(--cs-color-negative-solid);
+
+                    &[data-variant="elevated"] {
+                        --cs-checkbox-shadow: var(--cs-shadow-elevated), inset 0 0 0 2px var(--cs-color-negative-solid);
+                        --cs-checkbox-shadow-hover:
+                            var(--cs-shadow-elevated-hover), inset 0 0 0 2px var(--cs-color-negative-solid);
+                    }
                 }
             }
 
@@ -349,11 +353,6 @@
                 &[data-variant="elevated"] {
                     --cs-checkbox-bg: var(--cs-color-disabled-bg-elevated);
                     --cs-checkbox-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                }
-
-                &[aria-invalid="true"]:not(:checked, :indeterminate) {
-                    --cs-checkbox-bg: var(--cs-color-disabled-bg);
-                    --cs-checkbox-shadow: none;
                 }
 
                 &:is(:checked, :indeterminate) {
@@ -379,9 +378,9 @@
             pointer-events: none;
 
             & path {
-                opacity: 0;
                 stroke-dasharray: 1;
                 stroke-dashoffset: 1;
+                opacity: 0;
                 transition:
                     opacity 0s var(--cs-dur-80),
                     stroke-dashoffset var(--cs-dur-effect-fast) var(--cs-ease-effect);
@@ -397,9 +396,9 @@
             }
 
             & .cs-checkbox-morph {
-                opacity: 0;
                 stroke-dasharray: none;
                 stroke-dashoffset: 0;
+                opacity: 0;
                 transition: opacity 0s var(--cs-dur-80);
             }
         }
@@ -409,9 +408,9 @@
          * ========================================================= */
         /* 1. Indeterminate: Draws horizontal dash while checkmark fades out first (40ms sequential handoff) */
         .cs-checkbox:indeterminate + .cs-checkbox-icon .cs-checkbox-dash {
-            opacity: 1;
             stroke-dasharray: 1 0;
             stroke-dashoffset: 0;
+            opacity: 1;
             transition: opacity 0s var(--cs-dur-40);
         }
 
@@ -421,8 +420,8 @@
 
         /* 2. Checked: Draws checkmark while dash fades out first (40ms sequential handoff) */
         .cs-checkbox:checked:not(:indeterminate) + .cs-checkbox-icon .cs-checkbox-check {
-            opacity: 1;
             stroke-dashoffset: 0;
+            opacity: 1;
             transition:
                 opacity 0s var(--cs-dur-40),
                 stroke-dashoffset var(--cs-dur-140) var(--cs-ease-quart-out) var(--cs-dur-40);
