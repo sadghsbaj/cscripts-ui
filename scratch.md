@@ -6,6 +6,10 @@ focusc bug bei toglgebuittongroup wird agbeschnitten imimer davor wen nncöhstes
 
 - rovingfocus x
 - segmented control
+- modal
+- select
+- combobox
+- contextmenu
 - switch(anticipaton spring) + group
 
 - textinput
