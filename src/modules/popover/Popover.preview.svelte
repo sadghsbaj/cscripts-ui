@@ -45,10 +45,10 @@ ${closeScript}
 </Button>
 <Popover id="offset-popover" placement="top" width="content" offset="24px">...</Popover>
 
-<Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "hint-popover", mode: "hint" })}>
-    <ButtonLabel>Hover (Hint)</ButtonLabel>
+<Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "hover-popover", triggerOn: "hover", delay: [300, 150] })}>
+    <ButtonLabel>Hover</ButtonLabel>
 </Button>
-<Popover id="hint-popover" popover="hint" placement="bottom" width="content">...</Popover>`;
+<Popover id="hover-popover" popover="manual" placement="bottom" width="content">...</Popover>`;
 </script>
 
 <div class="flex flex-col gap-10">
@@ -133,7 +133,7 @@ ${closeScript}
         </div>
     </PreviewSection>
 
-    <PreviewSection title="Offset & Hint Mode" code={modesCode}>
+    <PreviewSection title="Offset & Hover Trigger" code={modesCode}>
         <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "popover-offset-demo" })}>
             <ButtonLabel>Offset 24px</ButtonLabel>
         </Button>
@@ -153,20 +153,20 @@ ${closeScript}
         <Button
             variant="tertiary"
             size="md"
-            {@attach popoverTrigger({ target: "popover-hint-demo", mode: "hint" })}
+            {@attach popoverTrigger({ target: "popover-hover-demo", triggerOn: "hover" })}
         >
-            <ButtonLabel>Hover (Hint)</ButtonLabel>
+            <ButtonLabel>Hover</ButtonLabel>
         </Button>
         <Popover
-            id="popover-hint-demo"
-            popover="hint"
+            id="popover-hover-demo"
+            popover="manual"
             placement="bottom"
             width="content"
             class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
         >
             <div class="flex flex-col gap-1">
-                <span class="font-600 text-strong">Hint Popover</span>
-                <span class="text-weak">Triggered via hover or focus</span>
+                <span class="font-600 text-strong">Hover Popover</span>
+                <span class="text-weak">Triggered via hover or focus-visible</span>
             </div>
         </Popover>
     </PreviewSection>

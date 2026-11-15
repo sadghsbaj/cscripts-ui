@@ -14,7 +14,6 @@ type PopoverTriggerBaseOptions = {
 export type PopoverTriggerOptions = PopoverTriggerBaseOptions &
     (
         | {
-              mode?: "auto";
               /**
                * Interaction event used to open/toggle the popover:
                * - "pointerdown": Opens immediately on mouse down for desktop (ideal for menus, selects, split-buttons),
@@ -23,142 +22,67 @@ export type PopoverTriggerOptions = PopoverTriggerBaseOptions &
                * @default "pointerdown"
                */
               triggerOn?: "pointerdown" | "click";
+              delay?: never;
+              dismissOnPress?: never;
           }
         | {
-              mode: "manual";
-              triggerOn?: never;
-          }
-        | {
-              mode: "hint";
-              triggerOn?: never;
+              triggerOn: "hover";
               /**
-               * Native `interest-delay` shorthand: `"<open> <close>"`.
-               * @default "400ms 150ms"
+               * Open and close delays in milliseconds: `[openMs, closeMs]`.
+               * @default [400, 150]
                */
-              delay?: string;
+              delay?: [number, number];
               /**
                * Whether pressing the trigger (pointer or `Enter` / `Space`) dismisses the popover.
                * @default true
                */
               dismissOnPress?: boolean;
           }
+        | {
+              triggerOn: "manual";
+              delay?: never;
+              dismissOnPress?: never;
+          }
     );
 
-type HintOptions = Extract<PopoverTriggerOptions, { mode: "hint" }>;
+type HoverOptions = Extract<PopoverTriggerOptions, { triggerOn: "hover" }>;
 
-const DEFAULT_HINT_DELAY = "400ms 150ms";
-const DEFAULT_HINT_CLOSE_DELAY = "150ms";
-const HINT_WARMUP_WINDOW_MS = 300;
+type PopoverElement = HTMLElement & {
+    showPopover: (options?: { source?: HTMLElement }) => void;
+    hidePopover: () => void;
+    togglePopover: (options?: boolean | { source?: HTMLElement; force?: boolean }) => boolean;
+};
+
+interface ActiveHoverEntry {
+    node: HTMLElement;
+    popoverEl: PopoverElement;
+    closeImmediate: (instant?: boolean) => void;
+}
+
+const DEFAULT_HOVER_DELAY: readonly [number, number] = [400, 150];
+const HOVER_WARMUP_WINDOW_MS = 300;
+const DISABLED_OR_INERT_SELECTOR = ':disabled, [aria-disabled="true"], [inert]';
 
 /**
- * Triggers whose `interestfor` was withdrawn. Module-level on purpose: attachments re-run when reactive
- * state changes, and a re-run must not re-arm a trigger that was dismissed or focused by the pointer.
+ * Triggers whose hover open was suppressed (e.g. pointer focus or explicit press dismissal).
+ * Module-level so reactive attachment re-runs do not re-arm a dismissed trigger.
  */
 const disarmedTriggers = new WeakSet<HTMLElement>();
 
-let registeredHintTriggers = 0;
-let hintWarmTimer: ReturnType<typeof setTimeout> | undefined;
-let activeHintPopover: HTMLElement | null = null;
+let isHoverWarm = false;
+let hoverCooldownTimer: ReturnType<typeof setTimeout> | undefined;
+let activeHoverEntry: ActiveHoverEntry | null = null;
+let documentEscapeBound = false;
 
-function markHintWarm(): void {
-    if (typeof document === "undefined") return;
-    clearTimeout(hintWarmTimer);
-    document.documentElement.dataset.hintWarm = "";
+function isTriggerDisabled(node: HTMLElement): boolean {
+    return node.closest(DISABLED_OR_INERT_SELECTOR) !== null;
 }
 
-function scheduleHintCooldown(): void {
-    if (typeof document === "undefined") return;
-    clearTimeout(hintWarmTimer);
-    hintWarmTimer = setTimeout(() => {
-        delete document.documentElement.dataset.hintWarm;
-    }, HINT_WARMUP_WINDOW_MS);
-}
-
-function clearHintWarm(): void {
-    if (typeof document === "undefined") return;
-    clearTimeout(hintWarmTimer);
-    delete document.documentElement.dataset.hintWarm;
-    if (activeHintPopover) {
-        delete activeHintPopover.dataset.warm;
-        delete activeHintPopover.dataset.instant;
-        activeHintPopover = null;
-    }
-}
-
-function markOpenHintPopoversInstant(except: HTMLElement): void {
-    if (activeHintPopover && activeHintPopover !== except && isPopoverOpen(activeHintPopover)) {
-        activeHintPopover.dataset.instant = "";
-    }
-    if (typeof document !== "undefined") {
-        for (const el of document.querySelectorAll<HTMLElement>('[popover="hint"]')) {
-            if (el !== except && isPopoverOpen(el)) {
-                el.dataset.instant = "";
-            }
-        }
-    }
-}
-
-function handleGlobalBeforeToggle(event: Event): void {
-    if (!(event.target instanceof HTMLElement)) return;
-    if (event.target.getAttribute("popover") !== "hint") return;
-
-    const target = event.target;
-    const newState = (event as { newState?: string }).newState;
-
-    if (newState === "open") {
-        const isWarm = "hintWarm" in document.documentElement.dataset;
-        if (isWarm) {
-            target.dataset.warm = "";
-            markOpenHintPopoversInstant(target);
-        } else {
-            delete target.dataset.warm;
-        }
-        activeHintPopover = target;
-    }
-}
-
-function handleGlobalToggle(event: Event): void {
-    if (!(event.target instanceof HTMLElement)) return;
-    if (event.target.getAttribute("popover") !== "hint") return;
-
-    const target = event.target;
-    const newState = (event as { newState?: string }).newState;
-
-    if (newState === "open") {
-        const isWarm = "hintWarm" in document.documentElement.dataset;
-        if (isWarm) {
-            target.dataset.warm = "";
-            markOpenHintPopoversInstant(target);
-        }
-        activeHintPopover = target;
-        markHintWarm();
-    } else if (newState === "closed") {
-        delete target.dataset.warm;
-        delete target.dataset.instant;
-        if (activeHintPopover === target) {
-            activeHintPopover = null;
-        }
-        scheduleHintCooldown();
-    }
-}
-
-function registerHintWarmup(): () => void {
-    if (typeof document === "undefined") return (): void => {};
-
-    if (registeredHintTriggers === 0) {
-        document.addEventListener("beforetoggle", handleGlobalBeforeToggle, { capture: true });
-        document.addEventListener("toggle", handleGlobalToggle, { capture: true });
-    }
-    registeredHintTriggers++;
-
-    return (): void => {
-        registeredHintTriggers = Math.max(0, registeredHintTriggers - 1);
-        if (registeredHintTriggers === 0) {
-            document.removeEventListener("beforetoggle", handleGlobalBeforeToggle, { capture: true });
-            document.removeEventListener("toggle", handleGlobalToggle, { capture: true });
-            clearHintWarm();
-        }
-    };
+function getTargetPopover(target: string): PopoverElement | null {
+    if (typeof document === "undefined") return null;
+    const element = document.getElementById(target);
+    if (!element || !element.hasAttribute("popover")) return null;
+    return element as PopoverElement;
 }
 
 function isPopoverOpen(element: HTMLElement | null): boolean {
@@ -172,26 +96,84 @@ function isPopoverOpen(element: HTMLElement | null): boolean {
     }
 }
 
-type PopoverElement = HTMLElement & {
-    togglePopover: (options?: boolean | { source?: HTMLElement; force?: boolean }) => boolean;
-};
+function isPointerHovering(node: HTMLElement, popoverEl: HTMLElement | null): boolean {
+    try {
+        if (node.matches(":hover")) return true;
+        if (popoverEl?.matches(":hover")) return true;
+    } catch {
+        // Ignore environments that do not evaluate :hover.
+    }
+    return false;
+}
+
+function sanitizeDelayMs(value: unknown, fallback: number): number {
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+        return fallback;
+    }
+    return value;
+}
+
+function resolveHoverDelay(delay?: [number, number]): [number, number] {
+    if (!Array.isArray(delay)) {
+        return [DEFAULT_HOVER_DELAY[0], DEFAULT_HOVER_DELAY[1]];
+    }
+    return [
+        sanitizeDelayMs(delay[0], DEFAULT_HOVER_DELAY[0]),
+        sanitizeDelayMs(delay[1], DEFAULT_HOVER_DELAY[1]),
+    ];
+}
+
+function markHoverWarm(): void {
+    clearTimeout(hoverCooldownTimer);
+    hoverCooldownTimer = undefined;
+    isHoverWarm = true;
+}
+
+function scheduleHoverCooldown(): void {
+    clearTimeout(hoverCooldownTimer);
+    hoverCooldownTimer = setTimeout(() => {
+        hoverCooldownTimer = undefined;
+        isHoverWarm = false;
+    }, HOVER_WARMUP_WINDOW_MS);
+}
+
+function clearHoverWarm(): void {
+    clearTimeout(hoverCooldownTimer);
+    hoverCooldownTimer = undefined;
+    isHoverWarm = false;
+}
+
+function handleDocumentKeyDown(event: KeyboardEvent): void {
+    if (event.key !== "Escape" || !activeHoverEntry) return;
+    const entry = activeHoverEntry;
+    clearHoverWarm();
+    entry.closeImmediate(false);
+}
+
+function syncDocumentEscapeListener(): void {
+    if (typeof document === "undefined") return;
+
+    if (activeHoverEntry && !documentEscapeBound) {
+        document.addEventListener("keydown", handleDocumentKeyDown);
+        documentEscapeBound = true;
+    } else if (!activeHoverEntry && documentEscapeBound) {
+        document.removeEventListener("keydown", handleDocumentKeyDown);
+        documentEscapeBound = false;
+    }
+}
 
 function bindToggle(node: HTMLElement, target: string, triggerOn: "pointerdown" | "click"): () => void {
     node.setAttribute("popovertarget", target);
 
-    if (triggerOn !== "pointerdown") {
-        return () => node.removeAttribute("popovertarget");
-    }
-
     let suppressNextClick = false;
+    let resetTimer: ReturnType<typeof setTimeout> | undefined;
 
     function onPointerDown(event: PointerEvent): void {
         // Only the primary mouse button. Touch contacts rely on click to preserve page scrolling.
         if (event.pointerType !== "mouse" || event.button !== 0) return;
+        if (isTriggerDisabled(node)) return;
 
-        if (node.hasAttribute("disabled") || node.getAttribute("aria-disabled") === "true") return;
-
-        const popoverEl = document.getElementById(target) as PopoverElement | null;
+        const popoverEl = getTargetPopover(target);
         if (!popoverEl || typeof popoverEl.togglePopover !== "function") return;
 
         popoverEl.togglePopover({ source: node });
@@ -200,7 +182,14 @@ function bindToggle(node: HTMLElement, target: string, triggerOn: "pointerdown" 
         suppressNextClick = true;
     }
 
-    function onClick(event: MouseEvent): void {
+    function onClickCapture(event: MouseEvent): void {
+        if (isTriggerDisabled(node)) {
+            suppressNextClick = false;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+        }
+
         if (!suppressNextClick) return;
 
         suppressNextClick = false;
@@ -212,129 +201,350 @@ function bindToggle(node: HTMLElement, target: string, triggerOn: "pointerdown" 
     function resetSuppression(): void {
         if (!suppressNextClick) return;
 
-        setTimeout(() => {
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+            resetTimer = undefined;
             suppressNextClick = false;
         }, 0);
     }
 
-    node.addEventListener("pointerdown", onPointerDown);
-    node.addEventListener("click", onClick, { capture: true });
-    window.addEventListener("pointerup", resetSuppression);
-    window.addEventListener("pointercancel", resetSuppression);
+    node.addEventListener("click", onClickCapture, { capture: true });
+
+    if (triggerOn === "pointerdown") {
+        node.addEventListener("pointerdown", onPointerDown);
+        window.addEventListener("pointerup", resetSuppression);
+        window.addEventListener("pointercancel", resetSuppression);
+    }
 
     return () => {
+        clearTimeout(resetTimer);
         node.removeAttribute("popovertarget");
-        node.removeEventListener("pointerdown", onPointerDown);
-        node.removeEventListener("click", onClick, { capture: true });
-        window.removeEventListener("pointerup", resetSuppression);
-        window.removeEventListener("pointercancel", resetSuppression);
+        node.removeEventListener("click", onClickCapture, { capture: true });
+
+        if (triggerOn === "pointerdown") {
+            node.removeEventListener("pointerdown", onPointerDown);
+            window.removeEventListener("pointerup", resetSuppression);
+            window.removeEventListener("pointercancel", resetSuppression);
+        }
     };
 }
 
-function bindHint(node: HTMLElement, options: HintOptions): () => void {
-    const { target, delay = DEFAULT_HINT_DELAY, dismissOnPress = true } = options;
-    const closeDelay = delay.split(" ", 2)[1] ?? DEFAULT_HINT_CLOSE_DELAY;
-    const unregisterWarmup = registerHintWarmup();
+function bindHover(node: HTMLElement, options: HoverOptions): () => void {
+    const { target, dismissOnPress = true } = options;
+    const [openDelayMs, closeDelayMs] = resolveHoverDelay(options.delay);
 
-    function getTarget(): HTMLElement | null {
-        return document.getElementById(target);
+    let openTimer: ReturnType<typeof setTimeout> | undefined;
+    let closeTimer: ReturnType<typeof setTimeout> | undefined;
+    let instantCleanupTimer: ReturnType<typeof setTimeout> | undefined;
+    let boundPopoverEl: PopoverElement | null = null;
+    let isCleanedUp = false;
+
+    function clearOpenTimer(): void {
+        if (openTimer === undefined) return;
+        clearTimeout(openTimer);
+        openTimer = undefined;
     }
 
-    function arm(): void {
-        disarmedTriggers.delete(node);
-        if (!node.hasAttribute("interestfor")) {
-            node.setAttribute("interestfor", target);
-        }
+    function clearCloseTimer(): void {
+        if (closeTimer === undefined) return;
+        clearTimeout(closeTimer);
+        closeTimer = undefined;
     }
 
-    function disarm(): void {
-        disarmedTriggers.add(node);
-        node.removeAttribute("interestfor");
+    function clearTimers(): void {
+        clearOpenTimer();
+        clearCloseTimer();
     }
 
-    function dismiss(): void {
-        const targetEl = getTarget();
-        if (isPopoverOpen(targetEl)) {
-            targetEl?.hidePopover();
-        }
-        clearHintWarm();
-        disarm();
+    function handlePopoverPointerEnter(): void {
+        clearCloseTimer();
     }
 
-    function restore(): void {
-        if (isPopoverOpen(getTarget())) {
-            markHintWarm();
-            scheduleHintCooldown();
-        }
-        arm();
-    }
+    function handlePopoverPointerLeave(event: PointerEvent): void {
+        const popoverEl = boundPopoverEl;
+        if (!popoverEl) return;
 
-    function handlePointerEnter(): void {
-        arm();
-    }
-
-    function handleFocusIn(): void {
-        // Native `interestfor` reacts to any DOM focus, including programmatic focus restoration when
-        // switching OS windows after a pointer click. Only keyboard-driven focus (`:focus-visible`) or an
-        // actively hovered trigger may keep it armed.
-        if (!node.matches(":focus-visible")) {
-            if (!node.matches(":hover")) disarm();
+        const related = event.relatedTarget;
+        if (related instanceof Node && (node.contains(related) || popoverEl.contains(related))) {
             return;
         }
 
-        arm();
+        scheduleClose();
     }
 
-    function handleKeyDown(event: KeyboardEvent): void {
-        if (event.key === "Enter" || event.key === " ") dismiss();
+    function handlePopoverFocusOut(event: FocusEvent): void {
+        const popoverEl = boundPopoverEl;
+        if (!popoverEl) return;
+
+        const related = event.relatedTarget;
+        if (related instanceof Node && (node.contains(related) || popoverEl.contains(related))) {
+            return;
+        }
+
+        if (!isPointerHovering(node, popoverEl)) {
+            scheduleClose();
+        }
     }
 
-    function handleScroll(event: Event): void {
-        const targetEl = getTarget();
-        if (!isPopoverOpen(targetEl)) return;
+    function handlePopoverToggle(event: Event): void {
+        const popoverEl = boundPopoverEl;
+        if (!popoverEl) return;
 
-        // Scrolling inside the popover itself must not close it.
-        if (event.target instanceof Node && targetEl?.contains(event.target)) return;
+        const newState = (event as { newState?: string }).newState;
+        if (newState !== "closed") return;
 
+        clearTimeout(instantCleanupTimer);
+        instantCleanupTimer = undefined;
+        delete popoverEl.dataset.warm;
+        delete popoverEl.dataset.instant;
+        unbindPopoverListeners();
+
+        if (activeHoverEntry?.node === node) {
+            activeHoverEntry = null;
+            syncDocumentEscapeListener();
+        }
+    }
+
+    function bindPopoverListeners(popoverEl: PopoverElement): void {
+        if (boundPopoverEl === popoverEl) return;
+        unbindPopoverListeners();
+
+        boundPopoverEl = popoverEl;
+        popoverEl.addEventListener("pointerenter", handlePopoverPointerEnter);
+        popoverEl.addEventListener("pointerleave", handlePopoverPointerLeave);
+        popoverEl.addEventListener("focusout", handlePopoverFocusOut);
+        popoverEl.addEventListener("toggle", handlePopoverToggle);
+    }
+
+    function unbindPopoverListeners(): void {
+        if (!boundPopoverEl) return;
+
+        boundPopoverEl.removeEventListener("pointerenter", handlePopoverPointerEnter);
+        boundPopoverEl.removeEventListener("pointerleave", handlePopoverPointerLeave);
+        boundPopoverEl.removeEventListener("focusout", handlePopoverFocusOut);
+        boundPopoverEl.removeEventListener("toggle", handlePopoverToggle);
+        boundPopoverEl = null;
+    }
+
+    function closeNow(instant = false, skipCooldown = false): void {
+        clearTimers();
+        const popoverEl = boundPopoverEl ?? getTargetPopover(target);
+
+        if (popoverEl) {
+            delete popoverEl.dataset.warm;
+            if (instant) {
+                popoverEl.dataset.instant = "";
+                clearTimeout(instantCleanupTimer);
+                // Allow hidePopover() to observe [data-instant] before removing it when no toggle event fires.
+                instantCleanupTimer = setTimeout(() => {
+                    instantCleanupTimer = undefined;
+                    delete popoverEl.dataset.instant;
+                }, 0);
+            } else {
+                clearTimeout(instantCleanupTimer);
+                instantCleanupTimer = undefined;
+                delete popoverEl.dataset.instant;
+            }
+
+            if (isPopoverOpen(popoverEl) && typeof popoverEl.hidePopover === "function") {
+                popoverEl.hidePopover();
+            }
+        }
+
+        unbindPopoverListeners();
+
+        if (activeHoverEntry?.node === node) {
+            activeHoverEntry = null;
+            syncDocumentEscapeListener();
+        }
+
+        if (!skipCooldown) {
+            scheduleHoverCooldown();
+        }
+    }
+
+    function openNow(): void {
+        clearTimers();
+        if (isCleanedUp || isTriggerDisabled(node) || disarmedTriggers.has(node)) return;
+
+        const popoverEl = getTargetPopover(target);
+        if (!popoverEl || typeof popoverEl.showPopover !== "function") return;
+
+        if (activeHoverEntry && activeHoverEntry.popoverEl !== popoverEl) {
+            activeHoverEntry.closeImmediate(true);
+        }
+
+        const warm = isHoverWarm;
+        markHoverWarm();
+
+        clearTimeout(instantCleanupTimer);
+        instantCleanupTimer = undefined;
+        delete popoverEl.dataset.instant;
+
+        if (warm) {
+            popoverEl.dataset.warm = "";
+        } else {
+            delete popoverEl.dataset.warm;
+        }
+
+        bindPopoverListeners(popoverEl);
+
+        if (!isPopoverOpen(popoverEl)) {
+            popoverEl.showPopover({ source: node });
+        }
+
+        activeHoverEntry = {
+            node,
+            popoverEl,
+            closeImmediate: (instant = false) => closeNow(instant, true),
+        };
+        syncDocumentEscapeListener();
+    }
+
+    function scheduleOpen(): void {
+        clearCloseTimer();
+        const currentPopover = getTargetPopover(target);
+        if (isPopoverOpen(currentPopover)) {
+            if (currentPopover) bindPopoverListeners(currentPopover);
+            markHoverWarm();
+            return;
+        }
+
+        if (isHoverWarm) {
+            openNow();
+            return;
+        }
+
+        clearOpenTimer();
+        openTimer = setTimeout(() => {
+            openTimer = undefined;
+            openNow();
+        }, openDelayMs);
+    }
+
+    function scheduleClose(): void {
+        clearOpenTimer();
+        clearCloseTimer();
+        closeTimer = setTimeout(() => {
+            closeTimer = undefined;
+            closeNow(false, false);
+        }, closeDelayMs);
+    }
+
+    function dismiss(): void {
+        clearHoverWarm();
+        disarmedTriggers.add(node);
+        closeNow(false, true);
+    }
+
+    function handlePointerEnter(event: PointerEvent): void {
+        if (event.pointerType === "touch") return;
+        if (isTriggerDisabled(node)) return;
+
+        disarmedTriggers.delete(node);
+        scheduleOpen();
+    }
+
+    function handlePointerLeave(event: PointerEvent): void {
+        clearOpenTimer();
+        disarmedTriggers.delete(node);
+
+        const popoverEl = getTargetPopover(target);
+        if (event.relatedTarget instanceof Node && popoverEl?.contains(event.relatedTarget)) {
+            return;
+        }
+
+        if (isPopoverOpen(popoverEl)) {
+            scheduleClose();
+        }
+    }
+
+    function handleFocusIn(): void {
+        if (isTriggerDisabled(node)) return;
+
+        // Ignore programmatic or pointer-driven focus restoration; only keyboard focus-visible opens.
+        if (!node.matches(":focus-visible")) {
+            if (!node.matches(":hover")) {
+                disarmedTriggers.add(node);
+            }
+            return;
+        }
+
+        if (disarmedTriggers.has(node)) return;
+        scheduleOpen();
+    }
+
+    function handleFocusOut(event: FocusEvent): void {
+        disarmedTriggers.delete(node);
+        clearOpenTimer();
+
+        const popoverEl = getTargetPopover(target);
+        const related = event.relatedTarget;
+        if (related instanceof Node && (node.contains(related) || popoverEl?.contains(related))) {
+            return;
+        }
+
+        if (isPopoverOpen(popoverEl) && !isPointerHovering(node, popoverEl)) {
+            scheduleClose();
+        }
+    }
+
+    function handlePointerDown(): void {
+        if (isTriggerDisabled(node)) return;
         dismiss();
     }
 
-    node.style.setProperty("interest-delay", delay);
-    node.style.setProperty("--cs-popover-hint-close-delay", closeDelay);
-    if (!disarmedTriggers.has(node)) {
-        node.setAttribute("interestfor", target);
+    function handleKeyDown(event: KeyboardEvent): void {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        if (isTriggerDisabled(node)) return;
+        dismiss();
+    }
+
+    function handleScroll(event: Event): void {
+        const popoverEl = getTargetPopover(target);
+        if (!isPopoverOpen(popoverEl)) return;
+
+        // Scrolling inside the popover itself must not close it.
+        if (event.target instanceof Node && popoverEl?.contains(event.target)) return;
+
+        clearHoverWarm();
+        closeNow(false, true);
     }
 
     node.addEventListener("pointerenter", handlePointerEnter);
+    node.addEventListener("pointerleave", handlePointerLeave);
     node.addEventListener("focusin", handleFocusIn);
-    node.addEventListener("pointerleave", restore);
-    node.addEventListener("focusout", restore);
+    node.addEventListener("focusout", handleFocusOut);
     window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
 
     if (dismissOnPress) {
-        node.addEventListener("pointerdown", dismiss);
+        node.addEventListener("pointerdown", handlePointerDown);
         node.addEventListener("keydown", handleKeyDown);
     }
-
-    let isCleanedUp = false;
 
     return () => {
         if (isCleanedUp) return;
         isCleanedUp = true;
 
-        unregisterWarmup();
+        clearTimers();
+        clearTimeout(instantCleanupTimer);
+        instantCleanupTimer = undefined;
 
         node.removeEventListener("pointerenter", handlePointerEnter);
+        node.removeEventListener("pointerleave", handlePointerLeave);
         node.removeEventListener("focusin", handleFocusIn);
-        node.removeEventListener("pointerleave", restore);
-        node.removeEventListener("focusout", restore);
-        window.removeEventListener("scroll", handleScroll, { capture: true });
-        node.removeEventListener("pointerdown", dismiss);
+        node.removeEventListener("focusout", handleFocusOut);
+        node.removeEventListener("pointerdown", handlePointerDown);
         node.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("scroll", handleScroll, { capture: true });
 
-        node.removeAttribute("interestfor");
-        node.style.removeProperty("interest-delay");
-        node.style.removeProperty("--cs-popover-hint-close-delay");
+        const openPopover = boundPopoverEl ?? getTargetPopover(target);
+        if (activeHoverEntry?.node === node || isPopoverOpen(openPopover)) {
+            closeNow(false, true);
+            clearHoverWarm();
+        } else {
+            unbindPopoverListeners();
+        }
 
         // An immediate re-run (reactive update) re-applies the anchor synchronously and keeps the disarmed
         // state. Only a real teardown forgets it.
@@ -354,9 +564,9 @@ export function popoverTrigger(options: PopoverTriggerOptions): Attachment<HTMLE
         node.style.setProperty("anchor-name", `--anchor-${options.target}`);
 
         let unbind: (() => void) | undefined;
-        if (options.mode === "hint") {
-            unbind = bindHint(node, options);
-        } else if (options.mode !== "manual") {
+        if (options.triggerOn === "hover") {
+            unbind = bindHover(node, options);
+        } else if (options.triggerOn !== "manual") {
             unbind = bindToggle(node, options.target, options.triggerOn ?? "pointerdown");
         }
 

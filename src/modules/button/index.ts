@@ -18,10 +18,6 @@ export type ButtonSize = (typeof BUTTON_SIZES)[number];
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 export type ButtonElement = "button" | "a" | "label";
 
-type InterestAttributes = {
-    interestfor?: string;
-};
-
 export type ButtonVariantProps =
     | {
           variant: "primary" | "secondary" | "ghost";
@@ -35,8 +31,7 @@ export type ButtonVariantProps =
 export type ButtonProps = (
     | (Omit<HTMLButtonAttributes, "color" | "size"> & { as?: "button"; ref?: HTMLButtonElement | null })
     | (Omit<HTMLAnchorAttributes, "color" | "size"> & { as: "a"; ref?: HTMLAnchorElement | null })
-    | ((Omit<HTMLLabelAttributes, "color" | "size"> & { as: "label"; ref?: HTMLLabelElement | null }) &
-          InterestAttributes)
+    | (Omit<HTMLLabelAttributes, "color" | "size"> & { as: "label"; ref?: HTMLLabelElement | null })
 ) &
     ButtonVariantProps & {
         size: ButtonSize;

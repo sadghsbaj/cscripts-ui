@@ -1,6 +1,6 @@
 <script lang="ts">
     import { type TooltipProps } from ".";
-    import Popover from "../popover/Popover.svelte";
+    import { Popover } from "../popover";
     import TooltipIcon from "./TooltipIcon.svelte";
     import TooltipKbd from "./TooltipKbd.svelte";
     import TooltipText from "./TooltipText.svelte";
@@ -18,7 +18,7 @@
     const shortcuts = $derived(Array.isArray(shortcut) ? shortcut : shortcut ? [shortcut] : []);
 </script>
 
-<Popover bind:ref {...rest} {id} popover="hint" width="content" placement="top" role="tooltip" class={["cs-tooltip", className]}>
+<Popover bind:ref {...rest} {id} popover="manual" width="content" placement="top" role="tooltip" class={["cs-tooltip", className]}>
     {#if children}
         {@render children()}
     {:else}

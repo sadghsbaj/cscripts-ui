@@ -9,7 +9,11 @@ import Tooltip from "./Tooltip.svelte";
 export type TooltipBaseOptions = {
     placement?: PopoverPlacement;
     offset?: string;
-    delay?: string;
+    /**
+     * Open and close delays in milliseconds: `[openMs, closeMs]`.
+     * @default [400, 150]
+     */
+    delay?: [number, number];
     /**
      * Whether the tooltip attachment is active.
      * @default true
@@ -100,7 +104,7 @@ export function tooltip(options: TooltipOptions): Attachment<HTMLElement> {
         }
 
         const id = resolveTooltipId(node, options);
-        const unbindTrigger = popoverTrigger({ target: id, mode: "hint", delay: options.delay })(node);
+        const unbindTrigger = popoverTrigger({ target: id, triggerOn: "hover", delay: options.delay })(node);
 
         node.setAttribute("aria-describedby", id);
         applyTargetStyles(id, options);

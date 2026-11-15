@@ -17,8 +17,8 @@ export type TooltipIconConfig =
 /**
  * Props for the `<Tooltip />` surface container.
  *
- * Built on top of `<Popover popover="hint">`. Inherits automatic entry/exit motion, anchor positioning,
- * and global warmup acceleration (`:root[data-hint-warm]`).
+ * Built on top of `<Popover popover="manual">`. Inherits automatic entry/exit motion, anchor positioning,
+ * and global warmup acceleration.
  */
 export interface TooltipProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover" | "role"> {
     ref?: HTMLDivElement | null;

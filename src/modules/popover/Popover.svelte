@@ -51,15 +51,6 @@
         }
 
         /* =========================================================
-        * HINT WARMUP ACCELERATION
-        * Eliminates open-delay across adjacent hint triggers while
-        * a hint popover is open or during the 300ms warmup window.
-        * ========================================================= */
-        :global(:root[data-hint-warm] [interestfor]) {
-            interest-delay: 0ms var(--cs-popover-hint-close-delay, 150ms) !important;
-        }
-
-        /* =========================================================
         * WIDTHS
         * ========================================================= */
         .cs-popover[data-width="content"] {

@@ -22,10 +22,13 @@ export type PopoverPlacement = (typeof POPOVER_PLACEMENTS)[number];
 export const POPOVER_WIDTHS = ["content", "anchor", "min-anchor"] as const;
 export type PopoverWidth = (typeof POPOVER_WIDTHS)[number];
 
+export const POPOVER_TRIGGER_ON = ["pointerdown", "click", "hover", "manual"] as const;
+export type PopoverTriggerOn = (typeof POPOVER_TRIGGER_ON)[number];
+
 export interface PopoverProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover"> {
     ref?: HTMLDivElement | null;
     id: string;
-    popover?: "" | "auto" | "manual" | "hint";
+    popover?: "" | "auto" | "manual";
     /** Whether to enable built-in directional spring animation. Defaults to `true`. */
     animate?: boolean;
     placement: PopoverPlacement;
