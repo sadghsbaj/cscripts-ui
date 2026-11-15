@@ -22,6 +22,6 @@
 }
 
 :focus-visible {
-    outline: 2px solid var(--cs-color-accent-500);
+    outline: 2px solid var(--cs-color-accent-solid);
     outline-offset: 2px;
 }

@@ -1,9 +1,6 @@
 :root {
-    --cs-color-selection-bg: light-dark(
-        oklch(from var(--cs-color-accent-500) l c h / 0.12),
-        oklch(from var(--cs-color-accent-500) l c h / 0.12)
-    );
-    --cs-color-selection-text: light-dark(var(--cs-color-accent-600), var(--cs-color-accent-500));
+    --cs-color-selection-bg: oklch(from var(--cs-color-accent-solid) l c h / 0.12);
+    --cs-color-selection-text: var(--cs-color-accent-soft-fg);
 }
 
 ::selection {
@@ -29,6 +26,6 @@ video::selection {
    white selection for contrast on colored surfaces */
 [data-selection-on-accent] ::selection,
 [data-selection-on-accent]::selection {
-    color: var(--cs-color-accent-500);
+    color: var(--cs-color-accent-solid);
     background-color: white;
 }
