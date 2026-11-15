@@ -17,7 +17,7 @@ const TRACK_SIZE_PX: Record<ScrollAreaSize, number> = {
 };
 const BOUNDARY_TOLERANCE = 2;
 const SCROLL_IDLE_DELAY_MS = 700;
-const OVERSHOOT_RELEASE_DELAY_MS = 150;
+const OVERSHOOT_RELEASE_DELAY_MS = 220;
 
 export interface ScrollAreaStateOptions {
     getSize: () => ScrollAreaSize;
@@ -129,7 +129,8 @@ export class ScrollAreaManager {
 
     #triggerOvershoot(edge: OvershootEdge, rawDelta: number): void {
         const impulse = Math.min(1, Math.max(0.25, Math.abs(rawDelta) / 120));
-        const next = Math.min(1, Math.max(0.35, this.overshootValues[edge] + impulse * 0.65));
+        const target = Math.min(1, Math.max(0.45, this.overshootValues[edge] + impulse * 0.45));
+        const next = this.overshootValues[edge] > 0 ? this.overshootValues[edge] * 0.5 + target * 0.5 : target;
         this.#setOvershoot(edge, next);
 
         const existingTimer = this.#overshootTimers[edge];
