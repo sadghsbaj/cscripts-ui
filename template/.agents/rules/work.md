@@ -6,14 +6,14 @@ description: "Rules for internal Pfleiderer work applications using cs/svelte/wo
 # Rule: Internal Work Applications (`cs/svelte/work`)
 
 <meta>
-  <scope>When to use cs/svelte/work, single-file Vite defaults, and work.docs.md discovery</scope>
+  <scope>When to use cs/svelte/work, single-file Vite defaults, and co-located work submodule docs discovery</scope>
   <applies_to>Internal company (Pfleiderer) tools and applications</applies_to>
   <version>1.0</version>
 </meta>
 
 <principles>
   - Use `cs/svelte/work` for all internal company (Pfleiderer) tools instead of inventing custom app headers, brand badges, intro screens, or page frames.
-  - Read `./node_modules/cs/src/work/work.docs.md` before composing work-shell components or referencing Pfleiderer locations.
+  - Read the co-located submodule docs (`./node_modules/cs/src/work/<submodule>/<submodule>.docs.md` — `app-layout`, `app-intro`, `app-controls`, `locations`, `logo`) before composing work-shell components or referencing Pfleiderer locations.
 </principles>
 
 <patterns>
@@ -25,7 +25,7 @@ description: "Rules for internal Pfleiderer work applications using cs/svelte/wo
   </vite_defaults>
 
   <module_docs>
-    - **API & Composition:** Read `./node_modules/cs/src/work/work.docs.md` (and `./node_modules/cs/src/work/index.ts` for exact exports) before using `WorkAppIntro`, `WorkAppFrame`, `WorkAppHeader`, `WorkAppHeaderSegment`, `WorkAppMain`, `WorkAppThemeButton`, `WorkAppHelpButton`, `WorkAppStatusDot`, or `WORK_LOCATIONS`.
+    - **API & Composition:** Read the matching `./node_modules/cs/src/work/<submodule>/<submodule>.docs.md` (`app-layout`, `app-intro`, `app-controls`, `locations`, `logo`) and `./node_modules/cs/src/work/index.ts` before using `WorkApp*`, `WorkLogo`, `WorkLocation`, or `WORK_LOCATIONS`.
   </module_docs>
 </patterns>
 
