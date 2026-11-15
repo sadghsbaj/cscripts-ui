@@ -16,8 +16,33 @@
         ...rest
     }: OverlayProps = $props();
 
-    /* Delays Svelte DOM unmounting by 160ms so native CSS `allow-discrete`
-     * and `overlay` exit transitions can fully play out before element removal. */
+    function getMaxTransitionDurationMs(node: HTMLElement): number {
+        if (typeof getComputedStyle !== "function") return 0;
+
+        const raw = getComputedStyle(node).transitionDuration;
+        if (!raw) return 0;
+
+        let max = 0;
+        for (const part of raw.split(",")) {
+            const trimmed = part.trim();
+            if (!trimmed) continue;
+
+            let ms = NaN;
+            if (trimmed.endsWith("ms")) {
+                ms = Number(trimmed.slice(0, -2));
+            } else if (trimmed.endsWith("s")) {
+                ms = Number(trimmed.slice(0, -1)) * 1000;
+            }
+            if (Number.isFinite(ms) && ms > max) {
+                max = ms;
+            }
+        }
+        return max;
+    }
+
+    /* Delays Svelte DOM unmounting to match the CSS exit transition duration
+     * so native `allow-discrete` and `overlay` exit transitions can play out.
+     * Computed after hidePopover() so base .cs-overlay exit rules apply. */
     function overlayExit(node: HTMLElement): TransitionConfig {
         try {
             if (node.matches?.(":popover-open")) {
@@ -28,7 +53,7 @@
         }
 
         return {
-            duration: 160,
+            duration: getMaxTransitionDurationMs(node),
         };
     }
 
@@ -97,11 +122,11 @@
             -webkit-backdrop-filter: blur(0px) saturate(100%);
             backdrop-filter: blur(0px) saturate(100%);
             transition:
-                opacity 160ms var(--cs-ease-cubic-in),
-                backdrop-filter 160ms var(--cs-ease-quad-in),
-                -webkit-backdrop-filter 160ms var(--cs-ease-quad-in),
-                display 160ms allow-discrete,
-                overlay 160ms allow-discrete;
+                opacity var(--cs-dur-exit-lg) var(--cs-ease-exit),
+                backdrop-filter var(--cs-dur-exit-lg) var(--cs-ease-exit),
+                -webkit-backdrop-filter var(--cs-dur-exit-lg) var(--cs-ease-exit),
+                display var(--cs-dur-exit-lg) allow-discrete,
+                overlay var(--cs-dur-exit-lg) allow-discrete;
             overscroll-behavior: contain;
 
             &[data-scroll-locked] {
@@ -119,11 +144,11 @@
         .cs-overlay:popover-open {
             opacity: 1;
             transition:
-                opacity 220ms var(--cs-ease-expo-out),
-                backdrop-filter 420ms var(--cs-ease-quart-out),
-                -webkit-backdrop-filter 420ms var(--cs-ease-quart-out),
-                display 420ms allow-discrete,
-                overlay 420ms allow-discrete;
+                opacity var(--cs-dur-enter-sm) var(--cs-ease-effect),
+                backdrop-filter var(--cs-dur-enter-lg) var(--cs-ease-quart-out),
+                -webkit-backdrop-filter var(--cs-dur-enter-lg) var(--cs-ease-quart-out),
+                display var(--cs-dur-enter-lg) allow-discrete,
+                overlay var(--cs-dur-enter-lg) allow-discrete;
         }
 
         /* =========================================================

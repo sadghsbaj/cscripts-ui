@@ -60,5 +60,5 @@ Promotes any `[popover]` element to the Top Layer on mount via `showPopover()` a
 
 ## Behavior & Quirks
 - **Safe backdrop dismiss:** `onclick` only fires when both `pointerdown` and `click` occur directly on the backdrop (`event.target === event.currentTarget`), preventing accidental dismissal when dragging text selection out of a child dialog.
-- **160ms exit transition:** Uses a custom `out:overlayExit` Svelte transition that calls `hidePopover()` and holds DOM removal for 160ms so CSS `allow-discrete` / `overlay` exit animations complete cleanly.
+- **Motion & exit transition:** Uses semantic motion tokens from `motion.css` (`--cs-dur-enter-sm` / `--cs-ease-effect` for opacity enter, `--cs-dur-enter-lg` / `--cs-ease-quart-out` for `backdrop-filter` enter, and `--cs-dur-exit-lg` / `--cs-ease-exit` for exit). On unmount, the custom `out:overlayExit` Svelte transition calls `hidePopover()` and dynamically reads the computed `transitionDuration` so JS unmount timing stays synced with CSS `allow-discrete` / `overlay` exit animations and `prefers-reduced-motion`.
 - **Conditional rendering:** Mount `<Overlay />` inside `{#if open}`—it opens automatically on mount via `topLayer()`.
