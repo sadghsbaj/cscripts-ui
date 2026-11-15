@@ -1,14 +1,18 @@
 <script lang="ts">
     import type { Component } from "svelte";
-    import { PanelLeftClose, PanelLeftOpen } from "@lucide/svelte";
+    import { BookOpen, Eye, PanelLeftClose, PanelLeftOpen } from "@lucide/svelte";
     import { getLocalStorage, setLocalStorage } from "cs/svelte/browser-storage";
     import { Button, ButtonIcon } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
     import { ScrollArea, ScrollAreaContent } from "cs/svelte/scroll-area";
     import { scrollFade } from "cs/svelte/scroll-fade";
     import { theme, THEME_ICONS, type ThemeMode } from "cs/svelte/theme";
+    import { ToggleButton, ToggleButtonIcon, ToggleButtonLabel } from "cs/svelte/toggle-button";
+    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
     import { tooltip } from "cs/svelte/tooltip";
+
     import {
+        DocsProse,
         PREVIEW_CATEGORIES,
         PREVIEW_CATEGORY_LABELS,
         type PreviewCategory,
@@ -31,7 +35,10 @@
         label: string;
         category: PreviewCategory;
         preview: Component;
+        docs?: string;
     }
+
+    type ViewMode = "preview" | "docs";
 
     interface PreviewGroup {
         id: PreviewCategory;
@@ -48,6 +55,21 @@
         { eager: true }
     );
 
+    const docsModules = import.meta.glob<string>(["../src/modules/**/*.docs.md", "../src/work/**/*.docs.md"], {
+        query: "?raw",
+        import: "default",
+        eager: true,
+    });
+
+    function dirFromPath(filePath: string): string {
+        const lastSlash = filePath.lastIndexOf("/");
+        return lastSlash === -1 ? filePath : filePath.slice(0, lastSlash);
+    }
+
+    const docsByDir = new Map<string, string>(
+        Object.entries(docsModules).map(([filePath, markdown]) => [dirFromPath(filePath), markdown])
+    );
+
     function categoryFromPath(path: string): PreviewCategory {
         return path.includes("/work/") ? "work" : "modules";
     }
@@ -58,6 +80,7 @@
             label: module.label,
             category: categoryFromPath(path),
             preview: module.default,
+            docs: docsByDir.get(dirFromPath(path)),
         }))
         .toSorted((a, b) => a.label.localeCompare(b.label, "en"));
 
@@ -83,12 +106,15 @@
 
     let activePreviewItem = $derived(previews.find((p) => p.id === selectedId));
     let ActivePreview = $derived(activePreviewItem?.preview);
+    let viewMode = $state<ViewMode>("preview");
+    let effectiveViewMode = $derived<ViewMode>(activePreviewItem?.docs ? viewMode : "preview");
 
     $effect(() => {
         if (selectedId) {
             setLocalStorage(SAVED_PREVIEW_KEY, selectedId);
         }
 
+        void effectiveViewMode;
         const viewport = mainScrollContainer?.querySelector<HTMLElement>(".cs-scroll-area-content");
         if (viewport) {
             viewport.scrollTop = 0;
@@ -135,6 +161,22 @@
         onfocusin={() => (isFocusedControls = true)}
         onfocusout={() => (isFocusedControls = false)}
     >
+        {#if activePreviewItem?.docs}
+            <div class="rounded-full bg-elevated p-0.5 shadow-sm border border-base-soft">
+                <ToggleButtonGroup type="single" bind:value={viewMode} aria-label="View mode">
+                    <ToggleButton value="preview" variant="ghost" color="accent" size="sm">
+                        <ToggleButtonIcon icon={Eye} />
+                        <ToggleButtonLabel>Preview</ToggleButtonLabel>
+                    </ToggleButton>
+                    <ToggleButtonGroupSeparator />
+                    <ToggleButton value="docs" variant="ghost" color="accent" size="sm">
+                        <ToggleButtonIcon icon={BookOpen} />
+                        <ToggleButtonLabel>Docs</ToggleButtonLabel>
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </div>
+        {/if}
+
         <Button
             size="md"
             variant="elevated"
@@ -169,9 +211,7 @@
     >
         <div class="w-260px h-full flex flex-col gap-4 py-7 px-4">
             <div class="px-3 flex items-center justify-between">
-                <span class="text-xs font-semibold uppercase tracking-wider text-weak">
-                    Playground
-                </span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-weak"> Playground </span>
             </div>
 
             <ScrollArea size="sm" direction="vertical" class="w-full flex-1 min-h-0">
@@ -215,7 +255,9 @@
                 {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
             >
                 <div class="w-full max-w-4xl mx-auto flex flex-col gap-10">
-                    {#if ActivePreview}
+                    {#if effectiveViewMode === "docs" && activePreviewItem?.docs}
+                        <DocsProse markdown={activePreviewItem.docs} />
+                    {:else if ActivePreview}
                         <ActivePreview />
                     {/if}
                 </div>
@@ -227,8 +269,8 @@
 <style>
     .cs-playground-sidebar {
         width: 0;
-        opacity: 0;
         border-right-width: 0;
+        opacity: 0;
         transition:
             width 280ms var(--cs-ease-cubic-out),
             opacity 200ms var(--cs-ease-cubic-out),
@@ -237,8 +279,8 @@
 
     .cs-playground-sidebar[data-open] {
         width: 260px;
-        opacity: 1;
         border-right-width: 1px;
+        opacity: 1;
     }
 
     .cs-sidebar-item:focus-visible {
@@ -249,10 +291,10 @@
     .cs-playground-controls {
         opacity: 0;
         transform: translateY(-4px);
-        pointer-events: none;
         transition:
             opacity 260ms var(--cs-ease-cubic-out),
             transform 260ms var(--cs-ease-cubic-out);
+        pointer-events: none;
     }
 
     .cs-playground-controls[data-visible] {
