@@ -1,7 +1,18 @@
+tab reihenfogle in card wenn close button teils noch nciht korrekt x
+
+wenn da wo closebutotn grafik dann etnwder überleen ob man zwingen überhaupt ein brauhct wenn ja üpb elevated nicht auhc clean aussehen könnte anstonen soft nutzen gucken obs passt oderm an ggf leicht overwrirtet mit nem solid bg x
+
+cleane references neben an velrinken in card docs x
+
+buttonmorph kann amn beim toglgen nicht mehr abbrehcen geht auf pointerdown fixen
+
+kbd keycap darkmdoe minmal der schawrze shcatten weg das gräulchie passst
+
 ## Modules
 
+- progressbar indicator
 - [x] Badges
-- [ ] Cards
+- [x] Cards
 - [ ] Textarea (evtl.)
 - [ ] Zahlen-Animationen
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
