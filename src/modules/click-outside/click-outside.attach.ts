@@ -264,30 +264,36 @@ export function clickOutside<T extends HTMLElement | SVGElement = HTMLElement>(
         let isUnmounted = false;
         let timerId: ReturnType<typeof setTimeout> | null = null;
         let iframeTimerId: ReturnType<typeof setTimeout> | null = null;
+        let pointerResetTimerId: ReturnType<typeof setTimeout> | null = null;
         let pointerDownPath: EventTarget[] = [];
         let pointerDownInside = false;
 
         container.dataset.clickOutside = "";
 
+        const clearPointerResetTimer = (): void => {
+            if (pointerResetTimerId === null) return;
+            clearTimeout(pointerResetTimerId);
+            pointerResetTimerId = null;
+        };
+
         const resetPointerDownState = (): void => {
+            clearPointerResetTimer();
             pointerDownPath = [];
             pointerDownInside = false;
         };
 
         const handlePointerDown = (event: Event): void => {
             if (isUnmounted) return;
+            clearPointerResetTimer();
             pointerDownPath = typeof event.composedPath === "function" ? event.composedPath() : [];
             pointerDownInside = isEventInside(event, container, ignore, pointerDownPath);
         };
 
         const handlePointerUpOrCancel = (): void => {
             if (isUnmounted) return;
-            // Defer reset to next microtask so current click/mouseup event cycle can read the state
-            if (typeof queueMicrotask === "function") {
-                queueMicrotask(resetPointerDownState);
-            } else {
-                setTimeout(resetPointerDownState, 0);
-            }
+            clearPointerResetTimer();
+            // Defer reset to next macrotask so click dispatched after pointerup still sees pointerDownInside
+            pointerResetTimerId = setTimeout(resetPointerDownState, 0);
         };
 
         const handleOutsideInteraction = (event: Event): void => {
@@ -399,6 +405,8 @@ export function clickOutside<T extends HTMLElement | SVGElement = HTMLElement>(
                 clearTimeout(iframeTimerId);
                 iframeTimerId = null;
             }
+
+            clearPointerResetTimer();
 
             delete container.dataset.clickOutside;
 

@@ -159,6 +159,129 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
 
             cleanup?.();
         });
+
+        test("should NOT trigger when a microtask boundary separates pointerup outside from the subsequent click event", async () => {
+            const handler = vi.fn();
+            const child = document.createElement("span");
+            container.append(child);
+
+            const attach = clickOutside({
+                onOutsideClick: handler,
+                requireMatchingPointerDown: true,
+            });
+            const cleanup = attach(container);
+
+            await Promise.resolve();
+
+            child.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            outsideElement.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+
+            await Promise.resolve();
+
+            outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+            expect(handler).not.toHaveBeenCalled();
+
+            cleanup?.();
+        });
+
+        test("should still trigger on a subsequent genuine outside click after a cancelled drag-out", async () => {
+            const handler = vi.fn();
+            const child = document.createElement("span");
+            container.append(child);
+
+            const attach = clickOutside({
+                onOutsideClick: handler,
+                requireMatchingPointerDown: true,
+            });
+            const cleanup = attach(container);
+
+            await Promise.resolve();
+
+            child.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            outsideElement.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+
+            await new Promise((r) => setTimeout(r, 0));
+
+            outsideElement.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+            expect(handler).toHaveBeenCalledTimes(1);
+
+            cleanup?.();
+        });
+
+        test("should cancel pending pointer reset timer when a second pointerdown occurs inside before macrotask flush", async () => {
+            const handler = vi.fn();
+            const child = document.createElement("span");
+            container.append(child);
+
+            const attach = clickOutside({
+                onOutsideClick: handler,
+                requireMatchingPointerDown: true,
+            });
+            const cleanup = attach(container);
+
+            await Promise.resolve();
+
+            child.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            outsideElement.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+            child.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+
+            await new Promise((r) => setTimeout(r, 0));
+
+            outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+            expect(handler).not.toHaveBeenCalled();
+
+            cleanup?.();
+        });
+
+        test("should reset pointerdown state on pointercancel so a subsequent outside click triggers", async () => {
+            const handler = vi.fn();
+            const child = document.createElement("span");
+            container.append(child);
+
+            const attach = clickOutside({
+                onOutsideClick: handler,
+                requireMatchingPointerDown: true,
+            });
+            const cleanup = attach(container);
+
+            await Promise.resolve();
+
+            child.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            child.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true }));
+            outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+            expect(handler).toHaveBeenCalledTimes(1);
+
+            cleanup?.();
+        });
+
+        test("should clear pending pointer reset timer on unmount cleanup", async () => {
+            const handler = vi.fn();
+            const child = document.createElement("span");
+            container.append(child);
+
+            const attach = clickOutside({
+                onOutsideClick: handler,
+                requireMatchingPointerDown: true,
+            });
+            const cleanup = attach(container);
+
+            await Promise.resolve();
+
+            child.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            outsideElement.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+            cleanup?.();
+
+            await new Promise((r) => setTimeout(r, 0));
+
+            outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+            expect(handler).not.toHaveBeenCalled();
+        });
     });
 
     describe("Detached DOM Node Edge Case", () => {
@@ -400,8 +523,8 @@ describe("clickOutside Svelte 5 Element Attachment", () => {
             child.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
             child.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
 
-            // Allow microtask to reset pointerdown inside state
-            await Promise.resolve();
+            // Allow macrotask to reset pointerdown inside state
+            await new Promise((resolve) => setTimeout(resolve, 0));
 
             // 2. Keyboard click (Enter key on outside button produces synthetic click with no pointerdown)
             outsideElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
