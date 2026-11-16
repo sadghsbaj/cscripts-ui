@@ -82,6 +82,7 @@
             --cs-switch-bg-checked: var(--cs-color-accent-solid);
             --cs-switch-bg-checked-hover: var(--cs-color-accent-solid-hover);
             --cs-switch-radius: calc(var(--cs-switch-height) / 2);
+            --cs-switch-thumb-radius: max(0px, calc(var(--cs-switch-radius) - var(--cs-switch-pad)));
             --cs-switch-thumb-bg: #fff;
             --cs-switch-thumb-shadow: 0 1px 3px rgb(0 0 0 / 0.18), 0 1px 1px rgb(0 0 0 / 0.08);
             --cs-switch-thumb-dur: var(--cs-dur-180);
@@ -156,14 +157,13 @@
                 inset-inline-start: var(--cs-switch-pad);
                 width: var(--cs-switch-thumb-width);
                 background-color: var(--cs-switch-thumb-bg);
-                border-radius: var(--cs-radius-full);
+                border-radius: var(--cs-switch-thumb-radius);
                 corner-shape: var(--cs-squircle-soft);
                 box-shadow: var(--cs-switch-thumb-shadow);
-                /* Pin inset-inline-start so horizontal travel stays on compositor translate while width stretches */
+                /* Pin inset-inline-start so horizontal travel stays on compositor translate */
                 translate: calc(var(--cs-switch-thumb-x, 0px) * var(--cs-switch-dir)) 0;
                 transition:
                     translate var(--cs-switch-thumb-dur) var(--cs-switch-thumb-ease),
-                    width var(--cs-dur-press) var(--cs-ease-press),
                     background-color var(--cs-dur-press) var(--cs-ease-press),
                     box-shadow var(--cs-dur-press) var(--cs-ease-press),
                     opacity var(--cs-dur-press) var(--cs-ease-press);
@@ -188,26 +188,6 @@
                 --cs-switch-thumb-x: calc(
                     var(--cs-switch-width) - var(--cs-switch-pad) * 2 - var(--cs-switch-thumb-width)
                 );
-            }
-
-            /* Scope press anticipation to fine hover pointers: on touch devices (Android Chrome),
-               :active latches ~64ms past touchend/click, causing thumb width to settle after the 180ms translate finishes */
-            @media (hover: hover) and (pointer: fine) {
-                &:active:not(:disabled) {
-                    /* Match translate timing to width press timing so :checked:active stays edge-locked */
-                    --cs-switch-thumb-dur: var(--cs-dur-press);
-                    --cs-switch-thumb-ease: var(--cs-ease-press);
-
-                    &::after {
-                        width: calc(var(--cs-switch-thumb-width) * 1.14);
-                    }
-
-                    &:checked {
-                        --cs-switch-thumb-x: calc(
-                            var(--cs-switch-width) - var(--cs-switch-pad) * 2 - var(--cs-switch-thumb-width) * 1.14
-                        );
-                    }
-                }
             }
 
             &:disabled {
