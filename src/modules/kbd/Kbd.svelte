@@ -1,5 +1,6 @@
 <script lang="ts">
     import "./kbd.internal.css";
+
     import { KBD_KEYS, type KbdKeyDefinition, type KbdProps } from "./index.ts";
     import { getKbdGroupContext, hasKbdGroupContext } from "./kbd.context.internal.ts";
 
@@ -20,15 +21,11 @@
 
     $effect.pre(() => {
         if (!resolvedVariant || !resolvedSize) {
-            throw new Error(
-                "<Kbd> requires both `variant` and `size` props when used outside a <KbdGroup>."
-            );
+            throw new Error("<Kbd> requires both `variant` and `size` props when used outside a <KbdGroup>.");
         }
     });
 
-    const symbolEntry: KbdKeyDefinition | undefined = $derived(
-        !children && symbol ? KBD_KEYS[symbol] : undefined
-    );
+    const symbolEntry: KbdKeyDefinition | undefined = $derived(!children && symbol ? KBD_KEYS[symbol] : undefined);
     const SymbolIcon = $derived(symbolEntry?.icon);
     const showSymbolIcon = $derived(Boolean(SymbolIcon) && display !== "text");
     const showSymbolText = $derived(Boolean(symbolEntry) && (!showSymbolIcon || display === "both"));
@@ -60,26 +57,26 @@
     @layer components.primitive {
         .cs-kbd {
             display: inline-flex;
+            gap: var(--cs-kbd-gap);
             align-items: center;
             justify-content: center;
-            gap: var(--cs-kbd-gap);
-            block-size: var(--cs-kbd-item-height, var(--cs-kbd-height));
             /* Slightly wide floor keeps single-character and icon-only keys from collapsing into circles */
             min-inline-size: var(--cs-kbd-item-min-width, calc(var(--cs-kbd-height) + 4px));
+            block-size: var(--cs-kbd-item-height, var(--cs-kbd-height));
             padding-inline: var(--cs-kbd-item-px, var(--cs-kbd-px));
-            vertical-align: middle;
+            color: var(--cs-kbd-fg);
             font-family: var(--cs-font-sans);
             font-size: var(--cs-kbd-font-size);
-            font-weight: 500;
             font-variant-numeric: tabular-nums;
+            font-weight: 500;
             line-height: var(--cs-leading-none);
             white-space: nowrap;
-            user-select: none;
-            color: var(--cs-kbd-fg);
+            vertical-align: middle;
             background: var(--cs-kbd-item-bg, var(--cs-kbd-bg));
-            box-shadow: var(--cs-kbd-item-shadow, var(--cs-kbd-shadow, none));
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-smooth);
+            box-shadow: var(--cs-kbd-item-shadow, var(--cs-kbd-shadow, none));
+            user-select: none;
             transition: none;
 
             &[data-variant="soft"] {
@@ -98,10 +95,8 @@
                 --cs-kbd-bg: linear-gradient(to bottom, white, var(--cs-color-base-50));
                 --cs-kbd-fg: var(--cs-color-text-strong);
                 --cs-kbd-shadow:
-                    inset 0 1px 0 0 rgb(255 255 255 / 0.9),
-                    0 2px 0 0 var(--cs-color-base-300),
-                    0 0 0 1px rgb(0 0 0 / 0.08),
-                    0 2px 3px -1px rgb(0 0 0 / 0.08);
+                    inset 0 1px 0 0 rgb(255 255 255 / 0.9), 0 2px 0 0 var(--cs-color-base-300),
+                    0 0 0 1px rgb(0 0 0 / 0.08), 0 2px 3px -1px rgb(0 0 0 / 0.08);
                 /* Compensate for the 2px bottom lip so keycaps align with neighboring text baselines */
                 margin-block-end: var(--cs-kbd-item-margin-block-end, 2px);
             }
@@ -113,12 +108,9 @@
                     color-mix(in oklab, var(--cs-color-base-700) 45%, var(--cs-color-base-800))
                 );
                 --cs-kbd-shadow:
-                    inset 0 1px 0 0 rgb(255 255 255 / 0.22),
-                    inset 0 0 0 1px rgb(255 255 255 / 0.08),
+                    inset 0 1px 0 0 rgb(255 255 255 / 0.22), inset 0 0 0 1px rgb(255 255 255 / 0.08),
                     0 2px 0 0 color-mix(in oklab, var(--cs-color-base-800) 75%, var(--cs-color-base-900)),
-                    0 0 0 1px color-mix(in oklab, var(--cs-color-base-950) 55%, black),
-                    0 2px 0 1px color-mix(in oklab, var(--cs-color-base-950) 55%, black),
-                    0 4px 5px -1px rgb(0 0 0 / 0.55);
+                    0 0 0 1px rgb(0 0 0 / 0.4), 0 2px 0 1px rgb(0 0 0 / 0.4), 0 3px 4px -1px rgb(0 0 0 / 0.4);
             }
 
             & :global(.cs-kbd-icon) {
