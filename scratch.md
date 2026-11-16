@@ -1,47 +1,50 @@
+## UI & Polish
+
+- SegmentedControl-Scale leicht buggy (ändert sich evtl. noch)
+- Close-Button nicht immer perfekt mit Titeln aligned – in Cards, Modals usw. etwas weiter am Rand (nicht zu nah) könnte cooler aussehen
+- Elemente allgemein zu klein: Da Work-Apps immer als Desktop-Apps gebaut werden (auch für kleinere Laptops optimiert), sind die gewählten Elemente oft zu klein bzw. es sind zu viele zu kleine Elemente
+
 ## Modules
 
-- filesystem basis bauen TESTEN vll playground artige test view oder so auch?
+- [ ] Filesystem-Basis bauen und testen (evtl. auch Playground-artige Test-View)
+- [ ] Modal
+- [ ] Select
+- [ ] Combobox
+- [ ] ContextMenu
+- [ ] Toast
+- [ ] NLP Parser
+- [ ] Chip
+- [ ] Badges
+- [ ] Color Picker
+- [ ] EML-Logik: Signaturen
+- [ ] EML-Wizard
+- [ ] Allgemeine EML-Logik (eigene Outlook-E-Mail-Logik für Work)
+- [ ] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
+- [ ] Cards
+- [ ] KI-Integrationen clean dargestellt
+- [ ] Dokumentationsseite: flexible Bausteine (Factory Pattern)
+- [ ] Filesystem-Chooser / Verwalter-Element
+- [ ] PDF Viewer
+- [ ] Verschlüsselte Seiten im Filesystem
+- [ ] Auth-System im Filesystem
+- [ ] Diff-Component
+- [ ] Textarea (evtl.)
+- [ ] ContentEditable-artiges Element für Platzhalter etc.
+- [ ] Animierte Charts
+- [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
+- [ ] Zahlen-Animationen
+- [x] Switch (Anticipation Spring) + Group
+- [x] RovingFocus
+- [x] TextInput
 
-- switch(anticipaton spring) + group x
-- rovingfocus x
-- modal
-- select
-- combobox
-- contextmenu
-- toast
-- nlp parser
-- chip
-- badges
-- color picker
-- eml logik signaturen
-- eml wizard
-- allgemeine eml logik eigene outlook email logik für work
-- excel parsing maybe zentraler einfacher? excel zu json json zu excel mit formatierung und co
-- Cards
-- KI integrationen clean dargstellt
-- Dokumentationsseite fleixble Bausteine factory pattern
-- filesystem chooser verwalter element
-- pdf viewer
-- verschlüsselte seiten im filesystem
-- auth system in fs
-- diff component
+## Checkbox
 
-- textinput x
-- textarea maybe
-- contenteditable artiges ding für Platzhalter und sowas
-
-- geile charts animiert
-- text morph
-- geile zahlen animationen
-
-## Checkbox:
-
-Group? x
-invalid style x
-Logik erweitern wie bei ToggleButton x
-Headless CheckboxGroup nur für Verhalten? x
-Animationen in alle Richtungen geil machen x
-Doku anpassen x
-dot in der mitte von chekbox bei indeterminate x
-indetermiante select all bug x
-Hit Area x
+- [x] Group?
+- [x] Invalid-Style
+- [x] Logik erweitern wie bei ToggleButton
+- [x] Headless CheckboxGroup nur für Verhalten?
+- [x] Animationen in alle Richtungen geil machen
+- [x] Doku anpassen
+- [x] Dot in der Mitte der Checkbox bei Indeterminate
+- [x] Indeterminate „Select All“-Bug
+- [x] Hit Area
