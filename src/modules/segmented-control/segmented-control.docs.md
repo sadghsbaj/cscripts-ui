@@ -170,8 +170,14 @@ Internal / computed properties:
 
 ### Form Submission (`name`)
 ```svelte
+<script lang="ts">
+    import { SegmentedControl, SegmentedControlItem, SegmentedControlLabel } from "cs/svelte/segmented-control";
+
+    let billingPeriod = $state("monthly");
+</script>
+
 <form>
-    <SegmentedControl size="md" name="billing_period" value="monthly" aria-label="Billing period">
+    <SegmentedControl size="md" name="billing_period" bind:value={billingPeriod} aria-label="Billing period">
         <SegmentedControlItem value="monthly">
             <SegmentedControlLabel>Monthly</SegmentedControlLabel>
         </SegmentedControlItem>
@@ -184,7 +190,14 @@ Internal / computed properties:
 
 ### Disabled Group & Item
 ```svelte
-<SegmentedControl size="md" value="standard" aria-label="Shipping tier">
+<script lang="ts">
+    import { SegmentedControl, SegmentedControlItem, SegmentedControlLabel } from "cs/svelte/segmented-control";
+
+    let shippingTier = $state("standard");
+    let lockedTier = $state("standard");
+</script>
+
+<SegmentedControl size="md" bind:value={shippingTier} aria-label="Shipping tier">
     <SegmentedControlItem value="standard">
         <SegmentedControlLabel>Standard</SegmentedControlLabel>
     </SegmentedControlItem>
@@ -196,7 +209,7 @@ Internal / computed properties:
     </SegmentedControlItem>
 </SegmentedControl>
 
-<SegmentedControl size="md" value="standard" disabled aria-label="Locked tier">
+<SegmentedControl size="md" bind:value={lockedTier} disabled aria-label="Locked tier">
     <SegmentedControlItem value="standard">
         <SegmentedControlLabel>Standard</SegmentedControlLabel>
     </SegmentedControlItem>
@@ -207,6 +220,7 @@ Internal / computed properties:
 ```
 
 ## Behavior & Quirks
+- **`$bindable()` pitfall (`value={fn()}`):** Never pass a non-bound expression (e.g. `value={getPeriod()}`) to `value`. Because `value` is declared with `$bindable()` and mutated internally on selection, passing a non-bound expression passes `svelte-check` without warning but throws a Svelte 5 runtime error **even if `onValueChange` is also passed**. When controlling state via a getter/setter or external store, you MUST use `bind:value={getter, setter}` (shown above) or `bind:value={() => current, () => {}}` paired with `onValueChange`, or `bind:value={state}` for local `$state`. `SegmentedControl` has no `defaultValue` prop; for uncontrolled mode, omit `value` (optionally pairing with `onValueChange`).
 - **Single-selection `radiogroup`/`radio` semantics:** Always enforces mutually exclusive single selection (`role="radiogroup"` and `role="radio"` with `aria-checked`)—clicking the already-active segment is a no-op and its `:active` content scale (`0.95`) only applies to `[data-state="inactive"]` items. Use `ToggleButtonGroup` when you need multi-selection (`type="multiple"`), `allowDeselect`, or vertical orientation.
 - **Roving focus & outline suppression:** Attaches `rovingFocus` (`orientation: "horizontal"`, `loop: false`, `homeEnd: true`, `preventScroll: true`), starting on the `aria-checked="true"` item (or the first item). Tabbing into the control displays the `:focus-visible` outline (`2px solid var(--cs-color-accent-solid)`). Navigating with arrow/`Home`/`End` keys immediately selects the newly focused item, sets `data-arrow-nav` on the root to suppress `:focus-visible` outlines while the sliding indicator communicates movement, and clears `data-arrow-nav` on `pointerdown` or when focus leaves the group (`focusout`).
 - **Mount-flush `180ms` `quart-out` sliding indicator:** Indicator `offsetLeft` and `offsetWidth` are synced synchronously in `$effect`, while `data-ready` is applied after the first `requestAnimationFrame` so initial mount snaps cleanly into place without animating from `0px`. Subsequent changes transition `translate` and `width` over `var(--cs-dur-180)` (`180ms`) with `var(--cs-ease-quart-out)`, and a `ResizeObserver` on the viewport, track, and active item keeps alignment accurate across resizes.

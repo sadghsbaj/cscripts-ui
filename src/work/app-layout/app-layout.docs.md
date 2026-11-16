@@ -101,6 +101,8 @@ Non-interactive elevated pill badge (`<div class="cs-work-app-brand">`) renderin
 ```
 
 ## Behavior & Quirks
+- **Header scope (global vs. app-specific):** `<WorkAppHeader />` is strictly reserved for **global app-level elements** (tool name, live status, help, theme, brand). App-specific navigation, filters, or business context (e.g. `Plant · Line`) belong in the app content area (`<WorkAppMain />`), not in header segments.
+- **Custom header button height (`48px`):** `<Button size="xl" />` alone is `44px`, whereas `<WorkAppHeader />` items are `48px`. Custom `<Button />` controls placed inside `<WorkAppHeader />` must therefore set `--cs-button-height: 48px` (optionally paired with `size="xl"` for matching typography and padding) to align cleanly at `48px` with `WorkAppToolIdentity`, `<WorkAppBrand />`, `<WorkAppHelpButton />`, and `<WorkAppThemeButton />`.
 - **Context-driven header title:** `<WorkAppHeader />` calls `getWorkAppIdentity()` and falls back to `identity.toolName` when `toolName` is not passed explicitly.
 - **Segment ordering:** Header flex order places `"before"` (`5`) before the tool identity pill (`10`), `"start"` (`20`), un-segmented children (`25`), spacer (`30`), `"end"` (`40`), `<WorkAppBrand />` (`50`), and `"after"` (`60`). `"center"` is absolutely centered (`left: 50%; transform: translateX(-50%)`).
 - **Responsive signature:** `<WorkAppSignature />` is hidden on viewports narrower than `640px`.

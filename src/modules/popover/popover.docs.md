@@ -16,7 +16,7 @@ exports:
 # Popover
 
 ## Overview
-Low-level floating surface primitive (`<Popover />`) and trigger attachment (`popoverTrigger`) built on the native HTML Popover API (`popover="auto" | "manual" | "hint"`) and CSS Anchor Positioning, with automatic placement flips, directional spring motion, and hint warmup acceleration.
+Low-level floating surface primitive (`<Popover />`) and trigger attachment (`popoverTrigger`) built on the native HTML Popover API (`popover="auto" | "manual" | "hint"`) and CSS Anchor Positioning, with automatic placement flips, directional spring motion, and hover warmup acceleration.
 
 ## API
 
@@ -36,18 +36,17 @@ Extends `Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover">`.
 ### `popoverTrigger(options: PopoverTriggerOptions): Attachment<HTMLElement>`
 Wires a trigger element's `anchor-name: --anchor-${target}` and interaction behavior:
 
-| Option | Modes | Type | Default | Description |
+| Option | Trigger Modes | Type | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `target` | All | `string` | — | Required ID of the target `<Popover />`. |
 | `enabled` | All | `boolean \| (() => boolean)` | `true` | Enables or disables the trigger attachment. |
-| `mode` | All | `"auto" \| "manual" \| "hint"` | `"auto"` | `"auto"` toggles via `popovertarget`; `"manual"` wires anchor only; `"hint"` uses hardened `interestfor`. |
-| `triggerOn` | `"auto"` | `"pointerdown" \| "click"` | `"pointerdown"` | `"pointerdown"` opens immediately on mouse down (touch/keyboard keep click). |
-| `delay` | `"hint"` | `string` | `"400ms 150ms"` | Native `interest-delay` shorthand (`"<open> <close>"`). |
-| `dismissOnPress` | `"hint"` | `boolean` | `true` | Dismisses the hint popover on pointer press or `Enter` / `Space`. |
+| `triggerOn` | All | `"pointerdown" \| "click" \| "hover" \| "manual"` | `"pointerdown"` | `"pointerdown"` / `"click"` toggle via `popovertarget`; `"hover"` uses JS hover/focus timers (`bindHover`); `"manual"` binds `anchor-name` only. |
+| `delay` | `"hover"` | `[number, number]` | `[400, 150]` | Open and close delays in milliseconds (`[openMs, closeMs]`). |
+| `dismissOnPress` | `"hover"` | `boolean` | `true` | Dismisses the hover popover on pointer press or `Enter` / `Space`. |
 
 ### `data-*` Attributes
 - `data-width={width}`, `data-placement={placement}`, `data-animate` (when `animate` is true).
-- Hint warmup sets `data-hint-warm` on `<html>`, `data-warm` on warm-opened hint popovers, and `data-instant` on replaced hint popovers.
+- Hover warmup sets `data-warm` on warm-opened popovers and `data-instant` on replaced popovers to skip entrance/exit transitions.
 
 ### CSS Custom Properties
 | Variable | Default | Description |
@@ -77,5 +76,8 @@ Wires a trigger element's `anchor-name: --anchor-${target}` and interaction beha
 
 ## Behavior & Quirks
 - **Automatic anchor pairing:** `<Popover id="foo" />` listens to `--anchor-foo` and `popoverTrigger({ target: "foo" })` sets `anchor-name: --anchor-foo` automatically.
-- **Hint focus hardening:** In `mode: "hint"`, `interestfor` is disarmed on programmatic focus restoration (e.g. switching OS windows) unless `:focus-visible` or `:hover` is active.
-- **Warmup window:** When any hint popover is open or closed within the 300ms cooldown, subsequent hint triggers open with `0ms` delay and skip entrance/exit transitions (`data-warm` / `data-instant`) for instant toolbar scrubbing.
+- **Choosing `triggerOn: "pointerdown"` vs. `"click"`:**
+  - `"pointerdown"` (default): Ideal for menus, selects, and dropdowns where immediate opening and press-drag-release (`pointerup` on an item) feel natural (touch and keyboard still activate on `click`).
+  - `"click"`: Better for standard toolbar/header action buttons or disclosure popovers where opening before pointer release feels jarring or conflicts with normal button click expectations.
+- **Hover focus & scroll hardening (`triggerOn: "hover"`):** `bindHover` opens on mouse `pointerenter` (touch contacts are ignored) and keyboard `:focus-visible` (`focusin`), while ignoring programmatic or pointer-driven focus restoration (e.g. switching OS windows). Pressing the trigger (when `dismissOnPress` is `true`), pressing `Escape`, or scrolling outside the popover closes it immediately and disarms hover until pointer/focus leaves.
+- **Hover warmup window (`triggerOn: "hover"`):** While a hover popover is open or within the `300ms` cooldown after closing, subsequent hover triggers open with `0ms` delay and skip entrance/exit transitions (`data-warm` / `data-instant`) for instant toolbar scrubbing.

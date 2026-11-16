@@ -216,13 +216,14 @@ Overridable on `.cs-text-input`:
     import { CopyIcon } from "cs/svelte/clipboard";
     import { TextInput, TextInputAction, TextInputField, TextInputIcon } from "cs/svelte/text-input";
 
+    let email = $state("not-an-email");
     let shareUrl = "https://cscripts.dev/share/94a1";
     let copied = $state(false);
 </script>
 
 <TextInput variant="soft" size="md" invalid>
     <TextInputIcon icon={AlertCircle} />
-    <TextInputField value="not-an-email" />
+    <TextInputField bind:value={email} />
 </TextInput>
 
 <TextInput variant="soft" size="md" disabled>
@@ -255,6 +256,7 @@ Overridable on `.cs-text-input`:
 ```
 
 ## Behavior & Quirks
+- **`$bindable()` pitfall (`value={fn()}`):** Never pass a non-bound expression (e.g. `value={getQuery()}`) to `<TextInputField />`. Because `value` is declared with `$bindable("")` and bound to the underlying `<input>`, passing a non-bound expression passes `svelte-check` without warning but throws a Svelte 5 runtime error on input **even if `onValueChange` is also passed**. When controlling state via a getter/setter or external store, you MUST use `bind:value={getter, setter}` (or `bind:value={() => current, () => {}}` paired with `onValueChange`), or `bind:value={state}` for local `$state`. `TextInputField` has no `defaultValue` prop; for uncontrolled mode, omit `value` (optionally pairing with `onValueChange`).
 - **Ring-First `invalid` Styling:** `[data-invalid]:not([data-disabled])` preserves the neutral `soft` or `elevated` background fill rather than tinting the surface, rendering a `2px` `--cs-color-negative-solid` inset ring on `.cs-text-input::after`, setting `--cs-text-input-caret` to `--cs-color-negative-solid`, and tinting `<TextInputIcon />` via `--cs-color-negative-soft-fg`. Because the `[data-invalid]` rule follows `:focus-within`, invalid inputs keep their negative ring while focused.
 - **Pointer Focus Delegation:** Clicking padding or gap regions directly on the `.cs-text-input` shell (`event.target === ref`) calls `event.preventDefault()` on `mousedown` and delegates focus to the registered `<TextInputField />` without blurring an already-focused input or flickering the focus ring.
 - **Concentric Padding & Animated Action Collapse:** `:has()` selectors tighten edge padding by `2px` when `<TextInputIcon />` is first or last, and switch to `--cs-text-input-action-inset` when a visible `<TextInputAction />` sits at an outer edge. Toggling `visible={false}` smoothly collapses width, margin, opacity, and scale (`0.85`) over `var(--cs-dur-120)` while removing the button from the tab order and accessibility tree.

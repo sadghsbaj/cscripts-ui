@@ -76,6 +76,7 @@ Extends `Omit<HTMLButtonAttributes, "color" | "size" | "value">`. Always enforce
 ```
 
 ## Behavior & Quirks
+- **`$bindable()` pitfall (`pressed={fn()}`):** Never pass a non-bound expression (e.g. `pressed={isSaved()}`) to standalone `pressed`. Because `pressed` is declared with `$bindable(false)` and mutated internally on click, passing a non-bound expression passes `svelte-check` without warning but throws a Svelte 5 runtime error **even if `onPressedChange` is also passed**. When controlling state via a getter/setter or external store, you MUST use `bind:pressed={getter, setter}` (or `bind:pressed={() => current, () => {}}` paired with `onPressedChange`), or `bind:pressed={state}` for local `$state`. `ToggleButton` has no `defaultPressed` prop; for uncontrolled standalone mode, omit `pressed` (optionally pairing with `onPressedChange`).
 - **Discriminated standalone vs group API:** TypeScript enforces `value` inside `<ToggleButtonGroup />` and `pressed` / `onPressedChange` standalone. In dev mode, mixing them logs a `console.warn`.
 - **Two-layer surface:** `::before` renders the unpressed `soft`/`ghost` plate while `::after` pops in (`scale(0.55)` → `scale(1)`) when `aria-pressed="true"`.
 - **Disabled active state:** Pressed disabled buttons use `--cs-color-disabled-fg-active` and `--cs-color-disabled-bg-active` so active selection remains legible without color saturation.
