@@ -73,7 +73,7 @@ Extends `HTMLAttributes<HTMLSpanElement>` and renders `<span aria-hidden="true" 
 
 | Prop | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `children` | `Snippet` | No | `<Plus />` | Custom separator content (e.g. `/`). Defaults to a Lucide `<Plus strokeWidth={2.25} />` icon. |
+| `children` | `Snippet` | No | Inline `+` SVG | Custom separator content (e.g. `/`). Defaults to an inline `+` SVG icon (`24×24`, `stroke-width="2.25"`). |
 | `ref` | `HTMLSpanElement \| null` | No | `null` | `$bindable` reference to the `<span>` element. |
 
 ### `KbdSymbol` Props
@@ -110,6 +110,7 @@ Discriminated union for rendering typed `KBD_KEYS` entries or a custom Lucide ic
 | `--cs-kbd-gap` | Gap between icon and text inside `<Kbd />` (`2px`–`5px`). |
 | `--cs-kbd-group-gap` | Gap between items inside `<KbdGroup />` (`3px`–`5px`). |
 | `--cs-kbd-separator-size` | Size of `<KbdSeparator />` icon/text (`12px`–`16px`). |
+| `--cs-kbd-separator-height` | Height of `<KbdSeparator />` (`auto` by default; `100%` inside `soft` and `ghost` `<KbdGroup />` containers). |
 | `--cs-kbd-bg` / `--cs-kbd-fg` / `--cs-kbd-shadow` | Surface background, foreground color, and shadow per variant. |
 | `--cs-kbd-item-*` | Internal group overrides (`height`, `min-width`, `px`, `bg`, `shadow`, `margin-block-end`) used by `soft` / `ghost` `<KbdGroup />` containers. |
 | `--cs-kbd-separator-offset` | Bottom margin offset on `<KbdSeparator />` (`2px` inside `keycap` groups to align with keycap's 2px lip). |

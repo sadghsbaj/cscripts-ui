@@ -17,7 +17,7 @@
             --cs-kbd-icon-size: 12px;
             --cs-kbd-gap: 3px;
             --cs-kbd-group-gap: 3px;
-            --cs-kbd-separator-size: 13px;
+            --cs-kbd-separator-size: 14px;
         }
 
         &[data-size="md"] {
@@ -37,7 +37,7 @@
             --cs-kbd-icon-size: 14px;
             --cs-kbd-gap: 4px;
             --cs-kbd-group-gap: 4px;
-            --cs-kbd-separator-size: 15px;
+            --cs-kbd-separator-size: 16px;
         }
 
         &[data-size="xl"] {

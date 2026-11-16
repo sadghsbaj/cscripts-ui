@@ -77,7 +77,7 @@ ${closeScript}
     <Kbd>C</Kbd>
 </KbdGroup>`;
 
-    const combosCode = `<!-- Default Lucide Plus separator vs custom "/" override -->
+    const combosCode = `<!-- Default inline + SVG separator vs custom "/" override -->
 <KbdGroup variant="keycap" size="md">
     <Kbd symbol="ctrl" />
     <KbdSeparator />
@@ -235,7 +235,7 @@ ${closeScript}
 
     <PreviewSection
         title="Separators & Chained Shortcuts"
-        description="KbdSeparator defaults to a Lucide Plus icon and accepts custom children such as /. Place separate KbdGroup instances side by side for multi-step shortcuts."
+        description="KbdSeparator defaults to an inline + SVG icon (24×24, stroke-width 2.25) and accepts custom children such as /. Place separate KbdGroup instances side by side for multi-step shortcuts."
         code={combosCode}
     >
         <div class="flex flex-col items-center gap-6">

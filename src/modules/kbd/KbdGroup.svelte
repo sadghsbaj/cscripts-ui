@@ -52,6 +52,7 @@
                 --cs-kbd-item-bg: none;
                 --cs-kbd-item-shadow: none;
                 --cs-kbd-item-margin-block-end: 0;
+                --cs-kbd-separator-height: 100%;
             }
 
             &[data-variant="ghost"] {
@@ -62,6 +63,7 @@
                 --cs-kbd-item-bg: none;
                 --cs-kbd-item-shadow: none;
                 --cs-kbd-item-margin-block-end: 0;
+                --cs-kbd-separator-height: 100%;
             }
 
             &[data-variant="keycap"] {
