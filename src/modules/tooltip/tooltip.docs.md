@@ -92,5 +92,5 @@ Two mutually exclusive modes:
 
 ## Behavior & Quirks
 - **Automatic `aria-describedby`:** The `tooltip` attachment automatically wires `aria-describedby={id}` on the trigger element and cleans it up on unmount.
-- **Warmup scrubbing:** Inherits `popoverTrigger({ mode: "hint" })` warmup (`data-hint-warm`), so moving between adjacent tooltip triggers opens subsequent tooltips with `0ms` delay and instant transitions.
+- **Warmup scrubbing:** Inherits `popoverTrigger({ triggerOn: "hover" })` warmup (`data-warm` / `data-instant`), so moving between adjacent tooltip triggers opens subsequent tooltips with `0ms` delay and instant transitions.
 - **Auto-unmount lifecycle:** Inline `<Tooltip />` instances mounted to `document.body` are cleaned up in a microtask only when the trigger disconnects or loses `aria-describedby`, surviving reactive attachment re-runs without flickering.
