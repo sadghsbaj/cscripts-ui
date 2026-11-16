@@ -95,6 +95,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            height: 100%;
             gap: var(--cs-segmented-control-gap);
             min-width: 0;
             transition: scale var(--cs-dur-press) var(--cs-ease-press);
