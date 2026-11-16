@@ -1,7 +1,9 @@
 ## UI & Polish
 
 - [ ] Englisch/Deutsch-Support integrieren (kein fertiges System, sondern damit Components wie `aria-label` beim Close-Button oder `Kbd` bestimmte Texte je nach App-Einstellung sauber in der passenden Sprache rendern)
-- [ ] Prüfen, ob `variant` auf `KbdGroup` inkonsistent ist, da wir das z. B. bei `ToggleButtonGroup` oder `CheckboxGroup` nicht machen
+- [x ] Prüfen, ob `variant` auf `KbdGroup` inkonsistent ist, da wir das z. B. bei `ToggleButtonGroup` oder `CheckboxGroup` nicht machen
+- [x ] prüfen ob eine art compactheight prop biem kbd sin nmacht z.b. default | compact für enge sachen
+- [ ] keycpa in tooltip integrieren
 - Sunken im Dark Mode noch mehr „sunken“ wirken lassen (Schatteneffekt / Lichtkante – noch offen)
 
 ## Modules
