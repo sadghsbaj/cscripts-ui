@@ -43,6 +43,12 @@ globs: "**/*.ts, **/*.svelte, **/*.css"
     - **Modern Chromium-First:** Target modern Chromium as the primary runtime (~95% focus) with graceful degradation in other modern browsers—no legacy browser support or outdated polyfills.
     - **Modern Platform Features Encouraged:** Native `popover` (including `hint` / `interestfor`), CSS Anchor Positioning, CSS Nesting, `:has()`, `@container`, `corner-shape` (squircle), `text-box-trim` / `text-trim`, `light-dark()`, `oklab`/`oklch`, and `linear()` springs are explicitly approved. Do NOT reject them as "unsupported" in reviews.
   </browser_support>
+
+  <localization>
+    - **Built-in UI & A11y Defaults:** Use `t({ de, en })` from `src/shared/lang.internal.ts` (resolved at build time via `csLanguage()`) for all built-in UI/a11y defaults (`aria-label`, tooltips, key labels, status defaults) in `src/modules/` and `src/work/`.
+    - **Exceptions:** Keep technical `Error` messages in English and keep brand/location names (e.g. `Pfleiderer`, plant names) fixed.
+    - **Internal-Only:** NEVER export `lang.internal.ts` or its symbols from any public barrel (`index.ts`).
+  </localization>
 </patterns>
 
 <constraints>

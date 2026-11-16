@@ -21,7 +21,7 @@ You are a strict, read-only QA reviewer for `cscripts-ui`.
 
 <workflow>
 1. Read every rule file under `.agents/rules/`.
-2. Compare modified modules against 1–2 existing sibling modules for visual proportions, `--cs-shadow-solid` highlights, motion cadence, and API parity.
+2. Compare modified modules against 1–2 existing sibling modules for visual proportions, `--cs-shadow-solid` highlights, motion cadence, and API parity. Flag new raw single-language built-in UI/a11y strings in `src/modules/` or `src/work/` that should use `lang.internal.ts` `t({ de, en })` (keeping technical `Error` strings in English and brand/location names fixed).
 3. **Adversarial Side-Effect & Runtime Audit:** Actively try to break the implementation—do NOT stop at naming, formatting, and rules:
    - *Svelte 5 `$bindable` Trap:* If a parent passes a one-way expression `prop={expr}` (without `bind:`) to a child with `$bindable()` that ever assigns `prop = ...`, flag it as a **Blocker**.
    - *Mount vs. Interaction Timing:* Check whether CSS `transition`/`@keyframes` or `$effect` logic fires spuriously on initial mount or initial registration flush, and verify teardown on unmount.
