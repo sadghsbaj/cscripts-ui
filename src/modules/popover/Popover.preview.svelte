@@ -18,7 +18,7 @@
     import { Popover, popoverTrigger } from "cs/svelte/popover";
 ${closeScript}
 
-<Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "demo-popover" })}>
+<Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "demo-popover", triggerOn: "click" })}>
     <ButtonLabel>Open popover</ButtonLabel>
 </Button>
 
@@ -40,7 +40,7 @@ ${closeScript}
 <Popover id="popover-anchor" placement="bottom" width="anchor">...</Popover>
 <Popover id="popover-min-anchor" placement="bottom" width="min-anchor">...</Popover>`;
 
-    const modesCode = `<Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "offset-popover" })}>
+    const modesCode = `<Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "offset-popover", triggerOn: "click" })}>
     <ButtonLabel>Offset 24px</ButtonLabel>
 </Button>
 <Popover id="offset-popover" placement="top" width="content" offset="24px">...</Popover>
@@ -58,7 +58,7 @@ ${closeScript}
     />
 
     <PreviewSection title="Basic" code={basicCode}>
-        <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "popover-basic-demo" })}>
+        <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "popover-basic-demo", triggerOn: "click" })}>
             <ButtonLabel>Open popover</ButtonLabel>
         </Button>
 
@@ -80,7 +80,7 @@ ${closeScript}
             <Button
                 variant="tertiary"
                 size="md"
-                {@attach popoverTrigger({ target: `popover-placement-${placement}` })}
+                {@attach popoverTrigger({ target: `popover-placement-${placement}`, triggerOn: "click" })}
             >
                 <ButtonLabel>{placement[0]?.toUpperCase() + placement.slice(1)}</ButtonLabel>
             </Button>
@@ -106,7 +106,7 @@ ${closeScript}
     >
         <div class="flex-wrap flex-center gap-4">
             {#each widths as width (width)}
-                <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: `popover-width-${width}` })}>
+                <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: `popover-width-${width}`, triggerOn: "click" })}>
                     <ButtonLabel>Width: {width}</ButtonLabel>
                 </Button>
 
@@ -134,7 +134,7 @@ ${closeScript}
     </PreviewSection>
 
     <PreviewSection title="Offset & Hover Trigger" code={modesCode}>
-        <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "popover-offset-demo" })}>
+        <Button variant="tertiary" size="md" {@attach popoverTrigger({ target: "popover-offset-demo", triggerOn: "click" })}>
             <ButtonLabel>Offset 24px</ButtonLabel>
         </Button>
         <Popover

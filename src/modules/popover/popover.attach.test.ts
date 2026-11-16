@@ -149,8 +149,8 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
             expect(trigger.style.getPropertyValue("anchor-name")).toBe("");
         });
 
-        test("defaults to triggerOn 'pointerdown' when omitted", () => {
-            popoverTrigger({ target: "pop" })(trigger);
+        test("wires popovertarget without interestfor for triggerOn 'pointerdown'", () => {
+            popoverTrigger({ target: "pop", triggerOn: "pointerdown" })(trigger);
 
             expect(trigger.getAttribute("popovertarget")).toBe("pop");
             expect(trigger.hasAttribute("interestfor")).toBe(false);
@@ -161,7 +161,7 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
         });
 
         test("enabled: false wires nothing and returns a no-op cleanup", () => {
-            const cleanup = popoverTrigger({ target: "pop", enabled: false })(trigger);
+            const cleanup = popoverTrigger({ target: "pop", triggerOn: "pointerdown", enabled: false })(trigger);
 
             expect(trigger.style.getPropertyValue("anchor-name")).toBe("");
             expect(trigger.hasAttribute("popovertarget")).toBe(false);
@@ -176,7 +176,7 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
 
         test("reactive enabled: () => boolean toggles wiring cleanly across re-runs", () => {
             let active = true;
-            const attach = popoverTrigger({ target: "pop", enabled: () => active });
+            const attach = popoverTrigger({ target: "pop", triggerOn: "pointerdown", enabled: () => active });
 
             const cleanup1 = attach(trigger);
             expect(trigger.style.getPropertyValue("anchor-name")).toBe("--anchor-pop");
@@ -815,7 +815,7 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
                 });
                 document.body.append(nonPopover);
 
-                popoverTrigger({ target: "not-a-popover" })(trigger);
+                popoverTrigger({ target: "not-a-popover", triggerOn: "pointerdown" })(trigger);
                 expect(() => pointerDown(trigger)).not.toThrow();
                 expect(nonPopover.togglePopover).not.toHaveBeenCalled();
 

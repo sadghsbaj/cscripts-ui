@@ -40,7 +40,7 @@ Wires a trigger element's `anchor-name: --anchor-${target}` and interaction beha
 | :--- | :--- | :--- | :--- | :--- |
 | `target` | All | `string` | — | Required ID of the target `<Popover />`. |
 | `enabled` | All | `boolean \| (() => boolean)` | `true` | Enables or disables the trigger attachment. |
-| `triggerOn` | All | `"pointerdown" \| "click" \| "hover" \| "manual"` | `"pointerdown"` | `"pointerdown"` / `"click"` toggle via `popovertarget`; `"hover"` uses JS hover/focus timers (`bindHover`); `"manual"` binds `anchor-name` only. |
+| `triggerOn` | All | `"pointerdown" \| "click" \| "hover" \| "manual"` | — | Required. `"pointerdown"` / `"click"` toggle via `popovertarget`; `"hover"` uses JS hover/focus timers (`bindHover`); `"manual"` binds `anchor-name` only. |
 | `delay` | `"hover"` | `[number, number]` | `[400, 150]` | Open and close delays in milliseconds (`[openMs, closeMs]`). |
 | `dismissOnPress` | `"hover"` | `boolean` | `true` | Dismisses the hover popover on pointer press or `Enter` / `Space`. |
 
@@ -65,7 +65,7 @@ Wires a trigger element's `anchor-name: --anchor-${target}` and interaction beha
     import { Popover, popoverTrigger } from "cs/svelte/popover";
 </script>
 
-<Button variant="secondary" size="md" {@attach popoverTrigger({ target: "menu-popover" })}>
+<Button variant="secondary" size="md" {@attach popoverTrigger({ target: "menu-popover", triggerOn: "pointerdown" })}>
     <ButtonLabel>Options</ButtonLabel>
 </Button>
 
@@ -75,9 +75,9 @@ Wires a trigger element's `anchor-name: --anchor-${target}` and interaction beha
 ```
 
 ## Behavior & Quirks
-- **Automatic anchor pairing:** `<Popover id="foo" />` listens to `--anchor-foo` and `popoverTrigger({ target: "foo" })` sets `anchor-name: --anchor-foo` automatically.
+- **Automatic anchor pairing:** `<Popover id="foo" />` listens to `--anchor-foo` and `popoverTrigger({ target: "foo", triggerOn: "click" })` sets `anchor-name: --anchor-foo` automatically.
 - **Choosing `triggerOn: "pointerdown"` vs. `"click"`:**
-  - `"pointerdown"` (default): Ideal for menus, selects, and dropdowns where immediate opening and press-drag-release (`pointerup` on an item) feel natural (touch and keyboard still activate on `click`).
+  - `"pointerdown"`: Ideal for menus, selects, and dropdowns where immediate opening and press-drag-release (`pointerup` on an item) feel natural (touch and keyboard still activate on `click`).
   - `"click"`: Better for standard toolbar/header action buttons or disclosure popovers where opening before pointer release feels jarring or conflicts with normal button click expectations.
 - **Hover focus & scroll hardening (`triggerOn: "hover"`):** `bindHover` opens on mouse `pointerenter` (touch contacts are ignored) and keyboard `:focus-visible` (`focusin`), while ignoring programmatic or pointer-driven focus restoration (e.g. switching OS windows). Pressing the trigger (when `dismissOnPress` is `true`), pressing `Escape`, or scrolling outside the popover closes it immediately and disarms hover until pointer/focus leaves.
 - **Hover warmup window (`triggerOn: "hover"`):** While a hover popover is open or within the `300ms` cooldown after closing, subsequent hover triggers open with `0ms` delay and skip entrance/exit transitions (`data-warm` / `data-instant`) for instant toolbar scrubbing.

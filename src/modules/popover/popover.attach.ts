@@ -19,9 +19,8 @@ export type PopoverTriggerOptions = PopoverTriggerBaseOptions &
                * - "pointerdown": Opens immediately on mouse down for desktop (ideal for menus, selects, split-buttons),
                *   falling back gracefully to click on touch to preserve touch scrolling.
                * - "click": Standard activation on pointerup / click release.
-               * @default "pointerdown"
                */
-              triggerOn?: "pointerdown" | "click";
+              triggerOn: "pointerdown" | "click";
               delay?: never;
               dismissOnPress?: never;
           }
@@ -567,7 +566,7 @@ export function popoverTrigger(options: PopoverTriggerOptions): Attachment<HTMLE
         if (options.triggerOn === "hover") {
             unbind = bindHover(node, options);
         } else if (options.triggerOn !== "manual") {
-            unbind = bindToggle(node, options.target, options.triggerOn ?? "pointerdown");
+            unbind = bindToggle(node, options.target, options.triggerOn);
         }
 
         return () => {
