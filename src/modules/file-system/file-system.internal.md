@@ -17,15 +17,16 @@
 
 ## Mount & Permission State Machine
 
-`mountStatus` transitions across `"unlinked" | "needs-permission" | "ready" | "stale" | "unsupported"`:
+`mountStatus` transitions across `"unlinked" | "restoring" | "needs-permission" | "ready" | "stale" | "unsupported"` (orthogonal to `activity` / `isBusy` and `health`, where `health` stays `"positive"` during normal `reading`/`writing`/`healing` and `"base"` during `"unlinked"`/`"restoring"`):
 
-1. **Initial state:** `"ready"` if an injected `config.backend` is provided (e.g., `MemoryFsBackend` in tests); `"unsupported"` if `checkFileSystemSupport().supported` is `false` (SSR, insecure context, missing `showDirectoryPicker` or `indexedDB`); otherwise `"unlinked"`.
-2. **`restore()`**: Reads the persisted `FileSystemDirectoryHandle` from `IdbHandleStore`.
+1. **Initial state:** `"ready"` if an injected `config.backend` is provided (e.g., `MemoryFsBackend` in tests); `"unsupported"` if `checkFileSystemSupport().supported` is `false` (SSR, insecure context, missing `showDirectoryPicker` or `indexedDB`); `"restoring"` if `config.autoRestore` is `true` (which immediately triggers `void restore()`); otherwise `"unlinked"`.
+2. **`restore()`**: Sets `mountStatus = "restoring"` synchronously before the first `await` (deduplicated within the same `mountEpoch` via `activeRestorePromise`) and reads the persisted `FileSystemDirectoryHandle` from `IdbHandleStore`.
    - Missing handle -> `"unlinked"`.
    - `queryPermission({ mode }) === "granted"` -> initializes `BrowserFsBackend`, `WriteQueue`, `CacheEngine`, boots cache, transitions to `"ready"`.
    - `queryPermission` returns anything other than `"granted"` (`"prompt"` or `"denied"`) -> stores handle in memory and transitions to `"needs-permission"` (never `"unlinked"`).
    - `NotFoundError` / `InvalidStateError` -> transitions to `"stale"` and surfaces `FsError("HANDLE_STALE")`.
-3. **`requestAccess()`**: Must be called from a user gesture when `mountStatus === "needs-permission"`. Invokes `handle.requestPermission({ mode })`; on `"granted"` boots engines and transitions to `"ready"`; if `permission !== "granted"` (including `"denied"` or `"prompt"`), remains in `"needs-permission"` (never `"unlinked"`).
+   - Any other error in `catch` -> runs `handleInfrastructureError(...)`, and if `epoch === mountEpoch && mountStatus === "restoring"`, falls back to `"unlinked"` so `restore()` never gets stuck in `"restoring"`.
+3. **`requestAccess()`**: Must be called from a user gesture when `mountStatus === "needs-permission"` (never resets `mountStatus` to `"restoring"`). Invokes `handle.requestPermission({ mode })`; on `"granted"` boots engines and transitions to `"ready"`; if `permission !== "granted"` (including `"denied"` or `"prompt"`), remains in `"needs-permission"` (never `"unlinked"`).
 4. **`pick(options?)`**: Calls `showDirectoryPicker`, persists handle in IndexedDB, tears down any prior engine state, boots engines, and transitions to `"ready"`.
 5. **`forget()`**: Deletes persisted handle from IndexedDB, destroys `CacheEngine` / `FsLogger` timers, clears `confirmedEntries` / `pendingMutations`, resets `mountStatus` to `"unlinked"`.
 6. **`mountEpoch` lifecycle guarding**: `mountEpoch` is incremented monotonically on `pick()`, `forget()`, and `destroy()`. Async operations (`restore`, `requestAccess`, `pick`, `heal`, `runBootCheck`, reads, mutations, conflict resolution, error handling) capture `const epoch = mountEpoch` at entry and verify `epoch === mountEpoch` before mutating reactive state (`mountStatus`, `confirmedEntries`, `pendingMutations`, `unresolvedConflicts`, `corruptEntries`, `lastError`, `trackedDocs`), preventing stale async completions from corrupting state across remounts or teardown.

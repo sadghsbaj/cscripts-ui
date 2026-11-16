@@ -267,7 +267,9 @@ export const workspace = defineWorkspace({
 	});
 </script>
 
-{#if workspace.mountStatus === "unlinked"}
+{#if workspace.mountStatus === "restoring"}
+	<!-- Neutral initial state while checking persisted handle -->
+{:else if workspace.mountStatus === "unlinked"}
 	<button onclick={() => workspace.pick()}>Choose Folder</button>
 {:else if workspace.mountStatus === "needs-permission"}
 	<button onclick={() => workspace.requestAccess()}>Grant Folder Access</button>
@@ -290,7 +292,7 @@ if (!report.supported) {
 ```
 
 ### Mount Lifecycle Methods
-- `workspace.restore()`: Loads a persisted `FileSystemDirectoryHandle` from IndexedDB, checks permission (`queryPermission`), and if granted runs boot cache validation/healing and transitions `mountStatus` to `"ready"` (or `"needs-permission"`, `"unlinked"`, `"stale"`, `"unsupported"`).
+- `workspace.restore()`: Synchronously transitions `mountStatus` to `"restoring"` (when supported and unbacked; deduplicated within the same `mountEpoch`), loads a persisted `FileSystemDirectoryHandle` from IndexedDB, checks permission (`queryPermission`), and if granted runs boot cache validation/healing and transitions `mountStatus` to `"ready"` (or `"needs-permission"`, `"unlinked"`, `"stale"`, `"unsupported"`). Pass `autoRestore: true` in `WorkspaceConfig` to start in `"restoring"` and trigger `restore()` automatically.
 - `workspace.pick(options?)`: Opens `window.showDirectoryPicker(options)`, persists the handle in IndexedDB, boots the cache engine, and transitions to `"ready"`. If the user cancels the picker (`AbortError`), `pick()` returns the current `mountStatus` without throwing.
 - `workspace.requestAccess()`: Calls `requestPermission({ mode })` on an existing handle when `mountStatus === "needs-permission"` and boots if granted.
 - `workspace.forget()`: Clears the persisted handle from IndexedDB, flushes/destroys internal engines, and resets `mountStatus` to `"unlinked"`.
@@ -399,13 +401,13 @@ Indexed collections (`defineCollection({ ..., index: ... })`) expose reactive Sv
 - On-demand partitioning: `loadedPartitions()`, `unloadedPartitions()`, `hasUnloadedPartitions()`, `loadPartitions(keys)`, `loadAllPartitions()`. Calling `loadPartitions()` automatically triggers an incremental heal if a lazy shard on disk is missing or corrupt.
 
 Workspace reactive status properties:
-- `mountStatus`: `"unlinked" | "needs-permission" | "ready" | "stale" | "unsupported"`.
+- `mountStatus`: `"unlinked" | "restoring" | "needs-permission" | "ready" | "stale" | "unsupported"`.
 - `activity`: `"idle" | "restoring" | "reading" | "writing" | "healing"`.
-- `isBusy`: `true` when `activity !== "idle" || pendingMutationCount > 0`.
+- `isBusy`: `true` when `activity !== "idle" || pendingMutationCount > 0` (orthogonal to `health`).
 - `pendingMutationCount`: Number of in-flight optimistic mutations.
 - `syncProgress`: `SyncProgress | null` — live progress (`{ phase, processed, total, currentPath? }`) emitted during `restore()` boot checks and `heal()`.
 - `corruptEntries`: `readonly CorruptEntry[]` — files that failed decode or validation during `restore()` / `heal()`.
-- `health`: `"base"` (`unlinked`), `"negative"` (`stale`, `unsupported`, or `lastError !== null`), `"caution"` (`needs-permission`, `isBusy`, `unresolvedConflictCount > 0`, or `corruptEntries.length > 0`), or `"positive"`.
+- `health`: `"base"` (`unlinked` or `restoring`), `"negative"` (`stale`, `unsupported`, or `lastError !== null`), `"caution"` (`needs-permission`, `unresolvedConflictCount > 0`, or `corruptEntries.length > 0`), or `"positive"` (stays `"positive"` during normal `reading`/`writing`/`healing` activity).
 - `lastError` & `clearError()`: Captures the most recent `FsError`. Call `workspace.clearError()` after the user acknowledges an error banner to return `health` from `"negative"` to `"positive"`/`"caution"`.
 - `preventCloseWhilePending` (default `true`): Registers a `beforeunload` handler that calls `event.preventDefault()` while `pendingMutationCount > 0`.
 - **Background cache & log flush:** Registers `pagehide` and `visibilitychange` (`"hidden"`) listeners that trigger a best-effort flush of buffered `_cs-fs/` index shards and JSONL logs while `mountStatus === "ready"`.

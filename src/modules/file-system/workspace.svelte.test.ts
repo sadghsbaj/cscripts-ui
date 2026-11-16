@@ -559,13 +559,13 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 			expect(ws.isBusy).toBe(false);
 			expect(ws.activity).toBe("idle");
 
-			// pending mutation -> isBusy true, caution
+			// pending mutation -> isBusy true, health stays positive
 			gateWrites = true;
 			const pendingWrite = ws.singletons.settings.write({ theme: "dark", currency: "EUR" });
 			expect(ws.pendingMutationCount).toBe(1);
 			expect(ws.isBusy).toBe(true);
 			expect(ws.activity).toBe("writing");
-			expect(ws.health).toBe("caution");
+			expect(ws.health).toBe("positive");
 
 			// beforeunload calls preventDefault while pendingMutationCount > 0
 			const unloadWhilePending = new Event("beforeunload", { cancelable: true });

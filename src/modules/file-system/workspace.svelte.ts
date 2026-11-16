@@ -96,6 +96,7 @@ export type {
 
 export const MOUNT_STATUSES = [
 	"unlinked",
+	"restoring",
 	"needs-permission",
 	"ready",
 	"stale",
@@ -360,6 +361,7 @@ export interface WorkspaceConfig<
 	storageKey?: string;
 	systemDir?: string;
 	mode?: "read" | "readwrite";
+	autoRestore?: boolean;
 	singletons?: TSingletons;
 	collections?: TCollections;
 	conflictPolicy?: ConflictPolicy;
@@ -757,7 +759,9 @@ export function defineWorkspace<
 	const initialStatus: MountStatus = config.backend
 		? "ready"
 		: support.supported
-			? "unlinked"
+			? config.autoRestore
+				? "restoring"
+				: "unlinked"
 			: "unsupported";
 
 	let mountStatus = $state<MountStatus>(initialStatus);
@@ -786,12 +790,11 @@ export function defineWorkspace<
 		if (mountStatus === "stale" || mountStatus === "unsupported" || lastError !== null) {
 			return "negative";
 		}
-		if (mountStatus === "unlinked") {
+		if (mountStatus === "unlinked" || mountStatus === "restoring") {
 			return "base";
 		}
 		if (
 			mountStatus === "needs-permission" ||
-			isBusy ||
 			unresolvedConflictCount > 0 ||
 			corruptEntries.length > 0
 		) {
@@ -806,6 +809,8 @@ export function defineWorkspace<
 	let directoryHandle: PermissionAwareDirectoryHandle | null = null;
 	let destroyed = false;
 	let mountEpoch = 0;
+	let activeRestoreEpoch = -1;
+	let activeRestorePromise: Promise<MountStatus> | null = null;
 	let activeAbortController: AbortController | null = null;
 	let lastRevalidateAt = 0;
 	let mutationSeq = 0;
@@ -1413,7 +1418,13 @@ export function defineWorkspace<
 			return mountStatus;
 		}
 
-		return withActivity("restoring", async () => {
+		if (activeRestorePromise && activeRestoreEpoch === epoch) {
+			return activeRestorePromise;
+		}
+
+		mountStatus = "restoring";
+
+		const promise = withActivity("restoring", async () => {
 			try {
 				const handle = (await idbStore.loadHandle()) as PermissionAwareDirectoryHandle | null;
 				if (epoch !== mountEpoch) {
@@ -1462,9 +1473,21 @@ export function defineWorkspace<
 					return mountStatus;
 				}
 				handleInfrastructureError(error, "Failed to restore workspace handle.", undefined, epoch);
+				if (epoch === mountEpoch && mountStatus === "restoring") {
+					mountStatus = "unlinked";
+				}
 				return mountStatus;
+			} finally {
+				if (activeRestorePromise === promise) {
+					activeRestorePromise = null;
+					activeRestoreEpoch = -1;
+				}
 			}
 		});
+
+		activeRestoreEpoch = epoch;
+		activeRestorePromise = promise;
+		return promise;
 	}
 
 	async function pick(options?: PickDirectoryOptions): Promise<MountStatus> {
@@ -1503,6 +1526,8 @@ export function defineWorkspace<
 
 		return withActivity("restoring", async () => {
 			mountEpoch += 1;
+			activeRestorePromise = null;
+			activeRestoreEpoch = -1;
 			const epoch = mountEpoch;
 			try {
 				directoryHandle = pickedHandle as PermissionAwareDirectoryHandle;
@@ -1605,6 +1630,8 @@ export function defineWorkspace<
 
 	async function forget(): Promise<void> {
 		mountEpoch += 1;
+		activeRestorePromise = null;
+		activeRestoreEpoch = -1;
 		activeAbortController?.abort();
 		activeAbortController = null;
 		cacheEngine?.destroy();
@@ -3271,6 +3298,8 @@ export function defineWorkspace<
 		}
 		destroyed = true;
 		mountEpoch += 1;
+		activeRestorePromise = null;
+		activeRestoreEpoch = -1;
 		activeAbortController?.abort();
 		activeAbortController = null;
 		cacheEngine?.destroy();
@@ -3284,6 +3313,10 @@ export function defineWorkspace<
 				document.removeEventListener("visibilitychange", onVisibilityChange);
 			}
 		}
+	}
+
+	if (config.autoRestore && !config.backend && support.supported) {
+		void restore();
 	}
 
 	return {
