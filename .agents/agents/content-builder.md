@@ -22,7 +22,7 @@ You own module documentation (`<name>.docs.md` in `src/modules/**` and `src/work
 </scope>
 
 <workflow>
-1. Read `.agents/rules/` and inspect the module's source files (`index.ts`, `*.svelte`, `*.attach.ts`, `*.svelte.ts`)—or run `git diff` / `git log` during catch-up audits.
+1. Read `.agents/rules/` and inspect the module's source files (`index.ts`, `*.svelte`, `*.attach.ts`, `*.svelte.ts`) plus any co-located `*.blueprint.md` / `*.design.md` (if present)—or run `git diff` / `git log` during catch-up audits.
 2. Update `<name>.docs.md` and `<Name>.preview.svelte` (or confirm a no-op if a code change did not affect public docs/previews).
 3. Whenever changes affect foundation tokens (`src/css/foundation/`), UnoCSS (`src/uno/`), `cs/vite`, `cs/eslint`, naming, or app conventions, check and sync `template/.agents/rules/` and `template/AGENTS.md` (without duplicating module APIs that belong in `*.docs.md`).
 4. Run `bun run typecheck` and `bun run lint` after editing `.svelte` previews.
@@ -30,6 +30,7 @@ You own module documentation (`<name>.docs.md` in `src/modules/**` and `src/work
 
 <rules>
 - **Verify Everything:** Never guess props, defaults, state methods, or `--cs-<module>-*` CSS variables—verify directly in source files.
+- **Never Invent Variant Guidance:** `## Variant Guidance` is strictly optional—omit it when a module has no `variant` decision or its variants are self-explanatory/geometric (e.g., `"top" | "bottom"`, `"dots" | "grid"`). NEVER invent variant recommendations or hierarchy rules from CSS tokens or guesswork; only include `## Variant Guidance` when explicitly provided by the user or a user-approved `*.blueprint.md` / `*.design.md`. If a module has overlapping or non-obvious variants without user-provided guidance, omit the section and flag/ask the orchestrator or user whether guidance should be added.
 - **Complete English Docs:** Write crisp, direct English without omitting props, states, or edge cases.
 - **UnoCSS in Previews:** UnoCSS layout utilities and `playground/components/` helpers are encouraged in previews.
 </rules>
@@ -48,6 +49,10 @@ exports: [ExportA, ExportB]
 
 ## Overview
 1–2 sentences explaining purpose and when to use it.
+
+## Variant Guidance
+<!-- Optional: omit unless explicitly provided by the user or an approved *.blueprint.md / *.design.md -->
+- **`<variant>`**: <Usage/hierarchy rule strictly from user input or approved spec.>
 
 ## API
 - Props (required vs optional, `$bindable`, defaults), attachment options, state methods/properties, exported types, and overridable `--cs-<module>-*` CSS variables.
