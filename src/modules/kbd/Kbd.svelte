@@ -112,16 +112,16 @@
             :global([data-theme="dark"]) &[data-variant="keycap"] {
                 --cs-kbd-bg: linear-gradient(
                     to bottom,
-                    color-mix(in oklab, var(--cs-color-base-700) 55%, var(--cs-color-base-800)),
-                    var(--cs-color-base-800)
+                    var(--cs-color-base-700),
+                    color-mix(in oklab, var(--cs-color-base-700) 45%, var(--cs-color-base-800))
                 );
                 --cs-kbd-shadow:
-                    inset 0 1px 0 0 rgb(255 255 255 / 0.2),
-                    inset 0 -1px 0 0 rgb(0 0 0 / 0.25),
-                    inset 0 0 0 1px rgb(255 255 255 / 0.07),
-                    0 2px 0 0 var(--cs-color-base-950),
-                    0 0 0 1px rgb(0 0 0 / 0.45),
-                    0 3px 4px -1px rgb(0 0 0 / 0.55);
+                    inset 0 1px 0 0 rgb(255 255 255 / 0.22),
+                    inset 0 0 0 1px rgb(255 255 255 / 0.08),
+                    0 2px 0 0 color-mix(in oklab, var(--cs-color-base-800) 75%, var(--cs-color-base-900)),
+                    0 0 0 1px color-mix(in oklab, var(--cs-color-base-950) 55%, black),
+                    0 2px 0 1px color-mix(in oklab, var(--cs-color-base-950) 55%, black),
+                    0 4px 5px -1px rgb(0 0 0 / 0.55);
             }
 
             & :global(.cs-kbd-icon) {
