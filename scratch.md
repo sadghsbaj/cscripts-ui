@@ -1,10 +1,14 @@
 ## UI & Polish
 
-- [ ] Englisch/Deutsch-Support integrieren (kein fertiges System, sondern damit Components wie `aria-label` beim Close-Button oder `Kbd` bestimmte Texte je nach App-Einstellung sauber in der passenden Sprache rendern)
-- [x ] Prüfen, ob `variant` auf `KbdGroup` inkonsistent ist, da wir das z. B. bei `ToggleButtonGroup` oder `CheckboxGroup` nicht machen
-- [x ] prüfen ob eine art compactheight prop biem kbd sin nmacht z.b. default | compact für enge sachen
-- [ ] keycpa in tooltip integrieren
+- [ x] Englisch/Deutsch-Support integrieren (kein fertiges System, sondern damit Components wie `aria-label` beim Close-Button oder `Kbd` bestimmte Texte je nach App-Einstellung sauber in der passenden Sprache rendern)
+- [x ] Keycap in Tooltip integrieren
+- [ ] `Kbd`-ESLint-Regeln anlegen
+- [ ] 1px kbd tooltip bug fixen
+- [ ] Usage Guidance zu bestimmten Components noch anlegen
+- [ ] Bestehende „1-Language-only“-Stellen auf DE/EN refactoren
 - Sunken im Dark Mode noch mehr „sunken“ wirken lassen (Schatteneffekt / Lichtkante – noch offen)
+- [x] Prüfen, ob `variant` auf `KbdGroup` inkonsistent ist, da wir das z. B. bei `ToggleButtonGroup` oder `CheckboxGroup` nicht machen
+- [x] Prüfen, ob eine Art `compactHeight`-Prop beim `Kbd` Sinn macht (z. B. `default | compact` für enge Stellen)
 
 ## Modules
 
@@ -15,7 +19,7 @@
 - [ ] ContextMenu
 - [ ] Toast
 - [ ] NLP Parser
-- [ ] Chip
+- [ ] Chips
 - [ ] Kbd
 - [ ] Badges
 - [ ] Color Picker
