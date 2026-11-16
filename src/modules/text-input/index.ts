@@ -24,16 +24,19 @@ export interface TextInputProps extends Omit<HTMLAttributes<HTMLDivElement>, "ch
     invalid?: boolean;
     disabled?: boolean;
     readonly?: boolean;
+    /** Bindable reference to the root `<div>`. Use `bind:ref` or `bind:ref={get, set}`; do not pass a plain expression like `ref={fn()}`. */
     ref?: HTMLDivElement | null;
     children?: Snippet;
 }
 
 export interface TextInputFieldProps extends Omit<HTMLInputAttributes, "size" | "children" | "value"> {
+    /** Bindable input value. Use `bind:value` or `bind:value={get, set}`; do not pass a plain expression like `value={fn()}`. */
     value?: string;
     onValueChange?: (value: string) => void;
     disabled?: boolean;
     readonly?: boolean;
     invalid?: boolean;
+    /** Bindable reference to the `<input>`. Use `bind:ref` or `bind:ref={get, set}`; do not pass a plain expression like `ref={fn()}`. */
     ref?: HTMLInputElement | null;
 }
 
@@ -48,6 +51,7 @@ export interface TextInputIconProps extends Omit<SVGAttributes<SVGSVGElement>, "
 }
 
 export interface TextInputActionProps extends Omit<HTMLButtonAttributes, "type"> {
+    /** Bindable reference to the action `<button>`. Use `bind:ref` or `bind:ref={get, set}`; do not pass a plain expression like `ref={fn()}`. */
     ref?: HTMLButtonElement | null;
     icon?: Component<TextInputIconComponentProps>;
     visible?: boolean;

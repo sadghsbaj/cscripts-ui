@@ -22,7 +22,7 @@ export type ToggleButtonStateProps =
       }
     | {
           value?: never;
-          /** Bindable pressed state (standalone only). Supports `bind:pressed` and `bind:pressed={get, set}`. */
+          /** Bindable pressed state (standalone only). Use `bind:pressed` or `bind:pressed={get, set}`; do not pass a plain expression like `pressed={fn()}`. */
           pressed?: boolean;
           /** Fires with the next pressed state after a user toggle (standalone only). */
           onPressedChange?: (pressed: boolean) => void;
@@ -30,6 +30,7 @@ export type ToggleButtonStateProps =
 
 export type ToggleButtonProps = Omit<HTMLButtonAttributes, "color" | "size" | "value"> &
     ToggleButtonStateProps & {
+        /** Bindable reference to the root `<button>`. Use `bind:ref` or `bind:ref={get, set}`; do not pass a plain expression like `ref={fn()}`. */
         ref?: HTMLButtonElement | null;
         variant: ToggleButtonVariant;
         color: ToggleButtonColor;
@@ -39,6 +40,7 @@ export type ToggleButtonProps = Omit<HTMLButtonAttributes, "color" | "size" | "v
     };
 
 export type ToggleButtonLabelProps = HTMLAttributes<HTMLSpanElement> & {
+    /** Bindable reference to the root `<span>`. Use `bind:ref` or `bind:ref={get, set}`; do not pass a plain expression like `ref={fn()}`. */
     ref?: HTMLSpanElement | null;
 };
 
