@@ -2,7 +2,7 @@
 
 > **Kontext:** Konkrete Erkenntnisse und umsetzbare Checkliste aus der Umsetzung unseres ersten PoCs (**Schicht- & Anlagen-Übergabe-Board**) auf Basis von `cs` (`cs/svelte/work`, `cs/svelte/file-system`, `cs` UI-Primitives, UnoCSS & Svelte 5 Runes).  
 > **Zielgruppe:** Weiterentwicklung von `cs`, Projekt-Template, Moduldokumentation (`*.docs.md`) und Agent-Prompts/Rules (`.agents/`).  
-> **Status:** 12 Punkte umgesetzt (**#1–#7**, **#10–#11**, **#13**, **#15–#16**), **#8** gestrichen — offen/zurückgestellt: **#9**, **#12**, **#14**, **#17**, **#18**.
+> **Status:** 13 Punkte umgesetzt (**#1–#7**, **#10–#11**, **#13–#16**), **#8** gestrichen — offen/zurückgestellt: **#9**, **#12**, **#17**, **#18**, **#19**.
 
 ---
 
@@ -10,9 +10,9 @@
 
 - [ ] **9. Design- & Agent-Prompts (`architect` / `design-critic` / dedizierter Design-Agent) *(Zurückgestellt (später))*:** Harte Leitplanken für Toolbar-Dichte-Budget, Progressive Disclosure, Button-Hierarchie, `SegmentedControl` vs. `ToggleButtonGroup` und Header-Abgrenzung schärfen
 - [ ] **12. Desktop-first Proportionen, Typografie-Skala & Layout-Klarheit *(Zurückgestellt (später))*:** Großzügigere Text-/Label-Größen und weniger verschachtelte, klar strukturierte vertikale Layouts einfordern
-- [ ] **14. Übermäßige rote `ghost`-Trash-Buttons & ruhigere `negative`-Button-Variante *(Zurückgestellt (später))*:** Lösch-Aktionen häufiger in Unter-/Kontextmenüs kapseln und ruhigere `negative`-Variante (erst bei Hover/Focus rot) prüfen
 - [ ] **17. Template-Design-Workflow (mehrstufige Design-Agenten, `lab/`-Wireframes, strenge Archetypen) *(Zurückgestellt (später))*:** Trennung von UX/IA-Planung, visuellem Layout-Blueprint (Wireframe-Route z. B. unter `lab/` mit Mock-Blueprint-Komponenten zur Vorab-Freigabe) und Detail-Review (`design-critic`) prüfen
 - [ ] **18. Golden Templates / Referenzen (`src/references/`) *(Zurückgestellt (später))*:** Wenige, qualitativ hochwertige Referenz-Ansichten (Makro-Layouts + reduzierter Code) in `cs` pflegen und ggf. per Agent aus bestehenden Lieblings-Apps in Layout-Sprache extrahieren
+- [ ] **19. Eigenes Agent-Tool unter `cscripts-ui` (`apps/`-Struktur prüfen) *(Idee / später)*:** Überlegung, ein eigenes Agent-Tool direkt im Repo anzusiedeln — dann wäre zu klären, ob/wie wir das Repo sauber aufteilen (z. B. `apps/` + Library/Packages)
 
 ---
 
@@ -45,16 +45,6 @@
 
 ---
 
-### 14. Übermäßige rote `ghost`-Trash-Buttons (`negative`) *(Zurückgestellt (später))*
-
-- **Beobachtetes Problem:**  
-  Viele kleine icon-only Trash-Buttons als `ghost` wirken im UI wie leuchtend rote Flecken und erzeugen visuelle Unruhe.
-- **Maßnahmen für `cs` / Design-Rules:**
-    - [ ] Weniger direkte Lösch-Aktionen offen im Layout platzieren; destruktive Aktionen häufiger in Unter-/Kontextmenüs kapseln.
-    - [ ] Prüfen, ob eine ruhigere `negative`-Button-Variante (im Ruhezustand neutral, erst bei `:hover` / `:focus-visible` rot/`negative`) sinnvoll ist.
-
----
-
 ### 17. Template-Design-Workflow: Mehrstufige Design-Agenten & Visueller Layout-Blueprint (`lab/` / Wireframe-Phase) *(Zurückgestellt (später))*
 
 - **Beobachtetes Problem:**  
@@ -77,6 +67,15 @@
 
 ---
 
+### 19. Eigenes Agent-Tool unter `cscripts-ui` (`apps/`-Aufteilung) *(Idee / später)*
+
+- **Idee:**  
+  Ein eigenes Agent-Tool bauen und idealerweise direkt unter `cscripts-ui` pflegen (Details noch offen).
+- **Offene Architektur-Frage:**  
+  Falls das Tool hier ins Repo wandert, müssten wir prüfen, wie wir die Struktur sauber aufteilen (z. B. Monorepo-Struktur mit `apps/` für Tools/Apps getrennt von der Library).
+
+---
+
 ## Erledigt / Gestrichen
 
 - [x] **1. `WorkAppHeader` & `WorkAppStatusDot`:** Doku, `cs-work.md`, Tooltip-Fix
@@ -90,6 +89,7 @@
 - [x] **10. `SegmentedControl` `scale`-1px-Sprung:** `height: 100%` auf `.cs-segmented-control-item-content`
 - [x] **11. Close-Button-Positionierung:** `cs-design-and-tokens.md` & `design-and-tokens.md`
 - [x] **13. Zustandswechselnde Buttons:** `ToggleButton` / `ButtonMorph` in `cs-design-and-tokens.md`
+- [x] **14. Ruhigere `negative`-Button-Hierarchie:** 4-stufige `negative`-Abstufung in `Button.svelte` (+ `:disabled` Hover-Reset), `Button.preview.svelte` & `button.docs.md`
 - [x] **15. `WorkAppSignature`:** Info-Icon Click-Block (`WorkAppSignature.svelte`)
 - [x] **16. Kurze Button-Labels & stabile Switcher:** `cs-design-and-tokens.md` & `design-and-tokens.md`
 
@@ -202,6 +202,20 @@
   Buttons wechselten beim Klick hart von `variant="tertiary"` auf `variant="secondary"`.
 - **Umgesetzte Maßnahmen (Rules):**
     - [x] In `cs-design-and-tokens.md` festgehalten: Für echte Toggle-Zustände `ToggleButton` nutzen — oder, falls `ToggleButton` optisch nicht passt, den Variantenwechsel mindestens über `ButtonMorph` animieren.
+
+---
+
+### 14. Übermäßige rote `ghost`-Trash-Buttons & ruhigere `negative`-Button-Hierarchie
+
+- **Beobachtetes Problem:**  
+  Viele kleine icon-only Trash-Buttons als `ghost` wirkten im UI wie leuchtend rote Flecken und erzeugten visuelle Unruhe.
+- **Umgesetzte Maßnahmen (`cs` / Doku / Preview):**
+    - [x] 4-stufige `negative`-Button-Hierarchie in `Button.svelte` umgesetzt:
+        - `primary`: vollflächiges `negative`-Solid-Styling
+        - `secondary`: bereits im Ruhezustand rotes `fg`
+        - `tertiary`, `ghost` & `elevated`: im Ruhezustand monoton, erst bei `:hover` / `:focus-visible` / Active mit `negative`-`fg` und monotonem Hover-`bg` (keine `negative?: never`-Einschränkung mehr auf `elevated`)
+    - [x] `:disabled`-Hover-Reset in `Button.svelte` korrigiert, damit deaktivierte Buttons keine Hover-Zustände annehmen.
+    - [x] `Button.preview.svelte` und `button.docs.md` entsprechend aktualisiert.
 
 ---
 
