@@ -8,6 +8,7 @@ import { clipboardConfig } from "./clipboard.ts";
 import { closeButtonConfig } from "./close-button.ts";
 import { componentLayersConfig } from "./component-layers.ts";
 import { cssSafetyConfigs } from "./css-safety.ts";
+import { kbdConfigs } from "./kbd.ts";
 import { overlayConfig } from "./overlay.ts";
 import { scrollAreaConfig } from "./scroll-area.ts";
 import { segmentedControlConfig } from "./segmented-control.ts";
@@ -28,6 +29,16 @@ export { clipboardConfig, noNativeClipboardRule, preferClipboardIconsRule } from
 export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
 export { componentLayersConfig, componentLayersRule } from "./component-layers.ts";
 export { cssSafetyConfigs, noOklchNeutralMixRule, vendorPrefixOrderRule } from "./css-safety.ts";
+export {
+    FORBIDDEN_UNICODE_KEYS_REGEX,
+    kbdConfigs,
+    kbdNoComboTextRule,
+    kbdNoMacosLabelsRule,
+    kbdNoRawKbdRule,
+    kbdNoUnicodeKeysRule,
+    kbdPreferDefaultSeparatorRule,
+    kbdRequireStandalonePropsRule,
+} from "./kbd.ts";
 export { overlayConfig, overlayPreferFocusTrapOnContentRule } from "./overlay.ts";
 export {
     scrollAreaConfig,
@@ -64,6 +75,7 @@ export const customRulesConfigs: Linter.Config[] = [
     segmentedControlConfig,
     componentLayersConfig,
     ...cssSafetyConfigs,
+    ...kbdConfigs,
     attachmentLayersConfig,
     overlayConfig,
     titleAttributeConfig,
