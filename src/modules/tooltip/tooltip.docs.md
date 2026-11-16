@@ -21,6 +21,11 @@ exports:
 ## Overview
 Lightweight tooltip surface (`<Tooltip />`) and Svelte 5 attachment (`tooltip`) built on `<Popover popover="manual">` and `popoverTrigger({ triggerOn: "hover" })`. Supports both zero-boilerplate inline `text`/`icon` tooltips and custom compound `<Tooltip />` surfaces paired by `target` ID.
 
+## Usage Guidance
+- **Don't force tooltips everywhere**: Even though ESLint flags unlabeled icon buttons (suppressible via ignore comment when intentional), self-explanatory controls like a close button or a standard three-dot menu button in a list/chat item do not need a tooltip.
+- **When to add one**: Use tooltips when an icon is not 100% self-explanatory, or when a menu/action button hides domain-specific settings (briefly describe what is inside, e.g., `"Workspace settings"`, rather than listing options).
+- **Copy length**: Keep tooltip text short and concise — avoid long sentences.
+
 ## API
 
 ### `tooltip(options: TooltipOptions): Attachment<HTMLElement>`

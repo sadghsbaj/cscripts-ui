@@ -23,6 +23,14 @@ exports:
 ## Overview
 Primary interactive button primitive with polymorphic element rendering (`button`, `a`, `label`), explicit `variant` and `size` selection, optional `negative` intent, and spring-physics press feedback. Pairs with `<ButtonLabel />` and `<ButtonIcon />` for optical icon/text alignment.
 
+## Usage Guidance
+- **`primary`**: At most one visible per page/view for the single main action.
+- **`secondary`**: Use sparingly — too many `secondary` buttons with accented text clutter a view.
+- **`tertiary`**: Workhorse alongside `secondary` for standard actions.
+- **`ghost`**: Avoid overusing (`ghost` everywhere feels unstructured); best for compact icon-only controls that should stay unobtrusive.
+- **`elevated`**: Best suited on `canvas` or `sunken` surfaces.
+- **Labels**: Keep button text short — ideally a single word (~4–8 characters), or at most two short words.
+
 ## API
 
 ### `Button` Props

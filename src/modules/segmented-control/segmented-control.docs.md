@@ -27,6 +27,10 @@ exports:
 ## Overview
 Single-selection `role="radiogroup"` / `role="radio"` pill control composed of `<SegmentedControl />`, `<SegmentedControlItem />`, `<SegmentedControlIcon />`, and `<SegmentedControlLabel />`, featuring a gliding active indicator, horizontal roving focus, and overflow step-scrolling with edge fade masks and context-sensitive chevrons.
 
+## Usage Guidance
+- **`equal`**: Looks cleanest when segments are uniform, provided label lengths do not differ too wildly.
+- **`content`** *(default, `fit-content`)*: Works best when labels vary significantly in length or layout space is tight; if it overflows, it scrolls automatically.
+
 ## API
 
 ### `SegmentedControl` Props

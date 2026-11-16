@@ -28,7 +28,7 @@ exports:
 ## Overview
 Tactile keyboard keycap primitive (`<Kbd />`) and shortcut composition suite (`<KbdGroup />`, `<KbdSeparator />`, `<KbdSymbol />`) standardized on Linux and Windows conventions. Supports `soft`, `ghost`, and 3D `keycap` surfaces, context-inherited group styling, and typed symbol keys (`KBD_KEYS`).
 
-## Variant Guidance
+## Usage Guidance
 - **`soft`** *(recommended default)*: Use in almost all standard UIs. Cleanest baseline for inline hints, command palettes, menus, and toolbars.
 - **`ghost`**: Use only for ultra-quiet, understated hints where even a soft pill adds too much visual weight (not for most apps).
 - **`keycap`**: Reserve for specific, intentional highlights (onboarding, hero cards, shortcut showcases) where keys should physically stand out — not for routine small inline hints.

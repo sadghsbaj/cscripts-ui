@@ -16,6 +16,12 @@ exports:
 ## Overview
 Fullscreen backdrop surface (`<Overlay />`) promoted to the browser's native Top Layer via `popover="manual"` and the `topLayer` attachment. Includes optical blur/dim/solid/transparent variants, safe backdrop click-dismiss ergonomics, and `scrollLock` containment.
 
+## Usage Guidance
+- **`blur`** *(recommended default)*: Default for most modals and overlays — separates the overlay clearly while preserving minimal background structure for context.
+- **`solid`**: When the user should be completely pulled out of the underlying view (e.g., fullscreen modals or major blocking states).
+- **`dim`**: When the underlying content should remain lightly visible/readable.
+- **`transparent`**: Rare — only when interaction must be blocked while keeping the background completely unobstructed.
+
 ## API
 
 ### `Overlay` Props

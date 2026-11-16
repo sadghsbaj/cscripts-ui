@@ -23,6 +23,12 @@ exports:
 ## Overview
 Composite scroll container (`<ScrollArea />` + `<ScrollAreaContent />`) that hides native OS scrollbars while preserving native scroll physics, rendering GPU-accelerated overlay scrollbars in the outer wrapper.
 
+## Usage Guidance
+- **`md`** *(recommended default)*: Standard size for most UI scroll containers.
+- **`sm`**: Only for very small/compact scroll containers.
+- **`lg`**: Reserve for very large or app-wide containers.
+- **Pairing with `ScrollFade`**: Matching sizes (e.g., `md` with `md`) usually gives the best proportions.
+
 ## API
 
 ### `ScrollArea` Props

@@ -18,6 +18,12 @@ exports:
 ## Overview
 Svelte 5 attachment (`scrollFade`) that applies dynamic, GPU-composited edge alpha fade masks to scrollable containers using CSS Scroll-Driven Animations (`scroll(self block)` / `scroll(self inline)`) and `@property` lengths.
 
+## Usage Guidance
+- **`md`** *(recommended default)*: Standard size for most UI scroll areas.
+- **`sm`**: Very small scroll containers.
+- **`lg`**: Very large or app-wide scroll containers.
+- **Pairing**: Generally match `ScrollFade` size to the `ScrollArea` size (e.g., `md` with `md`) for balanced proportions.
+
 ## API
 
 ### `scrollFade(options: ScrollFadeOptions): Attachment<Element>`

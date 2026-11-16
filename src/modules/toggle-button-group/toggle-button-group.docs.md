@@ -25,6 +25,10 @@ exports:
 ## Overview
 Composite container (`<ToggleButtonGroup />`) that coordinates single- or multi-selection across child `<ToggleButton value="..." />` items with unified outer pill corners, stationary surface press feedback (scaling inner content inward instead of squashing adjacent edges), and optional `<ToggleButtonGroupSeparator />` dividers.
 
+## Usage Guidance
+- **Prefer `SegmentedControl`**: Use `SegmentedControl` for most mode and view switches.
+- **Targeted toolbars**: Reserve `ToggleButtonGroup` for small, targeted, multi-select or formatting toolbars (e.g., Bold / Italic / Underline icon groups) — avoid using it as a generic switch across general layouts.
+
 ## API
 
 ### `ToggleButtonGroup` Props

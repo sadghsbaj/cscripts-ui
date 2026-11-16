@@ -16,6 +16,11 @@ exports:
 ## Overview
 Compact circular/squircle dismiss trigger (`<CloseButton />`) rendering an `X` icon with subordinate `text-weak` → `text-main` contrast and spring-physics press feedback.
 
+## Usage Guidance
+- **`soft`** *(recommended default)*: Default choice for modals, drawers, toasts, and similar surfaces — the subtle background gives structure instead of looking unanchored.
+- **`ghost`**: Only for tight/cramped spots where a background pill feels out of place.
+- **`elevated`**: For floating close controls (e.g., larger close buttons in fullscreen overlays/modals).
+
 ## API
 
 ### `CloseButton` Props
