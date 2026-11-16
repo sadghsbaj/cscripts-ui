@@ -9,7 +9,7 @@
     {#if children}
         {@render children()}
     {:else}
-        <Plus strokeWidth={2} aria-hidden="true" class="cs-kbd-separator-icon" />
+        <Plus strokeWidth={2.25} aria-hidden="true" class="cs-kbd-separator-icon" />
     {/if}
 </span>
 

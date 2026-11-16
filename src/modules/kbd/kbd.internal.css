@@ -7,7 +7,7 @@
             --cs-kbd-icon-size: 11px;
             --cs-kbd-gap: 2px;
             --cs-kbd-group-gap: 3px;
-            --cs-kbd-separator-size: 9px;
+            --cs-kbd-separator-size: 12px;
         }
 
         &[data-size="sm"] {
@@ -17,7 +17,7 @@
             --cs-kbd-icon-size: 12px;
             --cs-kbd-gap: 3px;
             --cs-kbd-group-gap: 3px;
-            --cs-kbd-separator-size: 10px;
+            --cs-kbd-separator-size: 13px;
         }
 
         &[data-size="md"] {
@@ -27,7 +27,7 @@
             --cs-kbd-icon-size: 13px;
             --cs-kbd-gap: 4px;
             --cs-kbd-group-gap: 4px;
-            --cs-kbd-separator-size: 11px;
+            --cs-kbd-separator-size: 14px;
         }
 
         &[data-size="lg"] {
@@ -37,7 +37,7 @@
             --cs-kbd-icon-size: 14px;
             --cs-kbd-gap: 4px;
             --cs-kbd-group-gap: 4px;
-            --cs-kbd-separator-size: 12px;
+            --cs-kbd-separator-size: 15px;
         }
 
         &[data-size="xl"] {
@@ -47,7 +47,7 @@
             --cs-kbd-icon-size: 15px;
             --cs-kbd-gap: 5px;
             --cs-kbd-group-gap: 5px;
-            --cs-kbd-separator-size: 13px;
+            --cs-kbd-separator-size: 16px;
         }
     }
 }
