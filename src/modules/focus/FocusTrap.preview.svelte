@@ -105,7 +105,7 @@ ${closeScript}
             role="dialog"
             aria-modal="true"
             aria-label="Settings"
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-400px relative"
+            class="bg-elevated shadow-floating rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-400px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isStandardOpen = false),
@@ -155,7 +155,7 @@ ${closeScript}
             role="dialog"
             aria-modal="true"
             aria-label="Confirm deletion"
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-380px relative"
+            class="bg-elevated shadow-floating rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-380px relative"
             {@attach focusTrap({
                 initialFocus: "#negative-confirm",
                 onEscape: () => (isTargetOpen = false),
@@ -201,7 +201,7 @@ ${closeScript}
             role="dialog"
             aria-modal="true"
             aria-label="Level 1 dialog"
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-440px relative"
+            class="bg-elevated shadow-floating rounded-3xl squircle p-6 flex flex-col gap-6 w-full max-w-440px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isParentOpen = false),
@@ -241,7 +241,7 @@ ${closeScript}
             role="dialog"
             aria-modal="true"
             aria-label="Level 2 sub-dialog"
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-8 flex flex-col gap-6 w-full max-w-360px relative"
+            class="bg-elevated shadow-floating rounded-3xl squircle p-8 flex flex-col gap-6 w-full max-w-360px relative"
             {@attach focusTrap({
                 initialFocus: "first-focusable",
                 onEscape: () => (isChildOpen = false),
