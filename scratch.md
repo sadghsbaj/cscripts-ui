@@ -1,12 +1,11 @@
 ## UI & Polish
 
-- SegmentedControl-Scale leicht buggy (ändert sich evtl. noch)
-- Close-Button nicht immer perfekt mit Titeln aligned – in Cards, Modals usw. etwas weiter am Rand (nicht zu nah) könnte cooler aussehen
-- Elemente allgemein zu klein: Da Work-Apps immer als Desktop-Apps gebaut werden (auch für kleinere Laptops optimiert), sind die gewählten Elemente oft zu klein bzw. es sind zu viele zu kleine Elemente
+- englisch deutsch integrierne nicht als fetiges systme aber damit components wie aria label bie close button oder kbds besitmmte sachen sauber je nach app einstellung in der einen oder andern sprache rendern
 
 ## Modules
 
-- [ ] Filesystem-Basis bauen und testen (evtl. auch Playground-artige Test-View)
+- [x] Filesystem-Basis bauen
+- [ ] FIleSystem Basis nochmal Testabdeckung gucken und ggf. erweitern
 - [ ] Modal
 - [ ] Select
 - [ ] Combobox
@@ -14,6 +13,7 @@
 - [ ] Toast
 - [ ] NLP Parser
 - [ ] Chip
+- [ ] kbd
 - [ ] Badges
 - [ ] Color Picker
 - [ ] EML-Logik: Signaturen
