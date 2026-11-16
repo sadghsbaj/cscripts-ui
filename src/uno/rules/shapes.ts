@@ -9,5 +9,6 @@ export const shapeRules: Rule[] = [
         /^shadow-elevated(?:-(hover))?$/,
         ([, hover]) => ({ "box-shadow": `var(--cs-shadow-elevated${hover ? `-${hover}` : ""})` }),
     ],
+    [/^shadow-floating$/, () => ({ "box-shadow": "var(--cs-shadow-floating)" })],
     [/^shadow-sunken$/, () => ({ "box-shadow": "var(--cs-shadow-sunken)" })],
 ];

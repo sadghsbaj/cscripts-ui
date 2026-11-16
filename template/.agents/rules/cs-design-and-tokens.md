@@ -23,7 +23,8 @@ globs: "**/*.svelte, **/*.css, **/*.html"
   <surfaces_and_shapes>
     - **Surface Hierarchy (`canvas -> elevated -> sunken`):**
       - `bg-canvas`: App root background.
-      - `bg-elevated` + `shadow-elevated`: Primary floating islands/cards (borderless in light mode; automatic top-lit inset hairline in dark mode via `light-dark()`).
+      - `bg-elevated` + `shadow-elevated`: Grounded cards, islands, and controls (borderless in light mode; automatic top-lit inset hairline in dark mode via `light-dark()`).
+      - `bg-elevated` + `shadow-floating`: Floating layers (`Popover`, `Tooltip`, `Overlay` panels/dialogs) needing an outer ambient/contact shadow and stronger dark-mode rim so they stay distinct over `bg-elevated` surfaces.
       - `bg-sunken` (optional `shadow-sunken`) or `bg-base-soft`: Recessed wells, inputs, and segmented tracks inside islands.
     - **Squircles (`corner-shape`):** Scale superellipse intensity with element size:
       - `squircle-soft` (`1.2`): Interactive controls, compact chips, checkboxes (`4px–8px` radii).

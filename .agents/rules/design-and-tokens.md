@@ -29,7 +29,11 @@ globs: "**/src/**, **/playground/**"
   </colors>
 
   <surfaces_and_shapes>
-    - **Borderless by Default:** Separate elements via surface contrast (`canvas` / `elevated` / `sunken`), whitespace, and `box-shadow` (`--cs-shadow-elevated`, `--cs-shadow-sunken`). Avoid CSS `border` on controls unless an explicit edge case demands it.
+    - **Borderless by Default:** Separate elements via surface contrast (`canvas` / `elevated` / `sunken`), whitespace, and `box-shadow`. Avoid CSS `border` on controls unless an explicit edge case demands it.
+    - **Elevation Semantics:**
+      - `--cs-shadow-elevated` / `shadow-elevated`: For **grounded** surfaces and controls (cards, headers, buttons, text inputs).
+      - `--cs-shadow-floating` / `shadow-floating`: For **floating** layers (popovers, tooltips, overlay panels/dialogs), which need an outer ambient/contact shadow and a slightly stronger rim in dark mode so they do not merge into underlying `bg-elevated` surfaces.
+      - `--cs-shadow-sunken` / `shadow-sunken`: For recessed wells and inset tracks.
     - **Solid Highlight:** Chromatic `-solid` interactive surfaces MUST use `--cs-shadow-solid` (1px top-lit inset highlight + subtle drop shadow) and `--cs-shadow-solid-active` on `:active`.
     - **Squircles (`corner-shape`):** Scale superellipse intensity with element size: `--cs-squircle-soft` (`1.2`) for compact controls, `--cs-squircle-smooth` (`1.6`) for medium elements, `--cs-squircle` (`2.0`) for large cards/islands.
   </surfaces_and_shapes>

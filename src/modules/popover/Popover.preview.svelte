@@ -26,7 +26,7 @@ ${closeScript}
     id="demo-popover"
     placement="bottom"
     width="content"
-    class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs text-main"
+    class="bg-elevated shadow-floating rounded-2xl squircle p-4 text-xs text-main"
 >
     Popover content anchored to the trigger.
 </Popover>`;
@@ -66,7 +66,7 @@ ${closeScript}
             id="popover-basic-demo"
             placement="bottom"
             width="content"
-            class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
+            class="bg-elevated shadow-floating rounded-2xl squircle p-4 text-xs font-500 text-main"
         >
             <div class="flex flex-col gap-1">
                 <span class="font-600 text-strong">Popover</span>
@@ -89,7 +89,7 @@ ${closeScript}
                 id="popover-placement-{placement}"
                 {placement}
                 width="content"
-                class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
+                class="bg-elevated shadow-floating rounded-2xl squircle p-4 text-xs font-500 text-main"
             >
                 <div class="flex flex-col gap-1">
                     <span class="font-600 text-strong">Placement: {placement}</span>
@@ -114,7 +114,7 @@ ${closeScript}
                     id="popover-width-{width}"
                     placement="bottom"
                     {width}
-                    class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
+                    class="bg-elevated shadow-floating rounded-2xl squircle p-4 text-xs font-500 text-main"
                 >
                     <div class="flex flex-col gap-1">
                         <span class="font-600 text-strong">{width}</span>
@@ -142,7 +142,7 @@ ${closeScript}
             placement="top"
             width="content"
             offset="24px"
-            class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
+            class="bg-elevated shadow-floating rounded-2xl squircle p-4 text-xs font-500 text-main"
         >
             <div class="flex flex-col gap-1">
                 <span class="font-600 text-strong">Offset: 24px</span>
@@ -162,7 +162,7 @@ ${closeScript}
             popover="manual"
             placement="bottom"
             width="content"
-            class="bg-elevated shadow-elevated rounded-2xl squircle p-4 text-xs font-500 text-main"
+            class="bg-elevated shadow-floating rounded-2xl squircle p-4 text-xs font-500 text-main"
         >
             <div class="flex flex-col gap-1">
                 <span class="font-600 text-strong">Hover Popover</span>

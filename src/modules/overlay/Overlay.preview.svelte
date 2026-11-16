@@ -39,7 +39,7 @@ ${closeScript}
             <HitArea size="md" />
         </CloseButton>
 
-        <div class="bg-elevated shadow-elevated rounded-3xl squircle p-6 w-360px">
+        <div class="bg-elevated shadow-floating rounded-3xl squircle p-6 w-360px">
             Overlay content
         </div>
     </Overlay>
@@ -101,7 +101,7 @@ ${closeScript}
         </CloseButton>
 
         <div
-            class="bg-elevated shadow-elevated rounded-3xl squircle p-6 flex flex-col gap-4 w-360px h-320px relative"
+            class="bg-elevated shadow-floating rounded-3xl squircle p-6 flex flex-col gap-4 w-360px h-320px relative"
         >
             <ScrollArea size="sm" direction="vertical" class="size-full">
                 <ScrollAreaContent

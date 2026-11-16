@@ -51,7 +51,7 @@ Promotes any `[popover]` element to the Top Layer on mount via `showPopover()` a
 
 {#if open}
     <Overlay variant="blur" onclick={() => (open = false)}>
-        <div class="bg-elevated shadow-elevated rounded-2xl p-6">
+        <div class="bg-elevated shadow-floating rounded-2xl p-6">
             Modal content
         </div>
     </Overlay>

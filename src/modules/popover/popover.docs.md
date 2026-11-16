@@ -70,7 +70,7 @@ Wires a trigger element's `anchor-name: --anchor-${target}` and interaction beha
     <ButtonLabel>Options</ButtonLabel>
 </Button>
 
-<Popover id="menu-popover" placement="bottom-start" width="min-anchor" class="bg-elevated shadow-elevated rounded-xl p-2">
+<Popover id="menu-popover" placement="bottom-start" width="min-anchor" class="bg-elevated shadow-floating rounded-xl p-2">
     <div>Menu item</div>
 </Popover>
 ```

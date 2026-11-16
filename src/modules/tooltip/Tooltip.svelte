@@ -68,7 +68,7 @@
             background-color: var(--cs-color-elevated);
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-soft);
-            box-shadow: var(--cs-shadow-elevated);
+            box-shadow: var(--cs-shadow-floating);
         }
 
         :global(.cs-tooltip:popover-open) {
