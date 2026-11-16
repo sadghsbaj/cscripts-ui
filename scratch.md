@@ -1,11 +1,12 @@
 ## UI & Polish
 
-- englisch deutsch integrierne nicht als fetiges systme aber damit components wie aria label bie close button oder kbds besitmmte sachen sauber je nach app einstellung in der einen oder andern sprache rendern
+- [ ] Englisch/Deutsch-Support integrieren (kein fertiges System, sondern damit Components wie `aria-label` beim Close-Button oder `Kbd` bestimmte Texte je nach App-Einstellung sauber in der passenden Sprache rendern)
+- [ ] Prüfen, ob `variant` auf `KbdGroup` inkonsistent ist, da wir das z. B. bei `ToggleButtonGroup` oder `CheckboxGroup` nicht machen
+- Sunken im Dark Mode noch mehr „sunken“ wirken lassen (Schatteneffekt / Lichtkante – noch offen)
 
 ## Modules
 
-- [x] Filesystem-Basis bauen
-- [ ] FIleSystem Basis nochmal Testabdeckung gucken und ggf. erweitern
+- [ ] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
 - [ ] Modal
 - [ ] Select
 - [ ] Combobox
@@ -13,7 +14,7 @@
 - [ ] Toast
 - [ ] NLP Parser
 - [ ] Chip
-- [ ] kbd
+- [ ] Kbd
 - [ ] Badges
 - [ ] Color Picker
 - [ ] EML-Logik: Signaturen
@@ -33,6 +34,7 @@
 - [ ] Animierte Charts
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
 - [ ] Zahlen-Animationen
+- [x] Filesystem-Basis bauen
 - [x] Switch (Anticipation Spring) + Group
 - [x] RovingFocus
 - [x] TextInput
