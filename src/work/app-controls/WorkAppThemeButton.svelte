@@ -2,11 +2,12 @@
     import { Button, ButtonIcon } from "../../modules/button/index.ts";
     import { HitArea } from "../../modules/hit-area/index.ts";
     import { tooltip } from "../../modules/tooltip/tooltip.attach.svelte.ts";
-    import { GERMAN_THEME_LABELS, theme } from "../../modules/theme/index.ts";
+    import { theme, THEME_LABELS } from "../../modules/theme/index.ts";
+    import { t } from "../../shared/lang.internal.ts";
     import type { WorkAppThemeButtonProps } from "./index.ts";
 
     let {
-        "aria-label": ariaLabel = "Theme wechseln",
+        "aria-label": ariaLabel = t({ de: "Theme wechseln", en: "Switch theme" }),
         class: className,
         onclick,
         ...rest
@@ -28,7 +29,10 @@
     aria-label={ariaLabel}
     onclick={handleClick}
     class={["cs-work-app-theme-button", className]}
-    {@attach tooltip({ text: `Erscheinung: ${GERMAN_THEME_LABELS[theme.mode]}`, placement: "bottom" })}
+    {@attach tooltip({
+        text: t({ de: `Erscheinung: ${THEME_LABELS[theme.mode]}`, en: `Appearance: ${THEME_LABELS[theme.mode]}` }),
+        placement: "bottom",
+    })}
 >
     <ButtonIcon icon={theme.icon} />
     <HitArea size="md" />

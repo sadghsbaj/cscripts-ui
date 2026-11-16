@@ -4,10 +4,11 @@
     import { Button, ButtonIcon } from "../../modules/button/index.ts";
     import { HitArea } from "../../modules/hit-area/index.ts";
     import { tooltip } from "../../modules/tooltip/tooltip.attach.svelte.ts";
+    import { t } from "../../shared/lang.internal.ts";
     import type { WorkAppHelpButtonProps } from "./index.ts";
 
     let {
-        "aria-label": ariaLabel = "Dokumentation und Hilfe",
+        "aria-label": ariaLabel = t({ de: "Dokumentation und Hilfe", en: "Documentation and help" }),
         icon = BookOpen,
         class: className,
         ...rest
@@ -21,7 +22,7 @@
     iconOnly
     aria-label={ariaLabel}
     class={["cs-work-app-help-button", className]}
-    {@attach tooltip({ text: "Hilfe", placement: "bottom" })}
+    {@attach tooltip({ text: t({ de: "Hilfe", en: "Help" }), placement: "bottom" })}
 >
     <ButtonIcon {icon} />
     <HitArea size="md" />

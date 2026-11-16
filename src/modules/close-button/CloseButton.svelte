@@ -2,13 +2,14 @@
     import { X } from "@lucide/svelte";
 
     import type { CloseButtonProps } from "./index.ts";
+    import { t } from "../../shared/lang.internal.ts";
 
     let { ref = $bindable(null), variant, size, class: className, children, ...rest }: CloseButtonProps = $props();
 </script>
 
 <button
     bind:this={ref}
-    aria-label="Close"
+    aria-label={t({ de: "Schließen", en: "Close" })}
     {...rest}
     type="button"
     class={["cs-close-button", className]}

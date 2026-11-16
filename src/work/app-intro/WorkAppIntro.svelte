@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
 
+    import { t } from "../../shared/lang.internal.ts";
     import { WORK_LOCATIONS } from "../locations/index.ts";
     import WorkLocation from "../locations/WorkLocation.svelte";
     import WorkLogo from "../logo/WorkLogo.svelte";
@@ -80,7 +81,9 @@
                 <div class="cs-work-app-intro-progress-bar"></div>
             </div>
 
-            <span class="cs-work-app-intro-progress-text"> Initialisiere Anwendung... </span>
+            <span class="cs-work-app-intro-progress-text">
+                {t({ de: "Initialisiere Anwendung...", en: "Initializing application..." })}
+            </span>
         </div>
     </div>
 {/if}

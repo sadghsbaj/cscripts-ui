@@ -3,6 +3,7 @@ export {
     isValidMode,
     theme,
     THEME_ICONS,
+    THEME_LABELS,
     THEME_MODES,
     ThemeManager,
     type ThemeMode,

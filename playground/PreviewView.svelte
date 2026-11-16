@@ -12,7 +12,7 @@
         SegmentedControlItem,
         SegmentedControlLabel,
     } from "cs/svelte/segmented-control";
-    import { theme, THEME_ICONS, type ThemeMode } from "cs/svelte/theme";
+    import { theme, THEME_ICONS, THEME_LABELS } from "cs/svelte/theme";
     import { tooltip } from "cs/svelte/tooltip";
 
     import {
@@ -21,12 +21,6 @@
         PREVIEW_CATEGORY_LABELS,
         type PreviewCategory,
     } from "./components/index.ts";
-
-    const THEME_LABELS: Record<ThemeMode, string> = {
-        system: "System",
-        light: "Light",
-        dark: "Dark",
-    };
 
     interface SvelteModule {
         default: Component;

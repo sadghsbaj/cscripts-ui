@@ -2,6 +2,7 @@ import type { Component } from "svelte";
 import type { HTMLButtonAttributes } from "svelte/elements";
 
 import type { ButtonIconComponentProps } from "../../modules/button/index.ts";
+import { t } from "../../shared/lang.internal.ts";
 
 export { default as WorkAppThemeButton } from "./WorkAppThemeButton.svelte";
 export { default as WorkAppHeaderThemeButton } from "./WorkAppThemeButton.svelte";
@@ -15,10 +16,10 @@ export const WORK_APP_STATUS_COLORS = ["positive", "caution", "negative", "base"
 export type WorkAppStatusColor = (typeof WORK_APP_STATUS_COLORS)[number];
 
 export const WORK_APP_STATUS_DEFAULTS: Record<WorkAppStatusColor, string> = {
-    positive: "Verbunden",
-    caution: "Wartend",
-    negative: "Getrennt",
-    base: "Inaktiv",
+    positive: t({ de: "Verbunden", en: "Connected" }),
+    caution: t({ de: "Wartend", en: "Waiting" }),
+    negative: t({ de: "Getrennt", en: "Disconnected" }),
+    base: t({ de: "Inaktiv", en: "Inactive" }),
 };
 
 export interface WorkAppStatusDotProps extends Omit<HTMLButtonAttributes, "color" | "aria-label"> {

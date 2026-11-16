@@ -2,6 +2,8 @@ import { flushSync, type Component } from "svelte";
 import { Monitor, Moon, Sun } from "@lucide/svelte";
 import { getLocalStorage, onLocalStorageChange, setLocalStorage } from "cs/svelte/browser-storage";
 
+import { t } from "../../shared/lang.internal.ts";
+
 /**
  * @file Reactive Theme Manager for Svelte 5 Applications.
  *
@@ -42,6 +44,12 @@ export const THEME_ICONS = {
     light: Sun,
     dark: Moon,
 } as const;
+
+export const THEME_LABELS: Record<ThemeMode, string> = {
+    system: t({ de: "System", en: "System" }),
+    light: t({ de: "Hell", en: "Light" }),
+    dark: t({ de: "Dunkel", en: "Dark" }),
+};
 
 export const GERMAN_THEME_LABELS = {
     system: "System",
