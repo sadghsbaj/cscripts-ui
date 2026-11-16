@@ -45,13 +45,14 @@ globs: "**/src/**, **/playground/**"
       - **Container controls (`<button>`, `<a>`):** Controls below `1936px²` total surface area require a `<HitArea />` child unless tight layout constraints justify an explicit exception.
       - **Void HTML controls (e.g. `<input>` checks/toggles):** Intentionally omit expanded hit areas even when below `1936px²`. Never add wrapper DOM or `40px`–`48px` pseudo-element hit areas (which splits hit handling into a dual-track architecture and consumes pseudo-elements; tiny `:active` press-jitter guards remain acceptable). Pair void controls with descriptive text inside a clickable `<label>` for the full target surface.
     - **CSS Layers:** Library modules use plain CSS inside `@layer` (`foundation`, `attachments`, `components.primitive`, `components.composite`). UnoCSS is for layouting in previews and consuming apps, not inside library component stylesheets.
+    - **Close-Button Positioning:** Place close buttons in cards, modals, and overlays near the outer corner/edge with a tighter edge offset—visually closer to the edge than the title's padding—rather than rigidly aligned inside the title row.
   </sizing_and_layout>
 
   <typography_and_icons>
     - **Fonts:** Sans-serif default (`Inter` via `cs/vite` font plugin or system sans). Use `monospace` strictly for code/terminal snippets.
     - **`text-trim` & Truncation:** Use `text-trim` / `text-trim-truncate` (clipping X-axis only, never Y-axis) ONLY on isolated single-line control labels paired with icons—never on headings, descriptions, or multi-line body copy.
     - **Icons:** Size `1–2px` larger than adjacent text; match `strokeWidth` to font-weight (`400 -> 2`, `500 -> 2.25`, `600+ -> 2.5`; custom vector controls may use heavier strokes when visually cleaner).
-    - **Copy & Cursors:** Concise 1–2 word control labels (`whitespace-nowrap`), no parenthetical hints or technical jargon (`IndexedDB`, `JSON`) in UI copy, no hyphens/dashes as separators. Use `cursor: default` on controls; `cursor: pointer` only on `:any-link`.
+    - **Copy, Stability & Cursors:** Concise 1–2 word control labels (`whitespace-nowrap`), no parenthetical hints or technical jargon (`IndexedDB`, `JSON`) in UI copy, no hyphens/dashes as separators. Prevent layout shifts on dynamic switchers (e.g. day/date/mode switchers) via fixed width, `min-width`, or `tabular-nums`. Use `cursor: default` on controls; `cursor: pointer` only on `:any-link`.
   </typography_and_icons>
 
   <motion>
