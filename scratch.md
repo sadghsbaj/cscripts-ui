@@ -1,18 +1,6 @@
-tab reihenfogle in card wenn close button teils noch nciht korrekt x
-
-wenn da wo closebutotn grafik dann etnwder überleen ob man zwingen überhaupt ein brauhct wenn ja üpb elevated nicht auhc clean aussehen könnte anstonen soft nutzen gucken obs passt oderm an ggf leicht overwrirtet mit nem solid bg x
-
-cleane references neben an velrinken in card docs x
-
-buttonmorph kann amn beim toglgen nicht mehr abbrehcen geht auf pointerdown fixen
-
-kbd keycap darkmdoe minmal der schawrze shcatten weg das gräulchie passst
-
 ## Modules
 
-- progressbar indicator
-- [x] Badges
-- [x] Cards
+- [ ] Progressbar / Indicator
 - [ ] Textarea (evtl.)
 - [ ] Zahlen-Animationen
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
@@ -72,3 +60,10 @@ kbd keycap darkmdoe minmal der schawrze shcatten weg das gräulchie passst
 - [x] Checkbox: Dot in der Mitte der Checkbox bei Indeterminate
 - [x] Checkbox: Indeterminate „Select All“-Bug
 - [x] Checkbox: Hit Area
+- [x] Badges
+- [x] Cards
+- [x] Tab-Reihenfolge in `Card` bei Close-Button prüfen/korrigieren
+- [x] Close-Button über Grafik in `Card`: prüfen, ob nötig, ggf. `elevated` oder `soft` nutzen bzw. leicht mit solidem `bg` überschreiben
+- [x] Cleane References nebenan in `Card`-Docs verlinken
+- [x] `ButtonMorph`: Toggling lässt sich nicht mehr abbrechen (geht auf `pointerdown`) – fixen
+- [x] `Kbd` Keycap im Dark Mode: minimalen schwarzen Schatten entfernen (das Gräuliche passt)
