@@ -86,11 +86,6 @@
                 --cs-button-bg-hover: var(--cs-color-base-soft);
                 --cs-button-fg: var(--cs-color-base-soft-fg);
                 --cs-button-fg-hover: var(--cs-color-base-soft-fg-hover);
-
-                &[data-negative] {
-                    --cs-button-fg: var(--cs-button-accent-fg);
-                    --cs-button-fg-hover: var(--cs-button-accent-fg);
-                }
             }
 
             &[data-variant="elevated"] {
@@ -102,24 +97,44 @@
                 --cs-button-shadow-active: var(--cs-shadow-elevated);
             }
 
+            /* Monotone negative variants stay calm at rest and reveal negative intent on interaction */
+            &:is([data-variant="tertiary"], [data-variant="ghost"], [data-variant="elevated"])[data-negative]:not(
+                    :disabled,
+                    [aria-disabled="true"],
+                    [data-disabled]
+                ) {
+                --cs-button-fg-hover: var(--cs-button-accent-fg);
+
+                &:is(:focus-visible, :active) {
+                    --cs-button-fg: var(--cs-button-accent-fg);
+                }
+            }
+
             &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
                 --cs-button-fg: var(--cs-color-disabled-fg);
+                --cs-button-fg-hover: var(--cs-color-disabled-fg);
                 --cs-button-shadow: none;
+                --cs-button-shadow-hover: none;
+                --cs-button-shadow-active: none;
 
                 &[data-variant="primary"],
                 &[data-variant="secondary"],
                 &[data-variant="tertiary"] {
                     --cs-button-bg: var(--cs-color-disabled-bg);
+                    --cs-button-bg-hover: var(--cs-color-disabled-bg);
                 }
 
                 &[data-variant="ghost"] {
                     --cs-button-bg: transparent;
-                    --cs-button-fg: var(--cs-color-disabled-fg);
+                    --cs-button-bg-hover: transparent;
                 }
 
                 &[data-variant="elevated"] {
                     --cs-button-bg: var(--cs-color-disabled-bg-elevated);
+                    --cs-button-bg-hover: var(--cs-color-disabled-bg-elevated);
                     --cs-button-shadow: 0 0 0 1px var(--cs-color-disabled-border);
+                    --cs-button-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
+                    --cs-button-shadow-active: 0 0 0 1px var(--cs-color-disabled-border);
                 }
             }
         }

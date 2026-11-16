@@ -39,13 +39,19 @@ ${closeScript}
 </Button>`;
 
     const negativeCode = `<Button variant="primary" size="md" negative>
-    <ButtonLabel>Delete item</ButtonLabel>
+    <ButtonLabel>Primary</ButtonLabel>
 </Button>
 <Button variant="secondary" size="md" negative>
-    <ButtonLabel>Delete item</ButtonLabel>
+    <ButtonLabel>Secondary</ButtonLabel>
+</Button>
+<Button variant="tertiary" size="md" negative>
+    <ButtonLabel>Tertiary</ButtonLabel>
 </Button>
 <Button variant="ghost" size="md" negative>
-    <ButtonLabel>Delete item</ButtonLabel>
+    <ButtonLabel>Ghost</ButtonLabel>
+</Button>
+<Button variant="elevated" size="md" negative>
+    <ButtonLabel>Elevated</ButtonLabel>
 </Button>`;
 
     const sizeLabels = {
@@ -139,18 +145,26 @@ ${closeScript}
 
     <PreviewSection
         title="Negative"
-        description="Destructive intent is supported on primary, secondary, and ghost variants."
+        description="Destructive intent is supported on all variants. Tertiary, elevated, and ghost stay monotone at rest and reveal negative fg on hover, focus-visible, and active."
         code={negativeCode}
     >
         <Button variant="primary" size="md" negative>
-            <ButtonLabel>Delete item</ButtonLabel>
+            <ButtonLabel>Primary</ButtonLabel>
         </Button>
         <Button variant="secondary" size="md" negative>
-            <ButtonLabel>Delete item</ButtonLabel>
+            <ButtonLabel>Secondary</ButtonLabel>
+        </Button>
+        <Button variant="tertiary" size="md" negative>
+            <ButtonLabel>Tertiary</ButtonLabel>
         </Button>
         <Button variant="ghost" size="md" negative>
-            <ButtonLabel>Delete item</ButtonLabel>
+            <ButtonLabel>Ghost</ButtonLabel>
         </Button>
+        <SunkenWell>
+            <Button variant="elevated" size="md" negative>
+                <ButtonLabel>Elevated</ButtonLabel>
+            </Button>
+        </SunkenWell>
     </PreviewSection>
 
     <PreviewSection title="Sizes" code={sizesCode}>

@@ -32,10 +32,19 @@ Polymorphic over `as?: "button" | "a" | "label"` (defaults to `"button"`), forwa
 | :--- | :--- | :--- | :--- | :--- |
 | `variant` | `ButtonVariant` | Yes | — | Visual style: `"primary" \| "secondary" \| "tertiary" \| "ghost" \| "elevated"`. |
 | `size` | `ButtonSize` | Yes | — | T-shirt size: `"xs" \| "sm" \| "md" \| "lg" \| "xl"`. |
-| `negative` | `boolean` | No | `undefined` | Applies destructive/negative intent. Only valid on `"primary"`, `"secondary"`, and `"ghost"` (`never` on `"tertiary"` and `"elevated"`). |
+| `negative` | `boolean` | No | `undefined` | Applies destructive/negative intent across all variants. |
 | `as` | `"button" \| "a" \| "label"` | No | `"button"` | Rendered root tag. Enforces `type="button"` when `as === "button"` unless overridden in `rest`. |
 | `iconOnly` | `boolean` | No | `undefined` | Locks square 1:1 proportions and scales direct `<ButtonIcon />` / `<CopyIcon />` / `<PasteIcon />` to 50%. |
 | `ref` | `HTMLButtonElement \| HTMLAnchorElement \| HTMLLabelElement \| null` | No | `null` | `$bindable` reference to the root element. |
+
+### Negative Intent Hierarchy
+| Variant | Rest | Hover / `focus-visible` / Active | When to use |
+| :--- | :--- | :--- | :--- |
+| `primary` + `negative` | Solid red fill, white fg | Darker solid red fill, white fg | Irreversible or high-impact destructive actions (e.g. delete account, confirm deletion). |
+| `secondary` + `negative` | `base-soft` bg, red fg | `base-soft-hover` bg, red fg | Secondary but visibly prominent negative actions. |
+| `tertiary` + `negative` | Monotone (`base-soft` bg, neutral fg) | Monotone `base-soft-hover` bg, red fg | Pill buttons in toolbars or lists that should not scream at rest. |
+| `elevated` + `negative` | Monotone (`--cs-color-elevated` bg, `--cs-color-text-strong` fg) | `--cs-color-elevated-hover` bg, negative fg, elevated hover shadow | Calm destructive action on `canvas` or sunken wells. |
+| `ghost` + `negative` | Transparent, monotone neutral fg | Monotone `base-soft` bg, red fg | Calm inline or row actions (e.g. trash/remove icon buttons in lists). |
 
 ### `ButtonLabel` & `ButtonIcon`
 - `ButtonLabel`: Renders `<span class="cs-button-label cs-button-control-label">` with `ref = $bindable(null)` and `...rest`.

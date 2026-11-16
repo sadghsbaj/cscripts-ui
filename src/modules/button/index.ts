@@ -18,15 +18,11 @@ export type ButtonSize = (typeof BUTTON_SIZES)[number];
 export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 export type ButtonElement = "button" | "a" | "label";
 
-export type ButtonVariantProps =
-    | {
-          variant: "primary" | "secondary" | "ghost";
-          negative?: boolean;
-      }
-    | {
-          variant: "tertiary" | "elevated";
-          negative?: never;
-      };
+export type ButtonVariantProps = {
+    variant: ButtonVariant;
+    /** Marks the button as a destructive/negative action across all variants. */
+    negative?: boolean;
+};
 
 export type ButtonProps = (
     | (Omit<HTMLButtonAttributes, "color" | "size"> & { as?: "button"; ref?: HTMLButtonElement | null })
