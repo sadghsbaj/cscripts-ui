@@ -4,3 +4,4 @@ export * from "./singlefile.ts";
 export * from "./lucide.ts";
 export * from "./storage.ts";
 export * from "./docs.ts";
+export * from "./language.ts";

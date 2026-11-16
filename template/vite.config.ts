@@ -1,6 +1,6 @@
 import path from "node:path";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import { csDocs, csFont, csLucide, csSingleFile, csTheme } from "cs/vite";
+import { csDocs, csFont, csLanguage, csLucide, csSingleFile, csTheme } from "cs/vite";
 import UnoCSS from "unocss/vite";
 import { defineConfig } from "vite";
 import { createHtmlPlugin } from "vite-plugin-html";
@@ -13,6 +13,7 @@ export default defineConfig({
 
     plugins: [
         csTheme({ mode: "system" }),
+        csLanguage("de"),
         csFont({ sans: "system" }),
         csDocs(),
         csSingleFile({ enabled: false }),
