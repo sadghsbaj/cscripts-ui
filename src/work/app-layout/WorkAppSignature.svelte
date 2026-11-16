@@ -6,6 +6,18 @@
     import type { WorkAppSignatureProps } from "./index.ts";
 
     let { text = "Entwickelt von Colin Schäfer", class: className, ...rest }: WorkAppSignatureProps = $props();
+
+    // Attach directly on the element so clicks are stopped before bubbling to ancestors
+    // (Svelte 5 delegated `onclick` runs at the root, after ancestor listeners).
+    function stopClick(event: MouseEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    function blockClicks(node: HTMLElement): () => void {
+        node.addEventListener("click", stopClick);
+        return () => node.removeEventListener("click", stopClick);
+    }
 </script>
 
 <button
@@ -13,6 +25,7 @@
     type="button"
     aria-label={text}
     class={["cs-work-app-signature", className]}
+    {@attach blockClicks}
     {@attach tooltip({ text, placement: "left" })}
 >
     <Info aria-hidden="true" class="cs-work-app-signature-icon" />
