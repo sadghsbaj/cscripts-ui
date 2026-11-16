@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { getSwitchGroupContext, hasSwitchGroupContext } from "../switch-group/switch-group.context.ts";
     import { type SwitchProps } from ".";
+    import { getSwitchGroupContext, hasSwitchGroupContext } from "../switch-group/switch-group.context.ts";
 
     let {
         ref = $bindable(null),
@@ -98,11 +98,11 @@
             border-radius: var(--cs-switch-radius);
             corner-shape: var(--cs-squircle-soft);
             box-shadow: var(--cs-switch-shadow, none);
-            cursor: default;
 
             transition:
                 background-color var(--cs-dur-press) var(--cs-ease-press),
                 box-shadow var(--cs-dur-press) var(--cs-ease-press);
+            cursor: default;
 
             &:dir(rtl) {
                 --cs-switch-dir: -1;
@@ -128,21 +128,21 @@
             &[data-size="md"] {
                 --cs-switch-height: 22px;
                 --cs-switch-width: 42px;
-                --cs-switch-pad: 2.5px;
+                --cs-switch-pad: 2px;
                 --cs-switch-thumb-width: 24px;
             }
 
             &[data-size="lg"] {
                 --cs-switch-height: 26px;
                 --cs-switch-width: 48px;
-                --cs-switch-pad: 3px;
+                --cs-switch-pad: 2px;
                 --cs-switch-thumb-width: 28px;
             }
 
             &[data-size="xl"] {
                 --cs-switch-height: 30px;
                 --cs-switch-width: 56px;
-                --cs-switch-pad: 3px;
+                --cs-switch-pad: 2px;
                 --cs-switch-thumb-width: 34px;
             }
 
@@ -161,13 +161,13 @@
                 box-shadow: var(--cs-switch-thumb-shadow);
                 /* Pin inset-inline-start so horizontal travel stays on compositor translate while width stretches */
                 translate: calc(var(--cs-switch-thumb-x, 0px) * var(--cs-switch-dir)) 0;
-                pointer-events: none;
                 transition:
                     translate var(--cs-switch-thumb-dur) var(--cs-switch-thumb-ease),
                     width var(--cs-dur-press) var(--cs-ease-press),
                     background-color var(--cs-dur-press) var(--cs-ease-press),
                     box-shadow var(--cs-dur-press) var(--cs-ease-press),
                     opacity var(--cs-dur-press) var(--cs-ease-press);
+                pointer-events: none;
             }
 
             /* =========================================================
