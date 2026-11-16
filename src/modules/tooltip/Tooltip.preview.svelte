@@ -7,9 +7,10 @@
     import { Bold, Info, Italic, Plus, Settings, Share2, Trash2, Underline } from "@lucide/svelte";
     import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
+    import { Kbd, KbdGroup, KbdSeparator } from "cs/svelte/kbd";
     import { ToggleButton, ToggleButtonIcon } from "cs/svelte/toggle-button";
     import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
-    import { Tooltip, tooltip, TooltipIcon, TooltipKbd, TooltipText } from "cs/svelte/tooltip";
+    import { Tooltip, tooltip, TooltipIcon, TooltipText } from "cs/svelte/tooltip";
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let activeFormatting = $state<string[]>(["bold"]);
@@ -42,11 +43,20 @@ ${closeScript}
     value="bold"
     iconOnly
     aria-label="Bold"
-    {@attach tooltip({ text: "Bold", shortcut: "Ctrl + B", placement: "top" })}
+    {@attach tooltip({ target: "bold-tooltip", placement: "top" })}
 >
     <ToggleButtonIcon icon={Bold} />
     <HitArea size="md" />
-</ToggleButton>`;
+</ToggleButton>
+
+<Tooltip id="bold-tooltip">
+    <TooltipText>Bold</TooltipText>
+    <KbdGroup variant="soft" size="sm">
+        <Kbd symbol="ctrl" />
+        <KbdSeparator />
+        <Kbd>B</Kbd>
+    </KbdGroup>
+</Tooltip>`;
 
     const compoundCode = `<Button
     variant="tertiary"
@@ -63,9 +73,11 @@ ${closeScript}
             <TooltipText>Save changes</TooltipText>
             <span class="text-xs text-weak">Syncs your current workspace</span>
         </div>
-        <span class="cs-tooltip-shortcuts">
-            <TooltipKbd>Ctrl + S</TooltipKbd>
-        </span>
+        <KbdGroup variant="soft" size="sm">
+            <Kbd symbol="ctrl" />
+            <KbdSeparator />
+            <Kbd>S</Kbd>
+        </KbdGroup>
     </div>
 </Tooltip>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
@@ -136,7 +148,7 @@ ${closeScript}
                 value="bold"
                 iconOnly
                 aria-label="Bold"
-                {@attach tooltip({ text: "Bold", shortcut: "Ctrl + B", placement: "top" })}
+                {@attach tooltip({ target: "preview-bold-tooltip", placement: "top" })}
             >
                 <ToggleButtonIcon icon={Bold} />
                 <HitArea size="md" />
@@ -151,7 +163,7 @@ ${closeScript}
                 value="italic"
                 iconOnly
                 aria-label="Italic"
-                {@attach tooltip({ text: "Italic", shortcut: "Ctrl + I", placement: "top" })}
+                {@attach tooltip({ target: "preview-italic-tooltip", placement: "top" })}
             >
                 <ToggleButtonIcon icon={Italic} />
                 <HitArea size="md" />
@@ -166,12 +178,39 @@ ${closeScript}
                 value="underline"
                 iconOnly
                 aria-label="Underline"
-                {@attach tooltip({ text: "Underline", shortcut: "Ctrl + U", placement: "top" })}
+                {@attach tooltip({ target: "preview-underline-tooltip", placement: "top" })}
             >
                 <ToggleButtonIcon icon={Underline} />
                 <HitArea size="md" />
             </ToggleButton>
         </ToggleButtonGroup>
+
+        <Tooltip id="preview-bold-tooltip">
+            <TooltipText>Bold</TooltipText>
+            <KbdGroup variant="soft" size="sm">
+                <Kbd symbol="ctrl" />
+                <KbdSeparator />
+                <Kbd>B</Kbd>
+            </KbdGroup>
+        </Tooltip>
+
+        <Tooltip id="preview-italic-tooltip">
+            <TooltipText>Italic</TooltipText>
+            <KbdGroup variant="soft" size="sm">
+                <Kbd symbol="ctrl" />
+                <KbdSeparator />
+                <Kbd>I</Kbd>
+            </KbdGroup>
+        </Tooltip>
+
+        <Tooltip id="preview-underline-tooltip">
+            <TooltipText>Underline</TooltipText>
+            <KbdGroup variant="soft" size="sm">
+                <Kbd symbol="ctrl" />
+                <KbdSeparator />
+                <Kbd>U</Kbd>
+            </KbdGroup>
+        </Tooltip>
     </PreviewSection>
 
     <PreviewSection
@@ -186,7 +225,7 @@ ${closeScript}
         >
             <ButtonLabel>Props</ButtonLabel>
         </Button>
-        <Tooltip id="preview-rich-tooltip" text="Save changes" icon={Info} shortcut="Ctrl + S" />
+        <Tooltip id="preview-rich-tooltip" text="Save changes" icon={Info} />
 
         <Button
             variant="tertiary"
@@ -202,9 +241,11 @@ ${closeScript}
                     <TooltipText>Save changes</TooltipText>
                     <span class="text-xs text-weak">Syncs your current workspace</span>
                 </div>
-                <span class="cs-tooltip-shortcuts">
-                    <TooltipKbd>Ctrl + S</TooltipKbd>
-                </span>
+                <KbdGroup variant="soft" size="sm">
+                    <Kbd symbol="ctrl" />
+                    <KbdSeparator />
+                    <Kbd>S</Kbd>
+                </KbdGroup>
             </div>
         </Tooltip>
     </PreviewSection>

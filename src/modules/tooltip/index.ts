@@ -4,7 +4,6 @@ import type { HTMLAttributes, SVGAttributes } from "svelte/elements";
 export { default as Tooltip } from "./Tooltip.svelte";
 export { default as TooltipText } from "./TooltipText.svelte";
 export { default as TooltipIcon } from "./TooltipIcon.svelte";
-export { default as TooltipKbd } from "./TooltipKbd.svelte";
 export * from "./tooltip.attach.svelte";
 
 export type TooltipIconConfig =
@@ -25,7 +24,6 @@ export interface TooltipProps extends Omit<HTMLAttributes<HTMLDivElement>, "id" 
     id: string;
     text?: string;
     icon?: TooltipIconConfig;
-    shortcut?: string | string[];
 }
 
 export type TooltipTextProps = HTMLAttributes<HTMLSpanElement> & {
@@ -42,8 +40,3 @@ export interface TooltipIconProps extends Omit<SVGAttributes<SVGSVGElement>, "ch
     icon: Component<TooltipIconComponentProps>;
     color?: string;
 }
-
-export type TooltipKbdProps = HTMLAttributes<HTMLElement> & {
-    ref?: HTMLElement | null;
-    key?: string;
-};

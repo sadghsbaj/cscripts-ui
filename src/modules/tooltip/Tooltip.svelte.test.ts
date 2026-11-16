@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { Popover, popoverTrigger } from "../popover";
 import Tooltip from "./Tooltip.svelte";
+import TooltipCompoundHost from "./TooltipCompoundHost.internal.svelte";
 import { tooltip } from "./tooltip.attach.svelte";
 
 const openPopovers = new WeakSet<HTMLElement>();
@@ -131,7 +132,7 @@ describe("Tooltip & Popover Integration", () => {
     test("<Tooltip /> renders popover='manual' (never 'hint') and role='tooltip'", () => {
         const inst = mount(Tooltip, {
             target: container,
-            props: { id: "tip-1", text: "Copy", shortcut: ["Cmd", "C"] },
+            props: { id: "tip-1", text: "Copy" },
         });
         instances.push(inst);
         flushSync();
@@ -144,8 +145,38 @@ describe("Tooltip & Popover Integration", () => {
         expect(tipEl?.dataset.width).toBe("content");
         expect(tipEl?.dataset.placement).toBe("top");
         expect(tipEl?.textContent).toContain("Copy");
-        expect(tipEl?.textContent).toContain("Cmd");
-        expect(tipEl?.textContent).toContain("C");
+    });
+
+    test("<Tooltip /> supports compound children with TooltipText and KbdGroup", () => {
+        const inst = mount(TooltipCompoundHost, {
+            target: container,
+            props: { id: "tip-compound" },
+        });
+        instances.push(inst);
+        flushSync();
+
+        const tipEl = document.getElementById("tip-compound");
+        expect(tipEl).not.toBeNull();
+        expect(tipEl?.getAttribute("popover")).toBe("manual");
+        expect(tipEl?.getAttribute("role")).toBe("tooltip");
+
+        const textEl = tipEl?.querySelector<HTMLSpanElement>(".cs-tooltip-text");
+        expect(textEl?.textContent).toBe("Copy");
+
+        const kbdGroup = tipEl?.querySelector<HTMLSpanElement>(".cs-kbd-group");
+        expect(kbdGroup?.dataset.variant).toBe("soft");
+        expect(kbdGroup?.dataset.size).toBe("sm");
+
+        const kbds = [...(kbdGroup?.querySelectorAll<HTMLElement>("kbd.cs-kbd") ?? [])];
+        expect(kbds).toHaveLength(2);
+        expect(kbds[0]?.dataset.variant).toBe("soft");
+        expect(kbds[0]?.dataset.size).toBe("sm");
+        expect(kbds[0]?.getAttribute("aria-label")).toBe("Control");
+        expect(kbds[0]?.textContent?.trim()).toBe("Ctrl");
+        expect(kbdGroup?.querySelector(".cs-kbd-separator")).not.toBeNull();
+        expect(kbds[1]?.dataset.variant).toBe("soft");
+        expect(kbds[1]?.dataset.size).toBe("sm");
+        expect(kbds[1]?.textContent?.trim()).toBe("C");
     });
 
     test("tooltip() wires aria-describedby and delegates hover, custom delay, and warmup to popoverTrigger", async () => {

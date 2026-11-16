@@ -6,14 +6,12 @@ exports:
   - Tooltip
   - TooltipText
   - TooltipIcon
-  - TooltipKbd
   - tooltip
   - TooltipIconConfig
   - TooltipProps
   - TooltipTextProps
   - TooltipIconComponentProps
   - TooltipIconProps
-  - TooltipKbdProps
   - TooltipBaseOptions
   - TooltipOptions
 ---
@@ -21,31 +19,31 @@ exports:
 # Tooltip
 
 ## Overview
-Lightweight tooltip surface (`<Tooltip />`) and Svelte 5 attachment (`tooltip`) built on `<Popover popover="hint">` and `popoverTrigger({ mode: "hint" })`. Supports both zero-boilerplate inline `text`/`icon`/`shortcut` tooltips and custom compound `<Tooltip />` surfaces paired by `target` ID.
+Lightweight tooltip surface (`<Tooltip />`) and Svelte 5 attachment (`tooltip`) built on `<Popover popover="manual">` and `popoverTrigger({ triggerOn: "hover" })`. Supports both zero-boilerplate inline `text`/`icon` tooltips and custom compound `<Tooltip />` surfaces paired by `target` ID.
 
 ## API
 
 ### `tooltip(options: TooltipOptions): Attachment<HTMLElement>`
 Two mutually exclusive modes:
-- **Inline auto-mounted mode:** `{ text: string; icon?: TooltipIconConfig; shortcut?: string | string[]; placement?; offset?; delay?; enabled? }`
+- **Inline auto-mounted mode:** `{ text: string; icon?: TooltipIconConfig; placement?; offset?; delay?; enabled? }`
 - **Custom target mode:** `{ target: string; placement?; offset?; delay?; enabled? }`
 
 | Option | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `text` | `string` | Inline mode | — | Auto-mounts a `<Tooltip />` into `document.body` with this text. |
 | `icon` | `Component \| { component: Component; position?: "start" \| "end" }` | No | `undefined` | Optional icon in inline mode. |
-| `shortcut` | `string \| string[]` | No | `undefined` | Optional keycap badge(s) in inline mode. |
 | `target` | `string` | Target mode | — | ID of a manually rendered `<Tooltip id="..." />` element. |
 | `placement` | `PopoverPlacement` | No | `"top"` | Anchor placement. |
 | `offset` | `string` | No | `"8px"` (from `Popover`) | Gap between trigger and tooltip. |
-| `delay` | `string` | No | `"400ms 150ms"` | Native `interest-delay` (`"<open> <close>"`). |
+| `delay` | `[number, number]` | No | `[400, 150]` | Open and close delays in milliseconds (`[openMs, closeMs]`). |
 | `enabled` | `boolean \| (() => boolean)` | No | `true` | Enables or disables the tooltip attachment. |
 
 ### `<Tooltip />` & Subcomponents
-- `Tooltip`: Extends `Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover" | "role">`. Props: `id: string` (required), `text?: string`, `icon?: TooltipIconConfig`, `shortcut?: string | string[]`, `ref = $bindable(null)`. Renders `role="tooltip"` with `popover="hint"`, `width="content"`, `placement="top"`.
+- `Tooltip`: Extends `Omit<HTMLAttributes<HTMLDivElement>, "id" | "popover" | "role">`. Props: `id: string` (required), `text?: string`, `icon?: TooltipIconConfig`, `ref = $bindable(null)`. Renders `role="tooltip"` with `popover="manual"`, `width="content"`, `placement="top"`.
 - `TooltipText`: `text?: string`, `ref = $bindable(null)`, `children`.
 - `TooltipIcon`: `icon: Component<TooltipIconComponentProps>`, `color?: string`.
-- `TooltipKbd`: `key?: string`, `ref = $bindable(null)`, `children`.
+
+> **Keyboard shortcuts inside `<Tooltip>`:** Compose `Kbd` / `KbdGroup` from `cs/svelte/kbd` inside compound tooltips, and always use `variant="soft"` with `size="sm"` (`20px` height fits concentrically inside the `26px` tooltip pill; `size="xs"` is too small against `13px` semibold text, and `variant="keycap"` is too heavy with its `2px` bottom lip).
 
 ### CSS Custom Properties
 | Variable | Default | Description |
@@ -57,23 +55,38 @@ Two mutually exclusive modes:
 ```svelte
 <script lang="ts">
     import { Copy } from "@lucide/svelte";
-    import { Button, ButtonIcon } from "cs/svelte/button";
-    import { Tooltip, TooltipKbd, TooltipText, tooltip } from "cs/svelte/tooltip";
+    import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
+    import { Kbd, KbdGroup, KbdSeparator } from "cs/svelte/kbd";
+    import { Tooltip, TooltipText, tooltip } from "cs/svelte/tooltip";
 </script>
 
 <!-- Inline mode -->
-<Button variant="secondary" size="md" iconOnly aria-label="Copy" {@attach tooltip({ text: "Copy", icon: Copy, shortcut: ["⌘", "C"] })}>
+<Button variant="secondary" size="md" iconOnly aria-label="Copy" {@attach tooltip({ text: "Copy", icon: Copy })}>
     <ButtonIcon icon={Copy} />
 </Button>
 
-<!-- Custom compound mode -->
-<Button variant="ghost" size="md" {@attach tooltip({ target: "custom-tip", placement: "bottom" })}>
-    Hover me
+<!-- Custom compound mode with shortcut -->
+<Button variant="ghost" size="md" {@attach tooltip({ target: "copy-tip", placement: "bottom" })}>
+    <ButtonLabel>Copy</ButtonLabel>
 </Button>
 
-<Tooltip id="custom-tip">
-    <TooltipText>Custom tooltip</TooltipText>
-    <TooltipKbd>Esc</TooltipKbd>
+<Tooltip id="copy-tip">
+    <TooltipText>Copy</TooltipText>
+    <KbdGroup variant="soft" size="sm">
+        <Kbd symbol="ctrl" />
+        <KbdSeparator />
+        <Kbd>C</Kbd>
+    </KbdGroup>
+</Tooltip>
+
+<!-- Single key shortcut -->
+<Button variant="ghost" size="md" {@attach tooltip({ target: "close-tip", placement: "bottom" })}>
+    <ButtonLabel>Close</ButtonLabel>
+</Button>
+
+<Tooltip id="close-tip">
+    <TooltipText>Close</TooltipText>
+    <Kbd variant="soft" size="sm" symbol="esc" />
 </Tooltip>
 ```
 

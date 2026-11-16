@@ -2,10 +2,9 @@
     import { type TooltipProps } from ".";
     import { Popover } from "../popover";
     import TooltipIcon from "./TooltipIcon.svelte";
-    import TooltipKbd from "./TooltipKbd.svelte";
     import TooltipText from "./TooltipText.svelte";
 
-    let { ref = $bindable(null), id, text, icon, shortcut, class: className, children, ...rest }: TooltipProps = $props();
+    let { ref = $bindable(null), id, text, icon, class: className, children, ...rest }: TooltipProps = $props();
 
     const resolvedIcon = $derived(
         typeof icon === "function"
@@ -14,8 +13,6 @@
               ? { component: icon.component, position: icon.position ?? ("start" as const) }
               : null
     );
-
-    const shortcuts = $derived(Array.isArray(shortcut) ? shortcut : shortcut ? [shortcut] : []);
 </script>
 
 <Popover bind:ref {...rest} {id} popover="manual" width="content" placement="top" role="tooltip" class={["cs-tooltip", className]}>
@@ -32,14 +29,6 @@
 
         {#if resolvedIcon && resolvedIcon.position === "end"}
             <TooltipIcon icon={resolvedIcon.component} />
-        {/if}
-
-        {#if shortcuts.length > 0}
-            <span class="cs-tooltip-shortcuts">
-                {#each shortcuts as key (key)}
-                    <TooltipKbd>{key}</TooltipKbd>
-                {/each}
-            </span>
         {/if}
     {/if}
 </Popover>
@@ -75,11 +64,8 @@
             display: inline-flex;
         }
 
-        :global(.cs-tooltip-shortcuts) {
-            display: inline-flex;
-            gap: 2px;
-            align-items: center;
-            margin-inline-start: 2px;
+        :global(.cs-tooltip:has(> :is(.cs-kbd, .cs-kbd-group)[data-variant="soft"]:last-child)) {
+            padding-inline-end: 4px;
         }
     }
 </style>
