@@ -1,7 +1,6 @@
 ## Modules
 
-- [ ] Badges
-- [ ] Chips
+- [x] Badges
 - [ ] Cards
 - [ ] Textarea (evtl.)
 - [ ] Zahlen-Animationen
@@ -12,6 +11,7 @@
 - [ ] Select
 - [ ] Combobox
 - [ ] Color Picker
+- [ ] Sidebar
 - [ ] Animierte Charts
 - [ ] NLP Parser
 
