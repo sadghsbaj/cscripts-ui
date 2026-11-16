@@ -45,7 +45,7 @@
     data-icon-only={isIconOnly ? "" : undefined}
 >
     {#if children}
-        {@render children()}
+        <span class="cs-kbd-label">{@render children()}</span>
     {:else if symbolEntry}
         {#if SymbolIcon && showSymbolIcon}
             <SymbolIcon strokeWidth={2.25} aria-hidden="true" class="cs-kbd-icon" />
@@ -73,9 +73,6 @@
             font-weight: 500;
             font-variant-numeric: tabular-nums;
             line-height: var(--cs-leading-none);
-            text-box-trim: trim-both;
-            text-box-edge: cap alphabetic;
-            text-box: trim-both cap alphabetic;
             white-space: nowrap;
             user-select: none;
             color: var(--cs-kbd-fg);
@@ -128,6 +125,16 @@
                 flex-shrink: 0;
                 inline-size: var(--cs-kbd-icon-size);
                 block-size: var(--cs-kbd-icon-size);
+            }
+        }
+
+        .cs-kbd-label {
+            text-box-trim: trim-both;
+            text-box-edge: cap alphabetic;
+            text-box: trim-both cap alphabetic;
+
+            &:has(> *) {
+                display: contents;
             }
         }
     }

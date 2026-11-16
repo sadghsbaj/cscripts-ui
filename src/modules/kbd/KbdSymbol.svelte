@@ -30,6 +30,9 @@
 
         .cs-kbd-label {
             display: inline-block;
+            text-box-trim: trim-both;
+            text-box-edge: cap alphabetic;
+            text-box: trim-both cap alphabetic;
         }
 
         .cs-kbd-sr-only {
