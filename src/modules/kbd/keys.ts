@@ -1,0 +1,100 @@
+import {
+    ArrowBigUp,
+    ArrowBigUpDash,
+    ArrowDown,
+    ArrowLeft,
+    ArrowLeftToLine,
+    ArrowRight,
+    ArrowRightToLine,
+    ArrowUp,
+    ChevronsDown,
+    ChevronsUp,
+    CornerDownLeft,
+    Delete,
+} from "@lucide/svelte";
+import type { Component } from "svelte";
+import type { SVGAttributes } from "svelte/elements";
+
+export type KbdIconComponentProps = Omit<SVGAttributes<SVGSVGElement>, "children" | "color"> &
+    Record<string, unknown> & {
+        color?: string;
+    };
+
+export interface KbdKeyDefinition {
+    readonly text: string;
+    readonly title: string;
+    readonly icon?: Component<KbdIconComponentProps>;
+}
+
+export const KBD_KEYS = {
+    ctrl: { text: "Ctrl", title: "Control" },
+    control: { text: "Ctrl", title: "Control" },
+    alt: { text: "Alt", title: "Alt" },
+    shift: { text: "Shift", title: "Shift", icon: ArrowBigUp },
+    capslock: { text: "Caps", title: "Caps Lock", icon: ArrowBigUpDash },
+    caps: { text: "Caps", title: "Caps Lock", icon: ArrowBigUpDash },
+    super: { text: "Super", title: "Super" },
+    win: { text: "Win", title: "Windows" },
+    meta: { text: "Meta", title: "Meta" },
+    arrowup: { text: "Up", title: "Up Arrow", icon: ArrowUp },
+    up: { text: "Up", title: "Up Arrow", icon: ArrowUp },
+    arrowdown: { text: "Down", title: "Down Arrow", icon: ArrowDown },
+    down: { text: "Down", title: "Down Arrow", icon: ArrowDown },
+    arrowleft: { text: "Left", title: "Left Arrow", icon: ArrowLeft },
+    left: { text: "Left", title: "Left Arrow", icon: ArrowLeft },
+    arrowright: { text: "Right", title: "Right Arrow", icon: ArrowRight },
+    right: { text: "Right", title: "Right Arrow", icon: ArrowRight },
+    pageup: { text: "PgUp", title: "Page Up", icon: ChevronsUp },
+    pgup: { text: "PgUp", title: "Page Up", icon: ChevronsUp },
+    pagedown: { text: "PgDn", title: "Page Down", icon: ChevronsDown },
+    pgdn: { text: "PgDn", title: "Page Down", icon: ChevronsDown },
+    home: { text: "Home", title: "Home" },
+    end: { text: "End", title: "End" },
+    enter: { text: "Enter", title: "Enter", icon: CornerDownLeft },
+    backspace: { text: "Backspace", title: "Backspace", icon: Delete },
+    delete: { text: "Del", title: "Delete" },
+    del: { text: "Del", title: "Delete" },
+    tab: { text: "Tab", title: "Tab", icon: ArrowRightToLine },
+    backtab: { text: "Backtab", title: "Backtab", icon: ArrowLeftToLine },
+    shifttab: { text: "Backtab", title: "Backtab", icon: ArrowLeftToLine },
+    space: { text: "Space", title: "Space" },
+    spacebar: { text: "Space", title: "Space" },
+    fn: { text: "Fn", title: "Function" },
+    escape: { text: "Esc", title: "Escape" },
+    esc: { text: "Esc", title: "Escape" },
+    insert: { text: "Ins", title: "Insert" },
+    ins: { text: "Ins", title: "Insert" },
+    printscreen: { text: "PrtSc", title: "Print Screen" },
+    prtsc: { text: "PrtSc", title: "Print Screen" },
+    prtscn: { text: "PrtSc", title: "Print Screen" },
+    scrolllock: { text: "ScrLk", title: "Scroll Lock" },
+    scrlk: { text: "ScrLk", title: "Scroll Lock" },
+    break: { text: "Pause", title: "Pause / Break" },
+    pausebreak: { text: "Pause", title: "Pause / Break" },
+    numlock: { text: "Num", title: "Num Lock" },
+    num: { text: "Num", title: "Num Lock" },
+    menu: { text: "Menu", title: "Context Menu" },
+    contextmenu: { text: "Menu", title: "Context Menu" },
+    apps: { text: "Menu", title: "Context Menu" },
+    volup: { text: "Vol+", title: "Volume Up" },
+    volumeup: { text: "Vol+", title: "Volume Up" },
+    voldown: { text: "Vol−", title: "Volume Down" },
+    volumedown: { text: "Vol−", title: "Volume Down" },
+    mute: { text: "Mute", title: "Mute" },
+    volumemute: { text: "Mute", title: "Mute" },
+    play: { text: "Play", title: "Play" },
+    pause: { text: "Pause", title: "Pause" },
+    brightnessup: { text: "Bright+", title: "Brightness Up" },
+    sun: { text: "Bright+", title: "Brightness Up" },
+    brightnessdown: { text: "Bright−", title: "Brightness Down" },
+    moon: { text: "Bright−", title: "Brightness Down" },
+    mic: { text: "Mic", title: "Microphone" },
+    microphone: { text: "Mic", title: "Microphone" },
+    power: { text: "Power", title: "Power" },
+    search: { text: "Search", title: "Search" },
+    find: { text: "Search", title: "Search" },
+    undo: { text: "Undo", title: "Undo" },
+    redo: { text: "Redo", title: "Redo" },
+} as const satisfies Record<string, KbdKeyDefinition>;
+
+export type KbdKey = keyof typeof KBD_KEYS;

@@ -1,0 +1,53 @@
+@layer components.primitive {
+    :is(.cs-kbd, .cs-kbd-group) {
+        &[data-size="xs"] {
+            --cs-kbd-height: 18px;
+            --cs-kbd-px: 5px;
+            --cs-kbd-font-size: 10px;
+            --cs-kbd-icon-size: 11px;
+            --cs-kbd-gap: 2px;
+            --cs-kbd-group-gap: 3px;
+            --cs-kbd-separator-size: 9px;
+        }
+
+        &[data-size="sm"] {
+            --cs-kbd-height: 20px;
+            --cs-kbd-px: 6px;
+            --cs-kbd-font-size: 11px;
+            --cs-kbd-icon-size: 12px;
+            --cs-kbd-gap: 3px;
+            --cs-kbd-group-gap: 3px;
+            --cs-kbd-separator-size: 10px;
+        }
+
+        &[data-size="md"] {
+            --cs-kbd-height: 24px;
+            --cs-kbd-px: 7px;
+            --cs-kbd-font-size: var(--cs-text-xs);
+            --cs-kbd-icon-size: 13px;
+            --cs-kbd-gap: 4px;
+            --cs-kbd-group-gap: 4px;
+            --cs-kbd-separator-size: 11px;
+        }
+
+        &[data-size="lg"] {
+            --cs-kbd-height: 28px;
+            --cs-kbd-px: 9px;
+            --cs-kbd-font-size: 13px;
+            --cs-kbd-icon-size: 14px;
+            --cs-kbd-gap: 4px;
+            --cs-kbd-group-gap: 4px;
+            --cs-kbd-separator-size: 12px;
+        }
+
+        &[data-size="xl"] {
+            --cs-kbd-height: 32px;
+            --cs-kbd-px: 11px;
+            --cs-kbd-font-size: var(--cs-text-sm);
+            --cs-kbd-icon-size: 15px;
+            --cs-kbd-gap: 5px;
+            --cs-kbd-group-gap: 5px;
+            --cs-kbd-separator-size: 13px;
+        }
+    }
+}
