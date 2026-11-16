@@ -1,7 +1,8 @@
 ## UI & Polish
 
 - [ ] Usage Guidance zu bestimmten Components noch anlegen
-- [ ] Bestehende „1-Language-only“-Stellen auf DE/EN refactoren
+- [x] Bestehende „1-Language-only“-Stellen auf DE/EN refactoren
+- [x] Zentriert-Bug bei `Kbd` fixen (Text-Trim)
 - Sunken im Dark Mode noch mehr „sunken“ wirken lassen (Schatteneffekt / Lichtkante – noch offen)
 - [x] Switch: `rounded-full` (Height / 2)
 - [x] Switch mit Spring testen?
