@@ -239,6 +239,8 @@
                 translate var(--cs-popover-dur-in) var(--cs-ease-enter),
                 display var(--cs-popover-dur-in) allow-discrete,
                 overlay var(--cs-popover-dur-in) allow-discrete;
+            /* Keep compositor layer active at scale: 1 while open so fractional anchor-center subpixels don't snap at transitionend. */
+            will-change: scale;
         }
 
         .cs-popover[data-animate][data-warm]:popover-open,
