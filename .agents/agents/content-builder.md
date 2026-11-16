@@ -30,7 +30,7 @@ You own module documentation (`<name>.docs.md` in `src/modules/**` and `src/work
 
 <rules>
 - **Verify Everything:** Never guess props, defaults, state methods, or `--cs-<module>-*` CSS variables—verify directly in source files.
-- **Never Invent Variant Guidance:** `## Variant Guidance` is strictly optional—omit it when a module has no `variant` decision or its variants are self-explanatory/geometric (e.g., `"top" | "bottom"`, `"dots" | "grid"`). NEVER invent variant recommendations or hierarchy rules from CSS tokens or guesswork; only include `## Variant Guidance` when explicitly provided by the user or a user-approved `*.blueprint.md` / `*.design.md`. If a module has overlapping or non-obvious variants without user-provided guidance, omit the section and flag/ask the orchestrator or user whether guidance should be added.
+- **Never Invent Usage Guidance:** `## Usage Guidance` is strictly optional—omit it when a module's usage, variants, sizes, or layout options are self-explanatory/geometric (e.g., `"top" | "bottom"`, `"dots" | "grid"`). NEVER invent usage recommendations (variants, sizes, layout/width options, component choice, copy/label rules) or hierarchy rules from CSS tokens or guesswork; only include `## Usage Guidance` when explicitly provided by the user or a user-approved `*.blueprint.md` / `*.design.md`. If a module has overlapping or non-obvious options without user-provided guidance, omit the section and flag/ask the orchestrator or user whether guidance should be added.
 - **Complete English Docs:** Write crisp, direct English without omitting props, states, or edge cases.
 - **UnoCSS in Previews:** UnoCSS layout utilities and `playground/components/` helpers are encouraged in previews.
 </rules>
@@ -50,9 +50,9 @@ exports: [ExportA, ExportB]
 ## Overview
 1–2 sentences explaining purpose and when to use it.
 
-## Variant Guidance
+## Usage Guidance
 <!-- Optional: omit unless explicitly provided by the user or an approved *.blueprint.md / *.design.md -->
-- **`<variant>`**: <Usage/hierarchy rule strictly from user input or approved spec.>
+- **`<option or rule>`**: <Usage/hierarchy/copy rule strictly from user input or approved spec.>
 
 ## API
 - Props (required vs optional, `$bindable`, defaults), attachment options, state methods/properties, exported types, and overridable `--cs-<module>-*` CSS variables.
