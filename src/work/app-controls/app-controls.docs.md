@@ -51,7 +51,7 @@ Elevated `48px × 48px` icon-only `<Button />` with `<HitArea size="md" />` and 
 | Prop | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `status` | `WorkAppStatusColor` | No | `"positive"` | Semantic status: `"positive" \| "caution" \| "negative" \| "base"` (`WORK_APP_STATUS_COLORS`). |
-| `label` | `string` | No | `WORK_APP_STATUS_DEFAULTS[status]` | Overrides the `aria-label` prefix (`"${displayLabel} (${status})"`). Defaults: `"Verbunden"`, `"Wartend"`, `"Getrennt"`, `"Inaktiv"`. |
+| `label` | `string` | No | `WORK_APP_STATUS_DEFAULTS[status]` | Overrides both the hover tooltip text and the `aria-label` prefix (`"${displayLabel} (${status})"`). Defaults: `"Verbunden"`, `"Wartend"`, `"Getrennt"`, `"Inaktiv"`. |
 | `pulse` | `boolean` | No | `true` | Enables dual concentric pulse rings (`data-pulse`). |
 
 - `data-status={status}`
@@ -90,5 +90,5 @@ Elevated `48px × 48px` icon-only `<Button />` with `<HitArea size="md" />` and 
 ```
 
 ## Behavior & Quirks
-- **Status tooltip text:** `<WorkAppStatusDot />` displays `WORK_APP_STATUS_DEFAULTS[status]` in its hover tooltip while using `label ?? WORK_APP_STATUS_DEFAULTS[status]` for `aria-label`.
+- **Status tooltip text:** `<WorkAppStatusDot />` uses `label ?? WORK_APP_STATUS_DEFAULTS[status]` for both its hover tooltip text and its `aria-label` prefix (`"${displayLabel} (${status})"`).
 - **Hit area slot:** `<WorkAppStatusDot />` renders `{@render children?.()}` inside the 12px `<button>` so consumers can pass `<HitArea size="md" />` for a comfortable pointer target.

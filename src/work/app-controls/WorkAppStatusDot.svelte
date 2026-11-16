@@ -22,7 +22,7 @@
     data-status={status}
     data-pulse={pulse ? "" : undefined}
     aria-label={computedAriaLabel}
-    {@attach tooltip({ text: WORK_APP_STATUS_DEFAULTS[status], placement: "bottom", offset: "24px" })}
+    {@attach tooltip({ text: displayLabel, placement: "bottom", offset: "24px" })}
 >
     <!-- Important so that we can use HitArea -->
     {@render children?.()}
