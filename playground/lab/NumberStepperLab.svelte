@@ -20,12 +20,6 @@
     let wellA = $state(50);
     let wellB = $state(100);
 
-    let badgeA = $state(50);
-    let badgeB = $state(50);
-
-    let splitB = $state(100);
-    let splitF = $state(14);
-
     let sizeXs = $state(50);
     let sizeSm = $state(50);
     let sizeMd = $state(50);
@@ -35,7 +29,6 @@
     let cardA = $state(50);
     let cardB = $state(100);
     let cardC = $state(50);
-    let cardF = $state(50);
 
     function step(val: number, delta: number, min = 10, max = 400): number {
         return Math.min(max, Math.max(min, val + delta));
@@ -73,7 +66,7 @@
 {/snippet}
 
 <div class="w-full max-w-5xl flex flex-col items-center gap-14 py-10">
-    <!-- 1. UNIFIED PILL: FLUSH & HAIRLINE DIVIDERS -->
+    <!-- 1. UNIFIED PILL WITH HAIRLINE DIVIDERS -->
     <div class="flex-center flex-wrap gap-6">
         {#snippet v1_2()}
             <div class="ns-pill" data-surface="soft" data-size="md">
@@ -176,73 +169,7 @@
         {@render pickable("3.2-well-outer-elevated-inner-soft", v3_2)}
     </div>
 
-    <!-- 4. OVERSIZED CIRCULAR CENTER BADGE (PROTRUDING CENTER CIRCLE) -->
-    <div class="flex-center flex-wrap gap-7">
-        {#snippet v4_1()}
-            <div class="ns-orb" data-bar="soft" data-orb="elevated">
-                <button type="button" class="ns-orb-wing" data-side="left" aria-label="Verkleinern" onclick={() => (badgeA = step(badgeA, -10))}>
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-orb-center" aria-label="Zurücksetzen" onclick={() => (badgeA = 50)}>
-                    {badgeA}%
-                </button>
-                <button type="button" class="ns-orb-wing" data-side="right" aria-label="Vergrößern" onclick={() => (badgeA = step(badgeA, 10))}>
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("4.1-orb-soft-bar-elevated-center", v4_1)}
-
-        {#snippet v4_1b()}
-            <div class="ns-orb" data-bar="soft" data-orb="elevated" data-shape="wide-round">
-                <button type="button" class="ns-orb-wing" data-side="left" aria-label="Verkleinern" onclick={() => (badgeB = step(badgeB, -10))}>
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-orb-center" aria-label="Zurücksetzen" onclick={() => (badgeB = 50)}>
-                    {badgeB}%
-                </button>
-                <button type="button" class="ns-orb-wing" data-side="right" aria-label="Vergrößern" onclick={() => (badgeB = step(badgeB, 10))}>
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("4.1b-orb-wide-round-pill", v4_1b)}
-    </div>
-
-    <!-- 5. THREE CONNECTED SEGMENTS (2PX MICRO-GAP & TIGHT INNER RADII) -->
-    <div class="flex-center flex-wrap gap-6">
-        {#snippet v5_2()}
-            <div class="ns-split" data-mode="elevated">
-                <button type="button" class="ns-split-btn" data-pos="start" aria-label="Verkleinern" onclick={() => (splitB = step(splitB, -10))}>
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-split-val" aria-label="Zurücksetzen" onclick={() => (splitB = 100)}>
-                    {splitB}%
-                </button>
-                <button type="button" class="ns-split-btn" data-pos="end" aria-label="Vergrößern" onclick={() => (splitB = step(splitB, 10))}>
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("5.2-split-3seg-elevated", v5_2)}
-
-        {#snippet v5_6()}
-            <div class="ns-split" data-mode="elevated" data-shape="keycap">
-                <button type="button" class="ns-split-btn" data-pos="start" aria-label="Verkleinern" onclick={() => (splitF = step(splitF, -1, 6, 96))}>
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-split-val" aria-label="Zurücksetzen" onclick={() => (splitF = 14)}>
-                    {splitF} pt
-                </button>
-                <button type="button" class="ns-split-btn" data-pos="end" aria-label="Vergrößern" onclick={() => (splitF = step(splitF, 1, 6, 96))}>
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("5.6-split-3seg-keycap-elevated", v5_6)}
-    </div>
-
-    <!-- 7. WITHOUT NUMBER IN THE MIDDLE (COMPACT STEPPER / ZOOM PAIRS) -->
+    <!-- 4. WITHOUT NUMBER IN THE MIDDLE (COMPACT STEPPER / ZOOM PAIRS) -->
     <div class="flex-center flex-wrap gap-6">
         {#snippet v7_1()}
             <div class="ns-pill" data-surface="soft" data-size="md">
@@ -269,30 +196,6 @@
             </div>
         {/snippet}
         {@render pickable("7.2-pair-pill-elevated-hairline", v7_2)}
-
-        {#snippet v7_3()}
-            <div class="ns-split" data-mode="soft">
-                <button type="button" class="ns-split-btn" data-pos="start" aria-label="Verkleinern">
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-split-btn" data-pos="end" aria-label="Vergrößern">
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("7.3-pair-split-2px-soft", v7_3)}
-
-        {#snippet v7_4()}
-            <div class="ns-split" data-mode="elevated">
-                <button type="button" class="ns-split-btn" data-pos="start" aria-label="Verkleinern">
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-split-btn" data-pos="end" aria-label="Vergrößern">
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("7.4-pair-split-2px-elevated", v7_4)}
 
         {#snippet v7_5()}
             <div class="ns-track ns-track-pair" data-surface="soft" data-btn="elevated">
@@ -333,7 +236,7 @@
         {@render pickable("7.7-pair-chevrons-soft", v7_7)}
     </div>
 
-    <!-- 9. SIZE SCALE (XS 28PX .. XL 44PX) -->
+    <!-- 5. SIZE SCALE (XS 28PX .. XL 44PX) -->
     <div class="flex-center flex-wrap gap-5">
         {#snippet v9_1()}
             <div class="ns-pill" data-surface="soft" data-size="xs">
@@ -421,7 +324,7 @@
         {@render pickable("9.5-size-xl", v9_5)}
     </div>
 
-    <!-- 11. ON ELEVATED CARD SURFACE (HOW THEY SIT INSIDE CARDS/TOOLBARS) -->
+    <!-- 6. ON ELEVATED CARD SURFACE (HOW THEY SIT INSIDE CARDS/TOOLBARS) -->
     <div class="w-full bg-elevated shadow-elevated rounded-3xl squircle p-8 flex-center flex-wrap gap-7">
         {#snippet v11_1()}
             <div class="ns-pill" data-surface="soft" data-size="md">
@@ -469,21 +372,6 @@
             </div>
         {/snippet}
         {@render pickable("11.3-card-center-well", v11_3)}
-
-        {#snippet v11_6()}
-            <div class="ns-split" data-mode="soft">
-                <button type="button" class="ns-split-btn" data-pos="start" aria-label="Verkleinern" onclick={() => (cardF = step(cardF, -10))}>
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-split-val" aria-label="Zurücksetzen" onclick={() => (cardF = 50)}>
-                    {cardF}%
-                </button>
-                <button type="button" class="ns-split-btn" data-pos="end" aria-label="Vergrößern" onclick={() => (cardF = step(cardF, 10))}>
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("11.6-card-split-3seg-soft", v11_6)}
     </div>
 </div>
 
@@ -881,169 +769,6 @@
 
         [data-inner="soft"] & {
             background-color: var(--cs-color-base-soft);
-        }
-    }
-
-    /* =========================================================================
-     * 4. OVERSIZED CIRCULAR CENTER BADGE (PROTRUDING CIRCLE)
-     * ========================================================================= */
-    .ns-orb {
-        --ns-bar-h: 32px;
-        --ns-orb-size: 44px;
-
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        height: var(--ns-orb-size);
-        font-size: var(--cs-text-xs);
-        font-weight: 650;
-    }
-
-    .ns-orb-wing {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        height: var(--ns-bar-h);
-        color: var(--cs-color-text-main);
-        background-color: var(--cs-color-base-soft);
-        transition:
-            background-color var(--cs-dur-effect) var(--cs-ease-effect),
-            color var(--cs-dur-effect) var(--cs-ease-effect);
-
-        @media (hover: hover) {
-            &:hover {
-                color: var(--cs-color-text-strong);
-                background-color: var(--cs-color-base-soft-hover);
-            }
-        }
-
-        &[data-side="left"] {
-            padding-inline: 12px 18px;
-            margin-right: -10px;
-            border-top-left-radius: calc(var(--ns-bar-h) / 2);
-            border-bottom-left-radius: calc(var(--ns-bar-h) / 2);
-        }
-
-        &[data-side="right"] {
-            padding-inline: 18px 12px;
-            margin-left: -10px;
-            border-top-right-radius: calc(var(--ns-bar-h) / 2);
-            border-bottom-right-radius: calc(var(--ns-bar-h) / 2);
-        }
-    }
-
-    .ns-orb-center {
-        position: relative;
-        z-index: 2;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: var(--ns-orb-size, 44px);
-        height: var(--ns-orb-size, 44px);
-        border-radius: 50%;
-        color: var(--cs-color-text-strong);
-        background-color: var(--cs-color-elevated);
-        box-shadow: var(--cs-shadow-floating);
-        transition:
-            scale var(--cs-dur-squash) var(--cs-ease-squash),
-            background-color var(--cs-dur-effect) var(--cs-ease-effect),
-            box-shadow var(--cs-dur-effect) var(--cs-ease-effect);
-
-        &:active {
-            scale: 0.93;
-            transition: scale var(--cs-dur-press) var(--cs-ease-press);
-        }
-
-        /* Gestaucht / breiter mit klassisch voller Rundung (Kapsel/Oval) */
-        [data-shape="wide-round"] & {
-            width: auto;
-            min-width: 52px;
-            height: 40px;
-            padding-inline: 12px;
-            border-radius: var(--cs-radius-full);
-        }
-    }
-
-    /* =========================================================================
-     * 5. THREE CONNECTED SEGMENTS (2PX MICRO-GAP SPLIT)
-     * ========================================================================= */
-    .ns-split {
-        --ns-h: 36px;
-        --ns-outer-r: calc(var(--ns-h) / 2);
-        --ns-inner-r: 4px;
-
-        display: inline-flex;
-        align-items: center;
-        gap: 2px;
-        height: var(--ns-h);
-        font-size: var(--cs-text-sm);
-        font-weight: 600;
-
-        &[data-shape="keycap"] {
-            --ns-outer-r: 10px;
-            --ns-inner-r: 4px;
-        }
-    }
-
-    .ns-split-btn,
-    .ns-split-val {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        corner-shape: var(--cs-squircle-soft);
-        transition:
-            background-color var(--cs-dur-effect) var(--cs-ease-effect),
-            color var(--cs-dur-effect) var(--cs-ease-effect),
-            box-shadow var(--cs-dur-effect) var(--cs-ease-effect),
-            scale var(--cs-dur-squash) var(--cs-ease-squash);
-
-        &:active {
-            scale: 0.96;
-            transition: scale var(--cs-dur-press) var(--cs-ease-press);
-        }
-    }
-
-    .ns-split-btn {
-        width: 34px;
-        color: var(--cs-color-text-main);
-
-        &[data-pos="start"] {
-            border-radius: var(--ns-outer-r) var(--ns-inner-r) var(--ns-inner-r) var(--ns-outer-r);
-        }
-
-        &[data-pos="end"] {
-            border-radius: var(--ns-inner-r) var(--ns-outer-r) var(--ns-outer-r) var(--ns-inner-r);
-        }
-    }
-
-    .ns-split-val {
-        min-width: 52px;
-        padding-inline: 10px;
-        color: var(--cs-color-text-strong);
-        border-radius: var(--ns-inner-r);
-    }
-
-    .ns-split[data-mode="soft"] > :is(.ns-split-btn, .ns-split-val) {
-        background-color: var(--cs-color-base-soft);
-
-        @media (hover: hover) {
-            &:hover {
-                color: var(--cs-color-text-strong);
-                background-color: var(--cs-color-base-soft-hover);
-            }
-        }
-    }
-
-    .ns-split[data-mode="elevated"] > :is(.ns-split-btn, .ns-split-val) {
-        background-color: var(--cs-color-elevated);
-        box-shadow: var(--cs-shadow-elevated);
-
-        @media (hover: hover) {
-            &:hover {
-                color: var(--cs-color-text-strong);
-                background-color: var(--cs-color-elevated-hover);
-            }
         }
     }
 </style>
