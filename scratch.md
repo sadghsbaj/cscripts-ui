@@ -1,6 +1,6 @@
 ## Modules
 
-- [ ] Toasts ESLint?
+- [x] Toasts ESLint?
 - [ ] Toast-Animation beim Verschwinden nochmal gucken und optimieren
 - [ ] Modal
 - [ ] Select
@@ -10,7 +10,7 @@
 - [ ] Chips
 - [ ] Sidebar
 - [ ] Color Picker
-- [ ] Autoresize Attachment ESLint?
+- [x] Autoresize Attachment ESLint?
 - [ ] Animierte Charts
 - [ ] NLP Parser
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
