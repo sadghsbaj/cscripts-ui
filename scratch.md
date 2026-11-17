@@ -1,15 +1,17 @@
 ## Modules
 
-- [ ] Textarea (evtl.)
-- [] autoresize attachment
+- [x] Textarea (evtl.)
+
 - [ ] Toast
 - [ ] Modal
 - [ ] Select
+- [ ] Dropdown
 - [ ] Combobox
 - [ ] ContextMenu
 - [ ] Sidebar
 - [ ] Color Picker
-- [ ] Animierte Charts
+- [ ] - [] autoresize attachment
+- [ ] - [ ] Animierte Charts
 - [ ] NLP Parser
 - [ ] Zahlen-Animationen
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
