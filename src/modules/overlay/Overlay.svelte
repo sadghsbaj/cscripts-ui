@@ -40,10 +40,14 @@
         return max;
     }
 
+    let isExiting = false;
+
     /* Delays Svelte DOM unmounting to match the CSS exit transition duration
      * so native `allow-discrete` and `overlay` exit transitions can play out.
      * Computed after hidePopover() so base .cs-overlay exit rules apply. */
     function overlayExit(node: HTMLElement): TransitionConfig {
+        isExiting = true;
+
         try {
             if (node.matches?.(":popover-open")) {
                 node.hidePopover();
@@ -54,6 +58,59 @@
 
         return {
             duration: getMaxTransitionDurationMs(node),
+        };
+    }
+
+    /* Tracks VisualViewport shifts (e.g. mobile on-screen keyboard opening)
+     * so the overlay's safe area shrinks without jumping its fixed backdrop. */
+    function trackVisualViewport(node: HTMLElement): () => void {
+        const vv = typeof window !== "undefined" ? window.visualViewport : null;
+        if (!vv) return () => {};
+
+        let lastTop = 0;
+        let lastBottom = 0;
+
+        function update(): void {
+            if (isExiting || !vv || vv.scale > 1.01) return;
+
+            const layoutHeight = node.clientHeight || window.innerHeight;
+            const rawTop = Math.max(0, Math.round(vv.offsetTop));
+            const rawBottom = Math.max(0, Math.round(layoutHeight - vv.height - vv.offsetTop));
+            const nextTop = rawTop <= 1 ? 0 : rawTop;
+            const nextBottom = rawBottom <= 1 ? 0 : rawBottom;
+
+            if (nextTop !== lastTop) {
+                lastTop = nextTop;
+                if (nextTop > 0) {
+                    node.style.setProperty("--cs-overlay-inset-top", `${nextTop}px`);
+                } else {
+                    node.style.removeProperty("--cs-overlay-inset-top");
+                }
+            }
+
+            if (nextBottom !== lastBottom) {
+                lastBottom = nextBottom;
+                if (nextBottom > 0) {
+                    node.style.setProperty("--cs-overlay-inset-bottom", `${nextBottom}px`);
+                } else {
+                    node.style.removeProperty("--cs-overlay-inset-bottom");
+                }
+            }
+        }
+
+        update();
+        /* eslint-disable unicorn/prefer-observer-apis -- VisualViewport is not an Element; resize and scroll events are the only Web API for tracking visual viewport geometry */
+        vv.addEventListener("resize", update);
+        vv.addEventListener("scroll", update);
+        window.addEventListener("resize", update);
+        /* eslint-enable unicorn/prefer-observer-apis */
+
+        return () => {
+            vv.removeEventListener("resize", update);
+            vv.removeEventListener("scroll", update);
+            window.removeEventListener("resize", update);
+            node.style.removeProperty("--cs-overlay-inset-top");
+            node.style.removeProperty("--cs-overlay-inset-bottom");
         };
     }
 
@@ -82,6 +139,7 @@
     popover="manual"
     {@attach topLayer()}
     {@attach scrollLock({ enabled: () => lockScroll })}
+    {@attach trackVisualViewport}
     onpointerdown={handlePointerDown}
     onclick={handleClick}
     class={["cs-overlay", className]}
@@ -112,7 +170,9 @@
             max-width: none;
             height: 100dvh;
             max-height: none;
-            padding: var(--cs-overlay-padding);
+            padding-block-start: calc(var(--cs-overlay-padding) + var(--cs-overlay-inset-top, 0px));
+            padding-block-end: calc(var(--cs-overlay-padding) + var(--cs-overlay-inset-bottom, 0px));
+            padding-inline: var(--cs-overlay-padding);
             overflow: hidden;
 
             /* =====================================================
@@ -125,6 +185,8 @@
                 opacity var(--cs-dur-exit-lg) var(--cs-ease-exit),
                 backdrop-filter var(--cs-dur-exit-lg) var(--cs-ease-exit),
                 -webkit-backdrop-filter var(--cs-dur-exit-lg) var(--cs-ease-exit),
+                padding-block-start var(--cs-dur-exit-lg) var(--cs-ease-exit),
+                padding-block-end var(--cs-dur-exit-lg) var(--cs-ease-exit),
                 display var(--cs-dur-exit-lg) allow-discrete,
                 overlay var(--cs-dur-exit-lg) allow-discrete;
             overscroll-behavior: contain;
@@ -147,6 +209,8 @@
                 opacity var(--cs-dur-enter-sm) var(--cs-ease-effect),
                 backdrop-filter var(--cs-dur-enter-lg) var(--cs-ease-quart-out),
                 -webkit-backdrop-filter var(--cs-dur-enter-lg) var(--cs-ease-quart-out),
+                padding-block-start var(--cs-dur-280) var(--cs-ease-quart-out),
+                padding-block-end var(--cs-dur-280) var(--cs-ease-quart-out),
                 display var(--cs-dur-enter-lg) allow-discrete,
                 overlay var(--cs-dur-enter-lg) allow-discrete;
         }
