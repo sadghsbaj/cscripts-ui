@@ -1,17 +1,18 @@
 ## Modules
 
 - [ ] Textarea (evtl.)
-- [ ] Zahlen-Animationen
-- [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
+- [] autoresize attachment
 - [ ] Toast
 - [ ] Modal
-- [ ] ContextMenu
 - [ ] Select
 - [ ] Combobox
-- [ ] Color Picker
+- [ ] ContextMenu
 - [ ] Sidebar
+- [ ] Color Picker
 - [ ] Animierte Charts
 - [ ] NLP Parser
+- [ ] Zahlen-Animationen
+- [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
 - [ ] Number Stepper (`-` / `+` Control für Zooming und Größenstufen)
 - [x] Progress
 
