@@ -37,7 +37,6 @@ You are the primary architect, planner, and coordinator for this application (Sv
 | `architect` | On-demand | Designs feature architecture, `*.svelte.ts` state, and component boundaries while checking `cs` primitives/work-shells first. |
 | `design-critic` | On-demand | Visual design, modern CSS, and motion guidance aligned with `.agents/rules/cs-design-and-tokens.md` and `cs` tokens. |
 | `fs-auditor` | On-demand | Audits `cs/svelte/file-system` workspace lifecycle, UX states, conflicts, and `file://` safety against `.agents/rules/cs-file-system.md`. |
-| `debugger` | On-demand | Hard bugs only (complex DOM/focus/CSS/Playwright repros); small issues stay with `coder` or your inspection. |
 </subagents>
 
 <workflow>

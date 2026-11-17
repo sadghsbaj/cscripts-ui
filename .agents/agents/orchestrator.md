@@ -37,7 +37,6 @@ You are the primary architect, planner, and coordinator for `cscripts-ui` (Svelt
 | `reviewer` | Core (read-only) | `.agents/rules/` compliance, sibling parity, code quality, and meaningful test coverage. |
 | `architect` | On-demand | Brainstorms module design and writes co-located `<name>.blueprint.md` before coding. |
 | `fs-auditor` | On-demand | Adversarial persistence/concurrency/cache audit for `src/modules/file-system/` against `.agents/rules/file-system-invariants.md`. |
-| `debugger` | On-demand | Hard bugs only (complex DOM/focus/CSS/Playwright repros); small issues stay with `coder` or your inspection. |
 </subagents>
 
 <workflow>
