@@ -63,6 +63,7 @@ export interface NumberStepperInputProps extends Omit<HTMLInputAttributes, "size
     readonly?: boolean;
     /** Bindable reference to the `<input>`. */
     ref?: HTMLInputElement | null;
+    children?: Snippet;
 }
 
 export interface NumberStepperValueProps extends HTMLAttributes<HTMLElement> {

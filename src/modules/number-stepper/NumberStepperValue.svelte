@@ -129,6 +129,11 @@
                 }
             }
 
+            &:active:not(:disabled) {
+                background-color: var(--cs-number-stepper-btn-bg-hover);
+                transition: background-color var(--cs-dur-press) var(--cs-ease-press);
+            }
+
             &:disabled {
                 --cs-disabled-opacity: 1;
                 color: var(--cs-number-stepper-fg-disabled);

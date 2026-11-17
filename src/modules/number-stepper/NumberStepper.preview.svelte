@@ -4,7 +4,6 @@
 </script>
 
 <script lang="ts">
-    import { ZoomIn, ZoomOut } from "@lucide/svelte";
     import { NumberMorph } from "cs/svelte/number-morph";
     import {
         NUMBER_STEPPER_SIZES,
@@ -21,10 +20,10 @@
     let elevatedValue = $state(24);
 
     let zoomMorphValue = $state(100);
-    let plainReadoutValue = $state(4);
+    let colsMorphValue = $state(4);
 
-    let horizontalIconValue = $state(100);
-    let verticalIconValue = $state(100);
+    let horizontalIconValue = $state(50);
+    let verticalIconValue = $state(50);
 
     let sizeValues = $state<Record<NumberStepperSize, number>>({
         xs: 10,
@@ -43,6 +42,7 @@
 
     /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
     const variantsCode = `<script lang="ts">
+    import { NumberMorph } from "cs/svelte/number-morph";
     import {
         NumberStepper,
         NumberStepperDecrement,
@@ -51,18 +51,22 @@
     } from "cs/svelte/number-stepper";
 
     let opacity = $state(100);
-    let radius = $state(24);
+    let budget = $state(24);
 ${closeScript}
 
 <NumberStepper variant="soft" size="md" orientation="horizontal" min={0} max={100} defaultValue={100} bind:value={opacity}>
     <NumberStepperDecrement />
-    <NumberStepperInput suffix="%" aria-label="Opacity" />
+    <NumberStepperInput suffix="%" aria-label="Opacity">
+        <NumberMorph value={opacity} willChange />
+    </NumberStepperInput>
     <NumberStepperIncrement />
 </NumberStepper>
 
-<NumberStepper variant="elevated" size="md" orientation="horizontal" min={0} max={999} defaultValue={24} bind:value={radius}>
+<NumberStepper variant="elevated" size="md" orientation="horizontal" min={0} max={999} defaultValue={24} bind:value={budget}>
     <NumberStepperDecrement />
-    <NumberStepperInput prefix="$" aria-label="Budget" />
+    <NumberStepperInput prefix="$" aria-label="Budget">
+        <NumberMorph value={budget} willChange />
+    </NumberStepperInput>
     <NumberStepperIncrement />
 </NumberStepper>`;
 
@@ -76,6 +80,7 @@ ${closeScript}
     } from "cs/svelte/number-stepper";
 
     let zoom = $state(100);
+    let cols = $state(4);
 ${closeScript}
 
 <NumberStepper
@@ -93,16 +98,24 @@ ${closeScript}
         <NumberMorph value={zoom} suffix="%" willChange />
     </NumberStepperValue>
     <NumberStepperIncrement />
-</NumberStepper>`;
-
-    const iconOnlyCode = `<NumberStepper variant="soft" size="md" orientation="horizontal" min={25} max={200} step={25} bind:value={zoom}>
-    <NumberStepperDecrement icon={ZoomOut} aria-label="Zoom out" />
-    <NumberStepperIncrement icon={ZoomIn} aria-label="Zoom in" />
 </NumberStepper>
 
-<NumberStepper variant="elevated" size="md" orientation="vertical" min={25} max={200} step={25} bind:value={zoom}>
-    <NumberStepperDecrement icon={ZoomOut} aria-label="Zoom out" />
-    <NumberStepperIncrement icon={ZoomIn} aria-label="Zoom in" />
+<NumberStepper variant="elevated" size="md" orientation="horizontal" min={1} max={12} bind:value={cols}>
+    <NumberStepperDecrement />
+    <NumberStepperValue>
+        <NumberMorph value={cols} suffix=" cols" willChange />
+    </NumberStepperValue>
+    <NumberStepperIncrement />
+</NumberStepper>`;
+
+    const iconOnlyCode = `<NumberStepper variant="soft" size="md" orientation="horizontal" min={0} max={100} step={10} defaultValue={50} bind:value={horizontalVal}>
+    <NumberStepperDecrement />
+    <NumberStepperIncrement />
+</NumberStepper>
+
+<NumberStepper variant="elevated" size="md" orientation="vertical" min={0} max={100} step={10} defaultValue={50} bind:value={verticalVal}>
+    <NumberStepperIncrement />
+    <NumberStepperDecrement />
 </NumberStepper>`;
 
     const sizesCode = `<NumberStepper variant="soft" size="xs" orientation="horizontal" bind:value={val}>...</NumberStepper>
@@ -114,28 +127,36 @@ ${closeScript}
     const statesCode = `<!-- Boundary disabled at min={0} -->
 <NumberStepper variant="soft" size="md" orientation="horizontal" min={0} max={5} bind:value={count}>
     <NumberStepperDecrement />
-    <NumberStepperInput aria-label="Count" />
+    <NumberStepperInput aria-label="Count">
+        <NumberMorph value={count} willChange />
+    </NumberStepperInput>
     <NumberStepperIncrement />
 </NumberStepper>
 
 <!-- Whole-stepper disabled -->
 <NumberStepper variant="soft" size="md" orientation="horizontal" disabled bind:value={locked}>
     <NumberStepperDecrement />
-    <NumberStepperInput suffix="px" aria-label="Locked size" />
+    <NumberStepperInput suffix="px" aria-label="Locked size">
+        <NumberMorph value={locked} willChange />
+    </NumberStepperInput>
     <NumberStepperIncrement />
 </NumberStepper>
 
 <!-- Invalid state -->
 <NumberStepper variant="soft" size="md" orientation="horizontal" invalid bind:value={invalidValue}>
     <NumberStepperDecrement />
-    <NumberStepperInput suffix="%" aria-label="Invalid percentage" />
+    <NumberStepperInput suffix="%" aria-label="Invalid percentage">
+        <NumberMorph value={invalidValue} willChange />
+    </NumberStepperInput>
     <NumberStepperIncrement />
 </NumberStepper>
 
 <!-- Decimal stepping -->
-<NumberStepper variant="soft" size="md" orientation="horizontal" min={0} max={10} step={0.5} bind:value={scale}>
+<NumberStepper variant="soft" size="md" orientation="horizontal" min={0} max={10} step={0.5} defaultValue={1.5} bind:value={scale}>
     <NumberStepperDecrement />
-    <NumberStepperInput suffix="x" aria-label="Scale factor" />
+    <NumberStepperInput suffix="x" aria-label="Scale factor">
+        <NumberMorph value={scale} willChange />
+    </NumberStepperInput>
     <NumberStepperIncrement />
 </NumberStepper>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
@@ -153,86 +174,80 @@ ${closeScript}
         code={variantsCode}
     >
         <div class="flex flex-wrap items-center gap-6">
-            <div class="flex flex-col gap-1.5">
-                <span class="text-xs font-medium text-weak">soft (suffix %, middle-click resets to 100)</span>
+            <NumberStepper
+                variant="soft"
+                size="md"
+                orientation="horizontal"
+                min={0}
+                max={100}
+                defaultValue={100}
+                bind:value={softValue}
+            >
+                <NumberStepperDecrement />
+                <NumberStepperInput suffix="%" aria-label="Opacity">
+                    <NumberMorph value={softValue} willChange />
+                </NumberStepperInput>
+                <NumberStepperIncrement />
+            </NumberStepper>
+
+            <SunkenWell>
                 <NumberStepper
-                    variant="soft"
+                    variant="elevated"
                     size="md"
                     orientation="horizontal"
                     min={0}
-                    max={100}
-                    defaultValue={100}
-                    bind:value={softValue}
+                    max={999}
+                    defaultValue={24}
+                    bind:value={elevatedValue}
                 >
                     <NumberStepperDecrement />
-                    <NumberStepperInput suffix="%" aria-label="Opacity" />
+                    <NumberStepperInput prefix="$" aria-label="Budget">
+                        <NumberMorph value={elevatedValue} willChange />
+                    </NumberStepperInput>
                     <NumberStepperIncrement />
                 </NumberStepper>
-            </div>
-
-            <SunkenWell>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-xs font-medium text-weak">elevated (prefix $, middle-click resets to 24)</span>
-                    <NumberStepper
-                        variant="elevated"
-                        size="md"
-                        orientation="horizontal"
-                        min={0}
-                        max={999}
-                        defaultValue={24}
-                        bind:value={elevatedValue}
-                    >
-                        <NumberStepperDecrement />
-                        <NumberStepperInput prefix="$" aria-label="Budget" />
-                        <NumberStepperIncrement />
-                    </NumberStepper>
-                </div>
             </SunkenWell>
         </div>
     </PreviewSection>
 
     <PreviewSection
         title="Read-Only Value & NumberMorph"
-        description="NumberStepperValue composes cleanly with NumberMorph and becomes a click-to-reset button when defaultValue is set."
+        description="NumberStepperValue composes with NumberMorph and becomes a click-to-reset button when defaultValue is set."
         code={valueMorphCode}
     >
         <div class="flex flex-wrap items-center gap-6">
-            <div class="flex flex-col gap-1.5">
-                <span class="text-xs font-medium text-weak">With NumberMorph + click-to-reset (defaultValue={100})</span>
+            <NumberStepper
+                variant="soft"
+                size="md"
+                orientation="horizontal"
+                min={25}
+                max={400}
+                step={25}
+                defaultValue={100}
+                bind:value={zoomMorphValue}
+            >
+                <NumberStepperDecrement />
+                <NumberStepperValue>
+                    <NumberMorph value={zoomMorphValue} suffix="%" willChange />
+                </NumberStepperValue>
+                <NumberStepperIncrement />
+            </NumberStepper>
+
+            <SunkenWell>
                 <NumberStepper
-                    variant="soft"
+                    variant="elevated"
                     size="md"
                     orientation="horizontal"
-                    min={25}
-                    max={400}
-                    step={25}
-                    defaultValue={100}
-                    bind:value={zoomMorphValue}
+                    min={1}
+                    max={12}
+                    bind:value={colsMorphValue}
                 >
                     <NumberStepperDecrement />
                     <NumberStepperValue>
-                        <NumberMorph value={zoomMorphValue} suffix="%" willChange />
+                        <NumberMorph value={colsMorphValue} suffix=" cols" willChange />
                     </NumberStepperValue>
                     <NumberStepperIncrement />
                 </NumberStepper>
-            </div>
-
-            <SunkenWell>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-xs font-medium text-weak">Plain NumberStepperValue (no defaultValue)</span>
-                    <NumberStepper
-                        variant="elevated"
-                        size="md"
-                        orientation="horizontal"
-                        min={1}
-                        max={12}
-                        bind:value={plainReadoutValue}
-                    >
-                        <NumberStepperDecrement />
-                        <NumberStepperValue suffix=" cols" />
-                        <NumberStepperIncrement />
-                    </NumberStepper>
-                </div>
             </SunkenWell>
         </div>
     </PreviewSection>
@@ -243,21 +258,21 @@ ${closeScript}
         code={iconOnlyCode}
     >
         <div class="flex flex-wrap items-center gap-8">
-            <div class="flex flex-col gap-1.5">
-                <span class="text-xs font-medium text-weak">horizontal ({horizontalIconValue}%)</span>
+            <div class="flex items-center gap-3">
                 <NumberStepper
                     variant="soft"
                     size="md"
                     orientation="horizontal"
-                    min={25}
-                    max={200}
-                    step={25}
-                    defaultValue={100}
+                    min={0}
+                    max={100}
+                    step={10}
+                    defaultValue={50}
                     bind:value={horizontalIconValue}
                 >
-                    <NumberStepperDecrement icon={ZoomOut} aria-label="Zoom out" />
-                    <NumberStepperIncrement icon={ZoomIn} aria-label="Zoom in" />
+                    <NumberStepperDecrement />
+                    <NumberStepperIncrement />
                 </NumberStepper>
+                <NumberMorph value={horizontalIconValue} suffix="%" willChange class="text-sm font-semibold" />
             </div>
 
             <SunkenWell>
@@ -266,19 +281,16 @@ ${closeScript}
                         variant="elevated"
                         size="md"
                         orientation="vertical"
-                        min={25}
-                        max={200}
-                        step={25}
-                        defaultValue={100}
+                        min={0}
+                        max={100}
+                        step={10}
+                        defaultValue={50}
                         bind:value={verticalIconValue}
                     >
-                        <NumberStepperDecrement icon={ZoomOut} aria-label="Zoom out" />
-                        <NumberStepperIncrement icon={ZoomIn} aria-label="Zoom in" />
+                        <NumberStepperIncrement />
+                        <NumberStepperDecrement />
                     </NumberStepper>
-                    <div class="flex flex-col gap-0.5">
-                        <span class="text-xs font-medium text-weak">vertical</span>
-                        <span class="text-sm font-semibold tabular-nums">{verticalIconValue}%</span>
-                    </div>
+                    <NumberMorph value={verticalIconValue} suffix="%" willChange class="text-sm font-semibold" />
                 </div>
             </SunkenWell>
         </div>
@@ -289,16 +301,15 @@ ${closeScript}
         description="Five T-shirt sizes (xs–xl, 28px–44px) matching Button and TextInput heights 1:1."
         code={sizesCode}
     >
-        <div class="flex flex-col items-start gap-3">
+        <div class="flex flex-wrap items-center gap-4">
             {#each NUMBER_STEPPER_SIZES as size (size)}
-                <div class="flex items-center gap-3">
-                    <span class="w-6 text-xs font-medium text-weak uppercase">{size}</span>
-                    <NumberStepper variant="soft" {size} orientation="horizontal" min={0} max={100} bind:value={sizeValues[size]}>
-                        <NumberStepperDecrement />
-                        <NumberStepperInput suffix="%" aria-label="Size {size}" />
-                        <NumberStepperIncrement />
-                    </NumberStepper>
-                </div>
+                <NumberStepper variant="soft" {size} orientation="horizontal" min={0} max={100} bind:value={sizeValues[size]}>
+                    <NumberStepperDecrement />
+                    <NumberStepperValue>
+                        <NumberMorph value={sizeValues[size]} suffix="%" willChange />
+                    </NumberStepperValue>
+                    <NumberStepperIncrement />
+                </NumberStepper>
             {/each}
         </div>
     </PreviewSection>
@@ -308,62 +319,57 @@ ${closeScript}
         description="Automatic boundary disabling at min/max, whole-control disabled, invalid ring feedback, and floating-point-safe decimal steps."
         code={statesCode}
     >
-        <div class="flex flex-wrap items-start gap-6">
-            <div class="flex flex-col gap-1.5">
-                <span class="text-xs font-medium text-weak">Boundary disabled (min=0, max=5)</span>
-                <NumberStepper variant="soft" size="md" orientation="horizontal" min={0} max={5} bind:value={boundaryValue}>
-                    <NumberStepperDecrement />
-                    <NumberStepperInput aria-label="Boundary count" />
-                    <NumberStepperIncrement />
-                </NumberStepper>
-            </div>
+        <div class="flex flex-wrap items-center gap-4">
+            <NumberStepper variant="soft" size="md" orientation="horizontal" min={0} max={5} bind:value={boundaryValue}>
+                <NumberStepperDecrement />
+                <NumberStepperInput aria-label="Boundary count">
+                    <NumberMorph value={boundaryValue} willChange />
+                </NumberStepperInput>
+                <NumberStepperIncrement />
+            </NumberStepper>
 
-            <div class="flex flex-col gap-1.5">
-                <span class="text-xs font-medium text-weak">Disabled (soft)</span>
-                <NumberStepper variant="soft" size="md" orientation="horizontal" disabled bind:value={disabledValue}>
-                    <NumberStepperDecrement />
-                    <NumberStepperInput suffix="px" aria-label="Disabled soft" />
-                    <NumberStepperIncrement />
-                </NumberStepper>
-            </div>
+            <NumberStepper variant="soft" size="md" orientation="horizontal" disabled bind:value={disabledValue}>
+                <NumberStepperDecrement />
+                <NumberStepperInput suffix="px" aria-label="Disabled soft">
+                    <NumberMorph value={disabledValue} willChange />
+                </NumberStepperInput>
+                <NumberStepperIncrement />
+            </NumberStepper>
 
             <SunkenWell>
-                <div class="flex flex-col gap-1.5">
-                    <span class="text-xs font-medium text-weak">Disabled (elevated)</span>
-                    <NumberStepper variant="elevated" size="md" orientation="horizontal" disabled bind:value={disabledValue}>
-                        <NumberStepperDecrement />
-                        <NumberStepperInput suffix="px" aria-label="Disabled elevated" />
-                        <NumberStepperIncrement />
-                    </NumberStepper>
-                </div>
+                <NumberStepper variant="elevated" size="md" orientation="horizontal" disabled bind:value={disabledValue}>
+                    <NumberStepperDecrement />
+                    <NumberStepperInput suffix="px" aria-label="Disabled elevated">
+                        <NumberMorph value={disabledValue} willChange />
+                    </NumberStepperInput>
+                    <NumberStepperIncrement />
+                </NumberStepper>
             </SunkenWell>
 
-            <div class="flex flex-col gap-1.5">
-                <span class="text-xs font-medium text-weak">Invalid</span>
-                <NumberStepper variant="soft" size="md" orientation="horizontal" invalid bind:value={invalidValue}>
-                    <NumberStepperDecrement />
-                    <NumberStepperInput suffix="%" aria-label="Invalid percentage" />
-                    <NumberStepperIncrement />
-                </NumberStepper>
-            </div>
+            <NumberStepper variant="soft" size="md" orientation="horizontal" invalid bind:value={invalidValue}>
+                <NumberStepperDecrement />
+                <NumberStepperInput suffix="%" aria-label="Invalid percentage">
+                    <NumberMorph value={invalidValue} willChange />
+                </NumberStepperInput>
+                <NumberStepperIncrement />
+            </NumberStepper>
 
-            <div class="flex flex-col gap-1.5">
-                <span class="text-xs font-medium text-weak">Decimal step (step=0.5)</span>
-                <NumberStepper
-                    variant="soft"
-                    size="md"
-                    orientation="horizontal"
-                    min={0}
-                    max={10}
-                    step={0.5}
-                    defaultValue={1.5}
-                    bind:value={decimalValue}
-                >
-                    <NumberStepperDecrement />
-                    <NumberStepperInput suffix="x" aria-label="Scale factor" />
-                    <NumberStepperIncrement />
-                </NumberStepper>
-            </div>
+            <NumberStepper
+                variant="soft"
+                size="md"
+                orientation="horizontal"
+                min={0}
+                max={10}
+                step={0.5}
+                defaultValue={1.5}
+                bind:value={decimalValue}
+            >
+                <NumberStepperDecrement />
+                <NumberStepperInput suffix="x" aria-label="Scale factor">
+                    <NumberMorph value={decimalValue} willChange />
+                </NumberStepperInput>
+                <NumberStepperIncrement />
+            </NumberStepper>
         </div>
     </PreviewSection>
 </div>

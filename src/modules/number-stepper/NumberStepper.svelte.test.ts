@@ -49,6 +49,22 @@ function dispatchMiddleClick(target: EventTarget): void {
     );
 }
 
+function getFlowText(flowEl: Element | null): string {
+    if (!flowEl) return "";
+    // @number-flow/svelte renders digits inside shadowRoot; only active items lack [inert].
+    if (flowEl.shadowRoot) {
+        const parts = flowEl.shadowRoot.querySelectorAll(
+            ".digit__num:not([inert]), .symbol__value:not([inert])",
+        );
+        const text = [...parts]
+            .filter((el) => !el.closest("[inert]"))
+            .map((el) => el.textContent ?? "")
+            .join("");
+        if (text) return text.replaceAll(/\s+/g, " ").trim();
+    }
+    return flowEl.getAttribute("aria-label") ?? flowEl.textContent?.trim() ?? "";
+}
+
 describe("NumberStepper Svelte 5 Component", () => {
     let container: HTMLDivElement;
 
@@ -781,6 +797,98 @@ describe("NumberStepper Svelte 5 Component", () => {
             expect(disabledInput.value).toBe("6");
 
             unmount(disabledInstance);
+        });
+
+        test("renders NumberMorph overlay with data-has-display, updates on step/middle-click, and toggles data-editing on focus/commit", () => {
+            let value = $state(10);
+            const onValueChange = vi.fn();
+
+            const instance = mount(NumberStepperTestHost, {
+                target: container,
+                props: {
+                    middle: "input-morph",
+                    min: 0,
+                    max: 100,
+                    defaultValue: 25,
+                    onValueChange,
+                    get value() {
+                        return value;
+                    },
+                    set value(v) {
+                        value = v;
+                    },
+                },
+            });
+            flushSync();
+
+            const root = getRoot();
+            const input = getInput();
+            const shell = input.closest<HTMLElement>(".cs-number-stepper-input-shell");
+            const display = shell?.querySelector<HTMLElement>(".cs-number-stepper-input-display");
+            const flowEl = display?.querySelector("number-flow-svelte") ?? null;
+
+            expect(shell?.dataset.hasDisplay).toBe("");
+            expect(shell?.dataset.editing).toBeUndefined();
+            expect(display).not.toBeNull();
+            expect(display?.getAttribute("aria-hidden")).toBe("true");
+            expect(display?.querySelector(".cs-number-morph")).not.toBeNull();
+            expect(input.value).toBe("10");
+            expect(getFlowText(flowEl)).toBe("10");
+
+            // Increment / decrement while blurred updates both <input> and <NumberMorph> overlay
+            getIncrement().click();
+            flushSync();
+            expect(value).toBe(11);
+            expect(input.value).toBe("11");
+            expect(getFlowText(flowEl)).toBe("11");
+            expect(shell?.dataset.editing).toBeUndefined();
+
+            getDecrement().click();
+            flushSync();
+            expect(value).toBe(10);
+            expect(input.value).toBe("10");
+            expect(getFlowText(flowEl)).toBe("10");
+            expect(shell?.dataset.editing).toBeUndefined();
+
+            // Middle-click reset while blurred updates both <input> and <NumberMorph> overlay
+            dispatchMiddleClick(root);
+            flushSync();
+            expect(value).toBe(25);
+            expect(input.value).toBe("25");
+            expect(getFlowText(flowEl)).toBe("25");
+            expect(shell?.dataset.editing).toBeUndefined();
+
+            // Focus sets data-editing=""; Enter commits, clears data-editing, and updates overlay
+            input.focus();
+            flushSync();
+            expect(shell?.dataset.editing).toBe("");
+
+            input.value = "42";
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            dispatchKey(input, "Enter");
+            flushSync();
+
+            expect(value).toBe(42);
+            expect(input.value).toBe("42");
+            expect(shell?.dataset.editing).toBeUndefined();
+            expect(getFlowText(flowEl)).toBe("42");
+
+            // Focus again, then commit via blur
+            input.focus();
+            flushSync();
+            expect(shell?.dataset.editing).toBe("");
+
+            input.value = "78";
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.dispatchEvent(new FocusEvent("blur", { bubbles: true }));
+            flushSync();
+
+            expect(value).toBe(78);
+            expect(input.value).toBe("78");
+            expect(shell?.dataset.editing).toBeUndefined();
+            expect(getFlowText(flowEl)).toBe("78");
+
+            unmount(instance);
         });
     });
 

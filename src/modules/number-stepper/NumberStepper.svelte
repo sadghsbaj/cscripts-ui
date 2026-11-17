@@ -158,10 +158,10 @@
             corner-shape: var(--cs-squircle-soft);
             box-shadow: var(--cs-number-stepper-shadow);
             user-select: none;
-            cursor: default;
             transition:
                 background-color var(--cs-dur-effect) var(--cs-ease-effect),
                 box-shadow var(--cs-dur-effect) var(--cs-ease-effect);
+            cursor: default;
 
             /* =========================================================
              * SIZES (xs - xl, matching Button & TextInput 28-44px 1:1)
@@ -220,15 +220,15 @@
              * ORIENTATIONS
              * ========================================================= */
             &[data-orientation="horizontal"] {
+                --cs-number-stepper-radius: calc(var(--cs-number-stepper-height) / 2);
                 flex-direction: row;
                 height: var(--cs-number-stepper-height);
-                --cs-number-stepper-radius: calc(var(--cs-number-stepper-height) / 2);
             }
 
             &[data-orientation="vertical"] {
+                --cs-number-stepper-radius: calc(var(--cs-number-stepper-width) / 2);
                 flex-direction: column;
                 width: var(--cs-number-stepper-width);
-                --cs-number-stepper-radius: calc(var(--cs-number-stepper-width) / 2);
             }
 
             /* =========================================================
@@ -247,8 +247,12 @@
                     white,
                     color-mix(in oklch, var(--cs-color-base-100) 18%, transparent)
                 );
-                --cs-number-stepper-well-shadow: light-dark(var(--cs-shadow-xs), none);
-                --cs-number-stepper-well-shadow-hover: light-dark(var(--cs-shadow-sm), none);
+                --cs-number-stepper-well-shadow:
+                    0 1px 2px 0 light-dark(rgb(0 0 0 / 0.08), transparent),
+                    0 1px 0 0 light-dark(rgb(0 0 0 / 0.04), transparent);
+                --cs-number-stepper-well-shadow-hover:
+                    0 1px 3px 0 light-dark(rgb(0 0 0 / 0.11), transparent),
+                    0 1px 1px 0 light-dark(rgb(0 0 0 / 0.06), transparent);
             }
 
             &[data-variant="elevated"] {
@@ -302,9 +306,9 @@
              * EDITABLE INPUT MODE LAYOUT
              * ========================================================= */
             &:has(> :global(.cs-number-stepper-input-shell)) {
-                padding: var(--cs-number-stepper-pad);
-                gap: var(--cs-number-stepper-pad);
                 --cs-number-stepper-btn-bg-hover: var(--cs-number-stepper-btn-bg-hover-input);
+                gap: var(--cs-number-stepper-pad);
+                padding: var(--cs-number-stepper-pad);
 
                 & > :global(.cs-number-stepper-btn) {
                     width: calc(var(--cs-number-stepper-height) - var(--cs-number-stepper-pad) * 2);
@@ -319,8 +323,8 @@
              * ========================================================= */
             &[data-orientation="horizontal"]:not(:has(> :global(.cs-number-stepper-input-shell))) {
                 & > :global(.cs-number-stepper-btn) {
-                    height: 100%;
                     aspect-ratio: 1;
+                    height: 100%;
                 }
 
                 & > :global(*:first-child) {
@@ -335,59 +339,77 @@
                     corner-shape: var(--cs-squircle-soft);
                 }
 
-                & > :global(*:not(:last-child))::after {
-                    content: "";
-                    position: absolute;
-                    inset-block: 24%;
-                    right: 0;
-                    width: 1px;
-                    background-color: var(--cs-number-stepper-sep-color);
-                    pointer-events: none;
-                    transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
-                }
+                & > :global(*:not(:last-child)) {
+                    &::after {
+                        content: "";
+                        position: absolute;
+                        inset-block: 24%;
+                        right: 0;
+                        z-index: 1;
+                        width: 1px;
+                        background-color: var(--cs-number-stepper-sep-color);
+                        translate: 50% 0;
+                        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+                        pointer-events: none;
+                    }
 
-                & > :global(button:not(:disabled):is(:hover, :active, :focus-visible):not(:last-child))::after,
-                & > :global(*:not(:last-child):has(+ button:not(:disabled):is(:hover, :active, :focus-visible)))::after {
-                    opacity: 0;
+                    &:is(:global(button:not(:disabled):is(:active, :focus-visible)))::after,
+                    &:has(+ :global(button:not(:disabled):is(:active, :focus-visible)))::after {
+                        opacity: 0;
+                    }
+
+                    @media (hover: hover) {
+                        &:is(:global(button:not(:disabled):hover))::after,
+                        &:has(+ :global(button:not(:disabled):hover))::after {
+                            opacity: 0;
+                        }
+                    }
                 }
             }
 
             &[data-orientation="vertical"] {
                 & > :global(.cs-number-stepper-btn) {
-                    width: 100%;
                     aspect-ratio: 1;
+                    width: 100%;
                 }
 
-                /* Increment always sits on top, decrement on bottom regardless of DOM order */
-                & > :global([data-direction="increment"]) {
-                    order: 1;
+                & > :global(*:first-child) {
                     border-start-start-radius: var(--cs-number-stepper-radius);
                     border-start-end-radius: var(--cs-number-stepper-radius);
                     corner-shape: var(--cs-squircle-soft);
-
-                    &::after {
-                        content: "";
-                        position: absolute;
-                        inset-inline: 24%;
-                        bottom: 0;
-                        height: 1px;
-                        background-color: var(--cs-number-stepper-sep-color);
-                        pointer-events: none;
-                        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
-                    }
                 }
 
-                & > :global([data-direction="decrement"]) {
-                    order: 2;
+                & > :global(*:last-child) {
                     border-end-start-radius: var(--cs-number-stepper-radius);
                     border-end-end-radius: var(--cs-number-stepper-radius);
                     corner-shape: var(--cs-squircle-soft);
                 }
 
-                & > :global([data-direction="increment"]:not(:disabled):is(:hover, :active, :focus-visible))::after,
-                &:has(> :global([data-direction="decrement"]:not(:disabled):is(:hover, :active, :focus-visible)))
-                    > :global([data-direction="increment"])::after {
-                    opacity: 0;
+                & > :global(*:not(:last-child)) {
+                    &::after {
+                        content: "";
+                        position: absolute;
+                        inset-inline: 24%;
+                        bottom: 0;
+                        z-index: 1;
+                        height: 1px;
+                        background-color: var(--cs-number-stepper-sep-color);
+                        translate: 0 50%;
+                        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+                        pointer-events: none;
+                    }
+
+                    &:is(:global(button:not(:disabled):is(:active, :focus-visible)))::after,
+                    &:has(+ :global(button:not(:disabled):is(:active, :focus-visible)))::after {
+                        opacity: 0;
+                    }
+
+                    @media (hover: hover) {
+                        &:is(:global(button:not(:disabled):hover))::after,
+                        &:has(+ :global(button:not(:disabled):hover))::after {
+                            opacity: 0;
+                        }
+                    }
                 }
             }
 
@@ -397,17 +419,17 @@
             & > :global(.cs-number-stepper-btn) {
                 position: relative;
                 display: inline-flex;
+                flex-shrink: 0;
                 align-items: center;
                 justify-content: center;
-                flex-shrink: 0;
                 padding: 0;
-                border: none;
-                background-color: transparent;
                 color: var(--cs-number-stepper-fg);
-                cursor: default;
+                background-color: transparent;
+                border: none;
                 transition:
                     background-color var(--cs-dur-effect) var(--cs-ease-effect),
                     color var(--cs-dur-effect) var(--cs-ease-effect);
+                cursor: default;
 
                 &:focus-visible {
                     z-index: 2;
@@ -415,9 +437,17 @@
 
                 @media (hover: hover) {
                     &:hover:not(:disabled) {
-                        background-color: var(--cs-number-stepper-btn-bg-hover);
                         color: var(--cs-number-stepper-fg-strong);
+                        background-color: var(--cs-number-stepper-btn-bg-hover);
                     }
+                }
+
+                &:active:not(:disabled) {
+                    color: var(--cs-number-stepper-fg-strong);
+                    background-color: var(--cs-number-stepper-btn-bg-hover);
+                    transition:
+                        background-color var(--cs-dur-press) var(--cs-ease-press),
+                        color var(--cs-dur-press) var(--cs-ease-press);
                 }
 
                 &:disabled {
@@ -427,11 +457,11 @@
 
                 & > :global(.cs-number-stepper-icon) {
                     display: inline-flex;
+                    flex-shrink: 0;
                     align-items: center;
                     justify-content: center;
                     width: var(--cs-number-stepper-icon-size);
                     height: var(--cs-number-stepper-icon-size);
-                    flex-shrink: 0;
                     transition: scale var(--cs-dur-200) var(--cs-spring-snappy);
                 }
 

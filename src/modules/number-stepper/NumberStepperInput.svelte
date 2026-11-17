@@ -8,6 +8,7 @@
         disabled = false,
         readonly = false,
         class: className,
+        children,
         onfocus,
         onblur,
         oninput,
@@ -139,14 +140,7 @@
     }
 </script>
 
-<label
-    class="cs-number-stepper-input-shell"
-    data-has-suffix={suffix ? "" : undefined}
-    data-disabled={isDisabled ? "" : undefined}
->
-    {#if prefix}
-        <span class="cs-number-stepper-unit" aria-hidden="true">{prefix}</span>
-    {/if}
+{#snippet inputField()}
     <input
         bind:this={ref}
         {...rest}
@@ -167,6 +161,28 @@
         onblur={handleBlur}
         onkeydown={handleKeyDown}
     />
+{/snippet}
+
+<label
+    class="cs-number-stepper-input-shell"
+    data-has-suffix={suffix ? "" : undefined}
+    data-has-display={children ? "" : undefined}
+    data-editing={isEditing ? "" : undefined}
+    data-disabled={isDisabled ? "" : undefined}
+>
+    {#if prefix}
+        <span class="cs-number-stepper-unit" aria-hidden="true">{prefix}</span>
+    {/if}
+    {#if children}
+        <span class="cs-number-stepper-input-stage">
+            {@render inputField()}
+            <span class="cs-number-stepper-input-display" aria-hidden="true">
+                {@render children()}
+            </span>
+        </span>
+    {:else}
+        {@render inputField()}
+    {/if}
     {#if suffix}
         <span class="cs-number-stepper-unit" aria-hidden="true">{suffix}</span>
     {/if}
@@ -224,6 +240,12 @@
             }
         }
 
+        .cs-number-stepper-input-stage {
+            display: grid;
+            align-items: baseline;
+            height: 100%;
+        }
+
         .cs-number-stepper-field {
             field-sizing: content;
             min-width: 3ch;
@@ -236,9 +258,15 @@
             font: inherit;
             font-weight: 600;
             font-variant-numeric: tabular-nums;
-            line-height: 1;
+            letter-spacing: inherit;
+            line-height: normal;
             text-align: center;
             caret-color: var(--cs-number-stepper-well-caret, var(--cs-color-accent-solid));
+
+            .cs-number-stepper-input-stage > & {
+                grid-area: 1 / 1;
+                height: 100%;
+            }
 
             /* Suppress global :focus-visible outline; shell::after renders the focus ring */
             &:focus-visible {
@@ -246,6 +274,7 @@
             }
 
             .cs-number-stepper-input-shell[data-has-suffix] & {
+                min-width: 2ch;
                 text-align: right;
             }
 
@@ -253,6 +282,45 @@
                 --cs-disabled-opacity: 1;
                 color: var(--cs-color-disabled-fg);
                 cursor: default;
+            }
+
+            .cs-number-stepper-input-shell[data-has-display]:not([data-editing]) & {
+                color: transparent;
+                caret-color: transparent;
+            }
+        }
+
+        .cs-number-stepper-input-display {
+            grid-area: 1 / 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 3ch;
+            color: var(--cs-number-stepper-fg-strong);
+            font: inherit;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: inherit;
+            line-height: normal;
+            text-align: center;
+            --cs-number-morph-char-height: 1.2em;
+            pointer-events: none;
+            user-select: none;
+
+            .cs-number-stepper-input-shell[data-has-suffix] & {
+                min-width: 2ch;
+                justify-content: flex-end;
+                text-align: right;
+            }
+
+            .cs-number-stepper-input-shell[data-disabled] & {
+                --cs-disabled-opacity: 1;
+                color: var(--cs-color-disabled-fg);
+            }
+
+            .cs-number-stepper-input-shell[data-editing] & {
+                opacity: 0;
+                visibility: hidden;
             }
         }
 

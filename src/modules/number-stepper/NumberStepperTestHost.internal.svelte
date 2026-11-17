@@ -7,7 +7,7 @@
     import NumberStepperValue from "./NumberStepperValue.svelte";
     import type { NumberStepperOrientation, NumberStepperSize, NumberStepperVariant } from "./index.ts";
 
-    export type NumberStepperTestMiddle = "none" | "input" | "value" | "value-morph";
+    export type NumberStepperTestMiddle = "none" | "input" | "input-morph" | "value" | "value-morph";
 
     interface Props {
         variant?: NumberStepperVariant;
@@ -88,13 +88,25 @@
     }: Props = $props();
 </script>
 
-{#snippet stepperContent()}
+{#snippet decrementBtn()}
     <NumberStepperDecrement
         bind:ref={decrementRef}
         disabled={decrementDisabled}
         class={decrementClass}
         {...decrementRest}
     />
+{/snippet}
+
+{#snippet incrementBtn()}
+    <NumberStepperIncrement
+        bind:ref={incrementRef}
+        disabled={incrementDisabled}
+        class={incrementClass}
+        {...incrementRest}
+    />
+{/snippet}
+
+{#snippet middleContent()}
     {#if middle === "input"}
         <NumberStepperInput
             bind:ref={inputRef}
@@ -105,6 +117,18 @@
             class={inputClass}
             {...inputRest}
         />
+    {:else if middle === "input-morph"}
+        <NumberStepperInput
+            bind:ref={inputRef}
+            {prefix}
+            {suffix}
+            disabled={inputDisabled}
+            readonly={inputReadonly}
+            class={inputClass}
+            {...inputRest}
+        >
+            <NumberMorph {value} {locales} format={format as NumberMorphFormat | undefined} animated={false} />
+        </NumberStepperInput>
     {:else if middle === "value"}
         <NumberStepperValue
             bind:ref={valueRef}
@@ -120,12 +144,18 @@
             <NumberMorph {value} {prefix} {suffix} {locales} format={format as NumberMorphFormat | undefined} animated={false} />
         </NumberStepperValue>
     {/if}
-    <NumberStepperIncrement
-        bind:ref={incrementRef}
-        disabled={incrementDisabled}
-        class={incrementClass}
-        {...incrementRest}
-    />
+{/snippet}
+
+{#snippet stepperContent()}
+    {#if orientation === "vertical"}
+        {@render incrementBtn()}
+        {@render middleContent()}
+        {@render decrementBtn()}
+    {:else}
+        {@render decrementBtn()}
+        {@render middleContent()}
+        {@render incrementBtn()}
+    {/if}
 {/snippet}
 
 {#if strictControlled}

@@ -48,7 +48,7 @@ Extends `Omit<HTMLAttributes<HTMLDivElement>, "children">`. Renders `<div role="
 | `min` | `number` | No | `undefined` | Lower clamp bound. Automatically disables `<NumberStepperDecrement />` when `value <= min`. |
 | `max` | `number` | No | `undefined` | Upper clamp bound. Automatically disables `<NumberStepperIncrement />` when `value >= max`. |
 | `step` | `number` | No | `1` | Increment/decrement delta. Floating-point drift is normalized to `max(decimals(step), decimals(min ?? 0))`. |
-| `defaultValue` | `number` | No | `undefined` | Reset target for middle-click on the stepper, and primary click/`Enter`/`Space` on `<NumberStepperValue />`. |
+| `defaultValue` | `number` | No | `undefined` | Reset target for middle-click on the stepper and primary click/`Enter`/`Space` on `<NumberStepperValue />`. Required for reset; when omitted, reset is disabled. |
 | `onValueChange` | `(value: number) => void` | No | `undefined` | Fires when user interaction commits a clamped value different from the current `value`. |
 | `disabled` | `boolean` | No | `false` | Disables the entire stepper (`data-disabled`, `aria-disabled="true"`) and all child subparts. |
 | `invalid` | `boolean` | No | `false` | Sets `data-invalid` on the root and `aria-invalid="true"` + negative ring/caret on `<NumberStepperInput />`. |
@@ -75,6 +75,7 @@ Extends `Omit<HTMLInputAttributes, "size" | "value" | "children" | "type">`. Ren
 | `disabled` | `boolean` | No | `false` | Local disabled override; effective state is `Boolean(disabled) \|\| ctx.disabled`. |
 | `readonly` | `boolean` | No | `false` | Marks the `<input>` read-only while keeping stepper buttons active. |
 | `ref` | `HTMLInputElement \| null` | No | `null` | `$bindable` reference to the `<input>`. |
+| `children` | `Snippet` | No | `undefined` | Optional display overlay (typically `<NumberMorph value={...} willChange />`) rendered in a 1:1 CSS Grid stage over the `<input>` when not focused/editing. |
 
 ### `NumberStepperValue` Props (Horizontal Only)
 Extends `HTMLAttributes<HTMLElement>`. Renders `<button type="button" class="cs-number-stepper-value">` when `ctx.defaultValue !== undefined`, or `<span class="cs-number-stepper-value">` otherwise. Throws at runtime if placed inside `<NumberStepper orientation="vertical">`.
@@ -100,7 +101,7 @@ Extends `HTMLAttributes<HTMLElement>`. Renders `<button type="button" class="cs-
 ### `data-*` Attributes
 - Root (`.cs-number-stepper`): `data-variant={variant}`, `data-size={size}`, `data-orientation={orientation}`, `data-disabled` (when `disabled`), `data-invalid` (when `invalid`).
 - Buttons (`.cs-number-stepper-btn`): `data-direction="decrement" | "increment"`.
-- Input shell (`.cs-number-stepper-input-shell`): `data-has-suffix` (when `suffix` is truthy), `data-disabled` (when `disabled`).
+- Input shell (`.cs-number-stepper-input-shell`): `data-has-suffix` (when `suffix` is truthy), `data-has-display` (when `children` is provided), `data-editing` (when the `<input>` is focused/editing), `data-disabled` (when `disabled`).
 
 ### CSS Custom Properties
 Overridable on `.cs-number-stepper`:
@@ -125,16 +126,17 @@ Overridable on `.cs-number-stepper`:
 | `--cs-number-stepper-well-px` | `8px` (`xs`–`sm`), `10px` (`md`–`xl`) | Horizontal padding inside `.cs-number-stepper-input-shell`. |
 | `--cs-number-stepper-well-bg` | `light-dark(white, color-mix(in oklch, var(--cs-color-base-100) 14%, transparent))` (`soft`) / `var(--cs-color-base-soft)` (`elevated`) | Inner input well background. |
 | `--cs-number-stepper-well-bg-hover` | `light-dark(white, color-mix(in oklch, var(--cs-color-base-100) 18%, transparent))` (`soft`) / `var(--cs-color-base-soft-hover)` (`elevated`) | Inner input well hover background. |
-| `--cs-number-stepper-well-shadow` | `light-dark(var(--cs-shadow-xs), none)` (`soft`) / `none` (`elevated`) | Inner input well rest shadow. |
-| `--cs-number-stepper-well-shadow-hover` | `light-dark(var(--cs-shadow-sm), none)` (`soft`) / `none` (`elevated`) | Inner input well hover shadow. |
+| `--cs-number-stepper-well-shadow` | `0 1px 2px 0 light-dark(rgb(0 0 0 / 0.08), transparent), 0 1px 0 0 light-dark(rgb(0 0 0 / 0.04), transparent)` (`soft`) / `none` (`elevated`) | Inner input well rest shadow. |
+| `--cs-number-stepper-well-shadow-hover` | `0 1px 3px 0 light-dark(rgb(0 0 0 / 0.11), transparent), 0 1px 1px 0 light-dark(rgb(0 0 0 / 0.06), transparent)` (`soft`) / `none` (`elevated`) | Inner input well hover shadow. |
 | `--cs-number-stepper-well-ring` | `inset 0 0 0 0px transparent` | Inset ring on `.cs-number-stepper-input-shell::after` (`2px` `accent-solid` on `:focus-within`, `2px` `negative-solid` on `[data-invalid]:not([data-disabled])`). |
 | `--cs-number-stepper-well-caret` | `var(--cs-color-accent-solid)` | Caret color inside `<NumberStepperInput />` (`var(--cs-color-negative-solid)` when `[data-invalid]:not([data-disabled])`). |
 
 ## Examples
 
-### Editable Input (`soft` & `elevated`, `prefix`/`suffix`, `defaultValue`)
+### Editable Input (`soft` & `elevated`, `prefix`/`suffix`, `defaultValue`, `<NumberMorph>`)
 ```svelte
 <script lang="ts">
+    import { NumberMorph } from "cs/svelte/number-morph";
     import {
         NumberStepper,
         NumberStepperDecrement,
@@ -156,7 +158,9 @@ Overridable on `.cs-number-stepper`:
     bind:value={opacity}
 >
     <NumberStepperDecrement />
-    <NumberStepperInput suffix="%" aria-label="Opacity" />
+    <NumberStepperInput suffix="%" aria-label="Opacity">
+        <NumberMorph value={opacity} willChange />
+    </NumberStepperInput>
     <NumberStepperIncrement />
 </NumberStepper>
 
@@ -170,7 +174,9 @@ Overridable on `.cs-number-stepper`:
     bind:value={budget}
 >
     <NumberStepperDecrement />
-    <NumberStepperInput prefix="$" aria-label="Budget" />
+    <NumberStepperInput prefix="$" aria-label="Budget">
+        <NumberMorph value={budget} willChange />
+    </NumberStepperInput>
     <NumberStepperIncrement />
 </NumberStepper>
 ```
@@ -226,8 +232,8 @@ Overridable on `.cs-number-stepper`:
 </NumberStepper>
 
 <NumberStepper variant="elevated" size="md" orientation="vertical" min={25} max={200} step={25} bind:value={zoom}>
-    <NumberStepperDecrement icon={ZoomOut} aria-label="Zoom out" />
     <NumberStepperIncrement icon={ZoomIn} aria-label="Zoom in" />
+    <NumberStepperDecrement icon={ZoomOut} aria-label="Zoom out" />
 </NumberStepper>
 ```
 
@@ -266,9 +272,11 @@ Overridable on `.cs-number-stepper`:
 ```
 
 ## Behavior & Quirks
-- **`orientation="vertical"` is strictly icon-only:** `<NumberStepperInput />` and `<NumberStepperValue />` are forbidden inside `<NumberStepper orientation="vertical">`. This is enforced both at runtime (both components throw an `Error` if `ctx.orientation === "vertical"`) and statically by the `number-stepper/no-middle-in-vertical` ESLint rule. In vertical mode, CSS `order` places `<NumberStepperIncrement />` (`order: 1`) on top and `<NumberStepperDecrement />` (`order: 2`) on bottom regardless of DOM order.
-- **Decoupled `<NumberMorph>` composition:** `cs/svelte/number-stepper` does not import `@number-flow/svelte` directly so apps without that optional peer dependency can use `NumberStepper` without bundle or build errors. Compose `<NumberMorph />` inside `<NumberStepperValue>` when digit-rolling transitions are desired; `.cs-number-stepper-value-text` provides `tabular-nums` alignment and `:active` press squash (`scale: 0.93`).
-- **`defaultValue` reset (middle-click & value click):** When `defaultValue !== undefined` and the stepper is not `disabled`, middle-clicking anywhere on `.cs-number-stepper` resets `value` to `defaultValue` without stealing input focus. In addition, `<NumberStepperValue />` renders as a `<button type="button">` when `defaultValue !== undefined` so primary click (or `Enter`/`Space`) also resets `value`.
+- **`orientation="vertical"` is strictly icon-only:** `<NumberStepperInput />` and `<NumberStepperValue />` are forbidden inside `<NumberStepper orientation="vertical">`. This is enforced both at runtime (both components throw an `Error` if `ctx.orientation === "vertical"`) and statically by the `number-stepper/no-middle-in-vertical` ESLint rule. Place `<NumberStepperIncrement />` first and `<NumberStepperDecrement />` second so visual order and Tab focus order both match top-to-bottom.
+- **Decoupled `<NumberMorph>` composition & `<NumberStepperInput />` Grid overlay:** `cs/svelte/number-stepper` does not import `@number-flow/svelte` directly so apps without that optional peer dependency can use `NumberStepper` without bundle or build errors.
+  - Inside `<NumberStepperValue />`, `.cs-number-stepper-value-text` provides `tabular-nums` alignment and `:active` press squash (`scale: 0.93`).
+  - Inside `<NumberStepperInput />`, `children` (such as `<NumberMorph value={...} willChange />`) renders in a 1:1 CSS Grid overlay (`.cs-number-stepper-input-stage` / `.cs-number-stepper-input-display`, `aria-hidden="true"`) directly over the `<input>`. When not focused, `-`/`+` stepping and middle-click reset animate smoothly via `NumberMorph` while the underlying `<input>` text and caret are transparent. When focused/editing (`data-editing`), the overlay hides immediately (`opacity: 0; visibility: hidden`) so direct typing uses native `<input>` editing without animation. Keep `prefix`/`suffix` on `<NumberStepperInput />` and pass only the raw numeric `value` to `<NumberMorph />`.
+- **`defaultValue` is required for reset (middle-click & value click):** Reset is only enabled when `defaultValue !== undefined` (and the stepper is not `disabled`); without `defaultValue`, `reset()` is a no-op, middle-clicking does nothing, and `<NumberStepperValue />` renders as a non-interactive `<span>`. When `defaultValue` is provided, middle-clicking anywhere on `.cs-number-stepper` resets `value` to `defaultValue` without stealing input focus, and `<NumberStepperValue />` renders as a `<button type="button">` so primary click (or `Enter`/`Space`) also resets `value`.
 - **Repeat-on-hold stepping:** Pressing and holding the primary pointer button (`event.button === 0`) on `<NumberStepperDecrement />` or `<NumberStepperIncrement />` starts auto-stepping after a `400ms` initial delay at `85ms` intervals. Timers cancel on `pointerup`, `pointercancel`, `pointerleave`, or when the button hits `min`/`max` or becomes disabled, and the trailing `click` is consumed to prevent an extra step.
 - **Input editing, clamping & keyboard/a11y:**
   - Root renders `role="group"` with `aria-disabled="true"` when `disabled`.
