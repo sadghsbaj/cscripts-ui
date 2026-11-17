@@ -12,6 +12,7 @@ import { componentLayersConfig } from "./component-layers.ts";
 import { cssSafetyConfigs } from "./css-safety.ts";
 import { kbdConfigs } from "./kbd.ts";
 import { numberMorphConfig } from "./number-morph.ts";
+import { numberStepperConfig } from "./number-stepper.ts";
 import { overlayConfig } from "./overlay.ts";
 import { progressConfig } from "./progress.ts";
 import { scrollAreaConfig } from "./scroll-area.ts";
@@ -46,6 +47,7 @@ export {
     kbdRequireStandalonePropsRule,
 } from "./kbd.ts";
 export { numberMorphConfig, numberMorphNoContinuousInGroupRule } from "./number-morph.ts";
+export { numberStepperConfig, numberStepperNoMiddleInVerticalRule } from "./number-stepper.ts";
 export { overlayConfig, overlayPreferFocusTrapOnContentRule } from "./overlay.ts";
 export { progressConfig, progressNoSegmentsOnBarRule, progressRequireAccessibleLabelRule } from "./progress.ts";
 export {
@@ -88,6 +90,7 @@ export const customRulesConfigs: Linter.Config[] = [
     ...cssSafetyConfigs,
     ...kbdConfigs,
     numberMorphConfig,
+    numberStepperConfig,
     attachmentLayersConfig,
     overlayConfig,
     titleAttributeConfig,
