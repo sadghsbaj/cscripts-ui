@@ -1,11 +1,7 @@
-debuger agent löschen
-scrollbar nicht nutzbar in textarea?
-
 ## Modules
 
-- [x] Textarea (evtl.)
-
-- [x] Toast
+- [ ] Toasts ESLint?
+- [ ] Toast-Animation beim Verschwinden nochmal gucken und optimieren
 - [ ] Modal
 - [ ] Select
 - [ ] Dropdown
@@ -14,17 +10,22 @@ scrollbar nicht nutzbar in textarea?
 - [ ] Chips
 - [ ] Sidebar
 - [ ] Color Picker
-- [ ] - [] autoresize attachment
-- [ x] middlce click attachment
-- [ ] - [ ] Animierte Charts
+- [ ] Autoresize Attachment ESLint?
+- [ ] Animierte Charts
 - [ ] NLP Parser
-- [ ] Zahlen-Animationen
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
 - [ ] Number Stepper (`-` / `+` Control für Zooming und Größenstufen)
+- [x] Textarea (evtl.)
+- [x] Scrollbar nicht nutzbar in Textarea?
+- [x] Toast
+- [x] Autoresize Attachment
+- [x] Middle Click Attachment
+- [x] Zahlen-Animationen
 - [x] Progress
 
 ## Work
 
+- KPI Cards
 - [ ] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
 - [ ] EML-Logik: Signaturen
 - [ ] EML-Wizard
@@ -41,6 +42,7 @@ scrollbar nicht nutzbar in textarea?
 
 ## Done
 
+- [x] Debugger-Agent löschen
 - [x] ESLint-Regeln für `Card`, `Badge`, `Progress`?
 - [x] Usage Guidance zu bestimmten Components noch anlegen
 - [x] Bestehende „1-Language-only“-Stellen auf DE/EN refactoren
