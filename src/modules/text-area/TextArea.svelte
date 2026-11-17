@@ -152,6 +152,22 @@
             }
 
             /* =========================================================
+             * AUTO-RESIZE ATTACHMENT COORDINATION
+             * ========================================================= */
+            &[data-auto-resize] {
+                resize: none;
+                min-width: var(--cs-auto-resize-min-width, 0);
+                min-height: var(
+                    --cs-auto-resize-min-height,
+                    calc(var(--cs-text-area-padding-block) * 2 + var(--cs-auto-resize-min-rows, 2) * 1lh)
+                );
+                max-height: var(
+                    --cs-auto-resize-max-height,
+                    calc(var(--cs-text-area-padding-block) * 2 + var(--cs-auto-resize-max-rows) * 1lh)
+                );
+            }
+
+            /* =========================================================
              * STATES
              * ========================================================= */
             @media (hover: hover) {

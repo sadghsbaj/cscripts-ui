@@ -70,6 +70,13 @@
                 outline: none;
             }
 
+            &[data-auto-resize] {
+                flex: 1 1 auto;
+                width: auto;
+                min-width: var(--cs-auto-resize-min-width, 0);
+                max-width: var(--cs-auto-resize-max-width, 100%);
+            }
+
             &:disabled {
                 --cs-disabled-opacity: 1;
                 color: var(--cs-color-disabled-fg);

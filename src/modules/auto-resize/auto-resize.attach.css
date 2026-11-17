@@ -1,0 +1,22 @@
+@layer attachments {
+    .cs-auto-resize {
+        field-sizing: content;
+        resize: none;
+        min-height: var(
+            --cs-auto-resize-min-height,
+            calc(
+                var(--cs-auto-resize-chrome-block, calc(var(--cs-text-area-padding-block, 0px) * 2)) +
+                    var(--cs-auto-resize-min-rows) * 1lh
+            )
+        );
+        max-height: var(
+            --cs-auto-resize-max-height,
+            calc(
+                var(--cs-auto-resize-chrome-block, calc(var(--cs-text-area-padding-block, 0px) * 2)) +
+                    var(--cs-auto-resize-max-rows) * 1lh
+            )
+        );
+        min-width: var(--cs-auto-resize-min-width);
+        max-width: var(--cs-auto-resize-max-width);
+    }
+}

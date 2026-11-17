@@ -145,6 +145,27 @@ Overridable on `.cs-text-area`:
 </div>
 ```
 
+### Auto-Resizing (with `autoResize`)
+Pair `<TextArea>` with [`autoResize`](../auto-resize/auto-resize.docs.md) from `cs/svelte/auto-resize` for content-driven growth:
+
+```svelte
+<script lang="ts">
+    import { autoResize } from "cs/svelte/auto-resize";
+    import { TextArea } from "cs/svelte/text-area";
+
+    let prompt = $state("");
+</script>
+
+<TextArea
+    variant="elevated"
+    size="md"
+    rows={1}
+    bind:value={prompt}
+    placeholder="Ask anything..."
+    {@attach autoResize({ maxRows: 6 })}
+/>
+```
+
 ## Behavior & Quirks
 - **`$bindable()` pitfalls (`value={fn()}`, `ref={fn()}`):** Never pass a non-bound expression (e.g. `value={getNotes()}`) to `<TextArea />`. Because `value` and `ref` are declared with `$bindable`, passing a plain expression passes `svelte-check` without warning but throws a Svelte 5 runtime error when mutated—even if `onValueChange` is also provided. Use `bind:value={state}` for local `$state`, `bind:value={getter, setter}` for derived/store state, or omit `value` for uncontrolled mode (optionally pairing with `onValueChange`).
 - **Single-Element `box-shadow` Ring Composition:** Because `<textarea>` does not reliably render `::before`/`::after` pseudo-elements across browsers, `TextArea` composites its inset ring and elevation shadow in a single declaration (`box-shadow: var(--cs-text-area-ring-shadow), var(--cs-text-area-shadow)`). Listing `--cs-text-area-ring-shadow` first ensures the `2px` inset ring paints above `--cs-shadow-elevated`. Inactive shadows use `0 0 #0000` (not `none`) so comma-separated `box-shadow` transitions remain valid across states.
@@ -154,4 +175,4 @@ Overridable on `.cs-text-area`:
   - `invalid` sets `aria-invalid="true"` when truthy and is omitted otherwise.
   - `disabled` removes the `<textarea>` from tab order, excludes it from form submission, sets `cursor: default`, and forces `resize: none`.
   - `readonly` keeps the `<textarea>` focusable, text-selectable, and submittable while preventing edits (`cursor: text`).
-- **No Inline Icons, Actions, or Auto-Resizing:** `TextArea` intentionally omits inline icons/actions (which conflict with multi-line line wrapping, scrollbars, and the bottom-right resize handle) and built-in auto-resizing. Compose external controls around `<TextArea />`, and attach auto-resizing behavior externally via `{@attach ...}` or `bind:ref` when needed.
+- **No Inline Icons, Actions, or Auto-Resizing:** `TextArea` intentionally omits inline icons/actions (which conflict with multi-line line wrapping, scrollbars, and the bottom-right resize handle) and built-in auto-resizing. Compose external controls around `<TextArea />`, and attach [`autoResize`](../auto-resize/auto-resize.docs.md) via `{@attach autoResize({ maxRows: 6 })}` when needed.
