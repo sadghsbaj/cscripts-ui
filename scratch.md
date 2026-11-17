@@ -2,15 +2,17 @@
 
 - [x] Textarea (evtl.)
 
-- [ ] Toast
+- [x] Toast
 - [ ] Modal
 - [ ] Select
 - [ ] Dropdown
 - [ ] Combobox
 - [ ] ContextMenu
+- [ ] Chips
 - [ ] Sidebar
 - [ ] Color Picker
 - [ ] - [] autoresize attachment
+- [ x] middlce click attachment
 - [ ] - [ ] Animierte Charts
 - [ ] NLP Parser
 - [ ] Zahlen-Animationen
