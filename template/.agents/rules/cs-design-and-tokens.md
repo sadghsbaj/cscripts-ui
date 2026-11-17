@@ -55,7 +55,7 @@ globs: "**/*.svelte, **/*.css, **/*.html"
     - **Sizing & Fonts:** Standard UI text is `14px–18px` (`12px–13px` sparingly for secondary metadata; never below `12px`). Use `font-sans` everywhere; reserve `font-mono` strictly for code or terminal output.
     - **Optical Alignment:** Use `text-trim` / `text-trim-truncate` only on single-line icon+label controls (never on headings, descriptions, or body copy). Size Lucide icons `1–2px` larger than adjacent text and match `strokeWidth` to weight (`400 -> 2`, `500 -> 2.25`, `600+ -> 2.5`).
     - **Layout & Separator Shortcuts (ESLint-enforced):** Use `flex-center` (not `flex justify-center items-center`), `absolute-center` (not manual 50%/translate centering), and `<span class="dot-sm|dot-md|dot-lg"></span>` instead of unicode dots (`·`, `•`) or hyphens/dashes.
-    - **Microcopy & Layout-Stable Switchers:** Keep button/tab labels to 1–2 concise words (`whitespace-nowrap`). Avoid parenthetical hints `(xyz)`, technical jargon (`JSON`, `LocalStorage`), and redundant view headers. Prevent layout shifts on dynamic switchers (e.g. day/date/mode switchers) via fixed width, `min-width`, or `tabular-nums`.
+    - **Microcopy & Layout-Stable Switchers:** Keep button/tab labels to 1–2 concise words (`whitespace-nowrap`), and keep `<input>` and `<textarea>` placeholders as short as possible (brief 1–3 word hints; no long instructions or parenthetical hints). Avoid parenthetical hints `(xyz)`, technical jargon (`JSON`, `LocalStorage`), and redundant view headers. Prevent layout shifts on dynamic switchers (e.g. day/date/mode switchers) via fixed width, `min-width`, or `tabular-nums`.
   </typography_and_shortcuts>
 
   <ux_and_motion>

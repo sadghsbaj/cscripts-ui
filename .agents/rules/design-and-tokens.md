@@ -52,7 +52,7 @@ globs: "**/src/**, **/playground/**"
     - **Fonts:** Sans-serif default (`Inter` via `cs/vite` font plugin or system sans). Use `monospace` strictly for code/terminal snippets.
     - **`text-trim` & Truncation:** Use `text-trim` / `text-trim-truncate` (clipping X-axis only, never Y-axis) ONLY on isolated single-line control labels paired with icons—never on headings, descriptions, or multi-line body copy.
     - **Icons:** Size `1–2px` larger than adjacent text; match `strokeWidth` to font-weight (`400 -> 2`, `500 -> 2.25`, `600+ -> 2.5`; custom vector controls may use heavier strokes when visually cleaner).
-    - **Copy, Stability & Cursors:** Concise 1–2 word control labels (`whitespace-nowrap`), no parenthetical hints or technical jargon (`IndexedDB`, `JSON`) in UI copy, no hyphens/dashes as separators. Prevent layout shifts on dynamic switchers (e.g. day/date/mode switchers) via fixed width, `min-width`, or `tabular-nums`. Use `cursor: default` on controls; `cursor: pointer` only on `:any-link`.
+    - **Copy, Stability & Cursors:** Concise 1–2 word control labels (`whitespace-nowrap`), keep `<input>` and `<textarea>` placeholders as short as possible (brief 1–3 word hints; no long instructions or parenthetical hints), no parenthetical hints or technical jargon (`IndexedDB`, `JSON`) in UI copy, no hyphens/dashes as separators. Prevent layout shifts on dynamic switchers (e.g. day/date/mode switchers) via fixed width, `min-width`, or `tabular-nums`. Use `cursor: default` on controls; `cursor: pointer` only on `:any-link`.
   </typography_and_icons>
 
   <motion>
