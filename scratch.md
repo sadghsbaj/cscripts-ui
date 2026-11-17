@@ -1,8 +1,5 @@
-- eslint regel nfr card badge progress?
-
 ## Modules
 
-- [ ] Progress
 - [ ] Textarea (evtl.)
 - [ ] Zahlen-Animationen
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
@@ -15,6 +12,8 @@
 - [ ] Sidebar
 - [ ] Animierte Charts
 - [ ] NLP Parser
+- [ ] Number Stepper (`-` / `+` Control für Zooming und Größenstufen)
+- [x] Progress
 
 ## Work
 
@@ -34,6 +33,7 @@
 
 ## Done
 
+- [x] ESLint-Regeln für `Card`, `Badge`, `Progress`?
 - [x] Usage Guidance zu bestimmten Components noch anlegen
 - [x] Bestehende „1-Language-only“-Stellen auf DE/EN refactoren
 - [x] Zentriert-Bug bei `Kbd` fixen (Text-Trim)
