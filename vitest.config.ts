@@ -11,5 +11,10 @@ export default defineConfig({
         environment: "happy-dom",
         include: ["src/**/*.test.ts"],
         restoreMocks: true,
+        server: {
+            deps: {
+                inline: ["number-flow"],
+            },
+        },
     },
 });
