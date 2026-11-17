@@ -59,6 +59,7 @@ globs: "**/src/**, **/playground/**"
     - **Semantic Tokens First:** Default to the predefined semantic duration (`--cs-dur-*`) and easing (`--cs-ease-*`) tokens in `src/css/foundation/motion.css` for animations and transitions so equivalent interactions feel consistent across modules.
     - **Extending vs. Local Timings:** If a new duration, curve, or spring is needed repeatedly across modules, add it to `motion.css`. For specialized, one-off requirements (e.g. custom morph curves, SVG draws, particle bursts), define custom timings or curves locally inside that module rather than adding single-use globals.
     - **Cadence:** High-frequency interactions stay fast and snappy; infrequent actions may be more expressive. Prefer GPU-friendly properties (`transform`, `scale`, `opacity`, `filter`).
+    - **Morphing:** Prefer morphing transitions in previews and multi-state controls (button state transitions, numeric readouts, and single-line text or mixed text-and-number labels) wherever it fits naturally without causing layout glitches or bugs.
   </motion>
 </patterns>
 
