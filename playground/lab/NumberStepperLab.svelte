@@ -1,7 +1,9 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import type { SvelteSet } from "svelte/reactivity";
-    import { ChevronLeft, ChevronRight, Minus, Plus, X, ZoomIn, ZoomOut } from "@lucide/svelte";
+    import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Minus, Plus, X, ZoomIn, ZoomOut } from "@lucide/svelte";
+    import { middleClick } from "cs/svelte/middle-click";
+    import { NumberMorph } from "cs/svelte/number-morph";
 
     interface Props {
         selectMode: boolean;
@@ -14,11 +16,8 @@
     let zoomB = $state(100);
     let zoomD = $state(125);
 
-    let insetB = $state(100);
-    let insetC = $state(80);
-
-    let wellA = $state(50);
-    let wellB = $state(100);
+    let inputWellSoft = $state(100);
+    let inputWellElevated = $state(16);
 
     let sizeXs = $state(50);
     let sizeSm = $state(50);
@@ -27,11 +26,53 @@
     let sizeXl = $state(50);
 
     let cardA = $state(50);
-    let cardB = $state(100);
-    let cardC = $state(50);
+    let cardInput = $state(100);
 
     function step(val: number, delta: number, min = 10, max = 400): number {
         return Math.min(max, Math.max(min, val + delta));
+    }
+
+    function commitInput(
+        event: Event & { currentTarget: HTMLInputElement },
+        current: number,
+        min = 10,
+        max = 400
+    ): number {
+        const cleaned = event.currentTarget.value.replaceAll(/[^0-9-]/g, "");
+        if (!cleaned) {
+            event.currentTarget.value = String(current);
+            return current;
+        }
+        const parsed = Math.trunc(Number(cleaned));
+        if (Number.isNaN(parsed)) {
+            event.currentTarget.value = String(current);
+            return current;
+        }
+        const clamped = Math.min(max, Math.max(min, parsed));
+        event.currentTarget.value = String(clamped);
+        return clamped;
+    }
+
+    function handleInputKeydown(
+        event: KeyboardEvent & { currentTarget: HTMLInputElement },
+        onStep: (delta: number) => void
+    ): void {
+        switch (event.key) {
+            case "ArrowUp": {
+                event.preventDefault();
+                onStep(1);
+                break;
+            }
+            case "ArrowDown": {
+                event.preventDefault();
+                onStep(-1);
+                break;
+            }
+            case "Enter": {
+                event.currentTarget.blur();
+                break;
+            }
+        }
     }
 </script>
 
@@ -66,7 +107,7 @@
 {/snippet}
 
 <div class="w-full max-w-5xl flex flex-col items-center gap-14 py-10">
-    <!-- 1. UNIFIED PILL WITH HAIRLINE DIVIDERS -->
+    <!-- 1. FLAT TRACK WITH HAIRLINE SEPARATORS (BUTTON IN MIDDLE: CLICK = RESET) -->
     <div class="flex-center flex-wrap gap-6">
         {#snippet v1_2()}
             <div class="ns-pill" data-surface="soft" data-size="md">
@@ -74,8 +115,14 @@
                     <Minus class="ns-icon" />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
-                <button type="button" class="ns-pill-val" aria-label="Zurücksetzen" onclick={() => (zoomB = 100)}>
-                    {zoomB}%
+                <button
+                    type="button"
+                    class="ns-pill-val"
+                    aria-label="Zurücksetzen"
+                    onclick={() => (zoomB = 100)}
+                    {@attach middleClick({ onMiddleClick: () => (zoomB = 100) })}
+                >
+                    <NumberMorph class="ns-val-text" value={zoomB} suffix="%" willChange />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
                 <button type="button" class="ns-pill-btn" aria-label="Vergrößern" onclick={() => (zoomB = step(zoomB, 10))}>
@@ -91,8 +138,14 @@
                     <Minus class="ns-icon" />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
-                <button type="button" class="ns-pill-val" aria-label="Zurücksetzen" onclick={() => (zoomD = 100)}>
-                    {zoomD}%
+                <button
+                    type="button"
+                    class="ns-pill-val"
+                    aria-label="Zurücksetzen"
+                    onclick={() => (zoomD = 100)}
+                    {@attach middleClick({ onMiddleClick: () => (zoomD = 100) })}
+                >
+                    <NumberMorph class="ns-val-text" value={zoomD} suffix="%" willChange />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
                 <button type="button" class="ns-pill-btn" aria-label="Vergrößern" onclick={() => (zoomD = step(zoomD, 25))}>
@@ -103,73 +156,87 @@
         {@render pickable("1.4-pill-elevated-hairline", v1_4)}
     </div>
 
-    <!-- 2. UNIFIED TRACK WITH CONCENTRIC INSET CIRCULAR BUTTONS -->
-    <div class="flex-center flex-wrap gap-6">
-        {#snippet v2_2()}
-            <div class="ns-track" data-surface="soft" data-btn="elevated">
-                <button type="button" class="ns-circle-inset" aria-label="Verkleinern" onclick={() => (insetB = step(insetB, -10))}>
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-track-val" aria-label="Zurücksetzen" onclick={() => (insetB = 100)}>
-                    {insetB}%
-                </button>
-                <button type="button" class="ns-circle-inset" aria-label="Vergrößern" onclick={() => (insetB = step(insetB, 10))}>
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("2.2-track-soft-btn-elevated", v2_2)}
-
-        {#snippet v2_3()}
-            <div class="ns-track" data-surface="elevated" data-btn="soft">
-                <button type="button" class="ns-circle-inset" aria-label="Verkleinern" onclick={() => (insetC = step(insetC, -10))}>
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-track-val" aria-label="Zurücksetzen" onclick={() => (insetC = 80)}>
-                    {insetC}%
-                </button>
-                <button type="button" class="ns-circle-inset" aria-label="Vergrößern" onclick={() => (insetC = step(insetC, 10))}>
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("2.3-track-elevated-btn-soft", v2_3)}
-    </div>
-
-    <!-- 3. UNIFIED PILL WITH INSET CENTER VALUE PILL / WELL -->
+    <!-- 2. TRACK WITH HIGHLIGHTED CENTER WELL (INPUT IN MIDDLE: CLICK = TYPE, MIDDLE-CLICK = RESET) -->
     <div class="flex-center flex-wrap gap-6">
         {#snippet v3_1()}
             <div class="ns-center-well" data-outer="soft" data-inner="elevated">
-                <button type="button" class="ns-well-btn" aria-label="Verkleinern" onclick={() => (wellA = step(wellA, -10))}>
+                <button
+                    type="button"
+                    class="ns-well-btn"
+                    aria-label="Verkleinern"
+                    onclick={() => (inputWellSoft = step(inputWellSoft, -10))}
+                >
                     <Minus class="ns-icon" />
                 </button>
-                <button type="button" class="ns-well-pill" aria-label="Zurücksetzen" onclick={() => (wellA = 50)}>
-                    {wellA}%
-                </button>
-                <button type="button" class="ns-well-btn" aria-label="Vergrößern" onclick={() => (wellA = step(wellA, 10))}>
+                <label
+                    class="ns-well-input-shell"
+                    {@attach middleClick({ onMiddleClick: () => (inputWellSoft = 100) })}
+                >
+                    <input
+                        type="text"
+                        inputmode="numeric"
+                        aria-label="Zoom in Prozent"
+                        class="ns-well-input"
+                        value={inputWellSoft}
+                        onfocus={(e) => e.currentTarget.select()}
+                        onchange={(e) => (inputWellSoft = commitInput(e, inputWellSoft, 10, 400))}
+                        onkeydown={(e) => handleInputKeydown(e, (dir) => (inputWellSoft = step(inputWellSoft, dir * 10)))}
+                    />
+                    <span class="ns-input-unit">%</span>
+                </label>
+                <button
+                    type="button"
+                    class="ns-well-btn"
+                    aria-label="Vergrößern"
+                    onclick={() => (inputWellSoft = step(inputWellSoft, 10))}
+                >
                     <Plus class="ns-icon" />
                 </button>
             </div>
         {/snippet}
-        {@render pickable("3.1-well-outer-soft-inner-elevated", v3_1)}
+        {@render pickable("3.1-well-outer-soft-inner-elevated-input", v3_1)}
 
         {#snippet v3_2()}
             <div class="ns-center-well" data-outer="elevated" data-inner="soft">
-                <button type="button" class="ns-well-btn" aria-label="Verkleinern" onclick={() => (wellB = step(wellB, -10))}>
+                <button
+                    type="button"
+                    class="ns-well-btn"
+                    aria-label="Verkleinern"
+                    onclick={() => (inputWellElevated = step(inputWellElevated, -1, 6, 96))}
+                >
                     <Minus class="ns-icon" />
                 </button>
-                <button type="button" class="ns-well-pill" aria-label="Zurücksetzen" onclick={() => (wellB = 100)}>
-                    {wellB}%
-                </button>
-                <button type="button" class="ns-well-btn" aria-label="Vergrößern" onclick={() => (wellB = step(wellB, 10))}>
+                <label
+                    class="ns-well-input-shell"
+                    {@attach middleClick({ onMiddleClick: () => (inputWellElevated = 16) })}
+                >
+                    <input
+                        type="text"
+                        inputmode="numeric"
+                        aria-label="Schriftgröße in Pixel"
+                        class="ns-well-input ns-well-input-narrow"
+                        value={inputWellElevated}
+                        onfocus={(e) => e.currentTarget.select()}
+                        onchange={(e) => (inputWellElevated = commitInput(e, inputWellElevated, 6, 96))}
+                        onkeydown={(e) =>
+                            handleInputKeydown(e, (dir) => (inputWellElevated = step(inputWellElevated, dir, 6, 96)))}
+                    />
+                    <span class="ns-input-unit">px</span>
+                </label>
+                <button
+                    type="button"
+                    class="ns-well-btn"
+                    aria-label="Vergrößern"
+                    onclick={() => (inputWellElevated = step(inputWellElevated, 1, 6, 96))}
+                >
                     <Plus class="ns-icon" />
                 </button>
             </div>
         {/snippet}
-        {@render pickable("3.2-well-outer-elevated-inner-soft", v3_2)}
+        {@render pickable("3.2-well-outer-elevated-inner-soft-input", v3_2)}
     </div>
 
-    <!-- 4. WITHOUT NUMBER IN THE MIDDLE (COMPACT STEPPER / ZOOM PAIRS) -->
+    <!-- 3. ICON-ONLY PAIRS (FLAT TRACK WITH HAIRLINE SEPARATOR) -->
     <div class="flex-center flex-wrap gap-6">
         {#snippet v7_1()}
             <div class="ns-pill" data-surface="soft" data-size="md">
@@ -196,18 +263,6 @@
             </div>
         {/snippet}
         {@render pickable("7.2-pair-pill-elevated-hairline", v7_2)}
-
-        {#snippet v7_5()}
-            <div class="ns-track ns-track-pair" data-surface="soft" data-btn="elevated">
-                <button type="button" class="ns-circle-inset" aria-label="Verkleinern">
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-circle-inset" aria-label="Vergrößern">
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("7.5-pair-track-soft-inset-circles", v7_5)}
 
         {#snippet v7_6()}
             <div class="ns-pill" data-surface="elevated" data-size="md">
@@ -236,7 +291,66 @@
         {@render pickable("7.7-pair-chevrons-soft", v7_7)}
     </div>
 
-    <!-- 5. SIZE SCALE (XS 28PX .. XL 44PX) -->
+    <!-- 3B. VERTICAL: ICON-ONLY PAIRS & VERTICAL MIDDLE-VALUE EXPERIMENTS -->
+    <div class="flex-center flex-wrap gap-7">
+        <!-- Vertical Icon-Only: Soft +/- -->
+        {#snippet vv_1()}
+            <div class="ns-pill-v" data-surface="soft">
+                <button type="button" class="ns-pill-v-btn" aria-label="Vergrößern">
+                    <Plus class="ns-icon" />
+                </button>
+                <span class="ns-sep-v" aria-hidden="true"></span>
+                <button type="button" class="ns-pill-v-btn" aria-label="Verkleinern">
+                    <Minus class="ns-icon" />
+                </button>
+            </div>
+        {/snippet}
+        {@render pickable("vert.1-pair-soft-plus-minus", vv_1)}
+
+        <!-- Vertical Icon-Only: Elevated +/- -->
+        {#snippet vv_2()}
+            <div class="ns-pill-v" data-surface="elevated">
+                <button type="button" class="ns-pill-v-btn" aria-label="Vergrößern">
+                    <Plus class="ns-icon" />
+                </button>
+                <span class="ns-sep-v" aria-hidden="true"></span>
+                <button type="button" class="ns-pill-v-btn" aria-label="Verkleinern">
+                    <Minus class="ns-icon" />
+                </button>
+            </div>
+        {/snippet}
+        {@render pickable("vert.2-pair-elevated-plus-minus", vv_2)}
+
+        <!-- Vertical Icon-Only: Elevated ZoomIn/ZoomOut -->
+        {#snippet vv_3()}
+            <div class="ns-pill-v" data-surface="elevated">
+                <button type="button" class="ns-pill-v-btn" aria-label="Hineinzoomen">
+                    <ZoomIn class="ns-icon" />
+                </button>
+                <span class="ns-sep-v" aria-hidden="true"></span>
+                <button type="button" class="ns-pill-v-btn" aria-label="Herauszoomen">
+                    <ZoomOut class="ns-icon" />
+                </button>
+            </div>
+        {/snippet}
+        {@render pickable("vert.3-pair-elevated-zoom-icons", vv_3)}
+
+        <!-- Vertical Icon-Only: Soft ChevronUp/ChevronDown -->
+        {#snippet vv_4()}
+            <div class="ns-pill-v" data-surface="soft">
+                <button type="button" class="ns-pill-v-btn" aria-label="Nach oben">
+                    <ChevronUp class="ns-icon" />
+                </button>
+                <span class="ns-sep-v" aria-hidden="true"></span>
+                <button type="button" class="ns-pill-v-btn" aria-label="Nach unten">
+                    <ChevronDown class="ns-icon" />
+                </button>
+            </div>
+        {/snippet}
+        {@render pickable("vert.4-pair-soft-chevrons", vv_4)}
+    </div>
+
+    <!-- 4. SIZE SCALE (XS 28PX .. XL 44PX) -->
     <div class="flex-center flex-wrap gap-5">
         {#snippet v9_1()}
             <div class="ns-pill" data-surface="soft" data-size="xs">
@@ -244,8 +358,14 @@
                     <Minus class="ns-icon" />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
-                <button type="button" class="ns-pill-val" aria-label="Zurücksetzen" onclick={() => (sizeXs = 50)}>
-                    {sizeXs}%
+                <button
+                    type="button"
+                    class="ns-pill-val"
+                    aria-label="Zurücksetzen"
+                    onclick={() => (sizeXs = 50)}
+                    {@attach middleClick({ onMiddleClick: () => (sizeXs = 50) })}
+                >
+                    <span class="ns-val-text">{sizeXs}%</span>
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
                 <button type="button" class="ns-pill-btn" aria-label="Vergrößern" onclick={() => (sizeXs = step(sizeXs, 10))}>
@@ -261,8 +381,14 @@
                     <Minus class="ns-icon" />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
-                <button type="button" class="ns-pill-val" aria-label="Zurücksetzen" onclick={() => (sizeSm = 50)}>
-                    {sizeSm}%
+                <button
+                    type="button"
+                    class="ns-pill-val"
+                    aria-label="Zurücksetzen"
+                    onclick={() => (sizeSm = 50)}
+                    {@attach middleClick({ onMiddleClick: () => (sizeSm = 50) })}
+                >
+                    <span class="ns-val-text">{sizeSm}%</span>
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
                 <button type="button" class="ns-pill-btn" aria-label="Vergrößern" onclick={() => (sizeSm = step(sizeSm, 10))}>
@@ -278,8 +404,14 @@
                     <Minus class="ns-icon" />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
-                <button type="button" class="ns-pill-val" aria-label="Zurücksetzen" onclick={() => (sizeMd = 50)}>
-                    {sizeMd}%
+                <button
+                    type="button"
+                    class="ns-pill-val"
+                    aria-label="Zurücksetzen"
+                    onclick={() => (sizeMd = 50)}
+                    {@attach middleClick({ onMiddleClick: () => (sizeMd = 50) })}
+                >
+                    <span class="ns-val-text">{sizeMd}%</span>
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
                 <button type="button" class="ns-pill-btn" aria-label="Vergrößern" onclick={() => (sizeMd = step(sizeMd, 10))}>
@@ -295,8 +427,14 @@
                     <Minus class="ns-icon" />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
-                <button type="button" class="ns-pill-val" aria-label="Zurücksetzen" onclick={() => (sizeLg = 50)}>
-                    {sizeLg}%
+                <button
+                    type="button"
+                    class="ns-pill-val"
+                    aria-label="Zurücksetzen"
+                    onclick={() => (sizeLg = 50)}
+                    {@attach middleClick({ onMiddleClick: () => (sizeLg = 50) })}
+                >
+                    <span class="ns-val-text">{sizeLg}%</span>
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
                 <button type="button" class="ns-pill-btn" aria-label="Vergrößern" onclick={() => (sizeLg = step(sizeLg, 10))}>
@@ -312,8 +450,14 @@
                     <Minus class="ns-icon" />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
-                <button type="button" class="ns-pill-val" aria-label="Zurücksetzen" onclick={() => (sizeXl = 50)}>
-                    {sizeXl}%
+                <button
+                    type="button"
+                    class="ns-pill-val"
+                    aria-label="Zurücksetzen"
+                    onclick={() => (sizeXl = 50)}
+                    {@attach middleClick({ onMiddleClick: () => (sizeXl = 50) })}
+                >
+                    <span class="ns-val-text">{sizeXl}%</span>
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
                 <button type="button" class="ns-pill-btn" aria-label="Vergrößern" onclick={() => (sizeXl = step(sizeXl, 10))}>
@@ -324,7 +468,7 @@
         {@render pickable("9.5-size-xl", v9_5)}
     </div>
 
-    <!-- 6. ON ELEVATED CARD SURFACE (HOW THEY SIT INSIDE CARDS/TOOLBARS) -->
+    <!-- 5. ON ELEVATED CARD SURFACE (HOW THEY SIT INSIDE CARDS/TOOLBARS) -->
     <div class="w-full bg-elevated shadow-elevated rounded-3xl squircle p-8 flex-center flex-wrap gap-7">
         {#snippet v11_1()}
             <div class="ns-pill" data-surface="soft" data-size="md">
@@ -332,8 +476,14 @@
                     <Minus class="ns-icon" />
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
-                <button type="button" class="ns-pill-val" aria-label="Zurücksetzen" onclick={() => (cardA = 50)}>
-                    {cardA}%
+                <button
+                    type="button"
+                    class="ns-pill-val"
+                    aria-label="Zurücksetzen"
+                    onclick={() => (cardA = 50)}
+                    {@attach middleClick({ onMiddleClick: () => (cardA = 50) })}
+                >
+                    <span class="ns-val-text">{cardA}%</span>
                 </button>
                 <span class="ns-sep" aria-hidden="true"></span>
                 <button type="button" class="ns-pill-btn" aria-label="Vergrößern" onclick={() => (cardA = step(cardA, 10))}>
@@ -343,35 +493,43 @@
         {/snippet}
         {@render pickable("11.1-card-pill-soft", v11_1)}
 
-        {#snippet v11_2()}
-            <div class="ns-track" data-surface="soft" data-btn="elevated">
-                <button type="button" class="ns-circle-inset" aria-label="Verkleinern" onclick={() => (cardB = step(cardB, -10))}>
-                    <Minus class="ns-icon" />
-                </button>
-                <button type="button" class="ns-track-val" aria-label="Zurücksetzen" onclick={() => (cardB = 100)}>
-                    {cardB}%
-                </button>
-                <button type="button" class="ns-circle-inset" aria-label="Vergrößern" onclick={() => (cardB = step(cardB, 10))}>
-                    <Plus class="ns-icon" />
-                </button>
-            </div>
-        {/snippet}
-        {@render pickable("11.2-card-track-inset-circles", v11_2)}
-
-        {#snippet v11_3()}
+        {#snippet v11_4()}
             <div class="ns-center-well" data-outer="soft" data-inner="elevated">
-                <button type="button" class="ns-well-btn" aria-label="Verkleinern" onclick={() => (cardC = step(cardC, -10))}>
+                <button
+                    type="button"
+                    class="ns-well-btn"
+                    aria-label="Verkleinern"
+                    onclick={() => (cardInput = step(cardInput, -10))}
+                >
                     <Minus class="ns-icon" />
                 </button>
-                <button type="button" class="ns-well-pill" aria-label="Zurücksetzen" onclick={() => (cardC = 50)}>
-                    {cardC}%
-                </button>
-                <button type="button" class="ns-well-btn" aria-label="Vergrößern" onclick={() => (cardC = step(cardC, 10))}>
+                <label
+                    class="ns-well-input-shell"
+                    {@attach middleClick({ onMiddleClick: () => (cardInput = 100) })}
+                >
+                    <input
+                        type="text"
+                        inputmode="numeric"
+                        aria-label="Zoom in Prozent"
+                        class="ns-well-input"
+                        value={cardInput}
+                        onfocus={(e) => e.currentTarget.select()}
+                        onchange={(e) => (cardInput = commitInput(e, cardInput, 10, 400))}
+                        onkeydown={(e) => handleInputKeydown(e, (dir) => (cardInput = step(cardInput, dir * 10)))}
+                    />
+                    <span class="ns-input-unit">%</span>
+                </label>
+                <button
+                    type="button"
+                    class="ns-well-btn"
+                    aria-label="Vergrößern"
+                    onclick={() => (cardInput = step(cardInput, 10))}
+                >
                     <Plus class="ns-icon" />
                 </button>
             </div>
         {/snippet}
-        {@render pickable("11.3-card-center-well", v11_3)}
+        {@render pickable("11.4-card-center-input", v11_4)}
     </div>
 </div>
 
@@ -455,6 +613,7 @@
         stroke-width: 2.35;
         pointer-events: none;
         flex-shrink: 0;
+        will-change: scale;
         transition: scale var(--cs-dur-effect) var(--cs-ease-effect);
     }
 
@@ -470,7 +629,7 @@
     }
 
     /* =========================================================================
-     * 1. UNIFIED PILL (HORIZONTAL)
+     * 1. FLAT TRACK WITH HAIRLINE SEPARATORS
      * ========================================================================= */
     .ns-pill {
         --ns-h: 36px;
@@ -494,10 +653,14 @@
         border-radius: calc(var(--ns-h) / 2);
         corner-shape: var(--cs-squircle-soft);
         box-shadow: var(--ns-shadow);
+        user-select: none;
 
         &[data-surface="elevated"] {
             --ns-bg: var(--cs-color-elevated);
-            --ns-hover: var(--cs-color-base-soft);
+            --ns-hover: light-dark(
+                color-mix(in oklab, var(--cs-color-base-900) 3%, transparent),
+                var(--cs-color-base-soft)
+            );
             --ns-shadow: var(--cs-shadow-elevated);
         }
 
@@ -547,6 +710,7 @@
         color: var(--ns-fg);
         background: transparent;
         border-radius: 0;
+        corner-shape: var(--cs-squircle-soft);
         transition:
             background-color var(--cs-dur-effect) var(--cs-ease-effect),
             color var(--cs-dur-effect) var(--cs-ease-effect);
@@ -561,6 +725,10 @@
             border-bottom-right-radius: calc(var(--ns-h) / 2);
         }
 
+        &:focus-visible {
+            z-index: 2;
+        }
+
         @media (hover: hover) {
             &:hover {
                 color: var(--ns-fg-strong);
@@ -570,6 +738,7 @@
     }
 
     .ns-pill-val {
+        position: relative;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -577,15 +746,31 @@
         padding-inline: 8px;
         color: var(--ns-fg-strong);
         background: transparent;
+        font-variant-numeric: tabular-nums;
         transition:
             background-color var(--cs-dur-effect) var(--cs-ease-effect),
             color var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &:focus-visible {
+            z-index: 2;
+        }
 
         @media (hover: hover) {
             &:hover {
                 background-color: var(--ns-hover);
             }
         }
+
+        &:active :global(.ns-val-text) {
+            scale: 0.93;
+            transition: scale var(--cs-dur-press) var(--cs-ease-press);
+        }
+    }
+
+    :global(.ns-val-text) {
+        will-change: scale;
+        scale: 1;
+        transition: scale var(--cs-dur-squash) var(--cs-ease-squash);
     }
 
     .ns-sep {
@@ -613,97 +798,7 @@
     }
 
     /* =========================================================================
-     * 2. UNIFIED TRACK WITH INSET CIRCULAR BUTTONS
-     * ========================================================================= */
-    .ns-track {
-        --ns-h: 36px;
-        --ns-pad: 3px;
-        --ns-circle: calc(var(--ns-h) - var(--ns-pad) * 2);
-
-        display: inline-flex;
-        align-items: center;
-        height: var(--ns-h);
-        padding: var(--ns-pad);
-        font-size: var(--cs-text-sm);
-        font-weight: 600;
-        border-radius: calc(var(--ns-h) / 2);
-        corner-shape: var(--cs-squircle-soft);
-
-        &[data-surface="soft"] {
-            background-color: var(--cs-color-base-soft);
-        }
-
-        &[data-surface="elevated"] {
-            background-color: var(--cs-color-elevated);
-            box-shadow: var(--cs-shadow-elevated);
-        }
-
-        &.ns-track-pair {
-            gap: 3px;
-        }
-    }
-
-    .ns-circle-inset {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: var(--ns-circle, 30px);
-        height: var(--ns-circle, 30px);
-        border-radius: 50%;
-        color: var(--cs-color-text-main);
-        background-color: transparent;
-        transition:
-            background-color var(--cs-dur-effect) var(--cs-ease-effect),
-            color var(--cs-dur-effect) var(--cs-ease-effect),
-            box-shadow var(--cs-dur-effect) var(--cs-ease-effect),
-            scale var(--cs-dur-squash) var(--cs-ease-squash);
-
-        &:active {
-            scale: 0.93;
-            transition: scale var(--cs-dur-press) var(--cs-ease-press);
-        }
-
-        [data-btn="elevated"] & {
-            color: var(--cs-color-text-strong);
-            background-color: light-dark(white, color-mix(in oklab, var(--cs-color-base-100) 14%, transparent));
-            box-shadow: light-dark(var(--cs-shadow-xs), none);
-
-            @media (hover: hover) {
-                &:hover {
-                    background-color: light-dark(white, color-mix(in oklab, var(--cs-color-base-100) 20%, transparent));
-                    box-shadow: light-dark(var(--cs-shadow-sm), none);
-                }
-            }
-        }
-
-        [data-btn="soft"] & {
-            color: var(--cs-color-text-main);
-            background-color: var(--cs-color-base-soft);
-
-            @media (hover: hover) {
-                &:hover {
-                    color: var(--cs-color-text-strong);
-                    background-color: var(--cs-color-base-soft-hover);
-                }
-            }
-        }
-    }
-
-    .ns-track-val {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 52px;
-        height: 100%;
-        padding-inline: 8px;
-        color: var(--cs-color-text-strong);
-        border-radius: 999px;
-        transition: color var(--cs-dur-effect) var(--cs-ease-effect);
-    }
-
-    /* =========================================================================
-     * 3. UNIFIED PILL WITH INSET CENTER VALUE PILL / WELL
+     * 2. TRACK WITH HIGHLIGHTED CENTER WELL (EDITABLE INPUT)
      * ========================================================================= */
     .ns-center-well {
         --ns-h: 36px;
@@ -748,27 +843,167 @@
         }
     }
 
-    .ns-well-pill {
+    .ns-well-input-shell {
+        position: relative;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 54px;
+        gap: 1px;
+        min-width: 58px;
         height: calc(var(--ns-h) - var(--ns-pad) * 2);
-        padding-inline: 10px;
+        padding-inline: 8px;
         color: var(--cs-color-text-strong);
         border-radius: calc((var(--ns-h) - var(--ns-pad) * 2) / 2);
         corner-shape: var(--cs-squircle-soft);
+        cursor: text;
         transition:
             background-color var(--cs-dur-effect) var(--cs-ease-effect),
-            box-shadow var(--cs-dur-effect) var(--cs-ease-effect);
+            box-shadow var(--cs-dur-120) var(--cs-ease-quart-out);
 
         [data-inner="elevated"] & {
             background-color: light-dark(white, color-mix(in oklab, var(--cs-color-base-100) 14%, transparent));
             box-shadow: light-dark(var(--cs-shadow-xs), none);
+
+            @media (hover: hover) {
+                &:hover:not(:focus-within) {
+                    background-color: light-dark(white, color-mix(in oklab, var(--cs-color-base-100) 20%, transparent));
+                }
+            }
         }
 
         [data-inner="soft"] & {
             background-color: var(--cs-color-base-soft);
+
+            @media (hover: hover) {
+                &:hover:not(:focus-within) {
+                    background-color: var(--cs-color-base-soft-hover);
+                }
+            }
         }
+
+        &:focus-within {
+            box-shadow: inset 0 0 0 2px var(--cs-color-accent-solid);
+        }
+    }
+
+    .ns-well-input {
+        width: 3ch;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        font-variant-numeric: tabular-nums;
+        color: inherit;
+        text-align: right;
+        background: transparent;
+        border: none;
+        outline: none;
+        caret-color: var(--cs-color-accent-solid);
+
+        &.ns-well-input-narrow {
+            width: 2.2ch;
+        }
+    }
+
+    .ns-input-unit {
+        color: var(--cs-color-text-weak);
+        font-weight: 500;
+        user-select: none;
+        pointer-events: none;
+    }
+
+    /* =========================================================================
+     * 3. VERTICAL TRACKS (ICON-ONLY & VERTICAL VALUE EXPERIMENTS)
+     * ========================================================================= */
+    .ns-pill-v {
+        --ns-w: 36px;
+        --ns-bg: var(--cs-color-base-soft);
+        --ns-hover: var(--cs-color-base-soft-hover);
+        --ns-fg: var(--cs-color-text-main);
+        --ns-fg-strong: var(--cs-color-text-strong);
+        --ns-shadow: none;
+        --ns-sep-color: color-mix(in oklab, var(--cs-color-text-main) 16%, transparent);
+
+        position: relative;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: var(--ns-w);
+        font-size: var(--cs-text-xs);
+        font-weight: 600;
+        background-color: var(--ns-bg);
+        border-radius: calc(var(--ns-w) / 2);
+        corner-shape: var(--cs-squircle-soft);
+        box-shadow: var(--ns-shadow);
+        user-select: none;
+
+        &[data-surface="elevated"] {
+            --ns-bg: var(--cs-color-elevated);
+            --ns-hover: light-dark(
+                color-mix(in oklab, var(--cs-color-base-900) 3%, transparent),
+                var(--cs-color-base-soft)
+            );
+            --ns-shadow: var(--cs-shadow-elevated);
+        }
+    }
+
+    .ns-pill-v-btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        aspect-ratio: 1;
+        color: var(--ns-fg);
+        background: transparent;
+        border-radius: 0;
+        corner-shape: var(--cs-squircle-soft);
+        transition:
+            background-color var(--cs-dur-effect) var(--cs-ease-effect),
+            color var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &:first-child {
+            border-top-left-radius: calc(var(--ns-w) / 2);
+            border-top-right-radius: calc(var(--ns-w) / 2);
+        }
+
+        &:last-child {
+            border-bottom-left-radius: calc(var(--ns-w) / 2);
+            border-bottom-right-radius: calc(var(--ns-w) / 2);
+        }
+
+        &:focus-visible {
+            z-index: 2;
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--ns-fg-strong);
+                background-color: var(--ns-hover);
+            }
+        }
+    }
+
+    .ns-sep-v {
+        position: relative;
+        height: 0;
+        align-self: stretch;
+        pointer-events: none;
+        z-index: 1;
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset-inline: 24%;
+            top: 0;
+            height: 1px;
+            translate: 0 -50%;
+            background-color: var(--ns-sep-color);
+            transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+        }
+    }
+
+    .ns-pill-v > button:is(:hover, :active, :focus-visible) + .ns-sep-v::before,
+    .ns-sep-v:has(+ button:is(:hover, :active, :focus-visible))::before {
+        opacity: 0;
     }
 </style>
