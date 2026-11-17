@@ -11,6 +11,7 @@ import { closeButtonConfig } from "./close-button.ts";
 import { componentLayersConfig } from "./component-layers.ts";
 import { cssSafetyConfigs } from "./css-safety.ts";
 import { kbdConfigs } from "./kbd.ts";
+import { numberMorphConfig } from "./number-morph.ts";
 import { overlayConfig } from "./overlay.ts";
 import { progressConfig } from "./progress.ts";
 import { scrollAreaConfig } from "./scroll-area.ts";
@@ -44,6 +45,7 @@ export {
     kbdPreferDefaultSeparatorRule,
     kbdRequireStandalonePropsRule,
 } from "./kbd.ts";
+export { numberMorphConfig, numberMorphNoContinuousInGroupRule } from "./number-morph.ts";
 export { overlayConfig, overlayPreferFocusTrapOnContentRule } from "./overlay.ts";
 export { progressConfig, progressNoSegmentsOnBarRule, progressRequireAccessibleLabelRule } from "./progress.ts";
 export {
@@ -85,6 +87,7 @@ export const customRulesConfigs: Linter.Config[] = [
     componentLayersConfig,
     ...cssSafetyConfigs,
     ...kbdConfigs,
+    numberMorphConfig,
     attachmentLayersConfig,
     overlayConfig,
     titleAttributeConfig,
