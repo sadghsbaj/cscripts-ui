@@ -1,6 +1,17 @@
+## UI & Polish
+
+- [ ] Kbd: Enter-Symbol rutscht in zwei Zeilen
+- [ ] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
+- [ ] Toast: Swipe-to-Dismiss noch minimal hakelig und nicht optimal smooth
+- [x] Stepper (vertical): Unteres Element bekommt zuerst Fokus – fixen
+- [x] Stepper: Immer morphen außer im Input
+- [x] Separatoren sind nicht richtig positioniert, sondern immer am Ende des Elements statt genau zentriert zwischen zwei
+- [x] Input-Zahl springt ein Pixel hoch beim Fokussieren (Alignment prüfen)
+- [x] Sticky Hover auf Mobile lässt Separatoren durch Hover-Auslösung sticky verschwinden (darf auf Mobile nicht passieren); dafür fehlt Interaktionsdarstellung bei `:active` auf Mobile (wie bei Button den Hover-Effekt auf `:active` spiegeln)
+- [x] Umspringen teils bei Ziffernanzahl-Wechsel (kann man das von außen sauber steuern?)
+
 ## Modules
 
-- [x] Toasts ESLint?
 - [ ] Toast-Animation beim Verschwinden nochmal gucken und optimieren
 - [ ] Modal
 - [ ] Select
@@ -10,11 +21,12 @@
 - [ ] Chips
 - [ ] Sidebar
 - [ ] Color Picker
-- [x] Autoresize Attachment ESLint?
 - [ ] Animierte Charts
 - [ ] NLP Parser
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
 - [ ] Number Stepper (`-` / `+` Control für Zooming und Größenstufen)
+- [x] Toasts ESLint?
+- [x] Autoresize Attachment ESLint?
 - [x] Textarea (evtl.)
 - [x] Scrollbar nicht nutzbar in Textarea?
 - [x] Toast
