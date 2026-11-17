@@ -1,9 +1,9 @@
 ## UI & Polish
 
-- [ x] Kbd: Enter-Symbol rutscht in zwei Zeilen
-- [x ] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
-- [x ] Toast: Swipe-to-Dismiss noch minimal hakelig und nicht optimal smooth
-- [x ] Toast-Animation beim Verschwinden nochmal gucken und optimieren
+- [x] Kbd: Enter-Symbol rutscht in zwei Zeilen
+- [x] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
+- [x] Toast: Swipe-to-Dismiss noch minimal hakelig und nicht optimal smooth
+- [x] Toast-Animation beim Verschwinden nochmal gucken und optimieren
 - [x] Stepper (vertical): Unteres Element bekommt zuerst Fokus – fixen
 - [x] Stepper: Immer morphen außer im Input
 - [x] Separatoren sind nicht richtig positioniert, sondern immer am Ende des Elements statt genau zentriert zwischen zwei
@@ -24,7 +24,7 @@
 - [ ] Animierte Charts
 - [ ] NLP Parser
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
-- [ ] Number Stepper (`-` / `+` Control für Zooming und Größenstufen)
+- [x] Number Stepper (`-` / `+` Control für Zooming und Größenstufen)
 - [x] Toasts ESLint?
 - [x] Autoresize Attachment ESLint?
 - [x] Textarea (evtl.)
