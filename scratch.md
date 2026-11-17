@@ -1,6 +1,8 @@
+- eslint regel nfr card badge progress?
+
 ## Modules
 
-- [ ] Progressbar / Indicator
+- [ ] Progress
 - [ ] Textarea (evtl.)
 - [ ] Zahlen-Animationen
 - [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
