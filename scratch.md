@@ -1,8 +1,9 @@
 ## UI & Polish
 
-- [ ] Kbd: Enter-Symbol rutscht in zwei Zeilen
-- [ ] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
-- [ ] Toast: Swipe-to-Dismiss noch minimal hakelig und nicht optimal smooth
+- [ x] Kbd: Enter-Symbol rutscht in zwei Zeilen
+- [x ] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
+- [x ] Toast: Swipe-to-Dismiss noch minimal hakelig und nicht optimal smooth
+- [x ] Toast-Animation beim Verschwinden nochmal gucken und optimieren
 - [x] Stepper (vertical): Unteres Element bekommt zuerst Fokus – fixen
 - [x] Stepper: Immer morphen außer im Input
 - [x] Separatoren sind nicht richtig positioniert, sondern immer am Ende des Elements statt genau zentriert zwischen zwei
@@ -12,7 +13,6 @@
 
 ## Modules
 
-- [ ] Toast-Animation beim Verschwinden nochmal gucken und optimieren
 - [ ] Modal
 - [ ] Select
 - [ ] Dropdown
