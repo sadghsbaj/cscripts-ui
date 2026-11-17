@@ -125,7 +125,7 @@
             text-box-edge: cap alphabetic;
             text-box: trim-both cap alphabetic;
 
-            &:has(> *) {
+            &:has(> :global(*)) {
                 display: contents;
             }
         }

@@ -9,7 +9,7 @@
     import { HitArea } from "cs/svelte/hit-area";
     import { Kbd, KbdGroup, KbdSeparator } from "cs/svelte/kbd";
     import { ToggleButton, ToggleButtonIcon } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
+    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
     import { Tooltip, tooltip, TooltipIcon, TooltipText } from "cs/svelte/tooltip";
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
@@ -154,8 +154,6 @@ ${closeScript}
                 <HitArea size="md" />
             </ToggleButton>
 
-            <ToggleButtonGroupSeparator />
-
             <ToggleButton
                 variant="soft"
                 color="accent"
@@ -168,8 +166,6 @@ ${closeScript}
                 <ToggleButtonIcon icon={Italic} />
                 <HitArea size="md" />
             </ToggleButton>
-
-            <ToggleButtonGroupSeparator />
 
             <ToggleButton
                 variant="soft"

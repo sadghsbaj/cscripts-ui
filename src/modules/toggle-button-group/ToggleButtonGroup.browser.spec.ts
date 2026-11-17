@@ -12,20 +12,22 @@ test.describe("ToggleButtonGroup focus ring stacking in Chromium", () => {
 
         const day = group.locator("button.cs-toggle-button", { hasText: "Day" });
         const week = group.locator("button.cs-toggle-button", { hasText: "Week" });
-        const separator = group.locator(".cs-toggle-button-group-separator").first();
 
         // Click "Week" so a later-DOM sibling is pressed while "Day" is unpressed.
         await week.click();
         await expect(week).toHaveAttribute("aria-pressed", "true");
         await expect(day).toHaveAttribute("aria-pressed", "false");
-        await expect(separator).toHaveCSS("z-index", "1");
+
+        // Automatic ::after seam separator on the earlier button sits at z-index: 1 and fades out when neighbor is pressed.
+        await expect.poll(() => day.evaluate((el) => getComputedStyle(el, "::after").zIndex)).toBe("1");
+        await expect.poll(() => day.evaluate((el) => getComputedStyle(el, "::after").opacity)).toBe("0");
 
         // Move focus back to "Day" via keyboard so :focus-visible activates.
         await page.keyboard.press("Shift+Tab");
         await expect(day).toBeFocused();
         await expect(day.evaluate((el) => el.matches(":focus-visible"))).resolves.toBe(true);
 
-        // Focused earlier button must stack above both the separator (z-index: 1) and pressed later sibling (auto).
+        // Focused earlier button must stack above both its ::after separator (z-index: 1) and pressed later sibling (auto).
         await expect(day).toHaveCSS("z-index", "2");
         await expect(week).toHaveCSS("z-index", "auto");
 

@@ -67,6 +67,7 @@
     data-size={size}
     data-icon-only={iconOnly ? "" : undefined}
 >
+    <span class="cs-toggle-button-fill" aria-hidden="true"></span>
     {@render children?.()}
 </button>
 
@@ -74,8 +75,8 @@
     @layer components.primitive {
         .cs-toggle-button {
             /* When releasing (pressed -> unpressed), transform uses a slower exit curve
-             * while opacity fades faster so ::after settles at scale(0.55) invisibly, giving
-             * the next press pop-in full distance without an abrupt visual collapse. */
+             * while opacity fades faster so .cs-toggle-button-fill settles at scale(0.55) invisibly,
+             * giving the next press pop-in full distance without an abrupt visual collapse. */
             --cs-toggle-button-transition-pressed:
                 transform var(--cs-dur-200) var(--cs-ease-exit), opacity var(--cs-dur-exit-sm) var(--cs-ease-effect);
 
@@ -95,9 +96,9 @@
             );
             --cs-button-control-focus-scale-active: var(--cs-toggle-button-focus-scale-active, 0.97);
 
-            /* Pressed fill layer (::after): `transform` drives pop-in, `scale` drives shared pointer squash. */
-            &::after {
-                content: "";
+            /* Pressed fill layer: `transform` drives pop-in, `scale` drives shared pointer squash.
+             * Kept as a dedicated element so .cs-toggle-button::after remains free for group seam separators. */
+            & > .cs-toggle-button-fill {
                 position: absolute;
                 inset: 0;
                 z-index: -1;
@@ -116,18 +117,18 @@
             @media (hover: hover) {
                 &:hover,
                 &[data-morph-hover] {
-                    &::after {
+                    & > .cs-toggle-button-fill {
                         background-color: var(--cs-toggle-button-bg-pressed-hover);
                     }
                 }
 
-                &[data-morph-hover]::after {
+                &[data-morph-hover] > .cs-toggle-button-fill {
                     transition: none;
                 }
             }
 
             &:active {
-                &::after {
+                & > .cs-toggle-button-fill {
                     background-color: var(--cs-toggle-button-bg-pressed-hover);
                     transition:
                         var(--cs-toggle-button-transition-pressed),
@@ -135,7 +136,7 @@
                         scale var(--cs-dur-press) var(--cs-ease-press);
                 }
 
-                &:not(:focus-visible)::after {
+                &:not(:focus-visible) > .cs-toggle-button-fill {
                     scale: var(--cs-button-control-squash-active);
                 }
             }
@@ -189,7 +190,7 @@
                     transform var(--cs-dur-enter-sm) var(--cs-ease-enter),
                     opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
 
-                &::after {
+                & > .cs-toggle-button-fill {
                     opacity: 1;
                     transform: scale(1);
                 }

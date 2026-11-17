@@ -2,7 +2,6 @@ import { createContext } from "svelte";
 import type { HTMLAttributes } from "svelte/elements";
 
 export { default as ToggleButtonGroup } from "./ToggleButtonGroup.svelte";
-export { default as ToggleButtonGroupSeparator } from "./ToggleButtonGroupSeparator.svelte";
 
 export const TOGGLE_BUTTON_GROUP_TYPES = ["single", "multiple"] as const;
 export type ToggleButtonGroupType = (typeof TOGGLE_BUTTON_GROUP_TYPES)[number];
@@ -44,11 +43,6 @@ export type ToggleButtonGroupProps = HTMLAttributes<HTMLDivElement> &
         /** Disables the group and all child `<ToggleButton>` items. */
         disabled?: boolean;
     };
-
-export type ToggleButtonGroupSeparatorProps = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
-    /** Bindable reference to the root `<span>`. Use `bind:ref` or `bind:ref={get, set}`; do not pass a plain expression like `ref={fn()}`. */
-    ref?: HTMLSpanElement | null;
-};
 
 export interface ToggleButtonGroupContext {
     readonly type: ToggleButtonGroupType;

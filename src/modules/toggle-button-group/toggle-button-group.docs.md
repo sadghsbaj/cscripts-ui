@@ -4,7 +4,6 @@ kind: component
 import: cs/svelte/toggle-button-group
 exports:
   - ToggleButtonGroup
-  - ToggleButtonGroupSeparator
   - TOGGLE_BUTTON_GROUP_TYPES
   - TOGGLE_BUTTON_GROUP_ORIENTATIONS
   - ToggleButtonGroupType
@@ -13,7 +12,6 @@ exports:
   - ToggleButtonGroupMultipleProps
   - ToggleButtonGroupTypeProps
   - ToggleButtonGroupProps
-  - ToggleButtonGroupSeparatorProps
   - ToggleButtonGroupContext
   - getToggleButtonGroupContext
   - setToggleButtonGroupContext
@@ -23,7 +21,7 @@ exports:
 # ToggleButtonGroup
 
 ## Overview
-Composite container (`<ToggleButtonGroup />`) that coordinates single- or multi-selection across child `<ToggleButton value="..." />` items with unified outer pill corners, stationary surface press feedback (scaling inner content inward instead of squashing adjacent edges), and optional `<ToggleButtonGroupSeparator />` dividers.
+Composite container (`<ToggleButtonGroup />`) that coordinates single- or multi-selection across child `<ToggleButton value="..." />` items with unified outer pill corners, stationary surface press feedback (scaling inner content inward instead of squashing adjacent edges), and automatic hairline separators between adjacent items.
 
 ## Usage Guidance
 - **Prefer `SegmentedControl`**: Use `SegmentedControl` for most mode and view switches.
@@ -44,9 +42,6 @@ Extends `HTMLAttributes<HTMLDivElement>`. Renders `role="group"`.
 | `disabled` | `boolean` | No | `false` | Disables the group (`aria-disabled="true"`) and all child `<ToggleButton />` items. |
 | `ref` | `HTMLDivElement \| null` | No | `null` | `$bindable` reference to the group `<div>`. |
 
-### `ToggleButtonGroupSeparator` Props
-Extends `Omit<HTMLAttributes<HTMLSpanElement>, "children">`. Renders a zero-width/zero-height `role="separator" aria-hidden="true"` `<span>` with `ref = $bindable(null)`.
-
 ### `data-*` Attributes
 - `data-type={type}`
 - `data-orientation={orientation}`
@@ -65,7 +60,7 @@ Extends `Omit<HTMLAttributes<HTMLSpanElement>, "children">`. Renders a zero-widt
 ```svelte
 <script lang="ts">
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
+    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
 
     let view = $state("list");
 </script>
@@ -74,7 +69,6 @@ Extends `Omit<HTMLAttributes<HTMLSpanElement>, "children">`. Renders a zero-widt
     <ToggleButton variant="soft" color="accent" size="md" value="list">
         <ToggleButtonLabel>List</ToggleButtonLabel>
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton variant="soft" color="accent" size="md" value="grid">
         <ToggleButtonLabel>Grid</ToggleButtonLabel>
     </ToggleButton>
@@ -108,4 +102,4 @@ Extends `Omit<HTMLAttributes<HTMLSpanElement>, "children">`. Renders a zero-widt
 ## Behavior & Quirks
 - **`$bindable()` pitfall (`value={fn()}`):** Never pass a non-bound expression (e.g. `value={getView()}`) to `value`. Because `value` is declared with `$bindable()` and mutated internally on interaction, passing a non-bound expression passes `svelte-check` without warning but throws a Svelte 5 runtime error **even if `onValueChange` is also passed**. When controlling state via a getter/setter or external store, you MUST use `bind:value={getter, setter}` (or `bind:value={() => current, () => {}}` paired with `onValueChange`), or `bind:value={state}` for local `$state`. `ToggleButtonGroup` has no `defaultValue` prop; for uncontrolled mode, omit `value` (optionally pairing with `onValueChange`).
 - **Group press feedback:** Surface squash and focus scale (`--cs-toggle-button-squash-active: 1`, `--cs-toggle-button-focus-scale-active: 1`) are neutralized across all grouped items so adjacent edges stay flush, while inner content (`.cs-toggle-button-icon`, `.cs-toggle-button-label`) scales inward (`0.94`) on `:active:not(:disabled)`. Under `data-fixed-selection` (`type="single"` with `allowDeselect={false}`), clicking an already-selected item is a no-op and keeps inner-content `scale: 1` as well.
-- **Smart separator visibility:** `<ToggleButtonGroupSeparator />` automatically fades out when either neighbor is pressed, hovered, active, or focused—and re-emerges in the active color when *both* adjacent buttons are pressed (in `type="multiple"`).
+- **Automatic hairline separators:** Hairline `::after` seam separators are rendered automatically between adjacent `<ToggleButton />` items (`.cs-toggle-button:not(:last-child)`). They fade out when either neighbor is pressed (`[aria-pressed="true"]`), active, or focused (`:focus-visible`)—and on `:hover` inside `@media (hover: hover)` so touch devices do not get sticky hover states—then re-emerge in the semantic soft foreground color (`--cs-color-<color>-soft-fg`) when *both* adjacent buttons are pressed in `type="multiple"`.

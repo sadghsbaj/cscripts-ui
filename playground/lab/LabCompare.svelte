@@ -3,7 +3,7 @@
     import { Columns2, Layers } from "@lucide/svelte";
     import { HitArea } from "cs/svelte/hit-area";
     import { ToggleButton, ToggleButtonIcon, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
+    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
     import { tooltip } from "cs/svelte/tooltip";
 
     export interface LabVariant {
@@ -32,10 +32,7 @@
     <div class="flex items-center gap-3">
         {#if mode === "switch"}
             <ToggleButtonGroup type="single" orientation="horizontal" bind:value={activeId}>
-                {#each variants as variant, index (variant.id)}
-                    {#if index > 0}
-                        <ToggleButtonGroupSeparator />
-                    {/if}
+                {#each variants as variant (variant.id)}
                     <ToggleButton value={variant.id} variant="soft" color="accent" size="sm">
                         <ToggleButtonLabel>{variant.label}</ToggleButtonLabel>
                     </ToggleButton>
@@ -56,7 +53,6 @@
                 <ToggleButtonIcon icon={Columns2} />
                 <HitArea size="sm" />
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton
                 value="switch"
                 variant="soft"

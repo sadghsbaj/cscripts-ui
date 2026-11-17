@@ -7,7 +7,7 @@
     import { Button, ButtonLabel } from "cs/svelte/button";
     import { rovingFocus } from "cs/svelte/focus";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
+    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let view = $state<string | undefined>("week");
@@ -18,7 +18,7 @@
     const horizontalCode = `<script lang="ts">
     import { rovingFocus } from "cs/svelte/focus";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
+    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
 
     let view = $state<string | undefined>("week");
 ${closeScript}
@@ -27,15 +27,12 @@ ${closeScript}
     <ToggleButton variant="soft" color="accent" size="md" value="day">
         <ToggleButtonLabel>Day</ToggleButtonLabel>
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton variant="soft" color="accent" size="md" value="week">
         <ToggleButtonLabel>Week</ToggleButtonLabel>
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton variant="soft" color="accent" size="md" value="month">
         <ToggleButtonLabel>Month</ToggleButtonLabel>
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton variant="soft" color="accent" size="md" value="year">
         <ToggleButtonLabel>Year</ToggleButtonLabel>
     </ToggleButton>
@@ -82,15 +79,12 @@ ${closeScript}
             <ToggleButton variant="soft" color="accent" size="md" value="day">
                 <ToggleButtonLabel>Day</ToggleButtonLabel>
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton variant="soft" color="accent" size="md" value="week">
                 <ToggleButtonLabel>Week</ToggleButtonLabel>
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton variant="soft" color="accent" size="md" value="month">
                 <ToggleButtonLabel>Month</ToggleButtonLabel>
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton variant="soft" color="accent" size="md" value="year">
                 <ToggleButtonLabel>Year</ToggleButtonLabel>
             </ToggleButton>

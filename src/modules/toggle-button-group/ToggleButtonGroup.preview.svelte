@@ -7,7 +7,7 @@
     import { Bold, Italic, Underline } from "@lucide/svelte";
     import { HitArea } from "cs/svelte/hit-area";
     import { ToggleButton, ToggleButtonIcon, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
+    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
     import { tooltip } from "cs/svelte/tooltip";
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
@@ -20,7 +20,7 @@
     /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
     const basicCode = `<script lang="ts">
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup, ToggleButtonGroupSeparator } from "cs/svelte/toggle-button-group";
+    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
 
     let value = $state<string | undefined>("day");
 ${closeScript}
@@ -29,11 +29,9 @@ ${closeScript}
     <ToggleButton value="day" size="md" variant="soft" color="accent">
         <ToggleButtonLabel>Day</ToggleButtonLabel>
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton value="week" size="md" variant="soft" color="accent">
         <ToggleButtonLabel>Week</ToggleButtonLabel>
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton value="month" size="md" variant="soft" color="accent">
         <ToggleButtonLabel>Month</ToggleButtonLabel>
     </ToggleButton>
@@ -52,7 +50,6 @@ ${closeScript}
         <ToggleButtonIcon icon={Bold} />
         <HitArea size="lg" />
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton
         value="italic"
         size="md"
@@ -65,7 +62,6 @@ ${closeScript}
         <ToggleButtonIcon icon={Italic} />
         <HitArea size="lg" />
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton
         value="underline"
         size="md"
@@ -84,7 +80,6 @@ ${closeScript}
     <ToggleButton value="list" size="md" variant="ghost" color="accent">
         <ToggleButtonLabel>List</ToggleButtonLabel>
     </ToggleButton>
-    <ToggleButtonGroupSeparator />
     <ToggleButton value="grid" size="md" variant="ghost" color="accent">
         <ToggleButtonLabel>Grid</ToggleButtonLabel>
     </ToggleButton>
@@ -107,11 +102,9 @@ ${closeScript}
             <ToggleButton value="day" size="md" variant="soft" color="accent">
                 <ToggleButtonLabel>Day</ToggleButtonLabel>
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton value="week" size="md" variant="soft" color="accent">
                 <ToggleButtonLabel>Week</ToggleButtonLabel>
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton value="month" size="md" variant="soft" color="accent">
                 <ToggleButtonLabel>Month</ToggleButtonLabel>
             </ToggleButton>
@@ -136,7 +129,6 @@ ${closeScript}
                 <ToggleButtonIcon icon={Bold} />
                 <HitArea size="lg" />
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton
                 value="italic"
                 size="md"
@@ -149,7 +141,6 @@ ${closeScript}
                 <ToggleButtonIcon icon={Italic} />
                 <HitArea size="lg" />
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton
                 value="underline"
                 size="md"
@@ -170,7 +161,6 @@ ${closeScript}
             <ToggleButton value="list" size="md" variant="ghost" color="accent">
                 <ToggleButtonLabel>List</ToggleButtonLabel>
             </ToggleButton>
-            <ToggleButtonGroupSeparator />
             <ToggleButton value="grid" size="md" variant="ghost" color="accent">
                 <ToggleButtonLabel>Grid</ToggleButtonLabel>
             </ToggleButton>

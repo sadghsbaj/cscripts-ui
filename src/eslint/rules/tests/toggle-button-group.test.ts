@@ -21,7 +21,6 @@ describe("toggle-button-group ESLint rules", () => {
                         code: `
                         <ToggleButtonGroup>
                             <ToggleButton variant="soft" color="accent" size="md"><ToggleButtonLabel>One</ToggleButtonLabel></ToggleButton>
-                            <ToggleButtonGroupSeparator />
                             <ToggleButton variant="soft" color="accent" size="md"><ToggleButtonLabel>Two</ToggleButtonLabel></ToggleButton>
                         </ToggleButtonGroup>
                         `,
@@ -74,9 +73,7 @@ describe("toggle-button-group ESLint rules", () => {
                         code: `
                         <ToggleButtonGroup>
                             <ToggleButton size="md" variant="soft" color="accent"><ToggleButtonLabel>One</ToggleButtonLabel></ToggleButton>
-                            <ToggleButtonGroupSeparator />
                             <ToggleButton size="md" variant="soft" color="accent"><ToggleButtonLabel>Two</ToggleButtonLabel></ToggleButton>
-                            <ToggleButtonGroupSeparator />
                             <ToggleButton size="md" variant="soft" color="accent"><ToggleButtonLabel>Three</ToggleButtonLabel></ToggleButton>
                         </ToggleButtonGroup>
                         `,
