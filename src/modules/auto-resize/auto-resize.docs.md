@@ -50,11 +50,12 @@ All options are optional; `{@attach autoResize()}` works with zero arguments.
     let prompt = $state("");
 </script>
 
-<div class="flex items-end gap-2">
+<div class="w-full flex items-end gap-2">
     <TextArea
         variant="elevated"
         size="md"
         rows={1}
+        class="flex-1"
         bind:value={prompt}
         placeholder="Ask anything..."
         {@attach autoResize({ maxRows: 6 })}

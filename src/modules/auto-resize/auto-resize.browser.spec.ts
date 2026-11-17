@@ -19,7 +19,7 @@ test.describe("autoResize CSS layer & nesting integration in Chromium", () => {
     test("applies @layer components.primitive &[data-auto-resize] resize and min-width fallback on TextArea", async ({
         page,
     }) => {
-        const textarea = page.locator('textarea.cs-text-area[placeholder="Write a comment..."]');
+        const textarea = page.locator('textarea.cs-text-area[placeholder="Comment..."]');
         await expect(textarea).toBeVisible();
         await expect(textarea).toHaveAttribute("data-auto-resize", "");
         await expect(textarea).toHaveCSS("resize", "none");

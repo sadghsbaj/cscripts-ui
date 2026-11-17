@@ -51,11 +51,12 @@
         '    let prompt = $state("");',
         closeScript,
         "",
-        '<div class="flex items-end gap-2">',
+        '<div class="w-full flex items-end gap-2">',
         "    <TextArea",
         '        variant="elevated"',
         '        size="md"',
         "        rows={1}",
+        '        class="flex-1"',
         "        bind:value={prompt}",
         '        placeholder="Ask anything..."',
         "        {@attach autoResize({ maxRows: 6 })}",
@@ -72,7 +73,7 @@
         '    size="md"',
         "    rows={3}",
         "    bind:value={comment}",
-        '    placeholder="Add a comment..."',
+        '    placeholder="Comment..."',
         "    {@attach autoResize({ maxRows: 6 })}",
         "/>",
     ].join("\n");
@@ -124,15 +125,16 @@
         description="Starts at a single line (rows={1}) aligned with a md Button, grows up to 6 rows, and snaps back when cleared."
         code={composerCode}
     >
-        <SunkenWell class="w-full max-w-lg flex flex-col gap-3">
-            <div class="flex items-end gap-2">
+        <SunkenWell class="w-full max-w-lg flex flex-col items-stretch gap-3">
+            <div class="w-full flex items-end gap-2">
                 <TextArea
                     variant="elevated"
                     size="md"
                     rows={1}
+                    class="flex-1"
                     bind:value={prompt}
                     onkeydown={handlePromptKeydown}
-                    placeholder="Ask anything... (Enter to send, Shift+Enter for newline)"
+                    placeholder="Ask anything..."
                     {@attach autoResize({ maxRows: 6 })}
                 />
                 <Button
@@ -165,7 +167,7 @@
                 size="md"
                 rows={3}
                 bind:value={comment}
-                placeholder="Write a comment..."
+                placeholder="Comment..."
                 {@attach autoResize({ maxRows: 6 })}
             />
         </div>
