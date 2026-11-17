@@ -91,6 +91,12 @@
                 transition: color var(--cs-dur-effect) var(--cs-ease-effect);
             }
 
+            /* Override the global 50px thumb floor in scroll.css so compact textareas (e.g. 2 rows) keep proportional thumb scaling and draggable travel. */
+            &::-webkit-scrollbar-thumb {
+                min-width: 16px;
+                min-height: 16px;
+            }
+
             /* =========================================================
              * SIZES (sm - lg)
              * ========================================================= */
