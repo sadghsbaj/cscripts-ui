@@ -1,5 +1,6 @@
 ## UI & Polish
 
+- [x] Tastatur-Overlay-Autofocus-Bug fixen
 - [x] Kbd: Enter-Symbol rutscht in zwei Zeilen
 - [x] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
 - [x] Toast: Swipe-to-Dismiss noch minimal hakelig und nicht optimal smooth
@@ -13,7 +14,6 @@
 
 ## Modules
 
-- [ ] Modal
 - [ ] Select
 - [ ] Dropdown
 - [ ] Combobox
@@ -23,7 +23,8 @@
 - [ ] Color Picker
 - [ ] Animierte Charts
 - [ ] NLP Parser
-- [ ] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
+- [x] Modal
+- [x] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
 - [x] Number Stepper (`-` / `+` Control für Zooming und Größenstufen)
 - [x] Toasts ESLint?
 - [x] Autoresize Attachment ESLint?
