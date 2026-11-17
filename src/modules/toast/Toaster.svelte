@@ -49,6 +49,9 @@
     let focusWithin = $state(false);
     let swipingId = $state<string | null>(null);
     let swipeStartY = 0;
+    let swipeLastY = 0;
+    let swipeLastTime = 0;
+    let swipeVelocity = 0;
     let swipeY = $state(0);
 
     // Non-reactive bookkeeping so timer updates never re-trigger $effect loops
@@ -82,12 +85,13 @@
         return map;
     });
 
+    // Include exiting toasts until DOM removal so the hover hit-box never shrinks out from under the cursor mid-exit
     const expandedHeight = $derived.by(() => {
-        if (activeToasts.length === 0) {
+        if (toastState.toasts.length === 0) {
             return 0;
         }
         let total = 0;
-        for (const item of activeToasts) {
+        for (const item of toastState.toasts) {
             total += (toastState.heights[item.id] ?? 0) + gap;
         }
         return Math.max(0, total - gap);
@@ -104,7 +108,7 @@
         return (node: HTMLLIElement) => {
             const rect = node.getBoundingClientRect();
             if (rect.height > 0) {
-                toastState.setHeight(id, rect.height);
+                toastState.setHeight(id, Math.round(rect.height));
             }
 
             // Re-measure synchronously on content updates without letting CSS height transitions corrupt the stored height
@@ -118,7 +122,7 @@
                 const prevTransition = node.style.transition;
                 node.style.transition = "none";
                 node.style.height = "auto";
-                const nextHeight = node.getBoundingClientRect().height;
+                const nextHeight = Math.round(node.getBoundingClientRect().height);
                 node.style.height = "";
                 node.style.transition = prevTransition;
                 if (nextHeight > 0) {
@@ -168,7 +172,17 @@
         expanded = false;
     }
 
-    function handleFocusIn(): void {
+    function handleFocusIn(event: FocusEvent): void {
+        if (!(event.target instanceof Element)) {
+            return;
+        }
+        try {
+            if (!event.target.matches(":focus-visible")) {
+                return;
+            }
+        } catch {
+            return;
+        }
         focusWithin = true;
         expanded = true;
     }
@@ -193,8 +207,12 @@
         ) {
             return;
         }
+        const now = event.timeStamp > 0 ? event.timeStamp : performance.now();
         swipingId = id;
         swipeStartY = event.clientY;
+        swipeLastY = event.clientY;
+        swipeLastTime = now;
+        swipeVelocity = 0;
         swipeY = 0;
         interacting = true;
         if (event.currentTarget instanceof HTMLElement) {
@@ -206,20 +224,36 @@
         if (swipingId !== id) {
             return;
         }
+        const now = event.timeStamp > 0 ? event.timeStamp : performance.now();
+        const dt = now - swipeLastTime;
+        if (dt > 100) {
+            swipeVelocity = 0;
+        } else if (dt > 0) {
+            const stepDismissDelta = (event.clientY - swipeLastY) * -lift;
+            swipeVelocity = stepDismissDelta / dt;
+        }
+        swipeLastY = event.clientY;
+        swipeLastTime = now;
+
         const deltaY = event.clientY - swipeStartY;
         const dismissDelta = deltaY * -lift;
         swipeY = dismissDelta > 0 ? deltaY : 0;
     }
 
-    function finishSwipe(id: string, shouldCheckDismiss: boolean): void {
+    function finishSwipe(id: string, shouldCheckDismiss: boolean, event?: PointerEvent): void {
         if (swipingId !== id) {
             return;
         }
+        const now = event && event.timeStamp > 0 ? event.timeStamp : performance.now();
+        const velocity = now - swipeLastTime > 100 ? 0 : swipeVelocity;
         const dismissDelta = swipeY * -lift;
         swipingId = null;
+        swipeLastY = 0;
+        swipeLastTime = 0;
+        swipeVelocity = 0;
         interacting = false;
 
-        if (shouldCheckDismiss && dismissDelta > 45) {
+        if (shouldCheckDismiss && (dismissDelta >= 28 || (dismissDelta >= 12 && velocity >= 0.3))) {
             swipedOutIds.add(id);
             toastState.dismiss(id);
         } else {
@@ -255,7 +289,8 @@
                         toastState.remove(item.id);
                     });
                 } else {
-                    const delay = swipedOutIds.has(item.id) ? 200 : 320;
+                    // Buffer slightly past the 320ms transition so DOM removal never races sibling transform frames
+                    const delay = swipedOutIds.has(item.id) ? 200 : 350;
                     removalTimers[item.id] = setTimeout(() => {
                         delete removalTimers[item.id];
                         swipedOutIds.delete(item.id);
@@ -286,6 +321,9 @@
             interacting = false;
             focusWithin = false;
             swipingId = null;
+            swipeLastY = 0;
+            swipeLastTime = 0;
+            swipeVelocity = 0;
             swipeY = 0;
         } else if (
             untrack(() => focusWithin) &&
@@ -409,13 +447,14 @@
                 data-visible={isVisible ? "" : undefined}
                 data-expanded={expanded ? "" : undefined}
                 data-removed={item.removed ? "" : undefined}
+                data-exit-in-place={item.removed && expanded && pos.index > 0 && !isSwipedOut ? "" : undefined}
                 data-swiping={isSwiping ? "" : undefined}
                 data-swipe-out={isSwipedOut ? "" : undefined}
                 style:--cs-toast-index={pos.index}
                 style:--cs-toast-offset={`${pos.offset}px`}
                 style:--cs-toast-initial-height={initialHeight !== undefined ? `${initialHeight}px` : "auto"}
                 style:--cs-toast-swipe-y={isSwiping ? `${swipeY}px` : "0px"}
-                style:z-index={toastState.toasts.length - pos.index}
+                style:z-index={item.removed && pos.index > 0 ? 0 : toastState.toasts.length - pos.index}
                 {@attach mountToast(item.id, () => item.updatedAt)}
                 {@attach middleClick({
                     enabled: () => item.dismissible && !item.removed,
@@ -424,8 +463,8 @@
                 })}
                 onpointerdown={(e) => handleItemPointerDown(item.id, item.dismissible, item.removed, e)}
                 onpointermove={(e) => handleItemPointerMove(item.id, e)}
-                onpointerup={() => finishSwipe(item.id, true)}
-                onpointercancel={() => finishSwipe(item.id, false)}
+                onpointerup={(e) => finishSwipe(item.id, true, e)}
+                onpointercancel={(e) => finishSwipe(item.id, false, e)}
                 onkeydown={(e) => handleItemKeyDown(item.id, item.dismissible, item.removed, e)}
             >
                 {#if item.render}
@@ -558,6 +597,7 @@
             inline-size: 100%;
             pointer-events: auto;
             touch-action: none;
+            will-change: transform;
             opacity: 0;
             transform: translateY(calc(var(--cs-toast-lift) * -100%));
             transition:
@@ -635,6 +675,7 @@
             &[data-swiping] {
                 user-select: none;
                 transition: none;
+                opacity: clamp(0.45, calc(1 - max(0px, var(--cs-toast-swipe-y) * var(--cs-toast-lift) * -1) / 80px), 1);
                 transform: translateY(var(--cs-toast-swipe-y));
             }
 
@@ -649,10 +690,15 @@
                 transform: translateY(calc(var(--cs-toast-lift) * -100%));
             }
 
-            &[data-expanded][data-removed] {
+            &[data-expanded][data-removed]:not([data-exit-in-place]) {
                 transform: translateY(
                     calc(var(--cs-toast-lift) * var(--cs-toast-offset) - var(--cs-toast-lift) * 100%)
                 );
+            }
+
+            &[data-expanded][data-removed][data-exit-in-place] {
+                opacity: 0;
+                transform: translateY(calc(var(--cs-toast-lift) * var(--cs-toast-offset))) scale(0.96);
             }
 
             /* Swipe-out completion */

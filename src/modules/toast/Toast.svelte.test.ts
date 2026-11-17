@@ -298,7 +298,7 @@ describe("toast module", () => {
 
             toast.dismiss(id);
             flushSync();
-            vi.advanceTimersByTime(320);
+            vi.advanceTimersByTime(350);
             flushSync();
             expect(hidePopover).toHaveBeenCalledTimes(1);
             expect(section.querySelectorAll("li.cs-toast-item")).toHaveLength(0);
@@ -332,14 +332,14 @@ describe("toast module", () => {
             expect(items().map((el) => hasDataAttr(el, "front"))).toEqual([false, true, false, false]);
             expect(items().map((el) => hasDataAttr(el, "visible"))).toEqual([false, true, true, false]);
 
-            vi.advanceTimersByTime(320);
+            vi.advanceTimersByTime(350);
             flushSync();
             expect(items()).toHaveLength(3);
             expect(items().map((el) => hasDataAttr(el, "visible"))).toEqual([true, true, false]);
             expect(toastState.toasts.map((t) => t.id)).toEqual([id3, id2, id1]);
         });
 
-        test("sets data-mounted after double rAF and cleans up data-removed after 320ms", () => {
+        test("sets data-mounted after double rAF and cleans up data-removed after 350ms", () => {
             const { section } = mountToaster();
             const id = toast.base("Animated");
             flushSync();
@@ -355,7 +355,7 @@ describe("toast module", () => {
             flushSync();
             expect(hasDataAttr(item, "removed")).toBe(true);
 
-            vi.advanceTimersByTime(319);
+            vi.advanceTimersByTime(349);
             flushSync();
             expect(section.querySelectorAll("li.cs-toast-item")).toHaveLength(1);
 
@@ -424,6 +424,19 @@ describe("toast module", () => {
             flushSync();
             expect(hasDataAttr(section, "expanded")).toBe(false);
 
+            const closeBtn = queryRequired<HTMLButtonElement>(section, "button.cs-toast-close");
+            const originalMatches = closeBtn.matches.bind(closeBtn);
+            let isFocusVisible = false;
+            vi.spyOn(closeBtn, "matches").mockImplementation((selector: string) =>
+                selector === ":focus-visible" ? isFocusVisible : originalMatches(selector)
+            );
+
+            // Non-:focus-visible focusin (e.g. touch tap on <ToastClose />) must not expand the stack
+            closeBtn.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+            flushSync();
+            expect(hasDataAttr(section, "expanded")).toBe(false);
+            expect(list.dataset.expanded).toBeUndefined();
+
             vi.advanceTimersByTime(1500);
             pointerEnter(list, "mouse");
             flushSync();
@@ -435,7 +448,8 @@ describe("toast module", () => {
             flushSync();
             expect(onAutoClose).not.toHaveBeenCalled();
 
-            const closeBtn = queryRequired<HTMLButtonElement>(section, "button.cs-toast-close");
+            isFocusVisible = true;
+            closeBtn.focus();
             closeBtn.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
             flushSync();
             pointerLeave(list);
@@ -476,6 +490,10 @@ describe("toast module", () => {
             }
 
             const closeBtn = queryRequired<HTMLButtonElement>(firstItem, "button.cs-toast-close");
+            const originalMatches = closeBtn.matches.bind(closeBtn);
+            vi.spyOn(closeBtn, "matches").mockImplementation((selector: string) =>
+                selector === ":focus-visible" ? true : originalMatches(selector)
+            );
             closeBtn.focus();
             closeBtn.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
             flushSync();
@@ -490,8 +508,8 @@ describe("toast module", () => {
             closeBtn.click();
             flushSync();
 
-            // Wait for 320ms exit animation + DOM removal without dispatching focusout
-            vi.advanceTimersByTime(320);
+            // Wait for 350ms exit animation + DOM removal without dispatching focusout
+            vi.advanceTimersByTime(350);
             flushSync();
 
             expect(section.querySelectorAll("li.cs-toast-item")).toHaveLength(1);
@@ -742,10 +760,10 @@ describe("toast module", () => {
 
     describe("5. Swipe-to-dismiss", () => {
         test.each<{ placement: ToastPlacement; deltaY: number }>([
-            { placement: "bottom-right", deltaY: 60 },
-            { placement: "top-right", deltaY: -60 },
+            { placement: "bottom-right", deltaY: 28 },
+            { placement: "top-right", deltaY: -28 },
         ])(
-            "swiping > 45px in dismiss direction on $placement sets data-swiping, data-swipe-out, data-removed, calls onDismiss, and removes after 200ms",
+            "swiping >= 28px in dismiss direction on $placement sets data-swiping, data-swipe-out, data-removed, calls onDismiss, and removes after 200ms",
             ({ placement, deltaY }) => {
                 const onDismiss = vi.fn();
                 const onAutoClose = vi.fn();
@@ -788,7 +806,7 @@ describe("toast module", () => {
             }
         );
 
-        test("snaps back without dismissing when dragged <= 45px or in opposite direction", () => {
+        test("snaps back without dismissing when dragged < 28px slowly or in opposite direction", () => {
             const onDismiss = vi.fn();
             const { section: bottomSection } = mountToaster({ placement: "bottom-right" });
 
@@ -797,14 +815,15 @@ describe("toast module", () => {
 
             const bottomItem = queryRequired<HTMLLIElement>(bottomSection, "li.cs-toast-item");
 
-            // < 45px in dismiss direction (+30px on bottom-right)
+            // < 28px slow drag in dismiss direction (+20px over 150ms on bottom-right)
             dispatchPointer(bottomItem, "pointerdown", { clientY: 100 });
-            dispatchPointer(bottomItem, "pointermove", { clientY: 130 });
+            vi.advanceTimersByTime(150);
+            dispatchPointer(bottomItem, "pointermove", { clientY: 120 });
             flushSync();
             expect(hasDataAttr(bottomItem, "swiping")).toBe(true);
-            expect(bottomItem.style.getPropertyValue("--cs-toast-swipe-y")).toBe("30px");
+            expect(bottomItem.style.getPropertyValue("--cs-toast-swipe-y")).toBe("20px");
 
-            dispatchPointer(bottomItem, "pointerup", { clientY: 130 });
+            dispatchPointer(bottomItem, "pointerup", { clientY: 120 });
             flushSync();
             expect(hasDataAttr(bottomItem, "swiping")).toBe(false);
             expect(hasDataAttr(bottomItem, "swipeOut")).toBe(false);
@@ -812,10 +831,11 @@ describe("toast module", () => {
             expect(bottomItem.style.getPropertyValue("--cs-toast-swipe-y")).toBe("0px");
             expect(onDismiss).not.toHaveBeenCalled();
 
-            // Exact threshold 45px must also snap back (> 45 required)
+            // Just below threshold (27px slow drag) must also snap back (>= 28 required without flick velocity)
             dispatchPointer(bottomItem, "pointerdown", { clientY: 100 });
-            dispatchPointer(bottomItem, "pointermove", { clientY: 145 });
-            dispatchPointer(bottomItem, "pointerup", { clientY: 145 });
+            vi.advanceTimersByTime(150);
+            dispatchPointer(bottomItem, "pointermove", { clientY: 127 });
+            dispatchPointer(bottomItem, "pointerup", { clientY: 127 });
             flushSync();
             expect(hasDataAttr(bottomItem, "removed")).toBe(false);
             expect(onDismiss).not.toHaveBeenCalled();
@@ -851,7 +871,43 @@ describe("toast module", () => {
             expect(onDismiss).not.toHaveBeenCalled();
         });
 
-        test("pointercancel aborts swipe without dismissing even beyond 45px", () => {
+        test("quick flick (>= 12px with >= 0.3 px/ms velocity) dismisses while slow small drag (< 28px, < 0.3 px/ms) snaps back", () => {
+            const onSlowDismiss = vi.fn();
+            const onFlickDismiss = vi.fn();
+            const { section } = mountToaster({ placement: "bottom-right" });
+
+            toast.base("Slow small drag", { onDismiss: onSlowDismiss });
+            flushSync();
+
+            const slowItem = queryRequired<HTMLLIElement>(section, "li.cs-toast-item");
+            // 16px over 80ms = 0.2 px/ms (< 0.3 px/ms) and < 28px -> snaps back
+            dispatchPointer(slowItem, "pointerdown", { clientY: 100 });
+            vi.advanceTimersByTime(80);
+            dispatchPointer(slowItem, "pointermove", { clientY: 116 });
+            dispatchPointer(slowItem, "pointerup", { clientY: 116 });
+            flushSync();
+
+            expect(hasDataAttr(slowItem, "swipeOut")).toBe(false);
+            expect(hasDataAttr(slowItem, "removed")).toBe(false);
+            expect(slowItem.style.getPropertyValue("--cs-toast-swipe-y")).toBe("0px");
+            expect(onSlowDismiss).not.toHaveBeenCalled();
+
+            // 12px over 20ms = 0.6 px/ms (>= 12px and >= 0.3 px/ms) -> dismisses
+            toast.base("Quick flick", { onDismiss: onFlickDismiss });
+            flushSync();
+            const flickItem = queryRequired<HTMLLIElement>(section, "li.cs-toast-item");
+            dispatchPointer(flickItem, "pointerdown", { clientY: 100 });
+            vi.advanceTimersByTime(20);
+            dispatchPointer(flickItem, "pointermove", { clientY: 112 });
+            dispatchPointer(flickItem, "pointerup", { clientY: 112 });
+            flushSync();
+
+            expect(hasDataAttr(flickItem, "swipeOut")).toBe(true);
+            expect(hasDataAttr(flickItem, "removed")).toBe(true);
+            expect(onFlickDismiss).toHaveBeenCalledTimes(1);
+        });
+
+        test("pointercancel aborts swipe without dismissing even beyond 28px", () => {
             const onDismiss = vi.fn();
             const { section } = mountToaster({ placement: "bottom-right" });
 
