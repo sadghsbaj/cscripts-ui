@@ -36,24 +36,26 @@ describe("Checkbox Svelte 5 Component", () => {
         flushSync();
 
         const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+        const mark = container.querySelector<SVGSVGElement>("svg.cs-checkbox-mark");
         expect(input).not.toBeNull();
+        expect(mark).not.toBeNull();
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         input?.click();
         flushSync();
         expect(state.checked).toBe(true);
         expect(input?.checked).toBe(true);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         input?.click();
         flushSync();
         expect(state.checked).toBe(false);
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         unmount(instance);
     });
@@ -92,10 +94,12 @@ describe("Checkbox Svelte 5 Component", () => {
         flushSync();
 
         const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+        const mark = container.querySelector<SVGSVGElement>("svg.cs-checkbox-mark");
         expect(input).not.toBeNull();
+        expect(mark).not.toBeNull();
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         input?.click();
         flushSync();
@@ -103,7 +107,7 @@ describe("Checkbox Svelte 5 Component", () => {
         expect(state.indeterminate).toBe(true);
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(true);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         input?.click();
         flushSync();
@@ -111,7 +115,7 @@ describe("Checkbox Svelte 5 Component", () => {
         expect(state.indeterminate).toBe(false);
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         unmount(instance);
     });
@@ -141,23 +145,24 @@ describe("Checkbox Svelte 5 Component", () => {
         flushSync();
 
         const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+        const mark = container.querySelector<SVGSVGElement>("svg.cs-checkbox-mark");
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(true);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         state.indeterminate = false;
         state.checked = true;
         flushSync();
         expect(input?.checked).toBe(true);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.dataset.morph).toBe("");
+        expect(mark?.dataset.morph).toBe("");
 
         state.checked = false;
         state.indeterminate = false;
         flushSync();
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         unmount(instance);
     });
@@ -187,23 +192,24 @@ describe("Checkbox Svelte 5 Component", () => {
         flushSync();
 
         const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+        const mark = container.querySelector<SVGSVGElement>("svg.cs-checkbox-mark");
         expect(input?.checked).toBe(true);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         state.checked = false;
         state.indeterminate = true;
         flushSync();
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(true);
-        expect(input?.dataset.morph).toBe("");
+        expect(mark?.dataset.morph).toBe("");
 
         state.checked = false;
         state.indeterminate = false;
         flushSync();
         expect(input?.checked).toBe(false);
         expect(input?.indeterminate).toBe(false);
-        expect(input?.hasAttribute("data-morph")).toBe(false);
+        expect(mark?.hasAttribute("data-morph")).toBe(false);
 
         unmount(instance);
     });
@@ -220,61 +226,65 @@ describe("Checkbox Svelte 5 Component", () => {
         const cycleB = container.querySelector<HTMLInputElement>(
             'input.cs-checkbox[aria-label="Unchecked to Checked to Indeterminate"]',
         );
+        const cycleAMark = cycleA?.nextElementSibling as SVGSVGElement | null;
+        const cycleBMark = cycleB?.nextElementSibling as SVGSVGElement | null;
 
         expect(cycleA).not.toBeNull();
         expect(cycleB).not.toBeNull();
+        expect(cycleAMark?.matches("svg.cs-checkbox-mark")).toBe(true);
+        expect(cycleBMark?.matches("svg.cs-checkbox-mark")).toBe(true);
 
         // Cycle A: 0 (unchecked) -> 1 (indeterminate) -> 2 (checked) -> 0 (unchecked)
         expect(cycleA?.checked).toBe(false);
         expect(cycleA?.indeterminate).toBe(false);
-        expect(cycleA?.hasAttribute("data-morph")).toBe(false);
+        expect(cycleAMark?.hasAttribute("data-morph")).toBe(false);
 
         cycleA?.click();
         await Promise.resolve();
         flushSync();
         expect(cycleA?.checked).toBe(false);
         expect(cycleA?.indeterminate).toBe(true);
-        expect(cycleA?.hasAttribute("data-morph")).toBe(false);
+        expect(cycleAMark?.hasAttribute("data-morph")).toBe(false);
 
         cycleA?.click();
         await Promise.resolve();
         flushSync();
         expect(cycleA?.checked).toBe(true);
         expect(cycleA?.indeterminate).toBe(false);
-        expect(cycleA?.dataset.morph).toBe("");
+        expect(cycleAMark?.dataset.morph).toBe("");
 
         cycleA?.click();
         await Promise.resolve();
         flushSync();
         expect(cycleA?.checked).toBe(false);
         expect(cycleA?.indeterminate).toBe(false);
-        expect(cycleA?.hasAttribute("data-morph")).toBe(false);
+        expect(cycleAMark?.hasAttribute("data-morph")).toBe(false);
 
         // Cycle B: 0 (unchecked) -> 1 (checked) -> 2 (indeterminate) -> 0 (unchecked)
         expect(cycleB?.checked).toBe(false);
         expect(cycleB?.indeterminate).toBe(false);
-        expect(cycleB?.hasAttribute("data-morph")).toBe(false);
+        expect(cycleBMark?.hasAttribute("data-morph")).toBe(false);
 
         cycleB?.click();
         await Promise.resolve();
         flushSync();
         expect(cycleB?.checked).toBe(true);
         expect(cycleB?.indeterminate).toBe(false);
-        expect(cycleB?.hasAttribute("data-morph")).toBe(false);
+        expect(cycleBMark?.hasAttribute("data-morph")).toBe(false);
 
         cycleB?.click();
         await Promise.resolve();
         flushSync();
         expect(cycleB?.checked).toBe(false);
         expect(cycleB?.indeterminate).toBe(true);
-        expect(cycleB?.dataset.morph).toBe("");
+        expect(cycleBMark?.dataset.morph).toBe("");
 
         cycleB?.click();
         await Promise.resolve();
         flushSync();
         expect(cycleB?.checked).toBe(false);
         expect(cycleB?.indeterminate).toBe(false);
-        expect(cycleB?.hasAttribute("data-morph")).toBe(false);
+        expect(cycleBMark?.hasAttribute("data-morph")).toBe(false);
 
         unmount(instance);
     });
@@ -480,30 +490,34 @@ describe("Checkbox Svelte 5 Component", () => {
             flushSync();
 
             const input = container.querySelector<HTMLInputElement>("input.cs-checkbox");
+            const mark = container.querySelector<SVGSVGElement>("svg.cs-checkbox-mark");
             expect(input).not.toBeNull();
+            expect(mark).not.toBeNull();
             expect(input?.indeterminate).toBe(true);
-            expect(input?.hasAttribute("data-dash-enter")).toBe(false);
+            expect(mark?.hasAttribute("data-dash-enter")).toBe(false);
             expect(input?.hasAttribute("data-settled")).toBe(false);
 
-            // Advance the settlement animation frame
+            // Advance the settlement animation frame(s) for Checkbox and CheckboxMark
             expect(rafQueue.length).toBeGreaterThan(0);
-            rafQueue.shift()?.(16);
+            while (rafQueue.length > 0) {
+                rafQueue.shift()?.(16);
+            }
             flushSync();
 
             expect(input?.hasAttribute("data-settled")).toBe(true);
-            expect(input?.hasAttribute("data-dash-enter")).toBe(false);
+            expect(mark?.hasAttribute("data-dash-enter")).toBe(false);
 
             // Transition indeterminate -> unchecked
             state.indeterminate = false;
             flushSync();
             expect(input?.indeterminate).toBe(false);
-            expect(input?.hasAttribute("data-dash-enter")).toBe(false);
+            expect(mark?.hasAttribute("data-dash-enter")).toBe(false);
 
             // Subsequent unchecked -> indeterminate transition sets data-dash-enter
             state.indeterminate = true;
             flushSync();
             expect(input?.indeterminate).toBe(true);
-            expect(input?.hasAttribute("data-dash-enter")).toBe(true);
+            expect(mark?.hasAttribute("data-dash-enter")).toBe(true);
 
             unmount(instance);
         } finally {

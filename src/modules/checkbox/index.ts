@@ -1,6 +1,7 @@
-import type { HTMLInputAttributes } from "svelte/elements";
+import type { HTMLInputAttributes, SVGAttributes } from "svelte/elements";
 
 export { default as Checkbox } from "./Checkbox.svelte";
+export { default as CheckboxMark } from "./CheckboxMark.svelte";
 
 export const CHECKBOX_VARIANTS = ["soft", "elevated"] as const;
 export const CHECKBOX_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
@@ -22,4 +23,13 @@ export interface CheckboxProps extends Omit<HTMLInputAttributes, "size" | "type"
     /** Fires with the next indeterminate state after a user change when the value changes. */
     onIndeterminateChange?: (indeterminate: boolean) => void;
     invalid?: boolean;
+}
+
+export interface CheckboxMarkProps extends Omit<SVGAttributes<SVGSVGElement>, "children"> {
+    /** Bindable reference to the `<svg>`. Use `bind:ref` or `bind:ref={get, set}`; do not pass a plain expression like `ref={fn()}`. */
+    ref?: SVGSVGElement | null;
+    /** @default false */
+    checked?: boolean;
+    /** @default false */
+    indeterminate?: boolean;
 }
