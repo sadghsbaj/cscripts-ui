@@ -1,6 +1,8 @@
 ## UI & Polish
 
-- [ ] Fix-Bericht ansehen und beheben
+- [ x] Fix-Bericht ansehen und beheben#
+- kpi übersichtlciher x
+- kpi eslint?
 
 ## Modules
 
