@@ -40,3 +40,4 @@ bun.lockb
 
 .vscode
 .playwright-mcp/
+.vitest/
