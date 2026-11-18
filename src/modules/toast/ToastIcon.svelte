@@ -40,6 +40,7 @@
             /* Couple box height to line 1 of ToastTitle so the icon centers on the first line */
             font-size: var(--cs-text-sm);
             line-height: var(--cs-leading-tight);
+            line-height: round(up, calc(var(--cs-text-sm) * var(--cs-leading-tight)), 1px);
             block-size: 1lh;
             color: var(--cs-toast-icon-fg);
 

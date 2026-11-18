@@ -20,6 +20,7 @@
             font-size: var(--cs-text-xs);
             font-weight: 400;
             line-height: var(--cs-leading-snug);
+            line-height: round(down, calc(var(--cs-text-xs) * var(--cs-leading-snug)), 1px);
             color: var(--cs-color-text-weak);
             overflow-wrap: anywhere;
             word-break: normal;
