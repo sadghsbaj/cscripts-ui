@@ -20,6 +20,13 @@ export interface RovingFocusChangeEvent {
     reason: RovingFocusChangeReason;
 }
 
+export interface RovingFocusTypeaheadOptions {
+    /** Timeout in milliseconds before the typed character buffer resets. @default 500 */
+    timeoutMs?: number;
+    /** Custom label resolver per item. Defaults to `data-typeahead-label` / `aria-label` / `textContent`. */
+    getLabel?: (item: HTMLElement) => string;
+}
+
 export interface RovingFocusOptions {
     /**
      * Enables or disables the roving focus attachment.
@@ -50,6 +57,12 @@ export interface RovingFocusOptions {
      * @default true
      */
     homeEnd?: boolean | (() => boolean);
+
+    /**
+     * Enables buffered printable-character typeahead matching across managed items.
+     * @default false
+     */
+    typeahead?: boolean | RovingFocusTypeaheadOptions | (() => boolean | RovingFocusTypeaheadOptions);
 
     /**
      * CSS selector or custom resolver returning candidate items within `container`.
@@ -200,12 +213,147 @@ function findNearestValidSibling(
     return currentItems.at(0) ?? null;
 }
 
+type NavigationAction = -1 | 1 | "first" | "last";
+
+interface ResolvedTypeaheadConfig {
+    timeoutMs: number;
+    getLabel: (item: HTMLElement) => string;
+}
+
+const DEFAULT_TYPEAHEAD_TIMEOUT_MS = 500;
+
+function defaultGetTypeaheadLabel(item: HTMLElement): string {
+    return item.dataset.typeaheadLabel || item.getAttribute("aria-label") || item.textContent || "";
+}
+
+function resolveTypeaheadConfig(typeahead: RovingFocusOptions["typeahead"]): ResolvedTypeaheadConfig | null {
+    const resolved = resolveGetter(typeahead);
+    if (!resolved) {
+        return null;
+    }
+
+    if (resolved === true) {
+        return {
+            timeoutMs: DEFAULT_TYPEAHEAD_TIMEOUT_MS,
+            getLabel: defaultGetTypeaheadLabel,
+        };
+    }
+
+    const timeoutMs =
+        typeof resolved.timeoutMs === "number" && Number.isFinite(resolved.timeoutMs) && resolved.timeoutMs > 0
+            ? resolved.timeoutMs
+            : DEFAULT_TYPEAHEAD_TIMEOUT_MS;
+
+    return {
+        timeoutMs,
+        getLabel: resolved.getLabel ?? defaultGetTypeaheadLabel,
+    };
+}
+
+function isAllSameChar(value: string): boolean {
+    if (value.length === 0) {
+        return false;
+    }
+    const first = value.charAt(0);
+    for (let i = 1; i < value.length; i++) {
+        if (value.charAt(i) !== first) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function findPrefixMatch(
+    items: HTMLElement[],
+    startIndex: number,
+    prefix: string,
+    getLabel: (item: HTMLElement) => string
+): HTMLElement | null {
+    const count = items.length;
+    if (count === 0 || prefix.length === 0) {
+        return null;
+    }
+
+    const normalizedStart = ((startIndex % count) + count) % count;
+    for (let offset = 0; offset < count; offset++) {
+        const candidate = items.at((normalizedStart + offset) % count);
+        if (!candidate) {
+            continue;
+        }
+        const label = getLabel(candidate).trim().replaceAll(/\s+/g, " ").toLowerCase();
+        if (label.startsWith(prefix)) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
+function findTypeaheadMatch(
+    items: HTMLElement[],
+    currentIndex: number,
+    buffer: string,
+    getLabel: (item: HTMLElement) => string
+): HTMLElement | null {
+    if (items.length === 0 || buffer.length === 0) {
+        return null;
+    }
+
+    if (buffer.length > 1) {
+        const startIndex = Math.max(currentIndex, 0);
+        const exactMatch = findPrefixMatch(items, startIndex, buffer, getLabel);
+        if (exactMatch) {
+            return exactMatch;
+        }
+
+        // Only fall back to single-character cycling when all typed characters match (e.g. "gg")
+        if (!isAllSameChar(buffer)) {
+            return null;
+        }
+    }
+
+    const cycleStartIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
+    return findPrefixMatch(items, cycleStartIndex, buffer.charAt(0), getLabel);
+}
+
+function resolveCurrentIndex(
+    target: HTMLElement,
+    currentItems: HTMLElement[],
+    currentActiveItem: HTMLElement | null
+): number {
+    const targetItem = findClosestManagedItem(target, currentItems);
+    let currentIndex = targetItem ? currentItems.indexOf(targetItem) : -1;
+    if (currentIndex === -1 && currentActiveItem) {
+        currentIndex = currentItems.indexOf(currentActiveItem);
+    }
+    return currentIndex;
+}
+
+function resolveNextIndex(
+    action: NavigationAction,
+    currentIndex: number,
+    itemCount: number,
+    loop: boolean
+): number {
+    if (action === "first") {
+        return 0;
+    }
+    if (action === "last") {
+        return itemCount - 1;
+    }
+    if (currentIndex === -1) {
+        return action === 1 ? 0 : itemCount - 1;
+    }
+    const rawIndex = currentIndex + action;
+    return loop ? (rawIndex + itemCount) % itemCount : Math.max(0, Math.min(itemCount - 1, rawIndex));
+}
+
 function getNavigationAction(
     key: string,
     orientation: RovingFocusOrientation,
     isRtl: boolean,
     homeEnd: boolean
-): -1 | 1 | "first" | "last" | null {
+): NavigationAction | null {
     if (homeEnd) {
         if (key === "Home") return "first";
         if (key === "End") return "last";
@@ -238,6 +386,7 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
         dir = "auto",
         loop = true,
         homeEnd = true,
+        typeahead = false,
         items,
         initialActive,
         preventScroll = false,
@@ -256,6 +405,17 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
         let isFocusWithin = false;
         let currentActiveItem: HTMLElement | null = null;
         let lastItemsSnapshot: HTMLElement[] = [];
+        let typeaheadBuffer = "";
+        let typeaheadTimer: ReturnType<typeof setTimeout> | null = null;
+
+        const clearTypeahead = (): void => {
+            typeaheadBuffer = "";
+            delete container.dataset.typeaheadActive;
+            if (typeaheadTimer !== null) {
+                clearTimeout(typeaheadTimer);
+                typeaheadTimer = null;
+            }
+        };
 
         container.dataset.rovingFocus = "";
 
@@ -365,8 +525,15 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
         }
         setActiveItem(initialItem, initialItems, "init");
 
+        const focusKeyboardItem = (nextItem: HTMLElement, managedItems: HTMLElement[]): void => {
+            setActiveItem(nextItem, managedItems, "keyboard");
+            if (getActiveElement() !== nextItem) {
+                nextItem.focus({ preventScroll });
+            }
+        };
+
         const handleKeyDown = (event: KeyboardEvent): void => {
-            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+            if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing) {
                 return;
             }
 
@@ -378,52 +545,77 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
                 return;
             }
 
-            const resolvedOrientation = resolveGetter(orientation);
-            const resolvedHomeEnd = resolveGetter(homeEnd) ?? true;
-            const resolvedLoop = resolveGetter(loop) ?? true;
-            const isRtl = isRtlDirection(container, dir);
+            if (!event.shiftKey) {
+                const resolvedOrientation = resolveGetter(orientation);
+                const resolvedHomeEnd = resolveGetter(homeEnd) ?? true;
+                const resolvedLoop = resolveGetter(loop) ?? true;
+                const isRtl = isRtlDirection(container, dir);
 
-            const action = getNavigationAction(event.key, resolvedOrientation, isRtl, resolvedHomeEnd);
-            if (action === null) {
+                const action = getNavigationAction(event.key, resolvedOrientation, isRtl, resolvedHomeEnd);
+                if (action !== null) {
+                    clearTypeahead();
+                    event.preventDefault();
+
+                    const currentItems = resolveItems();
+                    if (currentItems.length === 0) {
+                        return;
+                    }
+
+                    const currentIndex = resolveCurrentIndex(event.target, currentItems, currentActiveItem);
+                    const nextIndex = resolveNextIndex(action, currentIndex, currentItems.length, resolvedLoop);
+
+                    const nextItem = currentItems.at(nextIndex);
+                    if (!nextItem) {
+                        return;
+                    }
+
+                    focusKeyboardItem(nextItem, currentItems);
+                    return;
+                }
+            }
+
+            const typeaheadConfig = resolveTypeaheadConfig(typeahead);
+            if (!typeaheadConfig) {
+                clearTypeahead();
                 return;
             }
 
-            event.preventDefault();
+            if (event.key.length !== 1) {
+                return;
+            }
+
+            // Preserve Space activation on focused items unless continuing an active multi-char query
+            if (typeaheadBuffer.length === 0 && event.key === " ") {
+                return;
+            }
+
+            const isActiveSpaceQuery = typeaheadBuffer.length > 0 && event.key === " ";
+            if (isActiveSpaceQuery) {
+                event.preventDefault();
+            }
 
             const currentItems = resolveItems();
             if (currentItems.length === 0) {
                 return;
             }
 
-            const targetItem = findClosestManagedItem(event.target, currentItems);
-            let currentIndex = targetItem ? currentItems.indexOf(targetItem) : -1;
-            if (currentIndex === -1 && currentActiveItem) {
-                currentIndex = currentItems.indexOf(currentActiveItem);
+            typeaheadBuffer += event.key.toLowerCase();
+            container.dataset.typeaheadActive = "";
+            if (typeaheadTimer !== null) {
+                clearTimeout(typeaheadTimer);
             }
+            typeaheadTimer = setTimeout(() => {
+                clearTypeahead();
+            }, typeaheadConfig.timeoutMs);
 
-            let nextIndex: number;
-            if (action === "first") {
-                nextIndex = 0;
-            } else if (action === "last") {
-                nextIndex = currentItems.length - 1;
-            } else if (currentIndex === -1) {
-                nextIndex = action === 1 ? 0 : currentItems.length - 1;
-            } else {
-                const rawIndex = currentIndex + action;
-                nextIndex = resolvedLoop
-                    ? (rawIndex + currentItems.length) % currentItems.length
-                    : Math.max(0, Math.min(currentItems.length - 1, rawIndex));
-            }
-
-            const nextItem = currentItems.at(nextIndex);
-            if (!nextItem) {
+            const currentIndex = resolveCurrentIndex(event.target, currentItems, currentActiveItem);
+            const match = findTypeaheadMatch(currentItems, currentIndex, typeaheadBuffer, typeaheadConfig.getLabel);
+            if (!match) {
                 return;
             }
 
-            setActiveItem(nextItem, currentItems, "keyboard");
-            if (getActiveElement() !== nextItem) {
-                nextItem.focus({ preventScroll });
-            }
+            event.preventDefault();
+            focusKeyboardItem(match, currentItems);
         };
 
         const handlePointerDown = (event: PointerEvent): void => {
@@ -431,6 +623,7 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
                 return;
             }
 
+            clearTypeahead();
             const currentItems = resolveItems();
             const clickedItem = findClosestManagedItem(event.target, currentItems);
             if (!clickedItem) {
@@ -453,12 +646,14 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
             }
 
             if (event.target.closest("[data-roving-focus]") !== container) {
+                clearTypeahead();
                 return;
             }
 
             const currentItems = resolveItems();
             const focusedItem = findClosestManagedItem(event.target, currentItems);
             if (focusedItem && focusedItem !== currentActiveItem) {
+                clearTypeahead();
                 setActiveItem(focusedItem, currentItems, "focus");
             }
         };
@@ -468,6 +663,7 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
             if (related instanceof Node) {
                 if (!container.contains(related)) {
                     isFocusWithin = false;
+                    clearTypeahead();
                 }
                 return;
             }
@@ -480,6 +676,7 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
                 isElementVisible(event.target)
             ) {
                 isFocusWithin = false;
+                clearTypeahead();
             }
         };
 
@@ -501,6 +698,7 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
                       const hadFocus = isFocusWithin || (activeEl !== null && container.contains(activeEl));
                       const nextActive = findNearestValidSibling(lastItemsSnapshot, currentActiveItem, currentItems);
 
+                      clearTypeahead();
                       setActiveItem(nextActive, currentItems, "mutation");
 
                       if (hadFocus && nextActive) {
@@ -526,6 +724,7 @@ export function rovingFocus<T extends HTMLElement = HTMLElement>(options: Roving
         container.addEventListener("focusout", handleFocusOut);
 
         return () => {
+            clearTypeahead();
             observer?.disconnect();
             container.removeEventListener("keydown", handleKeyDown);
             container.removeEventListener("pointerdown", handlePointerDown);

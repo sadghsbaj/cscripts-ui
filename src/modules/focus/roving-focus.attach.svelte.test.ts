@@ -4,6 +4,7 @@ import {
     rovingFocus,
     type RovingFocusChangeEvent,
     type RovingFocusOrientation,
+    type RovingFocusTypeaheadOptions,
 } from "./roving-focus.attach";
 
 function createButton(label: string, attrs?: Record<string, string | boolean>): HTMLButtonElement {
@@ -38,11 +39,22 @@ function createToolbar<N extends 2 | 3 | 4 = 3>(
     return { toolbar, buttons: buttons as ButtonTuple<N> };
 }
 
-function dispatchKey(
-    target: EventTarget,
-    key: string,
-    init: Partial<KeyboardEventInit> = {}
-): KeyboardEvent {
+function createNamedToolbar<const T extends readonly string[]>(
+    labels: T
+): {
+    toolbar: HTMLDivElement;
+    buttons: { [K in keyof T]: HTMLButtonElement };
+} {
+    const toolbar = document.createElement("div");
+    toolbar.setAttribute("role", "toolbar");
+    const buttons = labels.map((label) => createButton(label)) as {
+        [K in keyof T]: HTMLButtonElement;
+    };
+    toolbar.append(...buttons);
+    return { toolbar, buttons };
+}
+
+function dispatchKey(target: EventTarget, key: string, init: Partial<KeyboardEventInit> = {}): KeyboardEvent {
     const event = new KeyboardEvent("keydown", {
         key,
         bubbles: true,
@@ -121,9 +133,7 @@ describe("rovingFocus Svelte 5 Element Attachment", () => {
             host.append(toolbar);
             const onActiveChange = vi.fn();
 
-            const cleanup = rovingFocus({ orientation: "horizontal", enabled: false, onActiveChange })(
-                toolbar
-            );
+            const cleanup = rovingFocus({ orientation: "horizontal", enabled: false, onActiveChange })(toolbar);
 
             expect("rovingFocus" in toolbar.dataset).toBe(false);
             for (const btn of buttons) {
@@ -186,9 +196,7 @@ describe("rovingFocus Svelte 5 Element Attachment", () => {
                 return items[2] ?? null;
             });
 
-            const cleanup = rovingFocus({ orientation: "horizontal", initialActive: resolver })(
-                toolbar
-            );
+            const cleanup = rovingFocus({ orientation: "horizontal", initialActive: resolver })(toolbar);
 
             expect(resolver).toHaveBeenCalledTimes(1);
             expect(buttons[2].getAttribute("tabindex")).toBe("0");
@@ -440,9 +448,7 @@ describe("rovingFocus Svelte 5 Element Attachment", () => {
             const onActiveChange = vi.fn();
 
             // loop: true
-            const cleanup1 = rovingFocus({ orientation: "horizontal", loop: true, onActiveChange })(
-                toolbar
-            );
+            const cleanup1 = rovingFocus({ orientation: "horizontal", loop: true, onActiveChange })(toolbar);
             buttons[0].focus();
             dispatchKey(buttons[0], "ArrowLeft");
             expect(document.activeElement).toBe(buttons[2]);
@@ -801,9 +807,7 @@ describe("rovingFocus Svelte 5 Element Attachment", () => {
             expect(buttons[1].getAttribute("tabindex")).toBe("0");
 
             // Simulate Tab-out to external element
-            buttons[1].dispatchEvent(
-                new FocusEvent("focusout", { bubbles: true, relatedTarget: externalBtn })
-            );
+            buttons[1].dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: externalBtn }));
             externalBtn.focus();
 
             expect(document.activeElement).toBe(externalBtn);
@@ -848,9 +852,7 @@ describe("rovingFocus Svelte 5 Element Attachment", () => {
             expect(buttons[2].getAttribute("tabindex")).toBe("0");
 
             // 4. External blur
-            buttons[2].dispatchEvent(
-                new FocusEvent("focusout", { bubbles: true, relatedTarget: externalBtn })
-            );
+            buttons[2].dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: externalBtn }));
             externalBtn.focus();
             expect(buttons[2].getAttribute("tabindex")).toBe("0");
 
@@ -885,15 +887,7 @@ describe("rovingFocus Svelte 5 Element Attachment", () => {
             const ariaHiddenBtn = createButton("AriaHidden", { "aria-hidden": "true" });
             const valid2 = createButton("Valid 2");
 
-            toolbar.append(
-                disabledBtn,
-                valid1,
-                ariaDisabledBtn,
-                inertWrapper,
-                hiddenBtn,
-                ariaHiddenBtn,
-                valid2
-            );
+            toolbar.append(disabledBtn, valid1, ariaDisabledBtn, inertWrapper, hiddenBtn, ariaHiddenBtn, valid2);
             host.append(toolbar);
 
             const cleanup = rovingFocus({ orientation: "horizontal" })(toolbar);
@@ -1265,6 +1259,904 @@ describe("rovingFocus Svelte 5 Element Attachment", () => {
             expect(onActiveChange).not.toHaveBeenCalled();
 
             cleanup?.();
+        });
+    });
+
+    describe("Typeahead Navigation", () => {
+        test("is disabled by default when typeahead is omitted or false", () => {
+            for (const typeaheadOption of [undefined, false] as const) {
+                const { toolbar, buttons } = createNamedToolbar(["Apple", "Banana", "Cherry"]);
+                host.append(toolbar);
+                const onActiveChange = vi.fn();
+
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: typeaheadOption,
+                    onActiveChange,
+                })(toolbar);
+
+                buttons[0].focus();
+                onActiveChange.mockClear();
+
+                for (const key of ["b", "c", " "]) {
+                    const event = dispatchKey(buttons[0], key);
+                    expect(event.defaultPrevented).toBe(false);
+                    expect(document.activeElement).toBe(buttons[0]);
+                    expect(buttons[0].getAttribute("tabindex")).toBe("0");
+                    expect("rovingActive" in buttons[0].dataset).toBe(true);
+                }
+
+                expect(onActiveChange).not.toHaveBeenCalled();
+
+                cleanup?.();
+                toolbar.remove();
+            }
+        });
+
+        test("single and multi-character prefix matching within timeoutMs", () => {
+            vi.useFakeTimers();
+            try {
+                const { toolbar, buttons } = createNamedToolbar(["Banana", "Apple", "Apricot", "Avocado"]);
+                host.append(toolbar);
+                const onActiveChange = vi.fn<(e: RovingFocusChangeEvent) => void>();
+
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                    onActiveChange,
+                })(toolbar);
+
+                buttons[0].focus();
+                onActiveChange.mockClear();
+
+                // Single printable key jumps to first matching item
+                const firstKey = dispatchKey(buttons[0], "a");
+                expect(firstKey.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[1]);
+                expect(buttons[1].getAttribute("tabindex")).toBe("0");
+                expect("rovingActive" in buttons[1].dataset).toBe(true);
+                expect(buttons[0].getAttribute("tabindex")).toBe("-1");
+                expect("rovingActive" in buttons[0].dataset).toBe(false);
+                expect(onActiveChange).toHaveBeenCalledTimes(1);
+                expect(onActiveChange).toHaveBeenLastCalledWith({
+                    activeItem: buttons[1],
+                    previousItem: buttons[0],
+                    container: toolbar,
+                    reason: "keyboard",
+                });
+
+                // Multi-character prefix ("ap") stays on "Apple" without re-firing onActiveChange
+                vi.advanceTimersByTime(100);
+                const secondKey = dispatchKey(buttons[1], "p");
+                expect(secondKey.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[1]);
+                expect(onActiveChange).toHaveBeenCalledTimes(1);
+
+                // Narrowing ("apr") advances to "Apricot"
+                vi.advanceTimersByTime(100);
+                const thirdKey = dispatchKey(buttons[1], "r");
+                expect(thirdKey.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[2]);
+                expect(buttons[2].getAttribute("tabindex")).toBe("0");
+                expect("rovingActive" in buttons[2].dataset).toBe(true);
+                expect("rovingActive" in buttons[1].dataset).toBe(false);
+                expect(onActiveChange).toHaveBeenCalledTimes(2);
+                expect(onActiveChange).toHaveBeenLastCalledWith({
+                    activeItem: buttons[2],
+                    previousItem: buttons[1],
+                    container: toolbar,
+                    reason: "keyboard",
+                });
+
+                cleanup?.();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("matches case-insensitively including Shift+Key", () => {
+            vi.useFakeTimers();
+            try {
+                const { toolbar, buttons } = createNamedToolbar(["apple", "Banana", "CHERRY"]);
+                host.append(toolbar);
+
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                })(toolbar);
+
+                buttons[0].focus();
+
+                const shiftB = dispatchKey(buttons[0], "B", { shiftKey: true });
+                expect(shiftB.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[1]);
+
+                vi.advanceTimersByTime(500);
+
+                const shiftC = dispatchKey(buttons[1], "C", { shiftKey: true });
+                expect(shiftC.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[2]);
+
+                cleanup?.();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("preserves Space when buffer is empty and supports Space inside an active multi-word buffer", () => {
+            const { toolbar, buttons } = createNamedToolbar(["Los Angeles", "New Delhi", "New York"]);
+            host.append(toolbar);
+
+            const cleanup = rovingFocus({
+                orientation: "horizontal",
+                typeahead: true,
+            })(toolbar);
+
+            buttons[0].focus();
+
+            // Space on empty buffer does not trigger typeahead
+            const leadingSpace = dispatchKey(buttons[0], " ");
+            expect(leadingSpace.defaultPrevented).toBe(false);
+            expect(document.activeElement).toBe(buttons[0]);
+
+            // Typing "new y" matches "New York"
+            dispatchKey(buttons[0], "n");
+            dispatchKey(buttons[1], "e");
+            dispatchKey(buttons[1], "w");
+            expect(document.activeElement).toBe(buttons[1]);
+
+            const innerSpace = dispatchKey(buttons[1], " ");
+            expect(innerSpace.defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(buttons[1]);
+
+            const finalKey = dispatchKey(buttons[1], "y");
+            expect(finalKey.defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(buttons[2]);
+
+            cleanup?.();
+        });
+
+        test("cycles repeated single characters and prefers exact 'aa' prefix before falling back to cycling", () => {
+            // 1. Repeated-character cycling with wrap-around
+            {
+                const { toolbar, buttons } = createNamedToolbar(["Apple", "Banana", "Blueberry", "Cherry"]);
+                host.append(toolbar);
+                const cleanup = rovingFocus({ orientation: "horizontal", typeahead: true })(toolbar);
+
+                buttons[0].focus();
+
+                dispatchKey(buttons[0], "b");
+                expect(document.activeElement).toBe(buttons[1]);
+
+                dispatchKey(buttons[1], "b");
+                expect(document.activeElement).toBe(buttons[2]);
+
+                dispatchKey(buttons[2], "b");
+                expect(document.activeElement).toBe(buttons[1]);
+
+                cleanup?.();
+                toolbar.remove();
+            }
+
+            // 2. Exact "aa" prefix beats single-char cycling, then "aaa" falls back to cycling
+            {
+                const { toolbar, buttons } = createNamedToolbar(["Banana", "Alpha", "Apricot", "AA Battery"]);
+                host.append(toolbar);
+                const cleanup = rovingFocus({ orientation: "horizontal", typeahead: true })(toolbar);
+
+                buttons[0].focus();
+
+                dispatchKey(buttons[0], "a");
+                expect(document.activeElement).toBe(buttons[1]); // Alpha
+
+                dispatchKey(buttons[1], "a");
+                expect(document.activeElement).toBe(buttons[3]); // AA Battery (exact "aa" match)
+
+                dispatchKey(buttons[3], "a");
+                expect(document.activeElement).toBe(buttons[1]); // Falls back to single-char cycling
+
+                cleanup?.();
+                toolbar.remove();
+            }
+        });
+
+        test("resets buffer after default 500ms and custom timeoutMs", () => {
+            vi.useFakeTimers();
+            try {
+                // Default 500ms timeout
+                {
+                    const { toolbar, buttons } = createNamedToolbar(["Apple", "Apricot", "Pear"]);
+                    host.append(toolbar);
+                    const cleanup = rovingFocus({
+                        orientation: "horizontal",
+                        typeahead: true,
+                    })(toolbar);
+
+                    buttons[2].focus();
+                    dispatchKey(buttons[2], "a");
+                    expect(document.activeElement).toBe(buttons[0]);
+
+                    // Still buffered at 499ms -> "ap" stays on Apple
+                    vi.advanceTimersByTime(499);
+                    dispatchKey(buttons[0], "p");
+                    expect(document.activeElement).toBe(buttons[0]);
+
+                    // Expires after 500ms -> "p" starts fresh and jumps to Pear
+                    vi.advanceTimersByTime(500);
+                    dispatchKey(buttons[0], "p");
+                    expect(document.activeElement).toBe(buttons[2]);
+
+                    cleanup?.();
+                    toolbar.remove();
+                }
+
+                // Custom 200ms timeout
+                {
+                    const { toolbar, buttons } = createNamedToolbar(["Apple", "Avocado", "Pear"]);
+                    host.append(toolbar);
+                    const cleanup = rovingFocus({
+                        orientation: "horizontal",
+                        typeahead: { timeoutMs: 200 },
+                    })(toolbar);
+
+                    buttons[2].focus();
+                    dispatchKey(buttons[2], "a");
+                    expect(document.activeElement).toBe(buttons[0]);
+
+                    vi.advanceTimersByTime(199);
+                    dispatchKey(buttons[0], "v");
+                    expect(document.activeElement).toBe(buttons[1]);
+
+                    vi.advanceTimersByTime(200);
+                    dispatchKey(buttons[1], "p");
+                    expect(document.activeElement).toBe(buttons[2]);
+
+                    cleanup?.();
+                    toolbar.remove();
+                }
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("resets buffer on Arrow/Home/End navigation, focusout leaving container, and reactive disable", () => {
+            vi.useFakeTimers();
+            try {
+                const { toolbar, buttons } = createNamedToolbar(["Apple", "Apricot", "Plum", "Pear"]);
+                const externalBtn = createButton("Outside");
+                host.append(toolbar, externalBtn);
+
+                let typeahead: boolean | RovingFocusTypeaheadOptions = true;
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: () => typeahead,
+                })(toolbar);
+
+                // 1. ArrowRight resets buffer
+                buttons[3].focus();
+                dispatchKey(buttons[3], "a");
+                expect(document.activeElement).toBe(buttons[0]);
+                dispatchKey(buttons[0], "ArrowRight");
+                expect(document.activeElement).toBe(buttons[1]);
+                // Fresh "p" jumps to Plum (stale "ap" would have stayed on Apricot)
+                dispatchKey(buttons[1], "p");
+                expect(document.activeElement).toBe(buttons[2]);
+
+                vi.advanceTimersByTime(500);
+
+                // 2. End resets buffer
+                dispatchKey(buttons[2], "a");
+                expect(document.activeElement).toBe(buttons[0]);
+                dispatchKey(buttons[0], "End");
+                expect(document.activeElement).toBe(buttons[3]);
+                // Fresh "p" cycles to Plum (stale "ap" would have jumped to Apple)
+                dispatchKey(buttons[3], "p");
+                expect(document.activeElement).toBe(buttons[2]);
+
+                // 3. Home resets buffer
+                dispatchKey(buttons[2], "Home");
+                expect(document.activeElement).toBe(buttons[0]);
+                // Fresh "a" cycles to Apricot (stale "pa" would not match)
+                dispatchKey(buttons[0], "a");
+                expect(document.activeElement).toBe(buttons[1]);
+
+                // 4. focusout leaving container resets buffer
+                buttons[1].dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: externalBtn }));
+                externalBtn.focus();
+                buttons[1].focus();
+                dispatchKey(buttons[1], "p");
+                expect(document.activeElement).toBe(buttons[2]);
+
+                vi.advanceTimersByTime(500);
+
+                // 5. Reactive typeahead getter returning false resets buffer
+                dispatchKey(buttons[2], "a");
+                expect(document.activeElement).toBe(buttons[0]);
+                typeahead = false;
+                const ignoredWhileDisabled = dispatchKey(buttons[0], "p");
+                expect(ignoredWhileDisabled.defaultPrevented).toBe(false);
+                expect(document.activeElement).toBe(buttons[0]);
+                typeahead = true;
+                // Fresh "p" jumps to Plum (stale "ap" would have stayed on Apple)
+                dispatchKey(buttons[0], "p");
+                expect(document.activeElement).toBe(buttons[2]);
+
+                cleanup?.();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("resolves labels with priority data-typeahead-label > aria-label > textContent and supports custom getLabel", () => {
+            vi.useFakeTimers();
+            try {
+                // Default label resolution priority
+                {
+                    const toolbar = document.createElement("div");
+                    const textItem = createButton("  Alpha  ");
+                    const ariaItem = createButton("Wrong Text", { "aria-label": "Bravo" });
+                    const dataItem = createButton("Wrong Text 2", {
+                        "aria-label": "Wrong Aria",
+                        "data-typeahead-label": "Charlie",
+                    });
+                    toolbar.append(textItem, ariaItem, dataItem);
+                    host.append(toolbar);
+
+                    const cleanup = rovingFocus({
+                        orientation: "horizontal",
+                        typeahead: true,
+                    })(toolbar);
+
+                    textItem.focus();
+
+                    dispatchKey(textItem, "b");
+                    expect(document.activeElement).toBe(ariaItem);
+
+                    vi.advanceTimersByTime(500);
+
+                    dispatchKey(ariaItem, "c");
+                    expect(document.activeElement).toBe(dataItem);
+
+                    vi.advanceTimersByTime(500);
+
+                    // Trimmed textContent still matches
+                    dispatchKey(dataItem, "a");
+                    expect(document.activeElement).toBe(textItem);
+
+                    vi.advanceTimersByTime(500);
+
+                    // Overridden text/aria labels do not match
+                    const noMatch = dispatchKey(textItem, "w");
+                    expect(noMatch.defaultPrevented).toBe(false);
+                    expect(document.activeElement).toBe(textItem);
+
+                    cleanup?.();
+                    toolbar.remove();
+                }
+
+                // Custom getLabel resolver
+                {
+                    const toolbar = document.createElement("div");
+                    const item1 = createButton("First", { "data-shortcut": "1" });
+                    const item2 = createButton("Second", { "data-shortcut": "2" });
+                    toolbar.append(item1, item2);
+                    host.append(toolbar);
+
+                    const cleanup = rovingFocus({
+                        orientation: "horizontal",
+                        typeahead: {
+                            getLabel: (item) => item.dataset.shortcut ?? "",
+                        },
+                    })(toolbar);
+
+                    item1.focus();
+
+                    // Default textContent is ignored when custom getLabel is used
+                    const textKey = dispatchKey(item1, "s");
+                    expect(textKey.defaultPrevented).toBe(false);
+                    expect(document.activeElement).toBe(item1);
+
+                    vi.advanceTimersByTime(500);
+
+                    const customKey = dispatchKey(item1, "2");
+                    expect(customKey.defaultPrevented).toBe(true);
+                    expect(document.activeElement).toBe(item2);
+
+                    cleanup?.();
+                    toolbar.remove();
+                }
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("skips disabled/hidden items and ignores modifier combos, IME composing, and text-editing targets", () => {
+            const toolbar = document.createElement("div");
+            const alpha = createButton("Alpha");
+            const disabledBanana = createButton("Banana", { disabled: true });
+            const ariaDisabledBlueberry = createButton("Blueberry", { "aria-disabled": "true" });
+            const hiddenBlackberry = createButton("Blackberry", { hidden: true });
+            const ariaHiddenBoys = createButton("Boysenberry", { "aria-hidden": "true" });
+            const brioche = createButton("Brioche");
+
+            const textInput = document.createElement("input");
+            textInput.type = "text";
+            const textarea = document.createElement("textarea");
+            const select = document.createElement("select");
+            const editable = document.createElement("div");
+            editable.setAttribute("contenteditable", "true");
+
+            toolbar.append(
+                alpha,
+                disabledBanana,
+                ariaDisabledBlueberry,
+                hiddenBlackberry,
+                ariaHiddenBoys,
+                brioche,
+                textInput,
+                textarea,
+                select,
+                editable
+            );
+            host.append(toolbar);
+
+            const onActiveChange = vi.fn();
+            const cleanup = rovingFocus({
+                orientation: "horizontal",
+                typeahead: true,
+                onActiveChange,
+            })(toolbar);
+
+            alpha.focus();
+            onActiveChange.mockClear();
+
+            // Ignores modifier combos and IME composition
+            for (const init of [{ ctrlKey: true }, { altKey: true }, { metaKey: true }, { isComposing: true }]) {
+                const event = dispatchKey(alpha, "b", init);
+                expect(event.defaultPrevented).toBe(false);
+                expect(document.activeElement).toBe(alpha);
+            }
+            expect(onActiveChange).not.toHaveBeenCalled();
+
+            // Ignores printable keys originating in text-editing targets
+            for (const target of [textInput, textarea, select, editable]) {
+                const event = dispatchKey(target, "b");
+                expect(event.defaultPrevented).toBe(false);
+            }
+            expect(onActiveChange).not.toHaveBeenCalled();
+            expect(alpha.getAttribute("tabindex")).toBe("0");
+
+            // Skips disabled/hidden "B*" items and jumps directly to Brioche
+            const validKey = dispatchKey(alpha, "b");
+            expect(validKey.defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(brioche);
+            expect(onActiveChange).toHaveBeenCalledTimes(1);
+
+            cleanup?.();
+        });
+
+        test("reacts dynamically to typeahead getter toggling boolean and options without remounting", () => {
+            const toolbar = document.createElement("div");
+            const alpha = createButton("Alpha", { "data-alias": "one" });
+            const bravo = createButton("Bravo", { "data-alias": "two" });
+            const charlie = createButton("Charlie", { "data-alias": "three" });
+            toolbar.append(alpha, bravo, charlie);
+            host.append(toolbar);
+
+            let typeahead: boolean | RovingFocusTypeaheadOptions = false;
+            const cleanup = rovingFocus({
+                orientation: "horizontal",
+                typeahead: () => typeahead,
+            })(toolbar);
+
+            alpha.focus();
+
+            // Initially disabled
+            expect(dispatchKey(alpha, "b").defaultPrevented).toBe(false);
+            expect(document.activeElement).toBe(alpha);
+
+            // Enable with boolean true
+            typeahead = true;
+            expect(dispatchKey(alpha, "b").defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(bravo);
+
+            // Reset buffer via ArrowLeft, then switch to custom options object dynamically
+            dispatchKey(bravo, "ArrowLeft");
+            expect(document.activeElement).toBe(alpha);
+
+            typeahead = { getLabel: (item) => item.dataset.alias ?? "" };
+            expect(dispatchKey(alpha, "t").defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(bravo); // matches "two" on bravo
+            expect(dispatchKey(bravo, "h").defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(charlie); // narrows "th" -> "three" on charlie
+
+            // Disable again
+            typeahead = false;
+            expect(dispatchKey(charlie, "o").defaultPrevented).toBe(false);
+            expect(document.activeElement).toBe(charlie);
+
+            cleanup?.();
+        });
+
+        test("pointerdown clears active typeahead buffer", () => {
+            vi.useFakeTimers();
+            try {
+                const { toolbar, buttons } = createNamedToolbar(["Apple", "Apricot", "Banana", "Plum"]);
+                host.append(toolbar);
+
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                })(toolbar);
+
+                buttons[2].focus();
+                dispatchKey(buttons[2], "a");
+                expect(document.activeElement).toBe(buttons[0]); // Apple
+
+                vi.advanceTimersByTime(100);
+                dispatchPointerDown(buttons[2]);
+                buttons[2].focus();
+                expect(buttons[2].getAttribute("tabindex")).toBe("0");
+
+                // Typing "p" immediately after pointerdown must start a fresh query ("Plum"), not "ap" ("Apple"/"Apricot")
+                vi.advanceTimersByTime(100);
+                const nextKey = dispatchKey(buttons[2], "p");
+                expect(nextKey.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[3]); // Plum
+
+                cleanup?.();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("programmatic focusin to a different managed item clears active typeahead buffer", () => {
+            vi.useFakeTimers();
+            try {
+                const { toolbar, buttons } = createNamedToolbar(["Apple", "Apricot", "Banana", "Plum"]);
+                host.append(toolbar);
+
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                })(toolbar);
+
+                // Focus Banana, type "a" -> moves to Apple and buffers "a"
+                buttons[2].focus();
+                dispatchKey(buttons[2], "a");
+                expect(document.activeElement).toBe(buttons[0]); // Apple
+
+                // Programmatic focusin to Banana (no pointerdown) clears buffer
+                vi.advanceTimersByTime(100);
+                buttons[2].focus();
+                expect(buttons[2].getAttribute("tabindex")).toBe("0");
+
+                // Typing "p" within timeoutMs must start a fresh query ("Plum"), not "ap" ("Apricot")
+                vi.advanceTimersByTime(100);
+                const nextKey = dispatchKey(buttons[2], "p");
+                expect(nextKey.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[3]); // Plum
+
+                cleanup?.();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("MutationObserver active-item promotion clears active typeahead buffer", async () => {
+            vi.useFakeTimers();
+            try {
+                const { toolbar, buttons } = createNamedToolbar(["Apple", "Apricot", "Banana", "Plum"]);
+                host.append(toolbar);
+                const onActiveChange = vi.fn<(e: RovingFocusChangeEvent) => void>();
+
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                    onActiveChange,
+                })(toolbar);
+
+                // Focus Banana, type "a" -> moves to Apple and buffers "a"
+                buttons[2].focus();
+                onActiveChange.mockClear();
+                dispatchKey(buttons[2], "a");
+                expect(document.activeElement).toBe(buttons[0]); // Apple
+
+                // Remove Apple within timeoutMs -> MutationObserver promotes and focuses Apricot and clears buffer
+                vi.advanceTimersByTime(100);
+                buttons[0].remove();
+                await flushMicrotasks();
+
+                expect(buttons[1].getAttribute("tabindex")).toBe("0");
+                expect("rovingActive" in buttons[1].dataset).toBe(true);
+                expect(document.activeElement).toBe(buttons[1]); // Apricot
+                expect(onActiveChange).toHaveBeenLastCalledWith({
+                    activeItem: buttons[1],
+                    previousItem: buttons[0],
+                    container: toolbar,
+                    reason: "mutation",
+                });
+
+                // Immediately typing "p" within timeoutMs must start a fresh query ("Plum"), not "ap" ("Apricot")
+                vi.advanceTimersByTime(100);
+                const nextKey = dispatchKey(buttons[1], "p");
+                expect(nextKey.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[3]); // Plum
+
+                cleanup?.();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("isolates typeahead matching and buffers between nested [data-roving-focus] containers", () => {
+            vi.useFakeTimers();
+            try {
+                const outer = document.createElement("div");
+                const outerAlpha = createButton("Alpha");
+                const outerOmega = createButton("Omega");
+
+                const inner = document.createElement("div");
+                const innerBeta = createButton("Beta");
+                const innerGamma = createButton("Gamma");
+                inner.append(innerBeta, innerGamma);
+
+                outer.append(outerAlpha, inner, outerOmega);
+                host.append(outer);
+
+                const onOuterChange = vi.fn();
+                const onInnerChange = vi.fn();
+
+                const cleanupInner = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                    onActiveChange: onInnerChange,
+                })(inner);
+                const cleanupOuter = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                    onActiveChange: onOuterChange,
+                })(outer);
+
+                // Move outer to Omega, then focus inside inner
+                outerAlpha.focus();
+                dispatchKey(outerAlpha, "ArrowRight");
+                expect(document.activeElement).toBe(outerOmega);
+                onOuterChange.mockClear();
+                onInnerChange.mockClear();
+
+                // Inner's own typeahead works without affecting outer
+                innerBeta.focus();
+                const innerMatch = dispatchKey(innerBeta, "g");
+                expect(innerMatch.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(innerGamma);
+                expect(onInnerChange).toHaveBeenCalledTimes(1);
+                expect(onOuterChange).not.toHaveBeenCalled();
+
+                vi.advanceTimersByTime(500);
+
+                // Typing "a" inside inner must neither move outer nor buffer "a" on outer
+                const innerNoMatch = dispatchKey(innerGamma, "a");
+                expect(innerNoMatch.defaultPrevented).toBe(false);
+                expect(document.activeElement).toBe(innerGamma);
+                expect(onOuterChange).not.toHaveBeenCalled();
+
+                // Immediately returning to outer and typing "l" does not form stale "al" -> "Alpha"
+                outerOmega.focus();
+                onOuterChange.mockClear();
+                const outerL = dispatchKey(outerOmega, "l");
+                expect(outerL.defaultPrevented).toBe(false);
+                expect(document.activeElement).toBe(outerOmega);
+                expect(onOuterChange).not.toHaveBeenCalled();
+
+                vi.advanceTimersByTime(500);
+
+                // Typing "b" on outer skips inner-owned "Beta"
+                onInnerChange.mockClear();
+                const outerB = dispatchKey(outerOmega, "b");
+                expect(outerB.defaultPrevented).toBe(false);
+                expect(document.activeElement).toBe(outerOmega);
+                expect(onInnerChange).not.toHaveBeenCalled();
+                expect(onOuterChange).not.toHaveBeenCalled();
+
+                cleanupOuter?.();
+                cleanupInner?.();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("nested [data-roving-focus] focusin clears outer container's active typeahead buffer", () => {
+            vi.useFakeTimers();
+            try {
+                const outer = document.createElement("div");
+                const outerAlpha = createButton("Alpha");
+                const outerApricot = createButton("Apricot");
+                const outerOmega = createButton("Omega");
+                const outerPlum = createButton("Plum");
+
+                const inner = document.createElement("div");
+                const innerBeta = createButton("Beta");
+                const innerGamma = createButton("Gamma");
+                inner.append(innerBeta, innerGamma);
+
+                outer.append(outerAlpha, outerApricot, inner, outerOmega, outerPlum);
+                host.append(outer);
+
+                const cleanupInner = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                })(inner);
+                const cleanupOuter = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                })(outer);
+
+                // Focus outer Omega, type "a" -> moves to Alpha (currentActiveItem) and buffers "a"
+                outerOmega.focus();
+                dispatchKey(outerOmega, "a");
+                expect(document.activeElement).toBe(outerAlpha);
+
+                // Focusing nested innerBeta within timeoutMs triggers outer's closest("[data-roving-focus]") !== outer branch and clears outer's buffer
+                vi.advanceTimersByTime(100);
+                innerBeta.focus();
+
+                // Refocusing outerAlpha keeps focusedItem === currentActiveItem (so the different-item branch is NOT entered)
+                vi.advanceTimersByTime(100);
+                outerAlpha.focus();
+
+                // Typing "p" within timeoutMs must jump to Plum, proving innerBeta.focus() cleared outer's "a" buffer (otherwise "ap" would match Apricot)
+                vi.advanceTimersByTime(100);
+                const nextKey = dispatchKey(outerAlpha, "p");
+                expect(nextKey.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(outerPlum);
+
+                cleanupOuter?.();
+                cleanupInner?.();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("sanitizes invalid timeoutMs values by falling back to 500ms default", () => {
+            vi.useFakeTimers();
+            try {
+                for (const invalidTimeout of [0, -100, NaN, Infinity] as const) {
+                    const { toolbar, buttons } = createNamedToolbar(["Apple", "Apricot", "Pear"]);
+                    host.append(toolbar);
+
+                    const cleanup = rovingFocus({
+                        orientation: "horizontal",
+                        typeahead: { timeoutMs: invalidTimeout },
+                    })(toolbar);
+
+                    buttons[2].focus();
+                    dispatchKey(buttons[2], "a");
+                    expect(document.activeElement).toBe(buttons[0]);
+
+                    // Still buffered at 499ms -> "ap" stays on Apple
+                    vi.advanceTimersByTime(499);
+                    dispatchKey(buttons[0], "p");
+                    expect(document.activeElement).toBe(buttons[0]);
+
+                    // Expires at 500ms -> fresh "p" jumps to Pear
+                    vi.advanceTimersByTime(500);
+                    dispatchKey(buttons[0], "p");
+                    expect(document.activeElement).toBe(buttons[2]);
+
+                    cleanup?.();
+                    toolbar.remove();
+                }
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("clears pending typeahead timer and ignores subsequent printable keys on cleanup", () => {
+            vi.useFakeTimers();
+            try {
+                const { toolbar, buttons } = createNamedToolbar(["Apple", "Banana"]);
+                host.append(toolbar);
+
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                })(toolbar);
+
+                buttons[0].focus();
+                expect(vi.getTimerCount()).toBe(0);
+
+                const firstKey = dispatchKey(buttons[0], "b");
+                expect(firstKey.defaultPrevented).toBe(true);
+                expect(document.activeElement).toBe(buttons[1]);
+                expect(vi.getTimerCount()).toBe(1);
+
+                cleanup?.();
+                expect(vi.getTimerCount()).toBe(0);
+
+                const afterCleanup = dispatchKey(buttons[1], "a");
+                expect(afterCleanup.defaultPrevented).toBe(false);
+                expect(document.activeElement).toBe(buttons[1]);
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        test("normalizes multi-line and repeated whitespace in textContent labels", () => {
+            const { toolbar, buttons } = createNamedToolbar(["Los Angeles", "New Delhi", "  New\n   York  "]);
+            host.append(toolbar);
+
+            const cleanup = rovingFocus({
+                orientation: "horizontal",
+                typeahead: true,
+            })(toolbar);
+
+            buttons[0].focus();
+
+            dispatchKey(buttons[0], "n");
+            dispatchKey(buttons[1], "e");
+            dispatchKey(buttons[1], "w");
+            expect(document.activeElement).toBe(buttons[1]);
+
+            const innerSpace = dispatchKey(buttons[1], " ");
+            expect(innerSpace.defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(buttons[1]);
+
+            const finalKey = dispatchKey(buttons[1], "y");
+            expect(finalKey.defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(buttons[2]);
+
+            cleanup?.();
+        });
+
+        test("sets data-typeahead-active while buffered, removes it on timeout/arrow/pointerdown/cleanup, and prevents Space default when buffered even without a match", () => {
+            vi.useFakeTimers();
+            try {
+                const { toolbar, buttons } = createNamedToolbar(["Los Angeles", "New Delhi", "New York"]);
+                host.append(toolbar);
+
+                const cleanup = rovingFocus({
+                    orientation: "horizontal",
+                    typeahead: true,
+                })(toolbar);
+
+                buttons[0].focus();
+                expect("typeaheadActive" in toolbar.dataset).toBe(false);
+
+                // Buffering sets data-typeahead-active; Space mid-query calls preventDefault() even when !match
+                dispatchKey(buttons[0], "n");
+                expect("typeaheadActive" in toolbar.dataset).toBe(true);
+                dispatchKey(buttons[1], "z");
+                const unmatchedSpace = dispatchKey(buttons[1], " ");
+                expect(unmatchedSpace.defaultPrevented).toBe(true);
+                expect("typeaheadActive" in toolbar.dataset).toBe(true);
+
+                // Timeout removes data-typeahead-active
+                vi.advanceTimersByTime(500);
+                expect("typeaheadActive" in toolbar.dataset).toBe(false);
+
+                // Arrow key removes data-typeahead-active
+                dispatchKey(buttons[1], "n");
+                expect(document.activeElement).toBe(buttons[2]);
+                expect("typeaheadActive" in toolbar.dataset).toBe(true);
+                dispatchKey(buttons[2], "ArrowRight");
+                expect("typeaheadActive" in toolbar.dataset).toBe(false);
+
+                // Pointerdown removes data-typeahead-active
+                dispatchKey(buttons[0], "l");
+                expect("typeaheadActive" in toolbar.dataset).toBe(true);
+                dispatchPointerDown(buttons[1]);
+                expect("typeaheadActive" in toolbar.dataset).toBe(false);
+
+                // Cleanup removes data-typeahead-active
+                buttons[0].focus();
+                dispatchKey(buttons[0], "n");
+                expect("typeaheadActive" in toolbar.dataset).toBe(true);
+                cleanup?.();
+                expect("typeaheadActive" in toolbar.dataset).toBe(false);
+            } finally {
+                vi.useRealTimers();
+            }
         });
     });
 

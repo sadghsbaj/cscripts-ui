@@ -6,8 +6,7 @@
 <script lang="ts">
     import { Button, ButtonLabel } from "cs/svelte/button";
     import { rovingFocus } from "cs/svelte/focus";
-    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
+    import { ToggleButton, ToggleButtonGroup, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let view = $state<string | undefined>("week");
@@ -17,8 +16,7 @@
     /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {view} bindings */
     const horizontalCode = `<script lang="ts">
     import { rovingFocus } from "cs/svelte/focus";
-    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
+    import { ToggleButton, ToggleButtonGroup, ToggleButtonLabel } from "cs/svelte/toggle-button";
 
     let view = $state<string | undefined>("week");
 ${closeScript}
@@ -62,6 +60,15 @@ ${closeScript}
         color: var(--cs-color-accent-soft-fg);
     }
 </style>`;
+
+    const typeaheadCode = `<div class="flex flex-col gap-1" {@attach rovingFocus({ orientation: "vertical", typeahead: true })}>
+    <button type="button" class="roving-item">Analytics</button>
+    <button type="button" class="roving-item">Archive</button>
+    <button type="button" class="roving-item">Billing</button>
+    <button type="button" class="roving-item">New Project</button>
+    <button type="button" class="roving-item">New Workspace</button>
+    <button type="button" class="roving-item">Settings</button>
+</div>`;
 </script>
 
 <div class="flex flex-col gap-10">
@@ -138,6 +145,54 @@ ${closeScript}
                 class="roving-item text-left text-sm font-medium px-3 h-32px rounded-xl squircle-soft text-main transition-colors"
             >
                 Archive
+            </button>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Typeahead"
+        description="Focus the list and type characters to jump to matching items or cycle shared prefixes."
+        code={typeaheadCode}
+    >
+        <div
+            class="bg-sunken shadow-sunken rounded-2xl squircle-soft p-1.5 flex flex-col gap-1 w-full max-w-220px"
+            {@attach rovingFocus({ orientation: "vertical", typeahead: true })}
+        >
+            <button
+                type="button"
+                class="roving-item text-left text-sm font-medium px-3 h-32px rounded-xl squircle-soft text-main transition-colors"
+            >
+                Analytics
+            </button>
+            <button
+                type="button"
+                class="roving-item text-left text-sm font-medium px-3 h-32px rounded-xl squircle-soft text-main transition-colors"
+            >
+                Archive
+            </button>
+            <button
+                type="button"
+                class="roving-item text-left text-sm font-medium px-3 h-32px rounded-xl squircle-soft text-main transition-colors"
+            >
+                Billing
+            </button>
+            <button
+                type="button"
+                class="roving-item text-left text-sm font-medium px-3 h-32px rounded-xl squircle-soft text-main transition-colors"
+            >
+                New Project
+            </button>
+            <button
+                type="button"
+                class="roving-item text-left text-sm font-medium px-3 h-32px rounded-xl squircle-soft text-main transition-colors"
+            >
+                New Workspace
+            </button>
+            <button
+                type="button"
+                class="roving-item text-left text-sm font-medium px-3 h-32px rounded-xl squircle-soft text-main transition-colors"
+            >
+                Settings
             </button>
         </div>
     </PreviewSection>
