@@ -21,18 +21,18 @@
         --cs-listbox-group-label-fg: var(--cs-color-text-weak);
         --cs-listbox-separator-bg: color-mix(in oklab, var(--cs-color-text-main) 10%, transparent);
         --cs-listbox-empty-fg: var(--cs-color-text-weak);
+        flex-direction: column;
 
         max-inline-size: min(var(--cs-listbox-content-max-width), calc(100vw - 32px));
         max-block-size: min(var(--cs-listbox-content-max-height), calc(100dvh - 32px));
+        overflow: hidden;
         background-color: var(--cs-listbox-content-bg);
         border-radius: var(--cs-listbox-content-radius);
         corner-shape: var(--cs-squircle-soft);
         box-shadow: var(--cs-listbox-content-shadow);
-        overflow: hidden;
 
         &:popover-open {
             display: flex;
-            flex-direction: column;
             overflow: hidden;
         }
 
@@ -121,12 +121,12 @@
     }
 
     .cs-listbox-list {
+        scroll-padding-block: calc(var(--cs-listbox-content-padding) + 16px);
         display: flex;
         flex-direction: column;
         gap: var(--cs-listbox-list-gap);
         padding: var(--cs-listbox-content-padding);
         overscroll-behavior: contain;
-        scroll-padding-block: calc(var(--cs-listbox-content-padding) + 16px);
 
         &:focus {
             outline: none;
@@ -138,22 +138,22 @@
         display: flex;
         align-items: center;
         min-height: var(--cs-listbox-item-min-height);
-        padding-inline: var(--cs-listbox-item-px);
         padding-block: var(--cs-listbox-item-py);
+        padding-inline: var(--cs-listbox-item-px);
         color: var(--cs-listbox-item-fg);
         font-size: var(--cs-listbox-item-font-size);
         background-color: var(--cs-listbox-item-bg);
         border-radius: var(--cs-listbox-item-radius);
         corner-shape: var(--cs-squircle-soft);
-        cursor: default;
         user-select: none;
         transition:
             background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
             color var(--cs-dur-effect-fast) var(--cs-ease-effect),
             scale var(--cs-dur-press) var(--cs-ease-press);
+        cursor: default;
 
         /* Optical edge inset for Lucide 2px internal SVG viewBox padding */
-        &:has(.cs-listbox-item-icon) {
+        &:has(.cs-listbox-item-icon, .cs-listbox-item-indicator) {
             padding-inline-start: calc(var(--cs-listbox-item-px) - 2px);
         }
 
@@ -221,14 +221,14 @@
         width: 100%;
         min-width: 0;
 
-        &:has(> .cs-listbox-item-icon) {
+        &:has(> .cs-listbox-item-icon, > .cs-listbox-item-indicator) {
             grid-template-columns: auto minmax(0, 1fr) var(--cs-listbox-check-size);
         }
 
         &:not(:has(> .cs-listbox-item-check)) {
             grid-template-columns: minmax(0, 1fr);
 
-            &:has(> .cs-listbox-item-icon) {
+            &:has(> .cs-listbox-item-icon, > .cs-listbox-item-indicator) {
                 grid-template-columns: auto minmax(0, 1fr);
             }
         }
@@ -236,7 +236,8 @@
         &:has(.cs-listbox-item-description) {
             align-items: start;
 
-            > .cs-listbox-item-icon {
+            > .cs-listbox-item-icon,
+            > .cs-listbox-item-indicator {
                 margin-block-start: calc((var(--cs-listbox-item-title-lh) - var(--cs-listbox-icon-size)) / 2);
             }
 
@@ -251,8 +252,8 @@
             height: var(--cs-listbox-icon-size);
             color: var(--cs-listbox-item-icon-fg);
             stroke-width: 2.25;
-            pointer-events: none;
             transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            pointer-events: none;
         }
     }
 
@@ -262,9 +263,9 @@
 
         &:not(:has(*)) {
             display: block;
-            font-weight: 500;
             overflow-x: clip;
             overflow-y: visible;
+            font-weight: 500;
             text-overflow: ellipsis;
             white-space: nowrap;
             text-box: trim-both cap alphabetic;
@@ -297,45 +298,45 @@
                 grid-template-columns: auto minmax(0, 1fr);
 
                 > .cs-listbox-item-icon {
-                    grid-column: 1;
                     grid-row: 1;
+                    grid-column: 1;
                     margin-block-start: calc((var(--cs-listbox-item-title-lh) - var(--cs-listbox-icon-size)) / 2);
                 }
 
                 > .cs-listbox-item-text {
-                    grid-column: 2;
                     grid-row: 1;
+                    grid-column: 2;
                 }
 
                 > .cs-listbox-item-description {
-                    grid-column: 2;
                     grid-row: 2;
+                    grid-column: 2;
                 }
 
                 > :not(.cs-listbox-item-icon, .cs-listbox-item-text, .cs-listbox-item-description) {
-                    grid-column: 3;
-                    grid-row: 1;
-                    align-self: center;
                     flex-shrink: 0;
+                    grid-row: 1;
+                    grid-column: 3;
+                    align-self: center;
                 }
             }
 
             &:not(:has(> .cs-listbox-item-icon)) {
                 > .cs-listbox-item-text {
-                    grid-column: 1;
                     grid-row: 1;
+                    grid-column: 1;
                 }
 
                 > .cs-listbox-item-description {
-                    grid-column: 1;
                     grid-row: 2;
+                    grid-column: 1;
                 }
 
                 > :not(.cs-listbox-item-icon, .cs-listbox-item-text, .cs-listbox-item-description) {
-                    grid-column: 2;
-                    grid-row: 1;
-                    align-self: center;
                     flex-shrink: 0;
+                    grid-row: 1;
+                    grid-column: 2;
+                    align-self: center;
                 }
             }
         }
@@ -347,25 +348,25 @@
         height: var(--cs-listbox-icon-size);
         color: var(--cs-listbox-item-icon-fg);
         stroke-width: 2.25;
-        pointer-events: none;
         transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        pointer-events: none;
     }
 
     .cs-listbox-item-text {
         flex: 1 1 auto;
         min-width: 0;
-        font-weight: 500;
         overflow-x: clip;
         overflow-y: visible;
+        font-weight: 500;
         text-overflow: ellipsis;
         white-space: nowrap;
         text-box: trim-both cap alphabetic;
 
         .cs-listbox-item:has(.cs-listbox-item-description) & {
             overflow: visible;
+            line-height: var(--cs-listbox-item-title-lh);
             text-overflow: clip;
             white-space: normal;
-            line-height: var(--cs-listbox-item-title-lh);
             text-box: normal;
         }
     }
@@ -387,10 +388,10 @@
         color: var(--cs-listbox-item-indicator-fg);
         opacity: 0;
         scale: 0.75;
-        pointer-events: none;
         transition:
             opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
             scale var(--cs-dur-effect-fast) var(--cs-ease-quart-out);
+        pointer-events: none;
 
         > .cs-listbox-item-check-icon {
             width: 100%;
@@ -414,8 +415,8 @@
     }
 
     .cs-listbox-group-label {
-        padding-inline: var(--cs-listbox-item-px);
         padding-block: 4px 2px;
+        padding-inline: var(--cs-listbox-item-px);
         color: var(--cs-listbox-group-label-fg);
         font-size: var(--cs-listbox-group-label-font-size);
         font-weight: 500;
@@ -430,15 +431,15 @@
 
     .cs-listbox-separator {
         flex-shrink: 0;
-        height: 1px;
         margin-block: 4px;
         margin-inline: var(--cs-listbox-item-px);
+        height: 1px;
         background-color: var(--cs-listbox-separator-bg);
     }
 
     .cs-listbox-empty {
-        padding-inline: var(--cs-listbox-item-px);
         padding-block: calc(var(--cs-listbox-item-py) * 2.5);
+        padding-inline: var(--cs-listbox-item-px);
         color: var(--cs-listbox-empty-fg);
         font-size: var(--cs-listbox-item-font-size);
         line-height: var(--cs-leading-snug);
