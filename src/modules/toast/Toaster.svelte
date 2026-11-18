@@ -104,12 +104,28 @@
         return lastPositions[id] ?? { index: 0, offset: 0 };
     }
 
+    function measureHeight(id: string, node: HTMLLIElement): boolean {
+        if (!node.isConnected) {
+            return false;
+        }
+        const prevTransition = node.style.transition;
+        const prevHeight = node.style.height;
+        node.style.transition = "none";
+        node.style.height = "auto";
+        // Read computed height instead of getBoundingClientRect() so rear-stack scale() is ignored
+        const nextHeight = Math.round(Number(getComputedStyle(node).height.replace("px", "")));
+        node.style.height = prevHeight;
+        node.style.transition = prevTransition;
+        if (Number.isFinite(nextHeight) && nextHeight > 0) {
+            toastState.setHeight(id, nextHeight);
+            return true;
+        }
+        return false;
+    }
+
     function mountToast(id: string, getUpdatedAt: () => number): Attachment<HTMLLIElement> {
         return (node: HTMLLIElement) => {
-            const rect = node.getBoundingClientRect();
-            if (rect.height > 0) {
-                toastState.setHeight(id, Math.round(rect.height));
-            }
+            const measuredSync = measureHeight(id, node);
 
             // Re-measure synchronously on content updates without letting CSS height transitions corrupt the stored height
             let isFirstRun = true;
@@ -119,15 +135,7 @@
                     isFirstRun = false;
                     return;
                 }
-                const prevTransition = node.style.transition;
-                node.style.transition = "none";
-                node.style.height = "auto";
-                const nextHeight = Math.round(node.getBoundingClientRect().height);
-                node.style.height = "";
-                node.style.transition = prevTransition;
-                if (nextHeight > 0) {
-                    toastState.setHeight(id, nextHeight);
-                }
+                measureHeight(id, node);
             });
 
             // Double rAF guarantees the off-screen start frame paints before transitioning in
@@ -135,6 +143,9 @@
             let raf2 = 0;
             if (typeof requestAnimationFrame === "function") {
                 raf1 = requestAnimationFrame(() => {
+                    if (!measuredSync) {
+                        measureHeight(id, node);
+                    }
                     raf2 = requestAnimationFrame(() => {
                         toastState.markMounted(id);
                     });
@@ -622,7 +633,7 @@
             }
 
             /* Collapsed rear toasts */
-            &[data-mounted]:not([data-expanded]):not([data-front]) {
+            &[data-mounted]:not([data-expanded]):not([data-front]):not([data-removed]) {
                 height: var(--cs-toast-front-height);
                 transform: translateY(calc(var(--cs-toast-lift) * var(--cs-toast-gap) * var(--cs-toast-index)))
                     scale(var(--cs-toast-scale));
@@ -679,6 +690,7 @@
 
             /* Standard exit animation */
             &[data-removed] {
+                height: var(--cs-toast-initial-height);
                 pointer-events: none;
                 opacity: 0;
                 transform: translateY(calc(var(--cs-toast-lift) * -100%));
