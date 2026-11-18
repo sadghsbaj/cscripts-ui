@@ -1,0 +1,1541 @@
+@layer components.composite {
+    .cs-data-table {
+        --cs-data-table-fg: var(--cs-color-text-main);
+        --cs-data-table-divider: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 5.5%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 7%, transparent)
+        );
+        --cs-data-table-header-divider: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 8.5%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 11%, transparent)
+        );
+        --cs-data-table-gridline: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 5%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 6.5%, transparent)
+        );
+        --cs-data-table-stripe-bg: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 2%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 2.8%, transparent)
+        );
+        --cs-data-table-header-shadow-scrolled: light-dark(
+            0 4px 12px -4px rgb(0 0 0 / 0.08),
+            0 6px 18px -4px rgb(0 0 0 / 0.5)
+        );
+        --cs-data-table-edge-fade-color: light-dark(rgb(0 0 0 / 0.055), rgb(0 0 0 / 0.34));
+        --cs-data-table-row-hover-overlay: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 2.5%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 4.5%, transparent)
+        );
+        --cs-data-table-row-interactive-hover-overlay: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 3.5%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 6.5%, transparent)
+        );
+        --cs-data-table-row-interactive-active-overlay: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 5%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 9%, transparent)
+        );
+        --cs-data-table-row-selected-overlay: light-dark(
+            color-mix(in oklab, var(--cs-color-accent-500) 8%, transparent),
+            color-mix(in oklab, var(--cs-color-accent-500) 16%, transparent)
+        );
+        --cs-data-table-header-pill-filtered-bg: light-dark(
+            color-mix(in oklab, var(--cs-color-accent-500) 8%, transparent),
+            color-mix(in oklab, var(--cs-color-accent-500) 15%, transparent)
+        );
+        --cs-data-table-header-pill-filtered-bg-hover: light-dark(
+            color-mix(in oklab, var(--cs-color-accent-500) 12%, transparent),
+            color-mix(in oklab, var(--cs-color-accent-500) 21%, transparent)
+        );
+        --cs-data-table-row-hover-dur: var(--cs-dur-60);
+        --cs-data-table-popover-pad: 6px;
+
+        isolation: isolate;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        inline-size: 100%;
+        min-inline-size: 0;
+        overflow: clip;
+        color: var(--cs-data-table-fg);
+        font-family: var(--cs-font-sans);
+        background-color: var(--cs-data-table-bg);
+        border-radius: var(--cs-data-table-radius);
+        corner-shape: var(--cs-data-table-squircle, var(--cs-squircle));
+        box-shadow: var(--cs-data-table-shadow, none);
+
+        /* =========================================================
+         * SIZES (xs - lg, exact integer row & header metrics)
+         * ========================================================= */
+        &[data-size="xs"] {
+            --cs-data-table-row-height: 28px;
+            --cs-data-table-header-height: 30px;
+            --cs-data-table-cell-px: 8px;
+            --cs-data-table-edge-px: 12px;
+            --cs-data-table-cell-py: 6px;
+            --cs-data-table-font-size: 12px;
+            --cs-data-table-line-height: 16px;
+            --cs-data-table-header-font-size: 11px;
+            --cs-data-table-header-line-height: 16px;
+            --cs-data-table-header-tracking: 0.01em;
+            --cs-data-table-radius: 12px;
+            --cs-data-table-squircle: var(--cs-squircle-smooth);
+            --cs-data-table-selection-width: 36px;
+            --cs-data-table-status-bar-height: 32px;
+            --cs-data-table-header-pill-inset-y: 2px;
+            --cs-data-table-header-pill-inset-x: 2px;
+            --cs-data-table-header-pill-radius: 7px;
+            --cs-data-table-header-icon-size: 12px;
+            --cs-data-table-empty-py: 36px;
+            --cs-data-table-popover-radius: 16px;
+            --cs-data-table-popover-sort-height: 30px;
+        }
+
+        &[data-size="sm"] {
+            --cs-data-table-row-height: 36px;
+            --cs-data-table-header-height: 34px;
+            --cs-data-table-cell-px: 10px;
+            --cs-data-table-edge-px: 16px;
+            --cs-data-table-cell-py: 9px;
+            --cs-data-table-font-size: 13px;
+            --cs-data-table-line-height: 18px;
+            --cs-data-table-header-font-size: 12px;
+            --cs-data-table-header-line-height: 16px;
+            --cs-data-table-header-tracking: 0.005em;
+            --cs-data-table-radius: 16px;
+            --cs-data-table-squircle: var(--cs-squircle);
+            --cs-data-table-selection-width: 40px;
+            --cs-data-table-status-bar-height: 34px;
+            --cs-data-table-header-pill-inset-y: 3px;
+            --cs-data-table-header-pill-inset-x: 4px;
+            --cs-data-table-header-pill-radius: 7px;
+            --cs-data-table-header-icon-size: 12px;
+            --cs-data-table-empty-py: 48px;
+            --cs-data-table-popover-radius: 16px;
+            --cs-data-table-popover-sort-height: 30px;
+        }
+
+        &[data-size="md"] {
+            --cs-data-table-row-height: 44px;
+            --cs-data-table-header-height: 38px;
+            --cs-data-table-cell-px: 12px;
+            --cs-data-table-edge-px: 20px;
+            --cs-data-table-cell-py: 12px;
+            --cs-data-table-font-size: 14px;
+            --cs-data-table-line-height: 20px;
+            --cs-data-table-header-font-size: 12px;
+            --cs-data-table-header-line-height: 16px;
+            --cs-data-table-header-tracking: 0.005em;
+            --cs-data-table-radius: 24px;
+            --cs-data-table-squircle: var(--cs-squircle);
+            --cs-data-table-selection-width: 44px;
+            --cs-data-table-status-bar-height: 38px;
+            --cs-data-table-header-pill-inset-y: 3px;
+            --cs-data-table-header-pill-inset-x: 4px;
+            --cs-data-table-header-pill-radius: 8px;
+            --cs-data-table-header-icon-size: 13px;
+            --cs-data-table-empty-py: 48px;
+            --cs-data-table-popover-radius: 18px;
+            --cs-data-table-popover-sort-height: 32px;
+        }
+
+        &[data-size="lg"] {
+            --cs-data-table-row-height: 52px;
+            --cs-data-table-header-height: 42px;
+            --cs-data-table-cell-px: 16px;
+            --cs-data-table-edge-px: 24px;
+            --cs-data-table-cell-py: 16px;
+            --cs-data-table-font-size: 14px;
+            --cs-data-table-line-height: 20px;
+            --cs-data-table-header-font-size: 13px;
+            --cs-data-table-header-line-height: 18px;
+            --cs-data-table-header-tracking: 0em;
+            --cs-data-table-radius: 28px;
+            --cs-data-table-squircle: var(--cs-squircle);
+            --cs-data-table-selection-width: 52px;
+            --cs-data-table-status-bar-height: 42px;
+            --cs-data-table-header-pill-inset-y: 3px;
+            --cs-data-table-header-pill-inset-x: 4px;
+            --cs-data-table-header-pill-radius: 8px;
+            --cs-data-table-header-icon-size: 13px;
+            --cs-data-table-empty-py: 64px;
+            --cs-data-table-popover-radius: 18px;
+            --cs-data-table-popover-sort-height: 32px;
+        }
+
+        /* =========================================================
+         * VARIANTS (surface-matched 100% opaque sticky headers)
+         * ========================================================= */
+        &[data-variant="elevated"] {
+            --cs-data-table-bg: var(--cs-color-elevated);
+            --cs-data-table-header-bg: var(--cs-color-elevated);
+            --cs-data-table-sticky-bg: var(--cs-color-elevated);
+            --cs-data-table-shadow: var(--cs-shadow-elevated);
+        }
+
+        &[data-variant="soft"] {
+            --cs-data-table-bg: var(--cs-color-base-soft);
+            --cs-data-table-header-bg: light-dark(
+                color-mix(
+                    in oklab,
+                    var(--cs-color-base-900) 5%,
+                    var(--cs-data-table-backdrop-bg, var(--cs-color-elevated))
+                ),
+                color-mix(
+                    in oklab,
+                    var(--cs-color-base-100) 11%,
+                    var(--cs-data-table-backdrop-bg, var(--cs-color-elevated))
+                )
+            );
+            --cs-data-table-sticky-bg: var(--cs-data-table-header-bg);
+            --cs-data-table-shadow: none;
+        }
+
+        &[data-variant="transparent"] {
+            --cs-data-table-bg: transparent;
+            --cs-data-table-header-bg: var(--cs-data-table-backdrop-bg, var(--cs-color-canvas));
+            --cs-data-table-sticky-bg: var(--cs-data-table-backdrop-bg, var(--cs-color-canvas));
+            --cs-data-table-shadow: none;
+            --cs-data-table-radius: 0px;
+            --cs-data-table-edge-px: var(--cs-data-table-cell-px);
+        }
+
+        /* Concentric nesting inside Card / KpiCard */
+        &[data-nested]:not([data-variant="transparent"]) {
+            --cs-data-table-radius: var(--cs-data-table-nested-radius);
+            --cs-data-table-squircle: var(--cs-squircle-smooth);
+        }
+
+        /* Striped suppresses row hairlines unless gridlines are also active */
+        &[data-striped]:not([data-gridlines]) {
+            --cs-data-table-divider: transparent;
+        }
+
+        /* Prevent ghost hover trails during rapid 100k-row fling scrolling */
+        &[data-scrolling] {
+            --cs-data-table-row-hover-dur: 0ms;
+        }
+
+        /* ScrollArea integration */
+        > .cs-scroll-area {
+            flex: 1 1 auto;
+            min-inline-size: 0;
+            min-block-size: 0;
+        }
+    }
+
+    /* Dark-mode elevated top specular rim sits above sticky headers & cells */
+    [data-theme="dark"] .cs-data-table[data-variant="elevated"] {
+        --cs-data-table-shadow: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 40;
+            border-radius: inherit;
+            corner-shape: inherit;
+            box-shadow: var(--cs-shadow-elevated);
+            pointer-events: none;
+        }
+    }
+
+    /* =========================================================
+     * VIEWPORT & CANVAS GEOMETRY
+     * ========================================================= */
+    .cs-data-table-viewport {
+        scroll-padding-block-start: calc(var(--cs-data-table-header-height) + 4px);
+    }
+
+    .cs-data-table-canvas {
+        display: flex;
+        flex-direction: column;
+        inline-size: max(100%, var(--cs-data-table-min-width, 0px));
+        min-block-size: 100%;
+    }
+
+    /* =========================================================
+     * STICKY HEADER & HEADER CELLS
+     * ========================================================= */
+    .cs-data-table-header {
+        position: sticky;
+        inset-block-start: 0;
+        z-index: 10;
+        inline-size: 100%;
+        background-color: var(--cs-data-table-header-bg);
+        box-shadow: inset 0 -1px 0 0 var(--cs-data-table-header-divider);
+
+        /* Grounded contact shadow revealed only when scrolled vertically */
+        &::after {
+            content: "";
+            position: absolute;
+            inset-block-end: 0;
+            inset-inline: 0;
+            block-size: 1px;
+            box-shadow: var(--cs-data-table-header-shadow-scrolled);
+            opacity: 0;
+            transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+            pointer-events: none;
+        }
+
+        .cs-data-table[data-scrolled-y] &::after {
+            opacity: 1;
+        }
+    }
+
+    .cs-data-table-header-row {
+        display: grid;
+        grid-template-columns: var(--cs-data-table-grid-columns);
+        inline-size: 100%;
+        min-block-size: var(--cs-data-table-header-height);
+    }
+
+    .cs-data-table-header-cell {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        min-inline-size: 0;
+        min-block-size: var(--cs-data-table-header-height);
+        color: var(--cs-color-text-weak);
+        font-size: var(--cs-data-table-header-font-size);
+        font-weight: 500;
+        line-height: var(--cs-data-table-header-line-height);
+        letter-spacing: var(--cs-data-table-header-tracking);
+        user-select: none;
+
+        .cs-data-table[data-gridlines] &:not(:last-child) {
+            box-shadow: inset -1px 0 0 0 var(--cs-data-table-gridline);
+        }
+
+        &[data-pinned="start"] {
+            position: sticky;
+            inset-inline-start: 0;
+            z-index: 15;
+            background-color: var(--cs-data-table-header-bg);
+            box-shadow: inset 0 -1px 0 0 var(--cs-data-table-header-divider);
+
+            .cs-data-table[data-gridlines] &:not(:last-child) {
+                box-shadow:
+                    inset -1px 0 0 0 var(--cs-data-table-gridline),
+                    inset 0 -1px 0 0 var(--cs-data-table-header-divider);
+            }
+        }
+
+        &[data-pinned="end"] {
+            position: sticky;
+            inset-inline-end: 0;
+            z-index: 15;
+            background-color: var(--cs-data-table-header-bg);
+            box-shadow: inset 0 -1px 0 0 var(--cs-data-table-header-divider);
+        }
+
+        &[data-pinned="start"]:not(:has(+ [data-pinned="start"]))::after {
+            content: "";
+            position: absolute;
+            inset-block: 0;
+            inset-inline-start: 100%;
+            inline-size: 12px;
+            background: linear-gradient(to inline-end, var(--cs-data-table-edge-fade-color), transparent);
+            opacity: 0;
+            transition: opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            pointer-events: none;
+        }
+
+        .cs-data-table[data-scrolled-x-start] &[data-pinned="start"]:not(:has(+ [data-pinned="start"]))::after {
+            opacity: 1;
+        }
+
+        &[data-selection] {
+            align-items: center;
+            justify-content: center;
+        }
+
+        &:not([data-interactive]):not([data-selection]) {
+            align-items: center;
+            padding-inline: var(--cs-data-table-cell-px);
+        }
+
+        &:not([data-interactive]):not([data-selection]):first-child {
+            padding-inline-start: var(--cs-data-table-edge-px);
+        }
+
+        &:not([data-interactive]):not([data-selection]):last-child {
+            padding-inline-end: var(--cs-data-table-edge-px);
+        }
+
+        &[data-align="start"] {
+            justify-content: flex-start;
+            text-align: start;
+        }
+
+        &[data-align="center"] {
+            justify-content: center;
+            text-align: center;
+        }
+
+        &[data-align="end"] {
+            justify-content: flex-end;
+            text-align: end;
+        }
+    }
+
+    .cs-data-table-header-trigger {
+        --cs-data-table-header-pill-bg: transparent;
+        isolation: isolate;
+
+        position: relative;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        inline-size: 100%;
+        min-inline-size: 0;
+        min-block-size: 100%;
+        padding-block: 0;
+        padding-inline: var(--cs-data-table-cell-px);
+        color: inherit;
+        font: inherit;
+        text-align: inherit;
+        letter-spacing: inherit;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        cursor: default;
+
+        .cs-data-table-header-cell:first-child:not([data-selection]) > & {
+            padding-inline-start: var(--cs-data-table-edge-px);
+        }
+
+        .cs-data-table-header-cell:last-child:not([data-selection]) > & {
+            padding-inline-end: var(--cs-data-table-edge-px);
+        }
+
+        /* Concentric inset squircle pill painted behind header label */
+        &::before {
+            content: "";
+            position: absolute;
+            inset-block: var(--cs-data-table-header-pill-inset-y);
+            inset-inline: var(--cs-data-table-header-pill-inset-x);
+            z-index: -1;
+            background-color: var(--cs-data-table-header-pill-bg);
+            border-radius: var(--cs-data-table-header-pill-radius);
+            corner-shape: var(--cs-squircle-soft);
+            transition: background-color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            pointer-events: none;
+        }
+
+        .cs-data-table-header-cell:first-child:not([data-selection]) > &::before {
+            inset-inline-start: max(2px, calc(var(--cs-data-table-edge-px) - 8px));
+        }
+
+        .cs-data-table-header-cell:last-child:not([data-selection]) > &::before {
+            inset-inline-end: max(2px, calc(var(--cs-data-table-edge-px) - 8px));
+        }
+
+        .cs-data-table-header-cell[data-align="start"] > & {
+            justify-content: flex-start;
+        }
+
+        .cs-data-table-header-cell[data-align="center"] > & {
+            justify-content: center;
+        }
+
+        /* End-aligned headers place indicators inline-start of the label */
+        .cs-data-table-header-cell[data-align="end"] > & {
+            flex-direction: row-reverse;
+            justify-content: flex-start;
+        }
+
+        &:focus-visible {
+            outline-offset: -2px;
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                --cs-data-table-header-pill-bg: var(--cs-color-base-soft);
+                color: var(--cs-color-text-strong);
+
+                .cs-data-table-header-cue {
+                    opacity: 1;
+                }
+            }
+        }
+
+        &:active {
+            --cs-data-table-header-pill-bg: var(--cs-color-base-soft-hover);
+            color: var(--cs-color-text-strong);
+        }
+
+        .cs-data-table-header-cell[data-open] > & {
+            --cs-data-table-header-pill-bg: var(--cs-color-base-soft);
+            color: var(--cs-color-text-strong);
+
+            .cs-data-table-header-cue {
+                opacity: 1;
+            }
+        }
+
+        /* Sorted-only stays pill-free at rest */
+        .cs-data-table-header-cell[data-sort] > & {
+            color: var(--cs-color-text-strong);
+        }
+
+        /* Filtered headers receive whisper accent inset pill */
+        .cs-data-table-header-cell[data-filtered] > & {
+            --cs-data-table-header-pill-bg: var(--cs-data-table-header-pill-filtered-bg);
+            color: var(--cs-color-text-strong);
+
+            @media (hover: hover) {
+                &:hover {
+                    --cs-data-table-header-pill-bg: var(--cs-data-table-header-pill-filtered-bg-hover);
+                }
+            }
+        }
+
+        .cs-data-table-header-cell[data-filtered][data-open] > & {
+            --cs-data-table-header-pill-bg: var(--cs-data-table-header-pill-filtered-bg-hover);
+        }
+    }
+
+    .cs-data-table-header-label {
+        min-inline-size: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cs-data-table-header-indicators {
+        display: inline-flex;
+        flex-shrink: 0;
+        gap: 3px;
+        align-items: center;
+    }
+
+    .cs-data-table-header-icon {
+        flex-shrink: 0;
+        inline-size: var(--cs-data-table-header-icon-size);
+        block-size: var(--cs-data-table-header-icon-size);
+        stroke-width: 2.25;
+    }
+
+    .cs-data-table-header-cue {
+        color: var(--cs-color-text-weaker);
+        opacity: 0;
+        transition:
+            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            rotate var(--cs-dur-exit-md) var(--cs-ease-exit);
+
+        .cs-data-table-header-cell[data-open] & {
+            rotate: 180deg;
+            transition:
+                opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
+                rotate var(--cs-dur-200) var(--cs-ease-quart-out);
+        }
+    }
+
+    .cs-data-table-header-sort-icon {
+        color: var(--cs-color-accent-soft-fg);
+        transition: rotate var(--cs-dur-effect) var(--cs-ease-quart-out);
+
+        .cs-data-table-header-cell[data-sort="desc"] & {
+            rotate: 180deg;
+        }
+    }
+
+    .cs-data-table-header-sort-priority {
+        color: var(--cs-color-accent-soft-fg);
+        font-size: 10px;
+        font-variant-numeric: tabular-nums lining-nums;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .cs-data-table-header-filter-icon {
+        color: var(--cs-color-accent-soft-fg);
+    }
+
+    /* =========================================================
+     * BODY & ROWS
+     * ========================================================= */
+    .cs-data-table-body {
+        display: flex;
+        flex-direction: column;
+        inline-size: 100%;
+    }
+
+    .cs-data-table-row {
+        display: grid;
+        grid-template-columns: var(--cs-data-table-grid-columns);
+        inline-size: 100%;
+        min-block-size: var(--cs-data-table-row-height);
+        color: var(--cs-data-table-row-resolved-fg, inherit);
+
+        /* Non-virtualized final row suppresses bottom seam unless status bar is open */
+        .cs-data-table:not([data-status-bar-open]) .cs-data-table-body:not([data-virtual-scroll-list]) > &:last-child {
+            --cs-data-table-cell-divider-shadow: 0 0 0 0 transparent;
+        }
+
+        /* Logical zebra striping */
+        .cs-data-table[data-striped] &[data-even] {
+            --cs-data-table-stripe-resolved-bg: var(--cs-data-table-stripe-bg);
+            --cs-data-table-sticky-row-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-base-900) 2%, var(--cs-data-table-sticky-bg)),
+                color-mix(in oklab, var(--cs-color-base-100) 2.8%, var(--cs-data-table-sticky-bg))
+            );
+        }
+
+        /* Hover whisper sheen across all cells */
+        @media (hover: hover) {
+            &:hover {
+                --cs-data-table-cell-hover-overlay: var(--cs-data-table-row-hover-overlay);
+            }
+
+            &[data-interactive]:hover {
+                --cs-data-table-cell-hover-overlay: var(--cs-data-table-row-interactive-hover-overlay);
+                color: var(--cs-data-table-row-resolved-fg, var(--cs-color-text-strong));
+            }
+        }
+
+        &[data-interactive] {
+            cursor: default;
+
+            &:active {
+                --cs-data-table-cell-hover-overlay: var(--cs-data-table-row-interactive-active-overlay);
+            }
+
+            &:focus-visible {
+                outline-offset: -2px;
+            }
+        }
+
+        /* Selected row Layer 2 accent wash + 2px leading accent bar */
+        &[data-selected] {
+            --cs-data-table-cell-selected-overlay: var(--cs-data-table-row-selected-overlay);
+
+            > .cs-data-table-cell:first-child {
+                --cs-data-table-cell-edge-shadow: inset 2px 0 0 0 var(--cs-color-accent-solid);
+            }
+        }
+
+        /* Row-level semantic tones */
+        &[data-tone="base"] {
+            --cs-data-table-row-resolved-bg: light-dark(
+                color-mix(in oklch, var(--cs-color-base-900) 4%, transparent),
+                color-mix(in oklch, var(--cs-color-base-100) 7.5%, transparent)
+            );
+            --cs-data-table-row-resolved-fg: var(--cs-color-text-strong);
+        }
+
+        &[data-tone="accent"] {
+            --cs-data-table-row-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-accent-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-accent-500) 17%, transparent)
+            );
+            --cs-data-table-row-resolved-fg: var(--cs-color-accent-soft-fg);
+        }
+
+        &[data-tone="positive"] {
+            --cs-data-table-row-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-positive-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-positive-500) 17%, transparent)
+            );
+            --cs-data-table-row-resolved-fg: var(--cs-color-positive-soft-fg);
+        }
+
+        &[data-tone="caution"] {
+            --cs-data-table-row-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-caution-500) 10%, transparent),
+                color-mix(in oklab, var(--cs-color-caution-500) 18%, transparent)
+            );
+            --cs-data-table-row-resolved-fg: var(--cs-color-caution-soft-fg);
+        }
+
+        &[data-tone="negative"] {
+            --cs-data-table-row-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-negative-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-negative-500) 18%, transparent)
+            );
+            --cs-data-table-row-resolved-fg: var(--cs-color-negative-soft-fg);
+        }
+
+        /* Row-level custom bg/fg */
+        &[data-custom-bg] {
+            --cs-data-table-row-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-data-table-row-bg) 14%, transparent),
+                color-mix(in oklab, var(--cs-data-table-row-bg) 24%, transparent)
+            );
+            --cs-data-table-row-resolved-fg: var(--cs-data-table-row-fg, var(--cs-color-text-strong));
+        }
+
+        &[data-custom-bg][data-color-mode="exact"] {
+            --cs-data-table-row-resolved-bg: var(--cs-data-table-row-bg);
+            --cs-data-table-row-resolved-fg: var(--cs-data-table-row-fg, var(--cs-color-text-strong));
+
+            @supports (color: contrast-color(white)) {
+                --cs-data-table-row-resolved-fg: var(
+                    --cs-data-table-row-fg,
+                    contrast-color(var(--cs-data-table-row-bg))
+                );
+            }
+        }
+
+        &[data-custom-fg]:not([data-custom-bg]) {
+            --cs-data-table-row-resolved-fg: var(--cs-data-table-row-fg);
+        }
+    }
+
+    /* =========================================================
+     * CELLS & 3-LAYER NON-DESTRUCTIVE PAINT STACK
+     * ========================================================= */
+    .cs-data-table-cell {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-inline-size: 0;
+        min-block-size: var(--cs-data-table-row-height);
+        padding-inline: var(--cs-data-table-cell-px);
+        color: var(--cs-data-table-cell-resolved-fg, inherit);
+        font-size: var(--cs-data-table-font-size);
+        line-height: var(--cs-data-table-line-height);
+        /* Layer 1: Cell > Row > Column > Stripe > Transparent */
+        background-color: var(
+            --cs-data-table-cell-resolved-bg,
+            var(
+                --cs-data-table-row-resolved-bg,
+                var(--cs-data-table-col-resolved-bg, var(--cs-data-table-stripe-resolved-bg, transparent))
+            )
+        );
+        /* Layer 3 (hover) over Layer 2 (selection) */
+        background-image:
+            linear-gradient(
+                var(--cs-data-table-cell-hover-overlay, transparent),
+                var(--cs-data-table-cell-hover-overlay, transparent)
+            ),
+            linear-gradient(
+                var(--cs-data-table-cell-selected-overlay, transparent),
+                var(--cs-data-table-cell-selected-overlay, transparent)
+            );
+        /* Composed inset hairlines: selected leading bar + opt-in gridline + horizontal row seam */
+        box-shadow:
+            var(--cs-data-table-cell-edge-shadow, 0 0 0 0 transparent),
+            var(--cs-data-table-cell-gridline-shadow, 0 0 0 0 transparent),
+            var(--cs-data-table-cell-divider-shadow, inset 0 -1px 0 0 var(--cs-data-table-divider));
+        transition: background-image var(--cs-data-table-row-hover-dur) var(--cs-ease-effect);
+
+        &:first-child:not([data-selection]) {
+            padding-inline-start: var(--cs-data-table-edge-px);
+        }
+
+        &:last-child:not([data-selection]) {
+            padding-inline-end: var(--cs-data-table-edge-px);
+        }
+
+        .cs-data-table[data-gridlines] &:not(:last-child) {
+            --cs-data-table-cell-gridline-shadow: inset -1px 0 0 0 var(--cs-data-table-gridline);
+        }
+
+        /* Alignment */
+        &[data-align="start"] {
+            justify-content: flex-start;
+            text-align: start;
+        }
+
+        &[data-align="center"] {
+            justify-content: center;
+            text-align: center;
+        }
+
+        &[data-align="end"] {
+            justify-content: flex-end;
+            text-align: end;
+        }
+
+        /* Tabular numerals */
+        &[data-numeric] {
+            font-variant-numeric: tabular-nums lining-nums;
+        }
+
+        /* Opt-in multi-line cell wrapping */
+        &[data-wrap] {
+            align-items: flex-start;
+            padding-block: var(--cs-data-table-cell-py);
+
+            > .cs-data-table-cell-content {
+                overflow: visible;
+                text-overflow: clip;
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+        }
+
+        /* Typographic emphasis */
+        &[data-emphasis="strong"] {
+            color: var(--cs-data-table-cell-resolved-fg, var(--cs-color-text-strong));
+            font-weight: 500;
+        }
+
+        &[data-emphasis="weak"] {
+            color: var(--cs-data-table-cell-resolved-fg, var(--cs-color-text-weak));
+        }
+
+        /* Selection checkbox cell */
+        &[data-selection] {
+            justify-content: center;
+            padding-inline: 0;
+        }
+
+        /* Pinned body cells: 100% opaque solid plate beneath translucent layers */
+        &[data-pinned] {
+            position: sticky;
+            z-index: 5;
+            background-color: var(--cs-data-table-sticky-row-bg, var(--cs-data-table-sticky-bg));
+            background-image:
+                linear-gradient(
+                    var(--cs-data-table-cell-hover-overlay, transparent),
+                    var(--cs-data-table-cell-hover-overlay, transparent)
+                ),
+                linear-gradient(
+                    var(--cs-data-table-cell-selected-overlay, transparent),
+                    var(--cs-data-table-cell-selected-overlay, transparent)
+                ),
+                linear-gradient(
+                    var(
+                        --cs-data-table-cell-resolved-bg,
+                        var(--cs-data-table-row-resolved-bg, var(--cs-data-table-col-resolved-bg, transparent))
+                    ),
+                    var(
+                        --cs-data-table-cell-resolved-bg,
+                        var(--cs-data-table-row-resolved-bg, var(--cs-data-table-col-resolved-bg, transparent))
+                    )
+                );
+        }
+
+        &[data-pinned="start"] {
+            inset-inline-start: 0;
+        }
+
+        &[data-pinned="end"] {
+            inset-inline-end: 0;
+        }
+
+        &[data-pinned="start"]:not(:has(+ [data-pinned="start"]))::after {
+            content: "";
+            position: absolute;
+            inset-block: 0;
+            inset-inline-start: 100%;
+            inline-size: 12px;
+            background: linear-gradient(to inline-end, var(--cs-data-table-edge-fade-color), transparent);
+            opacity: 0;
+            transition: opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            pointer-events: none;
+        }
+
+        .cs-data-table[data-scrolled-x-start] &[data-pinned="start"]:not(:has(+ [data-pinned="start"]))::after {
+            opacity: 1;
+        }
+
+        /* Column-tier semantic tones */
+        &[data-col-tone="base"] {
+            --cs-data-table-col-resolved-bg: light-dark(
+                color-mix(in oklch, var(--cs-color-base-900) 4%, transparent),
+                color-mix(in oklch, var(--cs-color-base-100) 7.5%, transparent)
+            );
+            --cs-data-table-col-resolved-fg: var(--cs-color-text-strong);
+        }
+
+        &[data-col-tone="accent"] {
+            --cs-data-table-col-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-accent-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-accent-500) 17%, transparent)
+            );
+            --cs-data-table-col-resolved-fg: var(--cs-color-accent-soft-fg);
+        }
+
+        &[data-col-tone="positive"] {
+            --cs-data-table-col-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-positive-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-positive-500) 17%, transparent)
+            );
+            --cs-data-table-col-resolved-fg: var(--cs-color-positive-soft-fg);
+        }
+
+        &[data-col-tone="caution"] {
+            --cs-data-table-col-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-caution-500) 10%, transparent),
+                color-mix(in oklab, var(--cs-color-caution-500) 18%, transparent)
+            );
+            --cs-data-table-col-resolved-fg: var(--cs-color-caution-soft-fg);
+        }
+
+        &[data-col-tone="negative"] {
+            --cs-data-table-col-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-negative-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-negative-500) 18%, transparent)
+            );
+            --cs-data-table-col-resolved-fg: var(--cs-color-negative-soft-fg);
+        }
+
+        /* Column-tier custom bg/fg */
+        &[data-col-bg] {
+            --cs-data-table-col-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-data-table-col-bg) 14%, transparent),
+                color-mix(in oklab, var(--cs-data-table-col-bg) 24%, transparent)
+            );
+            --cs-data-table-col-resolved-fg: var(--cs-data-table-col-fg, var(--cs-color-text-strong));
+        }
+
+        &[data-col-bg][data-col-color-mode="exact"] {
+            --cs-data-table-col-resolved-bg: var(--cs-data-table-col-bg);
+            --cs-data-table-col-resolved-fg: var(--cs-data-table-col-fg, var(--cs-color-text-strong));
+
+            @supports (color: contrast-color(white)) {
+                --cs-data-table-col-resolved-fg: var(
+                    --cs-data-table-col-fg,
+                    contrast-color(var(--cs-data-table-col-bg))
+                );
+            }
+        }
+
+        &[data-col-fg]:not([data-col-bg]) {
+            --cs-data-table-col-resolved-fg: var(--cs-data-table-col-fg);
+        }
+
+        /* Cell-tier semantic tones (highest precedence) */
+        &[data-tone="base"] {
+            --cs-data-table-cell-resolved-bg: light-dark(
+                color-mix(in oklch, var(--cs-color-base-900) 4%, transparent),
+                color-mix(in oklch, var(--cs-color-base-100) 7.5%, transparent)
+            );
+            --cs-data-table-cell-resolved-fg: var(--cs-color-text-strong);
+        }
+
+        &[data-tone="accent"] {
+            --cs-data-table-cell-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-accent-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-accent-500) 17%, transparent)
+            );
+            --cs-data-table-cell-resolved-fg: var(--cs-color-accent-soft-fg);
+        }
+
+        &[data-tone="positive"] {
+            --cs-data-table-cell-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-positive-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-positive-500) 17%, transparent)
+            );
+            --cs-data-table-cell-resolved-fg: var(--cs-color-positive-soft-fg);
+        }
+
+        &[data-tone="caution"] {
+            --cs-data-table-cell-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-caution-500) 10%, transparent),
+                color-mix(in oklab, var(--cs-color-caution-500) 18%, transparent)
+            );
+            --cs-data-table-cell-resolved-fg: var(--cs-color-caution-soft-fg);
+        }
+
+        &[data-tone="negative"] {
+            --cs-data-table-cell-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-negative-500) 9%, transparent),
+                color-mix(in oklab, var(--cs-color-negative-500) 18%, transparent)
+            );
+            --cs-data-table-cell-resolved-fg: var(--cs-color-negative-soft-fg);
+        }
+
+        /* Cell-tier custom bg/fg */
+        &[data-custom-bg] {
+            --cs-data-table-cell-resolved-bg: light-dark(
+                color-mix(in oklab, var(--cs-data-table-cell-bg) 14%, transparent),
+                color-mix(in oklab, var(--cs-data-table-cell-bg) 24%, transparent)
+            );
+            --cs-data-table-cell-resolved-fg: var(--cs-data-table-cell-fg, var(--cs-color-text-strong));
+        }
+
+        &[data-custom-bg][data-color-mode="exact"] {
+            --cs-data-table-cell-resolved-bg: var(--cs-data-table-cell-bg);
+            --cs-data-table-cell-resolved-fg: var(--cs-data-table-cell-fg, var(--cs-color-text-strong));
+
+            @supports (color: contrast-color(white)) {
+                --cs-data-table-cell-resolved-fg: var(
+                    --cs-data-table-cell-fg,
+                    contrast-color(var(--cs-data-table-cell-bg))
+                );
+            }
+        }
+
+        &[data-custom-fg]:not([data-custom-bg]) {
+            --cs-data-table-cell-resolved-fg: var(--cs-data-table-cell-fg);
+        }
+
+        /* Fall back to column foreground when neither cell nor row set foreground */
+        &:not([data-tone]):not([data-custom-bg]):not([data-custom-fg]):is(
+                [data-col-tone],
+                [data-col-bg],
+                [data-col-fg]
+            ) {
+            color: var(--cs-data-table-row-resolved-fg, var(--cs-data-table-col-resolved-fg, inherit));
+        }
+    }
+
+    .cs-data-table-cell-content {
+        min-inline-size: 0;
+        max-inline-size: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cs-data-table-selection-hit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        inline-size: 100%;
+        block-size: 100%;
+        cursor: default;
+    }
+
+    /* =========================================================
+     * HORIZONTAL EDGE CUES (only when edge is not pinned)
+     * ========================================================= */
+    .cs-data-table-edge-shadow {
+        position: absolute;
+        inset-block-start: 0;
+        inset-block-end: 0;
+        z-index: 12;
+        inline-size: 12px;
+        opacity: 0;
+        transition: opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        pointer-events: none;
+
+        &[data-edge="start"] {
+            inset-inline-start: 0;
+            background: linear-gradient(to inline-end, var(--cs-data-table-edge-fade-color), transparent);
+        }
+
+        &[data-edge="end"] {
+            inset-inline-end: 0;
+            background: linear-gradient(to inline-start, var(--cs-data-table-edge-fade-color), transparent);
+        }
+
+        .cs-data-table[data-scrolled-x-start] &[data-edge="start"],
+        .cs-data-table[data-scrolled-x-end] &[data-edge="end"] {
+            opacity: 1;
+        }
+    }
+
+    /* =========================================================
+     * EMPTY & FILTERED-EMPTY STATE
+     * ========================================================= */
+    .cs-data-table-empty {
+        position: sticky;
+        inset-inline-start: 0;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        inline-size: var(--cs-data-table-viewport-width, 100%);
+        padding-block: var(--cs-data-table-empty-py, 48px);
+        padding-inline: var(--cs-data-table-edge-px, 20px);
+        text-align: center;
+    }
+
+    .cs-data-table-empty-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: center;
+        max-inline-size: 280px;
+    }
+
+    .cs-data-table-empty-icon {
+        margin-block-end: 4px;
+        inline-size: 22px;
+        block-size: 22px;
+        color: var(--cs-color-text-weaker);
+        stroke-width: 1.75;
+    }
+
+    .cs-data-table-empty-title {
+        margin: 0;
+        color: var(--cs-color-text-strong);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 18px;
+    }
+
+    .cs-data-table-empty-description {
+        margin: 0;
+        color: var(--cs-color-text-weak);
+        font-size: 12px;
+        line-height: 18px;
+    }
+
+    .cs-data-table-empty-actions {
+        margin-block-start: 6px;
+    }
+
+    /* =========================================================
+     * BOTTOM-DOCKED CONTEXTUAL STATUS BAR (0px when idle)
+     * ========================================================= */
+    .cs-data-table-status-bar-dock {
+        display: contents;
+    }
+
+    .cs-data-table-status-bar-shell {
+        display: grid;
+        flex-shrink: 0;
+        grid-template-rows: 0fr;
+        opacity: 0;
+        transition:
+            grid-template-rows var(--cs-dur-200) var(--cs-ease-quart-out),
+            opacity var(--cs-dur-200) var(--cs-ease-quart-out);
+
+        &[data-open] {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+    }
+
+    .cs-data-table-status-bar-clip {
+        overflow: hidden;
+    }
+
+    .cs-data-table-status-bar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        block-size: var(--cs-data-table-status-bar-height);
+        padding-inline: var(--cs-data-table-edge-px);
+        font-size: 12px;
+        line-height: 18px;
+        background-color: var(--cs-data-table-header-bg);
+        box-shadow: inset 0 1px 0 0 var(--cs-data-table-header-divider);
+        transition: background-color var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-mode="selection"] {
+            background-color: light-dark(
+                color-mix(in oklab, var(--cs-color-accent-500) 7%, var(--cs-data-table-header-bg)),
+                color-mix(in oklab, var(--cs-color-accent-500) 14%, var(--cs-data-table-header-bg))
+            );
+        }
+    }
+
+    .cs-data-table-status-bar-start,
+    .cs-data-table-status-bar-end {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        min-inline-size: 0;
+    }
+
+    .cs-data-table-status-bar-start {
+        flex: 1 1 auto;
+        overflow: hidden;
+    }
+
+    .cs-data-table-status-bar-end {
+        flex-shrink: 0;
+    }
+
+    .cs-data-table-status-bar-summary {
+        color: var(--cs-color-text-weak);
+        font-variant-numeric: tabular-nums lining-nums;
+        white-space: nowrap;
+
+        .cs-data-table-status-bar[data-mode="selection"] & {
+            color: var(--cs-color-accent-soft-fg);
+            font-weight: 500;
+        }
+    }
+
+    .cs-data-table-status-bar-dot {
+        flex-shrink: 0;
+        inline-size: 3px;
+        block-size: 3px;
+        background-color: var(--cs-color-text-weaker);
+        border-radius: 50%;
+        user-select: none;
+    }
+
+    .cs-data-table-status-bar-columns {
+        display: inline-flex;
+        gap: 2px;
+        align-items: center;
+        min-inline-size: 0;
+        overflow: hidden;
+    }
+
+    .cs-data-table-status-bar-column-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 6px;
+        color: var(--cs-color-text-main);
+        font: inherit;
+        font-weight: 500;
+        line-height: 16px;
+        white-space: nowrap;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        corner-shape: var(--cs-squircle-soft);
+        transition:
+            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        cursor: default;
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--cs-color-text-strong);
+                background-color: var(--cs-color-base-soft);
+            }
+        }
+
+        &:active {
+            background-color: var(--cs-color-base-soft-hover);
+        }
+    }
+
+    .cs-data-table-status-bar-more {
+        color: var(--cs-color-text-weak);
+        font-variant-numeric: tabular-nums lining-nums;
+        white-space: nowrap;
+    }
+
+    /* =========================================================
+     * SINGLE SHARED COLUMN HEADER POPOVER
+     * ========================================================= */
+    .cs-data-table-column-popover {
+        --cs-popover-anim-distance: 6px;
+        --cs-popover-anim-scale-start: 0.94;
+        --cs-popover-anim-dur-in: var(--cs-dur-enter-sm);
+        --cs-popover-anim-dur-out: var(--cs-dur-exit-sm);
+        --cs-data-table-popover-inner-radius: calc(
+            var(--cs-data-table-popover-radius, 16px) - var(--cs-data-table-popover-pad, 6px)
+        );
+        --cs-data-table-popover-separator: var(
+            --cs-listbox-separator-bg,
+            color-mix(in oklab, var(--cs-color-text-main) 10%, transparent)
+        );
+
+        flex-direction: column;
+        inline-size: 256px;
+        max-inline-size: min(288px, calc(100vw - 32px));
+        overflow: hidden;
+        color: var(--cs-color-text-main);
+        font-family: var(--cs-font-sans);
+        background-color: var(--cs-color-elevated);
+        border-radius: var(--cs-data-table-popover-radius, 16px);
+        corner-shape: var(--cs-squircle-soft);
+        box-shadow: var(--cs-shadow-floating);
+
+        &:popover-open {
+            display: flex;
+            overflow: hidden;
+        }
+    }
+
+    .cs-data-table-popover-separator {
+        flex-shrink: 0;
+        block-size: 1px;
+        background-color: var(--cs-data-table-popover-separator);
+    }
+
+    /* Zone 1: 2-up horizontal sort toggle pair */
+    .cs-data-table-popover-sort {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        padding: var(--cs-data-table-popover-pad, 6px);
+    }
+
+    .cs-data-table-popover-sort-btn {
+        display: inline-flex;
+        gap: 5px;
+        align-items: center;
+        justify-content: center;
+        block-size: var(--cs-data-table-popover-sort-height, 30px);
+        padding-inline: 8px;
+        color: var(--cs-color-text-main);
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        white-space: nowrap;
+        background-color: var(--cs-color-base-soft);
+        border: none;
+        border-radius: var(--cs-data-table-popover-inner-radius);
+        corner-shape: var(--cs-squircle-soft);
+        transition:
+            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            scale var(--cs-dur-press) var(--cs-ease-press);
+        cursor: default;
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--cs-color-text-strong);
+                background-color: var(--cs-color-base-soft-hover);
+            }
+        }
+
+        &:active {
+            scale: 0.97;
+        }
+
+        &[aria-pressed="true"] {
+            color: var(--cs-color-accent-soft-fg);
+            background-color: var(--cs-color-accent-soft);
+
+            @media (hover: hover) {
+                &:hover {
+                    background-color: var(--cs-color-accent-soft-hover);
+                }
+            }
+        }
+    }
+
+    .cs-data-table-popover-sort-icon {
+        flex-shrink: 0;
+        inline-size: 13px;
+        block-size: 13px;
+        stroke-width: 2.25;
+    }
+
+    .cs-data-table-popover-sort-label {
+        overflow-x: clip;
+        overflow-y: visible;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-box: trim-both cap alphabetic;
+    }
+
+    /* Zone 1b: Conditional SegmentedControl mode switch */
+    .cs-data-table-popover-mode {
+        padding: var(--cs-data-table-popover-pad, 6px);
+
+        .cs-data-table-popover-sort + & {
+            padding-block-start: 0;
+        }
+    }
+
+    /* Zone 2A: Flush borderless search row */
+    .cs-data-table-popover-search {
+        position: relative;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        block-size: 34px;
+        padding-inline: 12px;
+        background: transparent;
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset-block-end: 0;
+            inset-inline: 0;
+            block-size: 2px;
+            background-color: var(--cs-color-accent-solid);
+            opacity: 0;
+            transition: opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            pointer-events: none;
+        }
+
+        &:focus-within {
+            .cs-data-table-popover-search-icon {
+                color: var(--cs-color-accent-soft-fg);
+            }
+
+            &::after {
+                opacity: 1;
+            }
+        }
+    }
+
+    .cs-data-table-popover-search-icon {
+        flex-shrink: 0;
+        inline-size: 14px;
+        block-size: 14px;
+        color: var(--cs-color-text-weaker);
+        stroke-width: 2;
+        transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        pointer-events: none;
+    }
+
+    .cs-data-table-popover-search-input {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+        block-size: 100%;
+        padding: 0;
+        color: var(--cs-color-text-strong);
+        font-family: inherit;
+        font-size: 12px;
+        line-height: 18px;
+        background: transparent;
+        border: none;
+        caret-color: var(--cs-color-accent-solid);
+        cursor: text;
+
+        &::placeholder {
+            color: var(--cs-color-text-weaker);
+        }
+
+        &:focus,
+        &:focus-visible {
+            outline: none;
+        }
+    }
+
+    .cs-data-table-popover-search-clear {
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        inline-size: 20px;
+        block-size: 20px;
+        padding: 0;
+        color: var(--cs-color-text-weak);
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        corner-shape: var(--cs-squircle-soft);
+        opacity: 1;
+        scale: 1;
+        transition:
+            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            scale var(--cs-dur-effect-fast) var(--cs-ease-quart-out),
+            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        cursor: default;
+
+        &[data-visible="false"] {
+            opacity: 0;
+            scale: 0.75;
+            pointer-events: none;
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--cs-color-text-strong);
+                background-color: var(--cs-color-base-soft);
+            }
+        }
+
+        > svg {
+            inline-size: 12px;
+            block-size: 12px;
+            stroke-width: 2.25;
+        }
+    }
+
+    /* Zone 2A: Additive checklist */
+    .cs-data-table-popover-scroll {
+        max-block-size: 204px;
+    }
+
+    .cs-data-table-popover-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 4px;
+    }
+
+    .cs-data-table-popover-option {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        block-size: 30px;
+        padding-inline: 8px;
+        color: var(--cs-color-text-main);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 18px;
+        border-radius: var(--cs-data-table-popover-inner-radius);
+        corner-shape: var(--cs-squircle-soft);
+        user-select: none;
+        transition:
+            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        cursor: default;
+
+        @media (hover: hover) {
+            &:hover {
+                background-color: var(--cs-color-base-soft);
+            }
+        }
+
+        &[data-checked] {
+            color: var(--cs-color-text-strong);
+        }
+
+        &[data-empty] .cs-data-table-popover-option-label {
+            color: var(--cs-color-text-weak);
+            font-style: italic;
+        }
+    }
+
+    .cs-data-table-popover-option-label {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cs-data-table-popover-option-count {
+        flex-shrink: 0;
+        margin-inline-start: auto;
+        color: var(--cs-color-text-weaker);
+        font-size: 11px;
+        font-variant-numeric: tabular-nums lining-nums;
+        line-height: 16px;
+    }
+
+    .cs-data-table-popover-empty,
+    .cs-data-table-popover-truncated {
+        padding: 12px 10px;
+        color: var(--cs-color-text-weak);
+        font-size: 12px;
+        line-height: 18px;
+        text-align: center;
+    }
+
+    .cs-data-table-popover-truncated {
+        padding: 6px 8px;
+        color: var(--cs-color-text-weaker);
+        font-size: 11px;
+        line-height: 16px;
+    }
+
+    /* Zone 2B: Condition filter builder */
+    .cs-data-table-popover-condition {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .cs-data-table-popover-condition-range {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    /* Zone 3: Conditional quiet bottom footer */
+    .cs-data-table-popover-footer {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        block-size: 34px;
+        padding-inline: 6px 12px;
+    }
+
+    .cs-data-table-popover-footer-count {
+        color: var(--cs-color-text-weak);
+        font-size: 11px;
+        font-variant-numeric: tabular-nums lining-nums;
+        line-height: 16px;
+        white-space: nowrap;
+    }
+}

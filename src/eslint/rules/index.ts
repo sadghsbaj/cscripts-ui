@@ -14,6 +14,7 @@ import { componentLayersConfig } from "./component-layers.ts";
 import { cssSafetyConfigs } from "./css-safety.ts";
 import { dropdownConfig } from "./dropdown.ts";
 import { kbdConfigs } from "./kbd.ts";
+import { kpiCardConfig } from "./kpi-card.ts";
 import { numberMorphConfig } from "./number-morph.ts";
 import { numberStepperConfig } from "./number-stepper.ts";
 import { overlayConfig } from "./overlay.ts";
@@ -53,6 +54,7 @@ export {
     kbdPreferDefaultSeparatorRule,
     kbdRequireStandalonePropsRule,
 } from "./kbd.ts";
+export { kpiCardConfig, kpiCardStructureRule } from "./kpi-card.ts";
 export { numberMorphConfig, numberMorphNoContinuousInGroupRule } from "./number-morph.ts";
 export { numberStepperConfig, numberStepperNoMiddleInVerticalRule } from "./number-stepper.ts";
 export { overlayConfig, overlayPreferFocusTrapOnContentRule } from "./overlay.ts";
@@ -101,6 +103,7 @@ export const customRulesConfigs: Linter.Config[] = [
     componentLayersConfig,
     ...cssSafetyConfigs,
     ...kbdConfigs,
+    kpiCardConfig,
     numberMorphConfig,
     numberStepperConfig,
     attachmentLayersConfig,

@@ -1,13 +1,24 @@
 ## UI & Polish
 
-- [ x] Fix-Bericht ansehen und beheben#
+- [ x] Fix-Bericht ansehen und beheben
 - kpi übersichtlciher x
-- kpi eslint?
+- kpi eslint? x
+- data table basis reviewen testen lassen preview und co
+- excel milestone 0 1 fertig weitermachen
+- workacces zeugs
+- dat table performance
+- data table fitler sotier menu cleaner
+- leer menu cleaner
+- geht auch ohne checkbox
+- cxhcekbox check felht teils
+- status dots und co
+- fußzeile allgemein
+- workspace viel cleaner
 
 ## Modules
 
-- [ ] KPI Cards
-- [ ] Virtual Scrolling
+- [x] KPI Cards
+- [x] Virtual Scrolling
 - [ ] Data Table
 - [ ] Animierte Charts
 - [ ] Tablist
@@ -38,7 +49,6 @@
 - [ ] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
 - [ ] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
 - [ ] Filesystem-Chooser / Verwalter-Element
-- [ ] Verschlüsselte Seiten im Filesystem - Auth-System im Filesystem
 - [ ] Dokumentationsseite: flexible Bausteine (Factory Pattern)
 - [ ] KI-Integrationen clean dargestellt
 - [ ] ContentEditable-artiges Element für Platzhalter etc.

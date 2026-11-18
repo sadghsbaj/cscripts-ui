@@ -7,13 +7,12 @@
     import { Activity, RefreshCw, RotateCcw } from "@lucide/svelte";
     import { Badge, BadgeLabel } from "cs/svelte/badge";
     import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
-    import { Card, CardBody, CardDescription, CardFooter, CardHeader, CardTitle } from "cs/svelte/card";
+    import { Card, CardActions, CardBody, CardDescription, CardFooter, CardHeader, CardTitle } from "cs/svelte/card";
     import {
         KPI_CARD_LAYOUTS,
         KPI_CARD_SIZES,
         KPI_CARD_VARIANTS,
         KpiCard,
-        KpiCardActions,
         KpiCardBreakdown,
         KpiCardBreakdownItem,
         KpiCardClose,
@@ -926,11 +925,11 @@ ${closeScript}
 
                 <CardFooter>
                     <span class="text-xs text-weak">Cycle renews Nov 30</span>
-                    <KpiCardActions>
+                    <CardActions>
                         <Button variant="secondary" size="sm">
                             <ButtonLabel>Manage plan</ButtonLabel>
                         </Button>
-                    </KpiCardActions>
+                    </CardActions>
                 </CardFooter>
             </Card>
         </div>
