@@ -1,0 +1,624 @@
+@layer components.primitive {
+    .cs-chip {
+        --cs-chip-radius: calc(var(--cs-chip-height) / 2);
+        --cs-chip-max-width: 100%;
+        --cs-chip-ring-shadow: 0 0 #0000;
+        --cs-chip-shadow-pressed: 0 0 #0000;
+        --cs-chip-bg-pressed: var(--cs-color-accent-soft);
+        --cs-chip-bg-pressed-hover: var(--cs-color-accent-soft-hover);
+        --cs-chip-fg-pressed: var(--cs-color-accent-soft-fg);
+        --cs-chip-trigger-bg-hover: color-mix(in oklch, currentColor 8%, transparent);
+        --cs-chip-remove-fg: var(--cs-color-text-weak);
+        --cs-chip-remove-fg-hover: var(--cs-color-text-strong);
+        --cs-chip-remove-bg-hover: var(--cs-color-base-soft-hover);
+        --cs-chip-squash-active: var(--cs-squash-subtle);
+        --cs-chip-focus-scale-active: 0.97;
+        /* Slow exit + fast opacity fade lets .cs-chip-fill settle at scale(0.65) invisibly */
+        --cs-chip-transition-pressed:
+            transform var(--cs-dur-200) var(--cs-ease-exit), opacity var(--cs-dur-exit-sm) var(--cs-ease-effect);
+
+        isolation: isolate;
+        position: relative;
+        display: inline-flex;
+        gap: var(--cs-chip-gap);
+        align-items: center;
+        justify-content: center;
+        inline-size: fit-content;
+        min-inline-size: var(--cs-chip-height);
+        max-inline-size: var(--cs-chip-max-width);
+        block-size: var(--cs-chip-height);
+        padding-inline: var(--cs-chip-px);
+        color: var(--cs-chip-fg);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chip-font-size);
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        line-height: var(--cs-leading-none);
+        white-space: nowrap;
+        vertical-align: middle;
+        background-color: var(--cs-chip-bg, var(--cs-chip-surface-bg));
+        border-radius: var(--cs-chip-radius);
+        corner-shape: var(--cs-squircle-soft);
+        box-shadow: var(--cs-chip-ring-shadow), var(--cs-chip-shadow, var(--cs-chip-surface-shadow, 0 0 #0000));
+        transition: none;
+        cursor: default;
+
+        &[data-size="xs"] {
+            --cs-chip-height: 20px;
+            --cs-chip-font-size: 11px;
+            --cs-chip-icon-size: 12px;
+            --cs-chip-px: 7px;
+            --cs-chip-gap: 4px;
+            --cs-chip-remove-size: 14px;
+            --cs-chip-remove-inset: 3px;
+            --cs-chip-remove-icon-size: 10px;
+        }
+
+        &[data-size="sm"] {
+            --cs-chip-height: 24px;
+            --cs-chip-font-size: var(--cs-text-xs);
+            --cs-chip-icon-size: 14px;
+            --cs-chip-px: 8px;
+            --cs-chip-gap: 4px;
+            --cs-chip-remove-size: 18px;
+            --cs-chip-remove-inset: 3px;
+            --cs-chip-remove-icon-size: 12px;
+        }
+
+        &[data-size="md"] {
+            --cs-chip-height: 28px;
+            --cs-chip-font-size: 13px;
+            --cs-chip-icon-size: 15px;
+            --cs-chip-px: 10px;
+            --cs-chip-gap: 5px;
+            --cs-chip-remove-size: 20px;
+            --cs-chip-remove-inset: 4px;
+            --cs-chip-remove-icon-size: 13px;
+        }
+
+        &[data-size="lg"] {
+            --cs-chip-height: 32px;
+            --cs-chip-font-size: var(--cs-text-sm);
+            --cs-chip-icon-size: 16px;
+            --cs-chip-px: 12px;
+            --cs-chip-gap: 6px;
+            --cs-chip-remove-size: 24px;
+            --cs-chip-remove-inset: 4px;
+            --cs-chip-remove-icon-size: 16px;
+        }
+
+        &[data-size="xl"] {
+            --cs-chip-height: 36px;
+            --cs-chip-font-size: var(--cs-text-sm);
+            --cs-chip-icon-size: 16px;
+            --cs-chip-px: 14px;
+            --cs-chip-gap: 6px;
+            --cs-chip-remove-size: 26px;
+            --cs-chip-remove-inset: 5px;
+            --cs-chip-remove-icon-size: 17px;
+        }
+
+        &[data-variant="soft"] {
+            --cs-chip-surface-bg: var(--cs-color-base-soft);
+            --cs-chip-surface-bg-hover: var(--cs-color-base-soft-hover);
+            --cs-chip-fg: var(--cs-color-base-soft-fg);
+            --cs-chip-fg-hover: var(--cs-color-base-soft-fg-hover);
+            --cs-chip-surface-shadow: 0 0 #0000;
+        }
+
+        &[data-variant="elevated"] {
+            --cs-chip-surface-bg: var(--cs-color-elevated);
+            --cs-chip-surface-bg-hover: var(--cs-color-elevated-hover);
+            --cs-chip-fg: var(--cs-color-text-strong);
+            --cs-chip-surface-shadow: var(--cs-shadow-elevated);
+            --cs-chip-surface-shadow-hover: var(--cs-shadow-elevated-hover);
+            --cs-chip-surface-shadow-active: var(--cs-shadow-elevated);
+            --cs-chip-shadow-pressed: inset 0 0 0 1px
+                light-dark(
+                    color-mix(in oklch, var(--cs-color-accent-solid) 32%, transparent),
+                    color-mix(in oklch, var(--cs-color-accent-solid) 44%, transparent)
+                );
+        }
+
+        &[data-variant="accent"] {
+            --cs-chip-surface-bg: var(--cs-color-accent-soft);
+            --cs-chip-surface-bg-hover: var(--cs-color-accent-soft-hover);
+            --cs-chip-fg: var(--cs-color-accent-soft-fg);
+            --cs-chip-fg-hover: var(--cs-color-accent-soft-fg);
+            --cs-chip-surface-shadow: 0 0 #0000;
+            --cs-chip-remove-fg: color-mix(in oklch, var(--cs-chip-fg) 75%, transparent);
+            --cs-chip-remove-fg-hover: var(--cs-chip-fg);
+            --cs-chip-remove-bg-hover: color-mix(in oklch, currentColor 14%, transparent);
+        }
+
+        &[data-invalid] {
+            --cs-chip-bg: var(--cs-color-negative-soft);
+            --cs-chip-bg-hover: var(--cs-color-negative-soft-hover);
+            --cs-chip-fg: var(--cs-color-negative-soft-fg);
+            --cs-chip-fg-hover: var(--cs-color-negative-soft-fg);
+            --cs-chip-shadow: 0 0 #0000;
+            --cs-chip-shadow-hover: 0 0 #0000;
+            --cs-chip-shadow-active: 0 0 #0000;
+            --cs-chip-ring-shadow: inset 0 0 0 1.5px
+                color-mix(in oklch, var(--cs-color-negative-solid) 45%, transparent);
+            --cs-chip-remove-fg: color-mix(in oklch, var(--cs-chip-fg) 75%, transparent);
+            --cs-chip-remove-fg-hover: var(--cs-chip-fg);
+            --cs-chip-remove-bg-hover: color-mix(in oklch, currentColor 14%, transparent);
+        }
+
+        &[data-icon-only] {
+            aspect-ratio: 1;
+            padding-inline: 0;
+        }
+
+        /* Optical edge calibration on static & removable pills */
+        &:not([data-icon-only], :has(> .cs-chip-trigger)) {
+            &:has(> .cs-chip-icon:first-child) {
+                padding-inline-start: max(4px, calc(var(--cs-chip-px) - 2px));
+            }
+
+            &:has(> .cs-chip-remove:last-child) {
+                padding-inline-end: var(--cs-chip-remove-inset);
+
+                & > .cs-chip-remove:not(:first-child) {
+                    margin-inline-start: -1px;
+                }
+            }
+        }
+
+        /* 1. Full-Pill Trigger: delegate surface, padding, focus ring, and squash to .cs-chip-trigger */
+        &:has(> .cs-chip-trigger):not(:has(> .cs-chip-remove)) {
+            padding-inline: 0;
+            background-color: transparent;
+            box-shadow: none;
+        }
+
+        /* 2. Split Trigger + Remove: .cs-chip owns unified pill surface; children own isolated interactions */
+        &:has(> .cs-chip-trigger):has(> .cs-chip-remove) {
+            gap: 2px;
+            padding-inline-start: 0;
+            padding-inline-end: var(--cs-chip-remove-inset);
+        }
+
+        &:is([data-pressed], :has(> .cs-chip-trigger[aria-pressed="true"])) {
+            --cs-chip-transition-pressed:
+                transform var(--cs-dur-enter-sm) var(--cs-ease-enter),
+                opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            --cs-chip-remove-fg: color-mix(in oklch, var(--cs-chip-fg-pressed) 75%, transparent);
+            --cs-chip-remove-fg-hover: var(--cs-chip-fg-pressed);
+            --cs-chip-remove-bg-hover: color-mix(in oklch, currentColor 14%, transparent);
+
+            & > .cs-chip-fill {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* In split mode, both segments inherit pressed foreground from the chip shell */
+        &:has(> .cs-chip-trigger):has(> .cs-chip-remove):is(
+                [data-pressed],
+                :has(> .cs-chip-trigger[aria-pressed="true"])
+            ) {
+            color: var(--cs-chip-fg-pressed);
+        }
+
+        &[data-disabled] {
+            --cs-disabled-opacity: 1;
+            --cs-chip-fg: var(--cs-color-disabled-fg);
+            --cs-chip-fg-hover: var(--cs-color-disabled-fg);
+            --cs-chip-fg-pressed: var(--cs-color-disabled-fg-active);
+            --cs-chip-bg-pressed: var(--cs-color-disabled-bg-active);
+            --cs-chip-bg-pressed-hover: var(--cs-color-disabled-bg-active);
+            --cs-chip-ring-shadow: 0 0 #0000;
+            --cs-chip-shadow: 0 0 #0000;
+            --cs-chip-shadow-hover: 0 0 #0000;
+            --cs-chip-shadow-active: 0 0 #0000;
+            --cs-chip-shadow-pressed: 0 0 #0000;
+            --cs-chip-remove-fg: var(--cs-color-disabled-fg);
+            --cs-chip-remove-fg-hover: var(--cs-color-disabled-fg);
+
+            &[data-variant="soft"],
+            &[data-variant="accent"],
+            &[data-invalid] {
+                --cs-chip-bg: var(--cs-color-disabled-bg);
+                --cs-chip-bg-hover: var(--cs-color-disabled-bg);
+            }
+
+            &[data-variant="elevated"] {
+                --cs-chip-bg: var(--cs-color-disabled-bg-elevated);
+                --cs-chip-bg-hover: var(--cs-color-disabled-bg-elevated);
+                --cs-chip-shadow: 0 0 0 1px var(--cs-color-disabled-border);
+                --cs-chip-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
+                --cs-chip-shadow-active: 0 0 0 1px var(--cs-color-disabled-border);
+                --cs-chip-shadow-pressed: 0 0 0 1px var(--cs-color-disabled-border);
+            }
+
+            &:is([data-pressed], :has(> .cs-chip-trigger[aria-pressed="true"])) {
+                --cs-chip-remove-fg: var(--cs-color-disabled-fg-active);
+                --cs-chip-remove-fg-hover: var(--cs-color-disabled-fg-active);
+
+                &:has(> .cs-chip-trigger):has(> .cs-chip-remove) {
+                    color: var(--cs-color-disabled-fg-active);
+                }
+            }
+        }
+    }
+
+    .cs-chip-fill {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background-color: var(--cs-chip-bg-pressed);
+        border-radius: inherit;
+        corner-shape: inherit;
+        box-shadow: var(--cs-chip-shadow-pressed);
+        opacity: 0;
+        transform: scale(0.65);
+        transition:
+            var(--cs-chip-transition-pressed),
+            background-color var(--cs-dur-effect) var(--cs-ease-effect),
+            scale var(--cs-dur-squash) var(--cs-ease-squash);
+        pointer-events: none;
+    }
+
+    .cs-chip-trigger {
+        isolation: isolate;
+        position: relative;
+        display: inline-flex;
+        gap: var(--cs-chip-gap);
+        align-items: center;
+        justify-content: center;
+        min-inline-size: 0;
+        block-size: 100%;
+        color: inherit;
+        font: inherit;
+        text-decoration: none;
+        letter-spacing: inherit;
+        white-space: nowrap;
+        transition:
+            color var(--cs-dur-effect) var(--cs-ease-effect),
+            scale var(--cs-dur-effect) var(--cs-ease-effect);
+        cursor: default;
+
+        &:any-link {
+            cursor: pointer;
+        }
+
+        &:focus-visible {
+            z-index: 2;
+        }
+
+        &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+            --cs-disabled-opacity: 1;
+            color: var(--cs-color-disabled-fg);
+        }
+    }
+
+    /* Full-height inner content wrapper prevents subpixel/cap-trim baseline snap when scaling */
+    .cs-chip-trigger-content {
+        display: inline-flex;
+        gap: inherit;
+        align-items: center;
+        justify-content: center;
+        min-inline-size: 0;
+        max-inline-size: 100%;
+        block-size: 100%;
+        scale: 1;
+        will-change: scale;
+    }
+
+    /* Full-pill trigger behavior */
+    .cs-chip:has(> .cs-chip-trigger):not(:has(> .cs-chip-remove)) > .cs-chip-trigger {
+        inline-size: 100%;
+        padding-inline: var(--cs-chip-px);
+        border-radius: inherit;
+        corner-shape: inherit;
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            background-color: var(--cs-chip-bg, var(--cs-chip-surface-bg));
+            border-radius: inherit;
+            corner-shape: inherit;
+            box-shadow: var(--cs-chip-ring-shadow), var(--cs-chip-shadow, var(--cs-chip-surface-shadow, 0 0 #0000));
+            transition:
+                background-color var(--cs-dur-effect) var(--cs-ease-effect),
+                box-shadow var(--cs-dur-effect) var(--cs-ease-effect),
+                scale var(--cs-dur-squash) var(--cs-ease-squash);
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--cs-chip-fg-hover, var(--cs-chip-fg));
+
+                &::before {
+                    background-color: var(--cs-chip-bg-hover, var(--cs-chip-surface-bg-hover));
+                    box-shadow:
+                        var(--cs-chip-ring-shadow),
+                        var(
+                            --cs-chip-shadow-hover,
+                            var(
+                                --cs-chip-shadow,
+                                var(--cs-chip-surface-shadow-hover, var(--cs-chip-surface-shadow, 0 0 #0000))
+                            )
+                        );
+                }
+
+                & > .cs-chip-fill {
+                    background-color: var(--cs-chip-bg-pressed-hover);
+                }
+            }
+        }
+
+        &:active {
+            color: var(--cs-chip-fg-hover, var(--cs-chip-fg));
+            transition:
+                color var(--cs-dur-effect) var(--cs-ease-effect),
+                scale var(--cs-dur-press) var(--cs-ease-press);
+
+            &::before {
+                background-color: var(--cs-chip-bg-hover, var(--cs-chip-surface-bg-hover));
+                box-shadow:
+                    var(--cs-chip-ring-shadow),
+                    var(
+                        --cs-chip-shadow-active,
+                        var(
+                            --cs-chip-shadow,
+                            var(--cs-chip-surface-shadow-active, var(--cs-chip-surface-shadow, 0 0 #0000))
+                        )
+                    );
+                transition:
+                    background-color var(--cs-dur-press) var(--cs-ease-press),
+                    box-shadow var(--cs-dur-press) var(--cs-ease-press),
+                    scale var(--cs-dur-press) var(--cs-ease-press);
+            }
+
+            & > .cs-chip-fill {
+                background-color: var(--cs-chip-bg-pressed-hover);
+                transition:
+                    var(--cs-chip-transition-pressed),
+                    background-color var(--cs-dur-press) var(--cs-ease-press),
+                    scale var(--cs-dur-press) var(--cs-ease-press);
+            }
+
+            &:not(:focus-visible) {
+                &::before,
+                & > .cs-chip-fill {
+                    scale: var(--cs-chip-squash-active);
+                }
+            }
+
+            &:focus-visible {
+                scale: var(--cs-chip-focus-scale-active);
+            }
+        }
+
+        &[aria-pressed="true"] {
+            color: var(--cs-chip-fg-pressed);
+
+            & > .cs-chip-fill {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            @media (hover: hover) {
+                &:hover {
+                    color: var(--cs-chip-fg-pressed);
+                }
+            }
+
+            &:active {
+                color: var(--cs-chip-fg-pressed);
+            }
+        }
+
+        &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+            color: var(--cs-color-disabled-fg);
+
+            &::before {
+                background-color: var(--cs-color-disabled-bg);
+                box-shadow: none;
+            }
+
+            &[aria-pressed="true"] {
+                color: var(--cs-color-disabled-fg-active);
+
+                & > .cs-chip-fill {
+                    background-color: var(--cs-color-disabled-bg-active);
+                }
+            }
+        }
+    }
+
+    .cs-chip[data-variant="elevated"]:has(> .cs-chip-trigger):not(:has(> .cs-chip-remove))
+        > .cs-chip-trigger:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+        &::before {
+            background-color: var(--cs-color-disabled-bg-elevated);
+            box-shadow: 0 0 0 1px var(--cs-color-disabled-border);
+        }
+
+        &[aria-pressed="true"] > .cs-chip-fill {
+            box-shadow: 0 0 0 1px var(--cs-color-disabled-border);
+        }
+    }
+
+    .cs-chip:not([data-icon-only]):has(> .cs-chip-trigger):not(:has(> .cs-chip-remove))
+        > .cs-chip-trigger:has(> .cs-chip-trigger-content > .cs-chip-icon:first-child) {
+        padding-inline-start: max(4px, calc(var(--cs-chip-px) - 2px));
+    }
+
+    .cs-chip[data-icon-only]:has(> .cs-chip-trigger):not(:has(> .cs-chip-remove)) > .cs-chip-trigger {
+        padding-inline: 0;
+    }
+
+    /* Split trigger behavior (paired with .cs-chip-remove) */
+    .cs-chip:has(> .cs-chip-trigger):has(> .cs-chip-remove) > .cs-chip-trigger {
+        flex: 1 1 auto;
+        padding-inline-start: var(--cs-chip-px);
+        padding-inline-end: max(3px, calc(var(--cs-chip-gap) - 2px));
+        border-start-start-radius: inherit;
+        border-start-end-radius: 6px;
+        border-end-start-radius: inherit;
+        border-end-end-radius: 6px;
+        corner-shape: inherit;
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background-color: transparent;
+            border-radius: inherit;
+            corner-shape: inherit;
+            transition: background-color var(--cs-dur-effect) var(--cs-ease-effect);
+        }
+
+        & > .cs-chip-trigger-content {
+            transition: scale var(--cs-dur-effect) var(--cs-ease-effect);
+        }
+
+        @media (hover: hover) {
+            &:hover::before {
+                background-color: var(--cs-chip-trigger-bg-hover);
+            }
+        }
+
+        &:active {
+            &::before {
+                background-color: var(--cs-chip-trigger-bg-hover);
+                transition: background-color var(--cs-dur-press) var(--cs-ease-press);
+            }
+
+            /* Keep outer split surface stationary to avoid seams against .cs-chip-remove */
+            & > .cs-chip-trigger-content {
+                scale: 0.96;
+                transition: scale var(--cs-dur-press) var(--cs-ease-press);
+            }
+        }
+
+        &:focus-visible {
+            outline-offset: 1px;
+        }
+
+        &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+            color: var(--cs-color-disabled-fg);
+        }
+    }
+
+    .cs-chip:not([data-icon-only]):has(> .cs-chip-trigger):has(> .cs-chip-remove)
+        > .cs-chip-trigger:has(> .cs-chip-trigger-content > .cs-chip-icon:first-child) {
+        padding-inline-start: max(4px, calc(var(--cs-chip-px) - 2px));
+    }
+
+    .cs-chip[data-disabled]:has(> .cs-chip-trigger):has(> .cs-chip-remove) > .cs-chip-trigger[aria-pressed="true"] {
+        color: var(--cs-color-disabled-fg-active);
+    }
+
+    .cs-chip-remove {
+        isolation: isolate;
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        inline-size: var(--cs-chip-remove-size);
+        block-size: var(--cs-chip-remove-size);
+        color: var(--cs-chip-remove-fg);
+        border-radius: var(--cs-radius-full);
+        corner-shape: var(--cs-squircle-soft);
+        transition:
+            color var(--cs-dur-effect) var(--cs-ease-effect),
+            scale var(--cs-dur-effect) var(--cs-ease-effect);
+        cursor: default;
+
+        /* Concentric elastic disc */
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background-color: transparent;
+            border-radius: inherit;
+            corner-shape: inherit;
+            transition:
+                background-color var(--cs-dur-effect) var(--cs-ease-effect),
+                scale var(--cs-dur-squash) var(--cs-ease-squash);
+        }
+
+        /* Bounded asymmetric hit zone: matches chip height with zero leftward bleed into label/trigger */
+        &::after {
+            content: "";
+            position: absolute;
+            inset-block: calc(var(--cs-chip-remove-inset) * -1);
+            inset-inline-start: 0;
+            inset-inline-end: calc(var(--cs-chip-remove-inset) * -1);
+        }
+
+        & > .cs-chip-remove-icon {
+            flex-shrink: 0;
+            inline-size: var(--cs-chip-remove-icon-size, calc(100% / 3 * 2));
+            block-size: var(--cs-chip-remove-icon-size, calc(100% / 3 * 2));
+            stroke-width: 2.5;
+            will-change: scale;
+            transition: scale var(--cs-dur-squash) var(--cs-ease-squash);
+            pointer-events: none;
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--cs-chip-remove-fg-hover);
+
+                &::before {
+                    background-color: var(--cs-chip-remove-bg-hover);
+                }
+            }
+        }
+
+        &:active {
+            color: var(--cs-chip-remove-fg-hover);
+            transition:
+                color var(--cs-dur-effect) var(--cs-ease-effect),
+                scale var(--cs-dur-press) var(--cs-ease-press);
+
+            &::before {
+                background-color: var(--cs-chip-remove-bg-hover);
+                transition:
+                    background-color var(--cs-dur-press) var(--cs-ease-press),
+                    scale var(--cs-dur-press) var(--cs-ease-press);
+            }
+
+            &:not(:focus-visible)::before {
+                scale: var(--cs-squash-default);
+            }
+
+            &:focus-visible {
+                scale: 0.97;
+            }
+
+            & > .cs-chip-remove-icon {
+                scale: 0.9;
+                transition: scale var(--cs-dur-press) var(--cs-ease-press);
+            }
+        }
+
+        &:focus-visible {
+            z-index: 2;
+            outline-offset: 1px;
+        }
+
+        &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+            --cs-disabled-opacity: 1;
+            color: var(--cs-chip-remove-fg, var(--cs-color-disabled-fg));
+        }
+    }
+
+    .cs-chip[data-size="xs"] > .cs-chip-remove:focus-visible {
+        outline-offset: 0px;
+    }
+
+    .cs-chip:not([data-disabled]) > .cs-chip-remove:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+        color: var(--cs-color-disabled-fg);
+    }
+}
