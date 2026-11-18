@@ -1,21 +1,12 @@
 ## UI & Polish
 
-- [x] erst groß dann klein sieht shceiße aus bei animation
-- [x] Toast: teilweise unscharf beim ersten Öffnen (evtl. GPU-Layer?)
-- [x] Select: Section Title und Separator irgendwie hässlich
-- [x] Modal: stärkerer Schatten?
-- [x] Select: ScrollArea nicht automatisch
-- [x] Select: Soll sich bei Items mit Icon auch das Icon im Button clean ändern?
-- [x] Select: stärkerer Scale auf Optionen?
+- [ ] Fix-Bericht ansehen und beheben
 
 ## Modules
 
-- [ ] Dropdown
-- [ ] Combobox
+- [ ] KPI Cards
 - [ ] Virtual Scrolling
 - [ ] Data Table
-- [ ]
-
 - [ ] Animierte Charts
 - [ ] Tablist
 - [ ] Sidebar
@@ -23,6 +14,8 @@
 - [ ] ContextMenu
 - [ ] NLP Parser
 - [ ] Command Palette
+- [x] Dropdown
+- [x] Combobox
 - [x] Select
 - [x] Chips
 - [x] Modal
@@ -40,7 +33,6 @@
 
 ## Work
 
-- [ ] KPI Cards
 - [ ] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
 - [ ] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
 - [ ] Filesystem-Chooser / Verwalter-Element
@@ -56,6 +48,18 @@
 
 ## Done
 
+- [x] ESLint bei neueren Modulen checken
+- [x] Checkbox-Mark-Animation prüfen (evtl. linear?)
+- [x] Kbd: Meta-Taste???
+- [x] Dropdown schließt nicht auf Tastendruck
+- [x] ButtonMorph in Dropdown?
+- [x] Erst groß dann klein sieht scheiße aus bei Animation
+- [x] Toast: teilweise unscharf beim ersten Öffnen (evtl. GPU-Layer?)
+- [x] Select: Section Title und Separator irgendwie hässlich
+- [x] Modal: stärkerer Schatten?
+- [x] Select: ScrollArea nicht automatisch
+- [x] Select: Soll sich bei Items mit Icon auch das Icon im Button clean ändern?
+- [x] Select: stärkerer Scale auf Optionen?
 - [x] Tastatur-Overlay-Autofocus-Bug fixen
 - [x] Kbd: Enter-Symbol rutscht in zwei Zeilen
 - [x] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
