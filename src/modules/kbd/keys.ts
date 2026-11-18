@@ -16,6 +16,7 @@ import type { Component } from "svelte";
 import type { SVGAttributes } from "svelte/elements";
 
 import { t } from "../../shared/lang.internal.ts";
+import WinIcon from "./WinIcon.internal.svelte";
 
 export type KbdIconComponentProps = Omit<SVGAttributes<SVGSVGElement>, "children" | "color"> &
     Record<string, unknown> & {
@@ -43,9 +44,9 @@ export const KBD_KEYS = {
         title: t({ de: "Feststelltaste", en: "Caps Lock" }),
         icon: ArrowBigUpDash,
     },
-    super: { text: "Super", title: "Super" },
-    win: { text: "Win", title: "Windows" },
-    meta: { text: "Meta", title: "Meta" },
+    super: { text: "Win", title: "Windows", icon: WinIcon },
+    win: { text: "Win", title: "Windows", icon: WinIcon },
+    meta: { text: "Win", title: "Windows", icon: WinIcon },
     arrowup: { text: t({ de: "Hoch", en: "Up" }), title: t({ de: "Pfeil nach oben", en: "Up Arrow" }), icon: ArrowUp },
     up: { text: t({ de: "Hoch", en: "Up" }), title: t({ de: "Pfeil nach oben", en: "Up Arrow" }), icon: ArrowUp },
     arrowdown: {

@@ -43,7 +43,7 @@ Tactile keyboard keycap primitive (`<Kbd />`) and shortcut composition suite (`<
 
 ## Linux & Windows Standard
 - **No OS detection, no macOS keys/icons, and no Unicode key glyphs** (`⌘`, `⌥`, `⇧`, `⌃`, `⏎`, `⌫`).
-- Always use standard Linux/Windows key names (`Ctrl`, `Alt`, `Shift`, `Super`, `Win`, `Enter`, `Backspace`, `Esc`, etc.) via `KBD_KEYS` or plain text children.
+- Always use standard Linux/Windows key names (`Ctrl`, `Alt`, `Shift`, `Win`, `Enter`, `Backspace`, `Esc`, etc.) via `KBD_KEYS` or plain text children.
 
 ## API
 
@@ -91,7 +91,7 @@ Discriminated union for rendering typed `KBD_KEYS` entries or a custom Lucide ic
 - `KBD_SIZES = ["xs", "sm", "md", "lg", "xl"] as const`
 - `KBD_SYMBOL_DISPLAYS = ["auto", "icon", "text", "both"] as const`
 - `KBD_KEYS`: Typed dictionary (`Record<string, KbdKeyDefinition>` where `KbdKeyDefinition = { text: string; title: string; icon?: Component<KbdIconComponentProps> }`):
-  - **Modifiers:** `ctrl` / `control` (`Ctrl`), `alt` (`Alt`), `shift` (`Shift`, `ArrowBigUp`), `capslock` / `caps` (`Caps`, `ArrowBigUpDash`), `super` (`Super`), `win` (`Win`), `meta` (`Meta`), `fn` (`Fn`)
+  - **Modifiers:** `ctrl` / `control` (`Ctrl`), `alt` (`Alt`), `shift` (`Shift`, `ArrowBigUp`), `capslock` / `caps` (`Caps`, `ArrowBigUpDash`), `super` / `win` / `meta` (`Win`, `WinIcon`), `fn` (`Fn`)
   - **Navigation:** `arrowup` / `up` (`Up`, `ArrowUp`), `arrowdown` / `down` (`Down`, `ArrowDown`), `arrowleft` / `left` (`Left`, `ArrowLeft`), `arrowright` / `right` (`Right`, `ArrowRight`), `pageup` / `pgup` (`PgUp`, `ChevronsUp`), `pagedown` / `pgdn` (`PgDn`, `ChevronsDown`), `home` (`Home`), `end` (`End`)
   - **Editing & Actions:** `enter` (`Enter`, `CornerDownLeft`), `backspace` (`Backspace`, `Delete`), `delete` / `del` (`Del`), `tab` (`Tab`, `ArrowRightToLine`), `backtab` / `shifttab` (`Backtab`, `ArrowLeftToLine`), `space` / `spacebar` (`Space`), `escape` / `esc` (`Esc`), `insert` / `ins` (`Ins`)
   - **System & Media:** `printscreen` / `prtsc` / `prtscn` (`PrtSc`), `scrolllock` / `scrlk` (`ScrLk`), `break` / `pausebreak` (`Pause`), `numlock` / `num` (`Num`), `menu` / `contextmenu` / `apps` (`Menu`), `volup` / `volumeup` (`Vol+`), `voldown` / `volumedown` (`Vol−`), `mute` / `volumemute` (`Mute`), `play` (`Play`), `pause` (`Pause`), `brightnessup` / `sun` (`Bright+`), `brightnessdown` / `moon` (`Bright−`), `mic` / `microphone` (`Mic`), `power` (`Power`), `search` / `find` (`Search`), `undo` (`Undo`), `redo` (`Redo`)
@@ -136,7 +136,7 @@ Discriminated union for rendering typed `KBD_KEYS` entries or a custom Lucide ic
 <KbdGroup variant="keycap" size="md">
     <Kbd symbol="ctrl" />
     <KbdSeparator />
-    <Kbd symbol="shift" display="text" />
+    <Kbd symbol="shift" />
     <KbdSeparator />
     <Kbd>P</Kbd>
 </KbdGroup>

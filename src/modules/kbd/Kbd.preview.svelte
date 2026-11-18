@@ -81,7 +81,7 @@ ${closeScript}
 <KbdGroup variant="keycap" size="md">
     <Kbd symbol="ctrl" />
     <KbdSeparator />
-    <Kbd symbol="shift" display="text" />
+    <Kbd symbol="shift" />
     <KbdSeparator />
     <Kbd>P</Kbd>
 </KbdGroup>
@@ -243,7 +243,7 @@ ${closeScript}
                 <KbdGroup variant="keycap" size="md">
                     <Kbd symbol="ctrl" />
                     <KbdSeparator />
-                    <Kbd symbol="shift" display="text" />
+                    <Kbd symbol="shift" />
                     <KbdSeparator />
                     <Kbd>P</Kbd>
                 </KbdGroup>
