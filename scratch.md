@@ -12,7 +12,9 @@
 
 - [ ] Dropdown
 - [ ] Combobox
+- [ ] Virtual Scrolling
 - [ ] Data Table
+- [ ]
 
 - [ ] Animierte Charts
 - [ ] Tablist
