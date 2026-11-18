@@ -28,7 +28,7 @@
 
     --cs-shadow-elevated: var(--cs-shadow-sm);
     --cs-shadow-elevated-hover: var(--cs-shadow-md);
-    --cs-shadow-floating: var(--cs-shadow-sm);
+    --cs-shadow-floating: var(--cs-shadow-lg);
     --cs-shadow-sunken:
         inset 0 2px 5px -1px rgb(0 0 0 / 0.09), inset 0 1px 2px 0 rgb(0 0 0 / 0.05),
         inset 0 -1px 0 0 rgb(255 255 255 / 0.7);
@@ -53,7 +53,7 @@
 [data-theme="light"] {
     --cs-shadow-elevated: var(--cs-shadow-sm);
     --cs-shadow-elevated-hover: var(--cs-shadow-md);
-    --cs-shadow-floating: var(--cs-shadow-sm);
+    --cs-shadow-floating: var(--cs-shadow-lg);
     --cs-shadow-sunken:
         inset 0 2px 5px -1px rgb(0 0 0 / 0.09), inset 0 1px 2px 0 rgb(0 0 0 / 0.05),
         inset 0 -1px 0 0 rgb(255 255 255 / 0.7);

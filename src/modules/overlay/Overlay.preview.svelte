@@ -10,8 +10,7 @@
     import { Overlay, OVERLAY_VARIANTS, type OverlayVariant } from "cs/svelte/overlay";
     import { ScrollArea, ScrollAreaContent } from "cs/svelte/scroll-area";
     import { scrollFade } from "cs/svelte/scroll-fade";
-    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
+    import { ToggleButton, ToggleButtonGroup, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let isOpen = $state(false);

@@ -8,8 +8,7 @@
     import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
     import { Kbd, KbdGroup, KbdSeparator } from "cs/svelte/kbd";
-    import { ToggleButton, ToggleButtonIcon } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
+    import { ToggleButton, ToggleButtonGroup, ToggleButtonIcon } from "cs/svelte/toggle-button";
     import { Tooltip, tooltip, TooltipIcon, TooltipText } from "cs/svelte/tooltip";
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 

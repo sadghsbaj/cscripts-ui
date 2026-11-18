@@ -2,8 +2,7 @@
     import type { Snippet } from "svelte";
     import { Columns2, Layers } from "@lucide/svelte";
     import { HitArea } from "cs/svelte/hit-area";
-    import { ToggleButton, ToggleButtonIcon, ToggleButtonLabel } from "cs/svelte/toggle-button";
-    import { ToggleButtonGroup } from "cs/svelte/toggle-button-group";
+    import { ToggleButton, ToggleButtonGroup, ToggleButtonIcon, ToggleButtonLabel } from "cs/svelte/toggle-button";
     import { tooltip } from "cs/svelte/tooltip";
 
     export interface LabVariant {
