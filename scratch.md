@@ -1,6 +1,6 @@
 ## UI & Polish
 
-- [ ] erst groß dann klein sieht shceiße aus bei animation
+- [x] erst groß dann klein sieht shceiße aus bei animation
 - [x] Toast: teilweise unscharf beim ersten Öffnen (evtl. GPU-Layer?)
 - [x] Select: Section Title und Separator irgendwie hässlich
 - [x] Modal: stärkerer Schatten?
