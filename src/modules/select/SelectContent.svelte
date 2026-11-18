@@ -1,4 +1,5 @@
 <script lang="ts">
+    import "../../shared/listbox/listbox.css";
     import { rovingFocus } from "../focus/index.ts";
     import { Popover } from "../popover/index.ts";
     import { ScrollArea, ScrollAreaContent } from "../scroll-area/index.ts";
@@ -132,13 +133,13 @@
     {width}
     {offset}
     {animate}
-    class={["cs-select-content", className]}
+    class={["cs-select-content", "cs-listbox", className]}
     data-size={select.size}
     data-arrow-nav={isArrowNav ? "" : undefined}
     data-nav={isKeyboardNav ? "keyboard" : undefined}
     style={styleProp
-        ? `--cs-select-content-max-height: ${maxHeight}; ${styleProp}`
-        : `--cs-select-content-max-height: ${maxHeight}`}
+        ? `--cs-listbox-content-max-height: ${maxHeight}; --cs-select-content-max-height: ${maxHeight}; ${styleProp}`
+        : `--cs-listbox-content-max-height: ${maxHeight}; --cs-select-content-max-height: ${maxHeight}`}
     ontoggle={handleToggle}
     onkeydown={handleKeyDown}
     onpointermove={handlePointerMove}
@@ -149,7 +150,7 @@
         <ScrollAreaContent
             bind:ref={listRef}
             tabindex={-1}
-            class="cs-select-list"
+            class="cs-select-list cs-listbox-list"
             {@attach scrollFade({ size: "sm", direction: "vertical", edges: "both" })}
             {@attach rovingFocus({
                 orientation: "vertical",
@@ -189,139 +190,3 @@
         </ScrollAreaContent>
     </ScrollArea>
 </Popover>
-
-<style>
-    @layer components.composite {
-        :global(.cs-select-content) {
-            --cs-select-content-bg: var(--cs-color-elevated);
-            --cs-select-content-shadow: var(--cs-shadow-floating);
-            --cs-select-content-max-height: min(320px, 60dvh);
-            --cs-select-content-max-width: 360px;
-            --cs-select-list-gap: 2px;
-            --cs-select-item-radius: max(
-                var(--cs-radius-lg),
-                calc(var(--cs-select-content-radius) - var(--cs-select-content-padding))
-            );
-            --cs-select-item-bg: transparent;
-            --cs-select-item-bg-hover: var(--cs-color-base-soft);
-            --cs-select-item-bg-active: var(--cs-color-base-soft-hover);
-            --cs-select-item-fg: var(--cs-color-text-strong);
-            --cs-select-item-fg-hover: var(--cs-color-text-strong);
-            --cs-select-item-description-fg: var(--cs-color-text-weak);
-            --cs-select-item-icon-fg: var(--cs-color-text-weak);
-            --cs-select-item-indicator-fg: var(--cs-color-accent-soft-fg);
-            --cs-select-group-label-fg: var(--cs-color-text-weak);
-            --cs-select-separator-bg: color-mix(in oklab, var(--cs-color-text-main) 10%, transparent);
-
-            max-inline-size: min(var(--cs-select-content-max-width), calc(100vw - 32px));
-            max-block-size: min(var(--cs-select-content-max-height), calc(100dvh - 32px));
-            background-color: var(--cs-select-content-bg);
-            border-radius: var(--cs-select-content-radius);
-            corner-shape: var(--cs-squircle-soft);
-            box-shadow: var(--cs-select-content-shadow);
-            overflow: hidden;
-
-            &:popover-open {
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            }
-
-            /* =========================================================
-             * SIZES (xs - xl, concentric panel & item geometry)
-             * ========================================================= */
-            &[data-size="xs"] {
-                --cs-select-content-radius: 14px;
-                --cs-select-content-padding: 4px;
-                --cs-select-item-px: 8px;
-                --cs-select-item-py: 5px;
-                --cs-select-item-min-height: 28px;
-                --cs-select-item-gap: 6px;
-                --cs-select-item-font-size: var(--cs-text-xs);
-                --cs-select-item-title-lh: 18px;
-                --cs-select-icon-size: 14px;
-                --cs-select-check-size: 14px;
-                --cs-select-group-gap: 6px;
-                --cs-select-group-label-font-size: 11px;
-            }
-
-            &[data-size="sm"] {
-                --cs-select-content-radius: 14px;
-                --cs-select-content-padding: 4px;
-                --cs-select-item-px: 8px;
-                --cs-select-item-py: 6px;
-                --cs-select-item-min-height: 30px;
-                --cs-select-item-gap: 6px;
-                --cs-select-item-font-size: var(--cs-text-xs);
-                --cs-select-item-title-lh: 18px;
-                --cs-select-icon-size: 14px;
-                --cs-select-check-size: 14px;
-                --cs-select-group-gap: 6px;
-                --cs-select-group-label-font-size: 11px;
-            }
-
-            &[data-size="md"] {
-                --cs-select-content-radius: 18px;
-                --cs-select-content-padding: 6px;
-                --cs-select-item-px: 10px;
-                --cs-select-item-py: 7px;
-                --cs-select-item-min-height: 34px;
-                --cs-select-item-gap: 8px;
-                --cs-select-item-font-size: var(--cs-text-sm);
-                --cs-select-item-title-lh: 20px;
-                --cs-select-icon-size: 16px;
-                --cs-select-check-size: 16px;
-                --cs-select-group-gap: 10px;
-                --cs-select-group-label-font-size: var(--cs-text-xs);
-            }
-
-            &[data-size="lg"] {
-                --cs-select-content-radius: 18px;
-                --cs-select-content-padding: 6px;
-                --cs-select-item-px: 12px;
-                --cs-select-item-py: 8px;
-                --cs-select-item-min-height: 38px;
-                --cs-select-item-gap: 8px;
-                --cs-select-item-font-size: var(--cs-text-sm);
-                --cs-select-item-title-lh: 20px;
-                --cs-select-icon-size: 16px;
-                --cs-select-check-size: 16px;
-                --cs-select-group-gap: 10px;
-                --cs-select-group-label-font-size: var(--cs-text-xs);
-            }
-
-            &[data-size="xl"] {
-                --cs-select-content-radius: 20px;
-                --cs-select-content-padding: 6px;
-                --cs-select-item-px: 12px;
-                --cs-select-item-py: 9px;
-                --cs-select-item-min-height: 42px;
-                --cs-select-item-gap: 10px;
-                --cs-select-item-font-size: var(--cs-text-base);
-                --cs-select-item-title-lh: 22px;
-                --cs-select-icon-size: 18px;
-                --cs-select-check-size: 16px;
-                --cs-select-group-gap: 10px;
-                --cs-select-group-label-font-size: var(--cs-text-xs);
-            }
-
-            > :global(.cs-scroll-area) {
-                flex: 1 1 auto;
-                min-height: 0;
-            }
-        }
-
-        :global(.cs-select-list) {
-            display: flex;
-            flex-direction: column;
-            gap: var(--cs-select-list-gap);
-            padding: var(--cs-select-content-padding);
-            overscroll-behavior: contain;
-            scroll-padding-block: calc(var(--cs-select-content-padding) + 16px);
-
-            &:focus {
-                outline: none;
-            }
-        }
-    }
-</style>

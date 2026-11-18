@@ -12,29 +12,6 @@
     });
 </script>
 
-<span bind:this={ref} {...rest} class={["cs-select-item-text", className]}>
+<span bind:this={ref} {...rest} class={["cs-select-item-text", "cs-listbox-item-text", className]}>
     {@render children?.()}
 </span>
-
-<style>
-    @layer components.composite {
-        .cs-select-item-text {
-            flex: 1 1 auto;
-            min-width: 0;
-            font-weight: 500;
-            overflow-x: clip;
-            overflow-y: visible;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            text-box: trim-both cap alphabetic;
-
-            :global(.cs-select-item:has(.cs-select-item-description)) & {
-                overflow: visible;
-                text-overflow: clip;
-                white-space: normal;
-                line-height: var(--cs-select-item-title-lh);
-                text-box: normal;
-            }
-        }
-    }
-</style>

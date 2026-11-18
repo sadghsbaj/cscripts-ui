@@ -12,18 +12,6 @@
     });
 </script>
 
-<p bind:this={ref} {...rest} class={["cs-select-item-description", className]}>
+<p bind:this={ref} {...rest} class={["cs-select-item-description", "cs-listbox-item-description", className]}>
     {@render children?.()}
 </p>
-
-<style>
-    @layer components.composite {
-        .cs-select-item-description {
-            margin: 0;
-            color: var(--cs-select-item-description-fg);
-            font-size: var(--cs-text-xs);
-            font-weight: 400;
-            line-height: var(--cs-leading-snug);
-        }
-    }
-</style>

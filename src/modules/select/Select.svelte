@@ -1,6 +1,6 @@
 <script lang="ts" generics="T extends string = string">
-    import { SvelteMap } from "svelte/reactivity";
-
+    import { createListboxRegistry } from "../../shared/listbox/listbox-registry.svelte.ts";
+    import { createPointerDragRelease } from "../../shared/listbox/pointer-drag-release.ts";
     import type { SelectProps, SelectSelectedItem } from "./index.ts";
     import {
         setSelectContext,
@@ -13,9 +13,6 @@
         showPopover: (options?: { source?: HTMLElement }) => void;
         hidePopover: () => void;
     };
-
-    const DRAG_DISTANCE_THRESHOLD_PX = 4;
-    const DRAG_HOLD_THRESHOLD_MS = 180;
 
     let {
         value = $bindable(),
@@ -33,7 +30,7 @@
     }: SelectProps<T> = $props();
 
     const generatedId = $props.id();
-    const items = new SvelteMap<string, SelectRegisteredItem<T>>();
+    const registry = createListboxRegistry<SelectRegisteredItem<T>>();
 
     let triggerIdOverride = $state<string | undefined>();
     let listboxIdOverride = $state<string | undefined>();
@@ -43,10 +40,9 @@
     let openFocus: SelectOpenFocus = "selected";
     let lastSyncedOpen = false;
     let reconcilingToggle: boolean | null = null;
-    let pointerDragActive = false;
-    let pointerStartX = 0;
-    let pointerStartY = 0;
-    let lastPointerOpenAt = 0;
+    const { beginPointerOpen, shouldCommitPointerRelease, clearPointerOpen } = createPointerDragRelease(
+        () => triggerRef
+    );
 
     const defaultTriggerId = $derived(id ?? `${generatedId}-trigger`);
     const defaultListboxId = $derived(`${id ?? generatedId}-listbox`);
@@ -55,7 +51,7 @@
 
     const selectedItem = $derived.by((): SelectSelectedItem<T> | undefined => {
         if (value === undefined) return undefined;
-        const registered = items.get(value);
+        const registered = registry.get(value);
         if (!registered) return undefined;
         return {
             value: registered.value,
@@ -74,54 +70,8 @@
         }
     }
 
-    function handleWindowPointerEnd(): void {
-        clearPointerOpen();
-    }
-
-    function clearPointerOpen(): void {
-        pointerDragActive = false;
-        if (typeof window !== "undefined") {
-            window.removeEventListener("pointerup", handleWindowPointerEnd);
-            window.removeEventListener("pointercancel", handleWindowPointerEnd);
-        }
-    }
-
-    function beginPointerOpen(clientX: number, clientY: number): void {
-        clearPointerOpen();
-        pointerDragActive = true;
-        pointerStartX = clientX;
-        pointerStartY = clientY;
-        lastPointerOpenAt = Date.now();
-
-        if (typeof window !== "undefined") {
-            window.addEventListener("pointerup", handleWindowPointerEnd, { once: true });
-            window.addEventListener("pointercancel", handleWindowPointerEnd, { once: true });
-        }
-    }
-
-    function shouldCommitPointerRelease(event: PointerEvent): boolean {
-        if (!pointerDragActive) return false;
-        if (event.pointerType !== "mouse" || event.button !== 0) return false;
-        if (event.target instanceof Node && triggerRef?.contains(event.target)) return false;
-
-        const distance = Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY);
-        const elapsed = Date.now() - lastPointerOpenAt;
-        return distance >= DRAG_DISTANCE_THRESHOLD_PX || elapsed >= DRAG_HOLD_THRESHOLD_MS;
-    }
-
     function getOrderedEnabledItems(): SelectRegisteredItem<T>[] {
-        const enabledItems = items
-            .values()
-            .filter((item) => !item.disabled)
-            .toArray();
-        enabledItems.sort((a, b) => {
-            if (!a.element || !b.element || a.element === b.element) return 0;
-            const position = a.element.compareDocumentPosition(b.element);
-            if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
-            if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1;
-            return 0;
-        });
-        return enabledItems;
+        return registry.getOrdered((item) => !item.disabled);
     }
 
     function selectWithoutToggle(itemValue: T): void {
@@ -299,14 +249,7 @@
                 }
             };
         },
-        registerItem(meta: SelectRegisteredItem<T>): () => void {
-            items.set(meta.value, meta);
-            return () => {
-                if (items.get(meta.value) === meta) {
-                    items.delete(meta.value);
-                }
-            };
-        },
+        registerItem: registry.register,
         getOrderedEnabledItems,
         isSelected(itemValue: T): boolean {
             return value === itemValue;

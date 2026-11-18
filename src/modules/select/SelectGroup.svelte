@@ -18,20 +18,12 @@
     });
 </script>
 
-<div bind:this={ref} {...rest} role="group" aria-labelledby={labelId} class={["cs-select-group", className]}>
+<div
+    bind:this={ref}
+    {...rest}
+    role="group"
+    aria-labelledby={labelId}
+    class={["cs-select-group", "cs-listbox-group", className]}
+>
     {@render children?.()}
 </div>
-
-<style>
-    @layer components.composite {
-        .cs-select-group {
-            display: flex;
-            flex-direction: column;
-            gap: var(--cs-select-list-gap);
-
-            & + :global(.cs-select-group) {
-                margin-block-start: var(--cs-select-group-gap);
-            }
-        }
-    }
-</style>

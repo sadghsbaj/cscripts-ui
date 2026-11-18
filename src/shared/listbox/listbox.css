@@ -1,0 +1,459 @@
+@layer components.composite {
+    .cs-listbox {
+        --cs-listbox-content-bg: var(--cs-color-elevated);
+        --cs-listbox-content-shadow: var(--cs-shadow-floating);
+        --cs-listbox-content-max-height: min(320px, 60dvh);
+        --cs-listbox-content-max-width: 360px;
+        --cs-listbox-list-gap: 2px;
+        --cs-listbox-item-radius: max(
+            var(--cs-radius-lg),
+            calc(var(--cs-listbox-content-radius) - var(--cs-listbox-content-padding))
+        );
+        --cs-listbox-item-bg: transparent;
+        --cs-listbox-item-bg-hover: var(--cs-color-base-soft);
+        --cs-listbox-item-bg-highlighted: var(--cs-listbox-item-bg-hover);
+        --cs-listbox-item-bg-active: var(--cs-color-base-soft-hover);
+        --cs-listbox-item-fg: var(--cs-color-text-strong);
+        --cs-listbox-item-fg-hover: var(--cs-color-text-strong);
+        --cs-listbox-item-description-fg: var(--cs-color-text-weak);
+        --cs-listbox-item-icon-fg: var(--cs-color-text-weak);
+        --cs-listbox-item-indicator-fg: var(--cs-color-accent-soft-fg);
+        --cs-listbox-group-label-fg: var(--cs-color-text-weak);
+        --cs-listbox-separator-bg: color-mix(in oklab, var(--cs-color-text-main) 10%, transparent);
+        --cs-listbox-empty-fg: var(--cs-color-text-weak);
+
+        max-inline-size: min(var(--cs-listbox-content-max-width), calc(100vw - 32px));
+        max-block-size: min(var(--cs-listbox-content-max-height), calc(100dvh - 32px));
+        background-color: var(--cs-listbox-content-bg);
+        border-radius: var(--cs-listbox-content-radius);
+        corner-shape: var(--cs-squircle-soft);
+        box-shadow: var(--cs-listbox-content-shadow);
+        overflow: hidden;
+
+        &:popover-open {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* =========================================================
+         * SIZES (xs - xl, concentric panel & item geometry)
+         * ========================================================= */
+        &[data-size="xs"] {
+            --cs-listbox-content-radius: 14px;
+            --cs-listbox-content-padding: 4px;
+            --cs-listbox-item-px: 8px;
+            --cs-listbox-item-py: 5px;
+            --cs-listbox-item-min-height: 28px;
+            --cs-listbox-item-gap: 6px;
+            --cs-listbox-item-font-size: var(--cs-text-xs);
+            --cs-listbox-item-title-lh: 18px;
+            --cs-listbox-icon-size: 14px;
+            --cs-listbox-check-size: 14px;
+            --cs-listbox-group-gap: 6px;
+            --cs-listbox-group-label-font-size: 11px;
+        }
+
+        &[data-size="sm"] {
+            --cs-listbox-content-radius: 14px;
+            --cs-listbox-content-padding: 4px;
+            --cs-listbox-item-px: 8px;
+            --cs-listbox-item-py: 6px;
+            --cs-listbox-item-min-height: 30px;
+            --cs-listbox-item-gap: 6px;
+            --cs-listbox-item-font-size: var(--cs-text-xs);
+            --cs-listbox-item-title-lh: 18px;
+            --cs-listbox-icon-size: 14px;
+            --cs-listbox-check-size: 14px;
+            --cs-listbox-group-gap: 6px;
+            --cs-listbox-group-label-font-size: 11px;
+        }
+
+        &[data-size="md"] {
+            --cs-listbox-content-radius: 18px;
+            --cs-listbox-content-padding: 6px;
+            --cs-listbox-item-px: 10px;
+            --cs-listbox-item-py: 7px;
+            --cs-listbox-item-min-height: 34px;
+            --cs-listbox-item-gap: 8px;
+            --cs-listbox-item-font-size: var(--cs-text-sm);
+            --cs-listbox-item-title-lh: 20px;
+            --cs-listbox-icon-size: 16px;
+            --cs-listbox-check-size: 16px;
+            --cs-listbox-group-gap: 10px;
+            --cs-listbox-group-label-font-size: var(--cs-text-xs);
+        }
+
+        &[data-size="lg"] {
+            --cs-listbox-content-radius: 18px;
+            --cs-listbox-content-padding: 6px;
+            --cs-listbox-item-px: 12px;
+            --cs-listbox-item-py: 8px;
+            --cs-listbox-item-min-height: 38px;
+            --cs-listbox-item-gap: 8px;
+            --cs-listbox-item-font-size: var(--cs-text-sm);
+            --cs-listbox-item-title-lh: 20px;
+            --cs-listbox-icon-size: 16px;
+            --cs-listbox-check-size: 16px;
+            --cs-listbox-group-gap: 10px;
+            --cs-listbox-group-label-font-size: var(--cs-text-xs);
+        }
+
+        &[data-size="xl"] {
+            --cs-listbox-content-radius: 20px;
+            --cs-listbox-content-padding: 6px;
+            --cs-listbox-item-px: 12px;
+            --cs-listbox-item-py: 9px;
+            --cs-listbox-item-min-height: 42px;
+            --cs-listbox-item-gap: 10px;
+            --cs-listbox-item-font-size: var(--cs-text-base);
+            --cs-listbox-item-title-lh: 22px;
+            --cs-listbox-icon-size: 18px;
+            --cs-listbox-check-size: 16px;
+            --cs-listbox-group-gap: 10px;
+            --cs-listbox-group-label-font-size: var(--cs-text-xs);
+        }
+
+        > .cs-scroll-area {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+    }
+
+    .cs-listbox-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--cs-listbox-list-gap);
+        padding: var(--cs-listbox-content-padding);
+        overscroll-behavior: contain;
+        scroll-padding-block: calc(var(--cs-listbox-content-padding) + 16px);
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+    .cs-listbox-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-height: var(--cs-listbox-item-min-height);
+        padding-inline: var(--cs-listbox-item-px);
+        padding-block: var(--cs-listbox-item-py);
+        color: var(--cs-listbox-item-fg);
+        font-size: var(--cs-listbox-item-font-size);
+        background-color: var(--cs-listbox-item-bg);
+        border-radius: var(--cs-listbox-item-radius);
+        corner-shape: var(--cs-squircle-soft);
+        cursor: default;
+        user-select: none;
+        transition:
+            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            scale var(--cs-dur-press) var(--cs-ease-press);
+
+        /* Optical edge inset for Lucide 2px internal SVG viewBox padding */
+        &:has(.cs-listbox-item-icon) {
+            padding-inline-start: calc(var(--cs-listbox-item-px) - 2px);
+        }
+
+        &[data-selected] {
+            .cs-listbox-item-check {
+                opacity: 1;
+                scale: 1;
+            }
+        }
+
+        @media (hover: hover) {
+            .cs-listbox:not([data-nav="keyboard"]) &:hover:not([data-disabled]) {
+                --cs-listbox-item-icon-fg: var(--cs-color-text-main);
+                color: var(--cs-listbox-item-fg-hover);
+                background-color: var(--cs-listbox-item-bg-hover);
+            }
+        }
+
+        &:not([data-disabled]):active {
+            --cs-listbox-item-icon-fg: var(--cs-color-text-main);
+            color: var(--cs-listbox-item-fg-hover);
+            background-color: var(--cs-listbox-item-bg-active);
+            scale: 0.97;
+        }
+
+        &:focus-visible:not([data-disabled]) {
+            --cs-listbox-item-icon-fg: var(--cs-color-text-main);
+            color: var(--cs-listbox-item-fg-hover);
+            background-color: var(--cs-listbox-item-bg-hover);
+            outline-offset: -2px;
+        }
+
+        .cs-listbox[data-arrow-nav] &:focus-visible {
+            outline: none;
+        }
+
+        .cs-listbox[data-nav="keyboard"] &[data-roving-active]:not([data-disabled]),
+        &[data-highlighted]:not([data-disabled]) {
+            --cs-listbox-item-icon-fg: var(--cs-color-text-main);
+            color: var(--cs-listbox-item-fg-hover);
+            background-color: var(--cs-listbox-item-bg-highlighted);
+        }
+
+        &[data-disabled] {
+            --cs-disabled-opacity: 1;
+            --cs-listbox-item-fg: var(--cs-color-disabled-fg);
+            --cs-listbox-item-description-fg: var(--cs-color-disabled-fg);
+            --cs-listbox-item-icon-fg: var(--cs-color-disabled-fg);
+            --cs-listbox-item-indicator-fg: var(--cs-color-disabled-fg);
+            color: var(--cs-color-disabled-fg);
+            background-color: transparent;
+            cursor: default;
+        }
+
+        &[data-hidden] {
+            display: none;
+        }
+    }
+
+    .cs-listbox-item-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) var(--cs-listbox-check-size);
+        gap: var(--cs-listbox-item-gap);
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+
+        &:has(> .cs-listbox-item-icon) {
+            grid-template-columns: auto minmax(0, 1fr) var(--cs-listbox-check-size);
+        }
+
+        &:not(:has(> .cs-listbox-item-check)) {
+            grid-template-columns: minmax(0, 1fr);
+
+            &:has(> .cs-listbox-item-icon) {
+                grid-template-columns: auto minmax(0, 1fr);
+            }
+        }
+
+        &:has(.cs-listbox-item-description) {
+            align-items: start;
+
+            > .cs-listbox-item-icon {
+                margin-block-start: calc((var(--cs-listbox-item-title-lh) - var(--cs-listbox-icon-size)) / 2);
+            }
+
+            > .cs-listbox-item-check {
+                margin-block-start: calc((var(--cs-listbox-item-title-lh) - var(--cs-listbox-check-size)) / 2);
+            }
+        }
+
+        > .cs-listbox-item-icon {
+            flex-shrink: 0;
+            width: var(--cs-listbox-icon-size);
+            height: var(--cs-listbox-icon-size);
+            color: var(--cs-listbox-item-icon-fg);
+            stroke-width: 2.25;
+            pointer-events: none;
+            transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        }
+    }
+
+    .cs-listbox-item-content {
+        min-width: 0;
+        font-weight: 500;
+
+        &:not(:has(*)) {
+            display: block;
+            font-weight: 500;
+            overflow-x: clip;
+            overflow-y: visible;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-box: trim-both cap alphabetic;
+        }
+
+        &:has(*):not(:has(> .cs-listbox-item-description)) {
+            display: flex;
+            gap: var(--cs-listbox-item-gap);
+            align-items: center;
+            font-weight: 500;
+
+            > :not(.cs-listbox-item-icon, .cs-listbox-item-text, .cs-listbox-item-description) {
+                flex-shrink: 0;
+            }
+
+            &:not(:has(> .cs-listbox-item-text))
+                > :not(.cs-listbox-item-icon, .cs-listbox-item-text, .cs-listbox-item-description) {
+                margin-inline-start: auto;
+            }
+        }
+
+        &:has(> .cs-listbox-item-description) {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            row-gap: 2px;
+            column-gap: var(--cs-listbox-item-gap);
+            align-items: start;
+
+            &:has(> .cs-listbox-item-icon) {
+                grid-template-columns: auto minmax(0, 1fr);
+
+                > .cs-listbox-item-icon {
+                    grid-column: 1;
+                    grid-row: 1;
+                    margin-block-start: calc((var(--cs-listbox-item-title-lh) - var(--cs-listbox-icon-size)) / 2);
+                }
+
+                > .cs-listbox-item-text {
+                    grid-column: 2;
+                    grid-row: 1;
+                }
+
+                > .cs-listbox-item-description {
+                    grid-column: 2;
+                    grid-row: 2;
+                }
+
+                > :not(.cs-listbox-item-icon, .cs-listbox-item-text, .cs-listbox-item-description) {
+                    grid-column: 3;
+                    grid-row: 1;
+                    align-self: center;
+                    flex-shrink: 0;
+                }
+            }
+
+            &:not(:has(> .cs-listbox-item-icon)) {
+                > .cs-listbox-item-text {
+                    grid-column: 1;
+                    grid-row: 1;
+                }
+
+                > .cs-listbox-item-description {
+                    grid-column: 1;
+                    grid-row: 2;
+                }
+
+                > :not(.cs-listbox-item-icon, .cs-listbox-item-text, .cs-listbox-item-description) {
+                    grid-column: 2;
+                    grid-row: 1;
+                    align-self: center;
+                    flex-shrink: 0;
+                }
+            }
+        }
+    }
+
+    .cs-listbox-item-icon {
+        flex-shrink: 0;
+        width: var(--cs-listbox-icon-size);
+        height: var(--cs-listbox-icon-size);
+        color: var(--cs-listbox-item-icon-fg);
+        stroke-width: 2.25;
+        pointer-events: none;
+        transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+    }
+
+    .cs-listbox-item-text {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-weight: 500;
+        overflow-x: clip;
+        overflow-y: visible;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-box: trim-both cap alphabetic;
+
+        .cs-listbox-item:has(.cs-listbox-item-description) & {
+            overflow: visible;
+            text-overflow: clip;
+            white-space: normal;
+            line-height: var(--cs-listbox-item-title-lh);
+            text-box: normal;
+        }
+    }
+
+    .cs-listbox-item-description {
+        margin: 0;
+        color: var(--cs-listbox-item-description-fg);
+        font-size: var(--cs-text-xs);
+        font-weight: 400;
+        line-height: var(--cs-leading-snug);
+    }
+
+    .cs-listbox-item-check {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--cs-listbox-check-size);
+        height: var(--cs-listbox-check-size);
+        color: var(--cs-listbox-item-indicator-fg);
+        opacity: 0;
+        scale: 0.75;
+        pointer-events: none;
+        transition:
+            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            scale var(--cs-dur-effect-fast) var(--cs-ease-quart-out);
+
+        > .cs-listbox-item-check-icon {
+            width: 100%;
+            height: 100%;
+            stroke-width: 2.5;
+        }
+    }
+
+    .cs-listbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--cs-listbox-list-gap);
+
+        & + .cs-listbox-group {
+            margin-block-start: var(--cs-listbox-group-gap);
+        }
+
+        &:has(.cs-listbox-item):not(:has(.cs-listbox-item:not([data-hidden]))) {
+            display: none;
+        }
+    }
+
+    .cs-listbox-group-label {
+        padding-inline: var(--cs-listbox-item-px);
+        padding-block: 4px 2px;
+        color: var(--cs-listbox-group-label-fg);
+        font-size: var(--cs-listbox-group-label-font-size);
+        font-weight: 500;
+        line-height: var(--cs-leading-tight);
+        letter-spacing: var(--cs-tracking-normal);
+        user-select: none;
+
+        .cs-listbox-group:first-child > &:first-child {
+            padding-block-start: 2px;
+        }
+    }
+
+    .cs-listbox-separator {
+        flex-shrink: 0;
+        height: 1px;
+        margin-block: 4px;
+        margin-inline: var(--cs-listbox-item-px);
+        background-color: var(--cs-listbox-separator-bg);
+    }
+
+    .cs-listbox-empty {
+        padding-inline: var(--cs-listbox-item-px);
+        padding-block: calc(var(--cs-listbox-item-py) * 2.5);
+        color: var(--cs-listbox-empty-fg);
+        font-size: var(--cs-listbox-item-font-size);
+        line-height: var(--cs-leading-snug);
+        text-align: center;
+        user-select: none;
+        animation: cs-listbox-empty-in var(--cs-dur-effect-fast) var(--cs-ease-effect);
+    }
+
+    @keyframes cs-listbox-empty-in {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+}

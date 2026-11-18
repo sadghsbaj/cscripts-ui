@@ -14,25 +14,12 @@
     });
 </script>
 
-<div bind:this={ref} {...rest} id={resolvedId} role="presentation" class={["cs-select-group-label", className]}>
+<div
+    bind:this={ref}
+    {...rest}
+    id={resolvedId}
+    role="presentation"
+    class={["cs-select-group-label", "cs-listbox-group-label", className]}
+>
     {@render children?.()}
 </div>
-
-<style>
-    @layer components.composite {
-        .cs-select-group-label {
-            padding-inline: var(--cs-select-item-px);
-            padding-block: 4px 2px;
-            color: var(--cs-select-group-label-fg);
-            font-size: var(--cs-select-group-label-font-size);
-            font-weight: 500;
-            line-height: var(--cs-leading-tight);
-            letter-spacing: var(--cs-tracking-normal);
-            user-select: none;
-
-            :global(.cs-select-group:first-child) > &:first-child {
-                padding-block-start: 2px;
-            }
-        }
-    }
-</style>
