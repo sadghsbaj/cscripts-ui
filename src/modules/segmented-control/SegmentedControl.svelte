@@ -2,8 +2,8 @@
     import { ChevronLeft, ChevronRight } from "@lucide/svelte";
     import { SvelteMap } from "svelte/reactivity";
 
-    import { rovingFocus } from "../focus/roving-focus.attach.ts";
-    import { scrollFade } from "../scroll-fade/scroll-fade.attach.ts";
+    import { rovingFocus } from "../focus/index.ts";
+    import { scrollFade } from "../scroll-fade/index.ts";
     import { setSegmentedControlContext, type SegmentedControlProps } from "./index.ts";
     import {
         getOverflowState,

@@ -76,11 +76,6 @@
                 }
             }
 
-            &:focus-visible {
-                outline: 2px solid var(--cs-color-accent-solid);
-                outline-offset: -1px;
-            }
-
             &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
                 --cs-disabled-opacity: 1;
                 color: var(--cs-color-disabled-fg);

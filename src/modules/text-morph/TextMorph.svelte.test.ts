@@ -2,7 +2,7 @@ import { flushSync, mount, unmount } from "svelte";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
-    CS_TEXT_MORPH_DURATION,
+    CS_TEXT_MORPH_DUR,
     CS_TEXT_MORPH_EASE,
     TextMorph,
     type TextMorphProps,
@@ -223,7 +223,7 @@ describe("TextMorph Svelte 5 Component", () => {
     }
 
     test("exports timing and easing constants aligned with motion.css", () => {
-        expect(CS_TEXT_MORPH_DURATION).toBe(380);
+        expect(CS_TEXT_MORPH_DUR).toBe(380);
         expect(CS_TEXT_MORPH_EASE).toBe("cubic-bezier(0.22, 1, 0.36, 1)");
     });
 

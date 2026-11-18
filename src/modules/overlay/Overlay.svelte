@@ -153,7 +153,7 @@
         /* Exposed on :root so external controls (e.g. floating close buttons)
          * or child panels can align to the overlay's exact viewport boundaries. */
         :root {
-            --cs-overlay-padding: clamp(1rem, 0.5rem + 2dvmin, 2rem);
+            --cs-overlay-padding: clamp(16px, 8px + 2dvmin, 32px);
         }
 
         .cs-overlay {

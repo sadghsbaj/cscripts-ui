@@ -1,24 +1,5 @@
-<script lang="ts" module>
-    import { createContext } from "svelte";
-
-    import type { CardSize } from "./index.ts";
-
-    const CARD_INNER_RADIUS_PX: Record<CardSize, number> = {
-        sm: 8,
-        md: 10,
-        lg: 12,
-    };
-
-    const CARD_PADDING_PX: Record<CardSize, number> = {
-        sm: 12,
-        md: 16,
-        lg: 24,
-    };
-
-    const [getCardRadiusContext, setCardRadiusContext, hasCardRadiusContext] = createContext<() => number>();
-</script>
-
 <script lang="ts">
+    import { createSurfaceRadius } from "../../shared/surface-radius/index.ts";
     import { setCardContext, type CardProps } from "./index.ts";
 
     let {
@@ -31,18 +12,7 @@
         ...rest
     }: CardProps = $props();
 
-    const parentInnerRadius = hasCardRadiusContext() ? getCardRadiusContext() : undefined;
-    const isNested = parentInnerRadius !== undefined;
-    const nestedRadius = $derived(parentInnerRadius !== undefined ? `${parentInnerRadius()}px` : undefined);
-
-    const ownInnerRadius = $derived.by(() => {
-        if (parentInnerRadius === undefined) {
-            return CARD_INNER_RADIUS_PX[size];
-        }
-        return Math.max(8, parentInnerRadius() - CARD_PADDING_PX[size]);
-    });
-
-    setCardRadiusContext(() => ownInnerRadius);
+    const surfaceRadius = createSurfaceRadius(() => size);
 
     setCardContext({
         get variant() {
@@ -64,8 +34,8 @@
     data-variant={variant}
     data-size={size}
     data-orientation={orientation}
-    data-nested={isNested ? "" : undefined}
-    style:--cs-card-nested-radius={nestedRadius}
+    data-nested={surfaceRadius.isNested ? "" : undefined}
+    style:--cs-card-nested-radius={surfaceRadius.nestedRadius}
 >
     {@render children?.()}
 </div>

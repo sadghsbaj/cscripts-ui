@@ -468,12 +468,12 @@ describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
             morph.syncValue();
 
             expect(morph.surfaceFrom).toEqual({
-                background: "rgb(255 0 0 / 0.1)",
+                bg: "rgb(255 0 0 / 0.1)",
                 shadow: "none",
                 corner: 1.2,
             });
             expect(morph.surfaceTo).toEqual({
-                background: "rgb(255 0 0)",
+                bg: "rgb(255 0 0)",
                 shadow: "0 1px 2px black",
                 corner: 1.6,
             });
@@ -564,12 +564,12 @@ describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
 
             expect(morph.isPointerHovered).toBe(true);
             expect(morph.surfaceFrom).toEqual({
-                background: "rgb(20 20 20)",
+                bg: "rgb(20 20 20)",
                 shadow: "0 1px 2px black",
                 corner: 1.3,
             });
             expect(morph.surfaceTo).toEqual({
-                background: "rgb(230 0 0)",
+                bg: "rgb(230 0 0)",
                 shadow: "0 2px 6px black",
                 corner: 1.6,
             });
@@ -588,12 +588,12 @@ describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
 
             expect(morph.isPointerHovered).toBe(true);
             expect(morph.surfaceFrom).toEqual({
-                background: "rgb(20 20 20)",
+                bg: "rgb(20 20 20)",
                 shadow: "0 1px 2px black",
                 corner: 1.3,
             });
             expect(morph.surfaceTo).toEqual({
-                background: "rgb(230 0 0)",
+                bg: "rgb(230 0 0)",
                 shadow: "0 2px 6px black",
                 corner: 1.6,
             });
@@ -610,7 +610,7 @@ describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
 
             expect(morph.isTransitioning).toBe(true);
             expect(morph.surfaceTo).toEqual({
-                background: "rgb(230 0 0)",
+                bg: "rgb(230 0 0)",
                 shadow: "0 2px 6px black",
                 corner: 1.6,
             });
@@ -620,7 +620,7 @@ describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
 
             expect(morph.isPointerHovered).toBe(false);
             expect(morph.surfaceTo).toEqual({
-                background: "rgb(200 0 0)",
+                bg: "rgb(200 0 0)",
                 shadow: "0 1px 2px black",
                 corner: 1.5,
             });
@@ -637,12 +637,12 @@ describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
             expect(morph.isPointerHovered).toBe(false);
             expect(morph.isTransitioning).toBe(true);
             expect(morph.surfaceFrom).toEqual({
-                background: "rgb(10 10 10)",
+                bg: "rgb(10 10 10)",
                 shadow: "none",
                 corner: 1.2,
             });
             expect(morph.surfaceTo).toEqual({
-                background: "rgb(200 0 0)",
+                bg: "rgb(200 0 0)",
                 shadow: "0 1px 2px black",
                 corner: 1.5,
             });
@@ -652,7 +652,7 @@ describe("ButtonMorphManager (button-morph-state.internal.svelte.ts)", () => {
 
             expect(morph.isPointerHovered).toBe(true);
             expect(morph.surfaceTo).toEqual({
-                background: "rgb(230 0 0)",
+                bg: "rgb(230 0 0)",
                 shadow: "0 2px 6px black",
                 corner: 1.6,
             });

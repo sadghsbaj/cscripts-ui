@@ -58,9 +58,9 @@
     data-guarded={morph.isGuarded ? "" : undefined}
     style:--cs-button-morph-width={morph.width !== null ? `${morph.width}px` : undefined}
     style:--cs-button-morph-height={morph.height !== null ? `${morph.height}px` : undefined}
-    style:--cs-button-morph-from-bg={morph.surfaceFrom?.background}
+    style:--cs-button-morph-from-bg={morph.surfaceFrom?.bg}
     style:--cs-button-morph-from-shadow={morph.surfaceFrom?.shadow}
-    style:--cs-button-morph-to-bg={morph.surfaceTo?.background}
+    style:--cs-button-morph-to-bg={morph.surfaceTo?.bg}
     style:--cs-button-morph-to-shadow={morph.surfaceTo?.shadow}
     style:--cs-button-morph-from-superellipse={morph.surfaceFrom?.corner ?? undefined}
     style:--cs-button-morph-to-superellipse={morph.surfaceTo?.corner ?? undefined}

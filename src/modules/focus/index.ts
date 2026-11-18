@@ -1,3 +1,3 @@
-export * from "./auto-focus.attach";
-export * from "./focus-trap.attach";
-export * from "./roving-focus.attach";
+export * from "./auto-focus.attach.ts";
+export * from "./focus-trap.attach.ts";
+export * from "./roving-focus.attach.ts";

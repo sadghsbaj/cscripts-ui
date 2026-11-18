@@ -7,7 +7,7 @@ exports:
   - ThemeManager
   - THEME_MODES
   - THEME_ICONS
-  - GERMAN_THEME_LABELS
+  - THEME_LABELS
   - isValidMode
   - ThemeMode
 ---
@@ -37,7 +37,7 @@ Reactive Svelte 5 theme manager (`theme` singleton and `ThemeManager` class) coo
 ### Constants & Helpers
 - `THEME_MODES`: `["system", "light", "dark"] as const`
 - `THEME_ICONS`: `{ system: Monitor, light: Sun, dark: Moon }`
-- `GERMAN_THEME_LABELS`: `{ system: "System", light: "Hell", dark: "Dunkel" }`
+- `THEME_LABELS`: `Record<ThemeMode, string>` (localized labels for `"system"`, `"light"`, and `"dark"`)
 - `isValidMode(v: unknown): v is ThemeMode`
 
 ## Examples
@@ -45,12 +45,12 @@ Reactive Svelte 5 theme manager (`theme` singleton and `ThemeManager` class) coo
 ```svelte
 <script lang="ts">
     import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
-    import { GERMAN_THEME_LABELS, theme } from "cs/svelte/theme";
+    import { THEME_LABELS, theme } from "cs/svelte/theme";
 </script>
 
 <Button variant="secondary" size="md" onclick={() => theme.cycle()}>
     <ButtonIcon icon={theme.icon} />
-    <ButtonLabel>{GERMAN_THEME_LABELS[theme.mode]}</ButtonLabel>
+    <ButtonLabel>{THEME_LABELS[theme.mode]}</ButtonLabel>
 </Button>
 ```
 

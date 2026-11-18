@@ -33,7 +33,7 @@ import { t } from "../../shared/lang.internal.ts";
  * 1. The manager is strictly immutable on the server (all mutative methods immediately no-op).
  * 2. The `ThemeManager` class is exported alongside the singleton `theme` instance.
  *    For large SSR apps, developers can instantiate the class inside Svelte context
- *    (`setContext` / `getContext`) to achieve absolute request-level isolation.
+ *    (`createContext()`) to achieve absolute request-level isolation.
  */
 
 export const THEME_MODES = ["system", "light", "dark"] as const;
@@ -51,19 +51,14 @@ export const THEME_LABELS: Record<ThemeMode, string> = {
     dark: t({ de: "Dunkel", en: "Dark" }),
 };
 
-export const GERMAN_THEME_LABELS = {
-    system: "System",
-    light: "Hell",
-    dark: "Dunkel",
-};
-
 const STORAGE_KEY = "cs-theme";
 
 /**
  * Runtime type guard to validate ThemeMode values.
  */
-export const isValidMode = (v: unknown): v is ThemeMode =>
-    typeof v === "string" && (THEME_MODES as readonly string[]).includes(v);
+export function isValidMode(v: unknown): v is ThemeMode {
+    return typeof v === "string" && (THEME_MODES as readonly string[]).includes(v);
+}
 
 /**
  * Reactive theme manager for Svelte 5 applications.

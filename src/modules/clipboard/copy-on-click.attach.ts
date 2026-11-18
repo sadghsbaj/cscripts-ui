@@ -1,7 +1,7 @@
 import type { Attachment } from "svelte/attachments";
 
 import { resolveGetter } from "../../shared/resolve-getter.ts";
-import { copyToClipboard } from "./clipboard.utils";
+import { copyToClipboard } from "./clipboard.utils.ts";
 
 export type CopySource = string | (() => string | Promise<string>) | HTMLElement | SVGElement;
 

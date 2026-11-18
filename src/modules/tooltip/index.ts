@@ -4,7 +4,7 @@ import type { HTMLAttributes, SVGAttributes } from "svelte/elements";
 export { default as Tooltip } from "./Tooltip.svelte";
 export { default as TooltipText } from "./TooltipText.svelte";
 export { default as TooltipIcon } from "./TooltipIcon.svelte";
-export * from "./tooltip.attach.svelte";
+export * from "./tooltip.attach.svelte.ts";
 
 export type TooltipIconConfig =
     | Component

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { CheckboxMark, type CheckboxProps } from ".";
-    import { getCheckboxGroupContext, hasCheckboxGroupContext } from "../checkbox-group/checkbox-group.context.ts";
+    import { getCheckboxGroupContext, hasCheckboxGroupContext } from "../checkbox-group/index.ts";
 
     let {
         ref = $bindable(null),

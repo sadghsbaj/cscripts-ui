@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import { MorphController, type TextMorphOptions } from "torph";
 
-    import { CS_TEXT_MORPH_DURATION, CS_TEXT_MORPH_EASE, type TextMorphProps } from "./index.ts";
+    import { CS_TEXT_MORPH_DUR, CS_TEXT_MORPH_EASE, type TextMorphProps } from "./index.ts";
 
     let {
         ref = $bindable(null),
@@ -16,7 +16,7 @@
         tabular = false,
         animated = true,
         respectMotionPreference = true,
-        duration = CS_TEXT_MORPH_DURATION,
+        duration = CS_TEXT_MORPH_DUR,
         ease = CS_TEXT_MORPH_EASE,
         debug = false,
         onanimationsstart,

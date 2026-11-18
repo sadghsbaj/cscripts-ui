@@ -12,7 +12,7 @@ globs: "**/src/modules/file-system/**"
 </meta>
 
 <principles>
-  - Read `src/modules/file-system/file-system.internal.md`, `src/modules/file-system/cache-engine.internal.md`, and `src/modules/file-system/file-system.blueprint.md` (plus `file-system.docs.md` for public API changes) before editing, and update them in lockstep when behavior changes.
+  - Read `src/modules/file-system/file-system.internal.md` and `src/modules/file-system/cache-engine.internal.md` (plus `file-system.docs.md` for public API changes) before editing, and update them in lockstep when behavior changes.
   - Keep `src/modules/file-system/` strictly headless: zero UI components, Svelte markup, or UnoCSS; UI belongs in consuming apps or `src/work/`.
 </principles>
 

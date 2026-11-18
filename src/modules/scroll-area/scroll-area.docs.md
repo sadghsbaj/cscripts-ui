@@ -13,9 +13,6 @@ exports:
   - ScrollAreaScrollbar
   - ScrollAreaProps
   - ScrollAreaContentProps
-  - getScrollAreaContext
-  - setScrollAreaContext
-  - hasScrollAreaContext
 ---
 
 # ScrollArea

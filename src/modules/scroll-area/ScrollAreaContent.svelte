@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { getScrollAreaContext, type ScrollAreaContentProps } from "./index.ts";
+    import { type ScrollAreaContentProps } from "./index.ts";
+    import { getScrollAreaContext } from "./scroll-area.context.internal.ts";
 
     let { ref = $bindable(null), class: className, children, ...rest }: ScrollAreaContentProps = $props();
 

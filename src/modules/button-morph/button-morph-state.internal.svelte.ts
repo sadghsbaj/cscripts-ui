@@ -18,7 +18,7 @@ export const MORPH_TRANSITION_DURATION_MS = 350;
  */
 const MULTI_CLICK_WINDOW_MS = 600;
 
-const INTERACTIVE_CHILD_Selector =
+const INTERACTIVE_CHILD_SELECTOR =
     'button, a[href], input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])';
 
 export interface ButtonMorphDimensions {
@@ -31,7 +31,7 @@ export interface ButtonMorphDimensions {
  * to interpolate a single continuous body between two buttons instead of cross-fading two surfaces.
  */
 export interface ButtonMorphSurface {
-    background: string;
+    bg: string;
     shadow: string;
     /** Superellipse exponent of the button's `corner-shape` (e.g. `1.2`); `null` when it cannot be resolved. */
     corner: number | null;
@@ -142,8 +142,8 @@ function readButtonSurface(slotNode: HTMLElement, hovered = false): ButtonMorphS
             after.content !== "normal" &&
             Number(after.opacity) >= 0.5;
 
-        const background = hasPressedFill ? after.backgroundColor : before.backgroundColor;
-        if (!background) return null;
+        const bg = hasPressedFill ? after.backgroundColor : before.backgroundColor;
+        if (!bg) return null;
 
         // `corner-shape` lives on the button itself (the pseudo-elements inherit it).
         const buttonStyle = getComputedStyle(button);
@@ -151,7 +151,7 @@ function readButtonSurface(slotNode: HTMLElement, hovered = false): ButtonMorphS
             typeof buttonStyle.getPropertyValue === "function" ? buttonStyle.getPropertyValue("corner-shape") : "";
 
         return {
-            background,
+            bg,
             shadow: before.boxShadow || "none",
             corner: parseCornerShape(corner),
         };
@@ -168,7 +168,7 @@ function readButtonSurface(slotNode: HTMLElement, hovered = false): ButtonMorphS
  * Resolves the focusable interactive target inside a `<ButtonMorphItem />` slot.
  */
 function findFocusableChild(slotNode: HTMLElement): HTMLElement | null {
-    const match = slotNode.querySelector<HTMLElement>(INTERACTIVE_CHILD_Selector);
+    const match = slotNode.querySelector<HTMLElement>(INTERACTIVE_CHILD_SELECTOR);
     if (match) {
         return match;
     }

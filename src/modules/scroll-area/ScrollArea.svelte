@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { setScrollAreaContext, type ScrollAreaProps } from "./index.ts";
+    import { type ScrollAreaProps } from "./index.ts";
+    import { setScrollAreaContext } from "./scroll-area.context.internal.ts";
     import { ScrollAreaManager } from "./scroll-area-state.internal.svelte.ts";
 
     let {
@@ -137,8 +138,8 @@
             translate: var(--cs-scroll-area-track-hide-translate);
             user-select: none;
             transition:
-                opacity 220ms var(--cs-ease-cubic-out),
-                translate 240ms var(--cs-ease-cubic-out);
+                opacity var(--cs-dur-200) var(--cs-ease-cubic-out),
+                translate var(--cs-dur-240) var(--cs-ease-cubic-out);
             pointer-events: none;
             touch-action: none;
 
@@ -154,8 +155,8 @@
                 scale: var(--cs-scroll-area-track-folded-scale);
                 transform-origin: var(--cs-scroll-area-track-unfold-origin);
                 transition:
-                    opacity 200ms var(--cs-ease-cubic-out),
-                    scale 260ms var(--cs-ease-cubic-out);
+                    opacity var(--cs-dur-200) var(--cs-ease-cubic-out),
+                    scale var(--cs-dur-260) var(--cs-ease-cubic-out);
                 pointer-events: none;
             }
 
@@ -223,8 +224,8 @@
                     background-color: var(--cs-scroll-area-thumb-bg-track-hover);
                     scale: 1;
                     transition:
-                        scale 220ms var(--cs-ease-back-out),
-                        background-color 140ms var(--cs-ease-quad-out);
+                        scale var(--cs-dur-200) var(--cs-ease-back-out),
+                        background-color var(--cs-dur-140) var(--cs-ease-quad-out);
 
                     /* Stage 3a: Thumb Directly Hovered -> High-Contrast Highlight */
                     &:hover {
@@ -247,8 +248,8 @@
             border-radius: var(--cs-radius-full);
             corner-shape: var(--cs-squircle-soft);
             transition:
-                scale 240ms var(--cs-ease-cubic-out),
-                background-color 200ms var(--cs-ease-quad-out);
+                scale var(--cs-dur-240) var(--cs-ease-cubic-out),
+                background-color var(--cs-dur-200) var(--cs-ease-quad-out);
         }
     }
 </style>

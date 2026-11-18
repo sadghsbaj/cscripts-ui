@@ -1,5 +1,4 @@
 export {
-    GERMAN_THEME_LABELS,
     isValidMode,
     theme,
     THEME_ICONS,

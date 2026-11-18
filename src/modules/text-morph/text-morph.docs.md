@@ -4,7 +4,7 @@ kind: component
 import: cs/svelte/text-morph
 exports:
     - TextMorph
-    - CS_TEXT_MORPH_DURATION
+    - CS_TEXT_MORPH_DUR
     - CS_TEXT_MORPH_EASE
     - TextMorphValue
     - TextMorphSpringParams
@@ -38,7 +38,7 @@ Extends `Omit<HTMLAttributes<HTMLElement>, "children">` (forwarded to the outer 
 | `tabular`                 | `boolean`                                           | No       | `false`                          | Opt-in `font-variant-numeric: tabular-nums` via `[data-tabular]` on `.cs-text-morph`.                        |
 | `animated`                | `boolean`                                           | No       | `true`                           | Enables or disables morph transitions (maps to `torph`'s `disabled: !animated`).                             |
 | `respectMotionPreference` | `boolean`                                           | No       | `true`                           | Maps to `torph`'s `respectReducedMotion` to honor `prefers-reduced-motion: reduce` in WAAPI animations.      |
-| `duration`                | `number`                                            | No       | `CS_TEXT_MORPH_DURATION` (`380`) | Transition duration in ms (ignored by `torph` when `ease` is a `TextMorphSpringParams` object).              |
+| `duration`                | `number`                                            | No       | `CS_TEXT_MORPH_DUR` (`380`)      | Transition duration in ms (ignored by `torph` when `ease` is a `TextMorphSpringParams` object).              |
 | `ease`                    | `TextMorphEase` (`string \| TextMorphSpringParams`) | No       | `CS_TEXT_MORPH_EASE`             | CSS easing string or spring physics config (`{ stiffness, damping, mass, precision }`).                      |
 | `debug`                   | `boolean`                                           | No       | `false`                          | Enables `torph` segment debug outlines (`[torph-debug]`) and sets `data-debug`.                              |
 | `onanimationsstart`       | `() => void`                                        | No       | `undefined`                      | Callback fired when `torph` transitions start (after initial mount).                                         |
@@ -50,7 +50,7 @@ Extends `Omit<HTMLAttributes<HTMLElement>, "children">` (forwarded to the outer 
 
 Aligned with `motion.css` (`--cs-dur-380`, `--cs-ease-quint-out`) and `NumberMorph`:
 
-- `CS_TEXT_MORPH_DURATION = 380`
+- `CS_TEXT_MORPH_DUR = 380`
 - `CS_TEXT_MORPH_EASE = "cubic-bezier(0.22, 1, 0.36, 1)"`
 
 ### Exported Types

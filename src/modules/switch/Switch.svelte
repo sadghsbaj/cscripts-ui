@@ -1,6 +1,6 @@
 <script lang="ts">
     import { type SwitchProps } from ".";
-    import { getSwitchGroupContext, hasSwitchGroupContext } from "../switch-group/switch-group.context.ts";
+    import { getSwitchGroupContext, hasSwitchGroupContext } from "../switch-group/index.ts";
 
     let {
         ref = $bindable(null),
