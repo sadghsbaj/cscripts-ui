@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { MouseEventHandler } from "svelte/elements";
 
-    import { ToggleButton, ToggleButtonLabel } from "../toggle-button/index.ts";
+    import { ToggleButton, ToggleButtonLabel } from "./index.ts";
     import ToggleButtonGroup from "./ToggleButtonGroup.svelte";
     import type { ToggleButtonGroupOrientation, ToggleButtonGroupType } from "./index.ts";
 

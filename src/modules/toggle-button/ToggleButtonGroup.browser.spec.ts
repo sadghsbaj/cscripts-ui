@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("ToggleButtonGroup focus ring stacking in Chromium", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/");
-        await page.locator("button.cs-sidebar-item", { hasText: /^Toggle-Button-Group$/ }).click();
+        await page.locator("button.cs-sidebar-item", { hasText: /^Toggle-Button$/ }).click();
     });
 
     test("lifts :focus-visible earlier button above pressed later sibling and separator", async ({ page }) => {

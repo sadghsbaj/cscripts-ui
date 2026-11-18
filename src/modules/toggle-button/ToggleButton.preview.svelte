@@ -4,12 +4,13 @@
 </script>
 
 <script lang="ts">
-    import { Bookmark, Pin } from "@lucide/svelte";
+    import { Bold, Bookmark, Italic, Pin, Underline } from "@lucide/svelte";
     import { HitArea } from "cs/svelte/hit-area";
     import {
         TOGGLE_BUTTON_COLORS,
         TOGGLE_BUTTON_SIZES,
         ToggleButton,
+        ToggleButtonGroup,
         ToggleButtonIcon,
         ToggleButtonLabel,
     } from "cs/svelte/toggle-button";
@@ -24,6 +25,9 @@
     let cautionPressed = $state(true);
     let negativePressed = $state(true);
     let iconPressed = $state(true);
+    let groupSingleValue = $state<string | undefined>("day");
+    let groupGhostValue = $state("list");
+    let groupToolbarValues = $state<string[]>(["bold"]);
 
     const closeScript = ["</", "script>"].join("");
 
@@ -93,6 +97,72 @@ ${closeScript}
 <ToggleButton variant="ghost" color="accent" size="md" pressed disabled>
     <ToggleButtonLabel>Ghost (Pressed)</ToggleButtonLabel>
 </ToggleButton>`;
+
+    const groupSingleCode = `<script lang="ts">
+    import { ToggleButton, ToggleButtonGroup, ToggleButtonLabel } from "cs/svelte/toggle-button";
+
+    let value = $state<string | undefined>("day");
+${closeScript}
+
+<ToggleButtonGroup type="single" bind:value orientation="horizontal" allowDeselect>
+    <ToggleButton value="day" size="md" variant="soft" color="accent">
+        <ToggleButtonLabel>Day</ToggleButtonLabel>
+    </ToggleButton>
+    <ToggleButton value="week" size="md" variant="soft" color="accent">
+        <ToggleButtonLabel>Week</ToggleButtonLabel>
+    </ToggleButton>
+    <ToggleButton value="month" size="md" variant="soft" color="accent">
+        <ToggleButtonLabel>Month</ToggleButtonLabel>
+    </ToggleButton>
+</ToggleButtonGroup>`;
+
+    const groupMultipleCode = `<ToggleButtonGroup type="multiple" bind:value={formats} orientation="horizontal">
+    <ToggleButton
+        value="bold"
+        size="md"
+        variant="soft"
+        color="accent"
+        iconOnly
+        aria-label="Bold"
+        {@attach tooltip({ text: "Bold" })}
+    >
+        <ToggleButtonIcon icon={Bold} />
+        <HitArea size="lg" />
+    </ToggleButton>
+    <ToggleButton
+        value="italic"
+        size="md"
+        variant="soft"
+        color="accent"
+        iconOnly
+        aria-label="Italic"
+        {@attach tooltip({ text: "Italic" })}
+    >
+        <ToggleButtonIcon icon={Italic} />
+        <HitArea size="lg" />
+    </ToggleButton>
+    <ToggleButton
+        value="underline"
+        size="md"
+        variant="soft"
+        color="accent"
+        iconOnly
+        aria-label="Underline"
+        {@attach tooltip({ text: "Underline" })}
+    >
+        <ToggleButtonIcon icon={Underline} />
+        <HitArea size="lg" />
+    </ToggleButton>
+</ToggleButtonGroup>`;
+
+    const groupGhostCode = `<ToggleButtonGroup type="single" bind:value orientation="horizontal">
+    <ToggleButton value="list" size="md" variant="ghost" color="accent">
+        <ToggleButtonLabel>List</ToggleButtonLabel>
+    </ToggleButton>
+    <ToggleButton value="grid" size="md" variant="ghost" color="accent">
+        <ToggleButtonLabel>Grid</ToggleButtonLabel>
+    </ToggleButton>
+</ToggleButtonGroup>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 
     const sizeLabels: Record<(typeof TOGGLE_BUTTON_SIZES)[number], string> = {
@@ -200,5 +270,79 @@ ${closeScript}
         <ToggleButton variant="ghost" color="accent" size="md" pressed disabled>
             <ToggleButtonLabel>Ghost (Pressed)</ToggleButtonLabel>
         </ToggleButton>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Group (Single Selection)"
+        description="Use ToggleButtonGroup with allowDeselect when none of the options need to remain active."
+        code={groupSingleCode}
+    >
+        <ToggleButtonGroup type="single" bind:value={groupSingleValue} orientation="horizontal" allowDeselect>
+            <ToggleButton value="day" size="md" variant="soft" color="accent">
+                <ToggleButtonLabel>Day</ToggleButtonLabel>
+            </ToggleButton>
+            <ToggleButton value="week" size="md" variant="soft" color="accent">
+                <ToggleButtonLabel>Week</ToggleButtonLabel>
+            </ToggleButton>
+            <ToggleButton value="month" size="md" variant="soft" color="accent">
+                <ToggleButtonLabel>Month</ToggleButtonLabel>
+            </ToggleButton>
+        </ToggleButtonGroup>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Group (Multiple Selection Toolbar)"
+        description="Combine icon-only toggle buttons with multiple selection for formatting toolbars."
+        code={groupMultipleCode}
+    >
+        <ToggleButtonGroup type="multiple" bind:value={groupToolbarValues} orientation="horizontal">
+            <ToggleButton
+                value="bold"
+                size="md"
+                variant="soft"
+                color="accent"
+                iconOnly
+                aria-label="Bold"
+                {@attach tooltip({ text: "Bold" })}
+            >
+                <ToggleButtonIcon icon={Bold} />
+                <HitArea size="lg" />
+            </ToggleButton>
+            <ToggleButton
+                value="italic"
+                size="md"
+                variant="soft"
+                color="accent"
+                iconOnly
+                aria-label="Italic"
+                {@attach tooltip({ text: "Italic" })}
+            >
+                <ToggleButtonIcon icon={Italic} />
+                <HitArea size="lg" />
+            </ToggleButton>
+            <ToggleButton
+                value="underline"
+                size="md"
+                variant="soft"
+                color="accent"
+                iconOnly
+                aria-label="Underline"
+                {@attach tooltip({ text: "Underline" })}
+            >
+                <ToggleButtonIcon icon={Underline} />
+                <HitArea size="lg" />
+            </ToggleButton>
+        </ToggleButtonGroup>
+    </PreviewSection>
+
+    <PreviewSection title="Group (Ghost Variant)" code={groupGhostCode}>
+        <ToggleButtonGroup type="single" bind:value={groupGhostValue} orientation="horizontal">
+            <ToggleButton value="list" size="md" variant="ghost" color="accent">
+                <ToggleButtonLabel>List</ToggleButtonLabel>
+            </ToggleButton>
+            <ToggleButton value="grid" size="md" variant="ghost" color="accent">
+                <ToggleButtonLabel>Grid</ToggleButtonLabel>
+            </ToggleButton>
+        </ToggleButtonGroup>
     </PreviewSection>
 </div>

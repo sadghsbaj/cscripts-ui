@@ -1,6 +1,7 @@
 <script lang="ts">
     import "../../shared/button-control/button-control-group.css";
-    import { setToggleButtonGroupContext, type ToggleButtonGroupProps } from "./index.ts";
+    import type { ToggleButtonGroupProps } from "./index.ts";
+    import { setToggleButtonGroupContext } from "./toggle-button.context.internal.ts";
 
     let {
         ref = $bindable(null),
