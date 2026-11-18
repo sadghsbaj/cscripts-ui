@@ -46,7 +46,7 @@ Because the trigger is external and arbitrary in size, `size` (`xs`–`xl`) is a
     └── .cs-dropdown-item-content.cs-listbox-item-content
         ├── Label (or .cs-dropdown-item-text.cs-listbox-item-text)
         ├── [optional] .cs-dropdown-item-description.cs-listbox-item-description
-        └── [optional] Trailing accessory: .cs-dropdown-shortcut | <Kbd> | Badge
+        └── [optional] Trailing accessory: .cs-dropdown-item-shortcut | <Kbd> | Badge
 ```
 
 - **Optical icon inset:** Handled automatically by `listbox.css` (`.cs-listbox-item:has(.cs-listbox-item-icon)` sets `padding-inline-start: calc(var(--cs-listbox-item-px) - 2px)` to compensate for Lucide's `2px` internal SVG viewBox padding).
@@ -56,10 +56,10 @@ Because the trigger is external and arbitrary in size, `size` (`xs`–`xl`) is a
 
 ### 2. Trailing Shortcut & Submenus (v1.1 / Deferred)
 
-- **Text Shortcut (`.cs-dropdown-shortcut`):**
+- **Text Shortcut (`.cs-dropdown-item-shortcut`):**
   - Placed inside `.cs-listbox-item-content` after the label/`DropdownItemText`. `listbox.css` already gives trailing non-text children `flex-shrink: 0` (and `margin-inline-start: auto` when `.cs-listbox-item-text` is absent; when `.cs-listbox-item-text` is present, `flex: 1 1 auto` pushes the shortcut right).
   - Styling: `padding-inline-start: 12px` (minimum breathing room from long labels), `font-size: var(--cs-text-xs)` (`11px` at `xs`/`sm`), `font-weight: 500`, `font-variant-numeric: tabular-nums`, `letter-spacing: 0.02em`, `text-box: trim-both cap alphabetic`.
-  - Color: `--cs-dropdown-shortcut-fg: var(--cs-color-text-weaker)` at rest → `--cs-color-text-weak` on hover/highlight (`--cs-color-disabled-fg` when disabled).
+  - Color: `--cs-dropdown-item-shortcut-fg: var(--cs-color-text-weaker)` at rest → `--cs-color-text-weak` on hover/highlight (`--cs-color-disabled-fg` when disabled).
 - **`<Kbd>` Shortcut:**
   - Use `<Kbd variant="ghost" size="xs" />` for `xs`–`lg` menus (`18px` tall, `10px` text) and `size="sm"` for `xl` menus (`20px` tall). `variant="ghost"` keeps the floating panel calm and borderless; `variant="soft"` may be used when extra keycap separation is desired.
 - **Submenus (`DropdownSubTrigger` / `DropdownSubContent`) — *v1.1 / Deferred (not part of v1)*:**
@@ -69,7 +69,7 @@ Because the trigger is external and arbitrary in size, `size` (`xs`–`xl`) is a
 
 - **Leading Indicator Slot (`.cs-dropdown-item-indicator`):** Unlike `SelectItem` and `ComboboxItem` (which place `.cs-listbox-item-check` on the right and have no shortcuts), `DropdownCheckboxItem` and `DropdownRadioItem` place their indicator in the **leading** `--cs-listbox-icon-size` (`14px–18px`) column and use `padding-inline-start: calc(var(--cs-listbox-item-px) - 2px)` (matching `.cs-listbox-item-icon`):
   - Labels align vertically across checked and unchecked items in the same group.
-  - The trailing slot remains free for `<Kbd>` or `.cs-dropdown-shortcut`.
+  - The trailing slot remains free for `<Kbd>` or `.cs-dropdown-item-shortcut`.
   - Standard `DropdownItem`s in other groups are never penalized with an empty leading gutter.
 - **Indicator Visuals & Motion:**
   - `DropdownCheckboxItem[data-checked]`: Lucide `Check` (`stroke-width: 2.5`, `--cs-listbox-item-indicator-fg` / `--cs-color-accent-soft-fg`) reveals via `opacity: 0 → 1`, `scale: 0.75 → 1` (`--cs-dur-effect-fast` `--cs-ease-quart-out`).
@@ -84,7 +84,7 @@ Following intent-driven status semantics and `Button`'s boolean `negative` API, 
 - **Calm at rest:** Default state uses standard monochrome `--cs-listbox-item-fg` (`--cs-color-text-strong`) and `--cs-listbox-item-icon-fg` (`--cs-color-text-weak`) so a destructive action does not shout in a quiet menu.
 - **Clear on hover / keyboard highlight / press:**
   - `listbox.css` sets `--cs-listbox-item-icon-fg: var(--cs-color-text-main)` directly inside `:hover`, `[data-roving-active]`, `:focus-visible`, and `:active`. `.cs-dropdown-item[data-negative]` therefore overrides those interaction states with:
-    - Hover / `[data-roving-active]` / `:focus-visible`: `background-color: var(--cs-color-negative-soft)`, `color: var(--cs-color-negative-soft-fg)`, `--cs-listbox-item-icon-fg: var(--cs-color-negative-soft-fg)`, `--cs-dropdown-shortcut-fg: color-mix(in oklab, var(--cs-color-negative-soft-fg) 70%, transparent)`.
+    - Hover / `[data-roving-active]` / `:focus-visible`: `background-color: var(--cs-color-negative-soft)`, `color: var(--cs-color-negative-soft-fg)`, `--cs-listbox-item-icon-fg: var(--cs-color-negative-soft-fg)`, `--cs-dropdown-item-shortcut-fg: color-mix(in oklab, var(--cs-color-negative-soft-fg) 70%, transparent)`.
     - `:active`: `background-color: var(--cs-color-negative-soft-hover)`, `scale: 0.97`.
     - `[data-disabled]`: Overrides back to colorless `--cs-color-disabled-fg` with `transparent` background.
 
@@ -94,8 +94,10 @@ Following intent-driven status semantics and `Button`'s boolean `negative` API, 
 
 - **`DropdownGroup` / `DropdownGroupLabel` / `DropdownSeparator`:**
   - Compose `.cs-dropdown-group.cs-listbox-group`, `.cs-dropdown-group-label.cs-listbox-group-label`, and `.cs-dropdown-separator.cs-listbox-separator` directly from `listbox.css` (1:1 parity with `ComboboxGroup`, `ComboboxGroupLabel`, and `ComboboxSeparator`).
-- **Custom Header (e.g. User Info / Workspace Header):**
-  - Non-interactive, excluded from `rovingFocus`. Uses `--cs-listbox-item-px` horizontal padding, `padding-block: 6px 8px`, `--cs-text-sm` `font-weight: 500` `--cs-color-text-strong` title + `--cs-text-xs` `--cs-color-text-weak` subtitle, followed by a `DropdownSeparator`. Zero extra card fill or border.
+- **Pinned `DropdownHeader` & `DropdownFooter` (outside `<ScrollArea>`):**
+  - Rendered as direct children of `.cs-dropdown-content.cs-listbox` **above** and **below** `<ScrollArea>` (not inside `.cs-listbox-list`), with `flex-shrink: 0` so they stay pinned while long menus scroll inside `<ScrollArea>` (`flex: 1 1 auto; min-height: 0`).
+  - **Chrome & Padding:** Zero extra card fill or border. Both use `padding-inline: calc(var(--cs-listbox-content-padding) + var(--cs-listbox-item-px))` to align with item text, `padding-block: 8px`, and a clean `1px` hairline (`--cs-listbox-separator-bg`) on the edge facing `<ScrollArea>` (`border-block-end` on `.cs-dropdown-header`, `border-block-start` on `.cs-dropdown-footer`)—avoiding double-padding or a floating `DropdownSeparator` inside the scroll viewport.
+  - `DropdownHeader` (e.g. User Info / Workspace Header) is non-interactive (`--cs-text-sm` `font-weight: 500` `--cs-color-text-strong` title + `--cs-text-xs` `--cs-color-text-weak` subtitle); `DropdownFooter` can hold static metadata or compact action controls.
 - **Inline Widgets (e.g. `Switch`, `Slider`, `ToggleGroup`):**
   - Non-item custom rows (`.cs-dropdown-row`) match item padding (`padding-inline: var(--cs-listbox-item-px)`, `padding-block: var(--cs-listbox-item-py)`, `min-height: var(--cs-listbox-item-min-height)`) with `background: transparent` and no item-level hover/press scale, letting the embedded control own its focus ring and tactile physics.
   - Inline `Switch` rows wrap text + `<Switch size="sm" />` inside a clickable `<label>` (no extra hit-area wrapper DOM).
@@ -127,4 +129,4 @@ Following intent-driven status semantics and `Button`'s boolean `negative` API, 
 3. **Kept module-local in `src/modules/dropdown/`:**
    - `width="content"` default, `min-inline-size: 180px`, and `--cs-listbox-content-max-width: 320px` on `.cs-dropdown-content`.
    - `.cs-dropdown-item[data-negative]` hover/active/roving-active overrides.
-   - `.cs-dropdown-shortcut`, `.cs-dropdown-header`, and `.cs-dropdown-row` (with `.cs-dropdown-sub-chevron` / `[data-state="open"]` submenu trigger persistence deferred to v1.1).
+   - `.cs-dropdown-item-shortcut`, `.cs-dropdown-header`, `.cs-dropdown-footer`, and `.cs-dropdown-row` (with `.cs-dropdown-sub-chevron` / `[data-state="open"]` submenu trigger persistence deferred to v1.1).

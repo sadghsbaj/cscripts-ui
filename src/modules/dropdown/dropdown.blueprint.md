@@ -89,11 +89,14 @@ Unlike `SelectTrigger` (which *is* a styled form-field `<button>`), `Dropdown` i
 - `maxHeight?: string` — `@default "min(320px, 60dvh)"` (matches `ComboboxContent` and `listbox.css`)
 - `scrollbar?: ScrollAreaScrollbar` — `@default "hover"`
 - `animate?: boolean` — `@default true`
+- `header?: Snippet` — Optional pinned header rendered above `<ScrollArea>` inside the `.cs-listbox` flex column (typically wrapping `<DropdownHeader>`).
+- `footer?: Snippet` — Optional pinned footer rendered below `<ScrollArea>` inside the `.cs-listbox` flex column (typically wrapping `<DropdownFooter>`).
 - `children?: Snippet`
 
 #### `DropdownHeader` & `DropdownFooter` (`HTMLAttributes<HTMLDivElement>`)
 - `ref = $bindable<HTMLDivElement | null>(null)`
 - `children?: Snippet`
+- **Pinned vs. Scrollable Placement:** Pass inside `DropdownContent`'s `header` / `footer` snippets (`{#snippet header()}<DropdownHeader>...</DropdownHeader>{/snippet}`) to keep them pinned outside `<ScrollArea>` (`.cs-listbox` is `display: flex; flex-direction: column; overflow: hidden;` with `> .cs-scroll-area { flex: 1 1 auto; min-height: 0; }`). Placing `<DropdownHeader>` / `<DropdownFooter>` inside `children` instead renders them as non-roving blocks that scroll with the list.
 
 #### `DropdownGroup`, `DropdownGroupLabel`, `DropdownSeparator`
 - Mirror `SelectGroup`, `SelectGroupLabel`, `SelectSeparator` 1:1, each exposing `ref = $bindable()`.
@@ -164,7 +167,10 @@ Unlike `SelectTrigger` (which *is* a styled form-field `<button>`), `Dropdown` i
   - Receives `id={triggerId}`, `popovertarget={menuId}`, `aria-haspopup="menu"`, `aria-expanded={open ? "true" : "false"}`, `aria-controls={menuId}`, `data-open={open ? "" : undefined}`.
 - **`DropdownContent`**:
   - `<Popover role="menu" id={resolvedId} aria-labelledby={triggerId} data-size={size} data-arrow-nav? data-nav="keyboard"?>`
-  - Contains `<ScrollArea><ScrollAreaContent class="cs-dropdown-list" tabindex={-1}>`.
+  - Layout inside `.cs-listbox` (`display: flex; flex-direction: column; overflow: hidden;`):
+    1. `{@render header?.()}` (`flex-shrink: 0`, pinned above scroll viewport)
+    2. `<ScrollArea><ScrollAreaContent class="cs-dropdown-list cs-listbox-list" tabindex={-1}>{@render children?.()}</ScrollAreaContent></ScrollArea>` (`flex: 1 1 auto; min-height: 0`)
+    3. `{@render footer?.()}` (`flex-shrink: 0`, pinned below scroll viewport)
 - **`DropdownItem` / `DropdownCheckboxItem` / `DropdownRadioItem`**:
   - `<div|a class="cs-dropdown-item" role="menuitem" | "menuitemcheckbox" | "menuitemradio" tabindex={-1}>`
   - `aria-checked`: `"true" | "false" | "mixed"` (on checkbox/radio items only).
@@ -214,7 +220,7 @@ Unlike `SelectTrigger` (which *is* a styled form-field `<button>`), `Dropdown` i
   - **CSS (`src/shared/listbox/listbox.css`):** `DropdownContent`, `DropdownGroup`, `DropdownGroupLabel`, `DropdownSeparator`, and all item components compose `.cs-listbox*` classes alongside `.cs-dropdown-*` classes (matching `Combobox`), inheriting `xs..xl` concentric radii, padding, typography, hover/press/disabled states, and `[data-nav="keyboard"]` / `[data-arrow-nav]` focus rules.
   - **Label Extraction (`src/shared/listbox/listbox-utils.ts`):** `DropdownItem`, `DropdownCheckboxItem`, and `DropdownRadioItem` use `extractListboxItemLabel(label, textEl, contentEl, descriptionEl, "")` to compute `data-typeahead-label` for `rovingFocus`.
   - **No `createListboxRegistry` Needed:** Unlike `Select` and `Combobox` (which map `value: T` to item metadata and filter visibility via `createListboxRegistry` + `sortListboxItemsByDomOrder`), `Dropdown` action items carry no `value`, and DOM-order traversal/typeahead is handled directly by `rovingFocus`. `DropdownRadioGroup` only tracks its own `value` binding without a global registry.
-  - **Drag-to-Select:** Shares `beginPointerOpen` / `shouldCommitPointerRelease` press-drag-release mechanics with `Select` and `Combobox` (candidate for future extraction into `src/shared/`).
+  - **Drag-to-Select (`src/shared/listbox/pointer-drag-release.ts`):** Uses `createPointerDragRelease(() => triggerRef)` directly (`beginPointerOpen`, `shouldCommitPointerRelease`, `clearPointerOpen`), matching `Select` and `Combobox`.
 - **Press-Drag-Release (`triggerOn: "pointerdown"`):**
   - Holding mouse-down on the trigger, dragging onto a `DropdownItem`, and releasing (`pointerup`) commits that item—matching native OS menus and `Select`. Touch contacts fall back to `click` to preserve scrolling.
 - **Popover + Top-Layer Light Dismiss:**

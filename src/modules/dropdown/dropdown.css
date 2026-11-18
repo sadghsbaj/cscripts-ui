@@ -1,0 +1,136 @@
+@layer components.composite {
+    .cs-dropdown-content.cs-listbox {
+        --cs-listbox-content-max-width: var(--cs-dropdown-content-max-width, 320px);
+        --cs-dropdown-header-px: calc(var(--cs-listbox-content-padding) + var(--cs-listbox-item-px));
+        --cs-dropdown-header-py: 8px;
+        --cs-dropdown-footer-px: calc(var(--cs-listbox-content-padding) + var(--cs-listbox-item-px));
+        --cs-dropdown-footer-py: 8px;
+        --cs-dropdown-shortcut-fg: var(--cs-color-text-weaker);
+        --cs-dropdown-item-negative-fg: var(--cs-color-negative-soft-fg);
+        --cs-dropdown-item-negative-bg-hover: var(--cs-color-negative-soft);
+        --cs-dropdown-item-negative-bg-active: var(--cs-color-negative-soft-hover);
+
+        min-inline-size: var(--cs-dropdown-content-min-width, 180px);
+    }
+
+    .cs-dropdown-header,
+    .cs-dropdown-footer {
+        flex-shrink: 0;
+    }
+
+    .cs-dropdown-header {
+        padding-inline: var(--cs-dropdown-header-px);
+        padding-block: var(--cs-dropdown-header-py);
+    }
+
+    .cs-dropdown-footer {
+        padding-inline: var(--cs-dropdown-footer-px);
+        padding-block: var(--cs-dropdown-footer-py);
+    }
+
+    .cs-dropdown-list > .cs-dropdown-header,
+    .cs-dropdown-list > .cs-dropdown-footer {
+        padding-inline: var(--cs-listbox-item-px);
+    }
+
+    .cs-dropdown-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--cs-listbox-item-gap);
+        min-height: var(--cs-listbox-item-min-height);
+        padding-inline: var(--cs-listbox-item-px);
+        padding-block: var(--cs-listbox-item-py);
+        font-size: var(--cs-listbox-item-font-size);
+        background-color: transparent;
+    }
+
+    .cs-dropdown-item.cs-listbox-item {
+        @media (hover: hover) {
+            .cs-listbox:not([data-nav="keyboard"]) &:hover:not([data-disabled]) {
+                --cs-dropdown-shortcut-fg: var(--cs-color-text-weak);
+            }
+        }
+
+        &:not([data-disabled]):active,
+        &:focus-visible:not([data-disabled]),
+        .cs-listbox[data-nav="keyboard"] &[data-roving-active]:not([data-disabled]),
+        &[data-highlighted]:not([data-disabled]) {
+            --cs-dropdown-shortcut-fg: var(--cs-color-text-weak);
+        }
+
+        &[data-negative] {
+            @media (hover: hover) {
+                .cs-listbox:not([data-nav="keyboard"]) &:hover:not([data-disabled]) {
+                    --cs-listbox-item-icon-fg: var(--cs-dropdown-item-negative-fg);
+                    --cs-dropdown-shortcut-fg: color-mix(in oklab, var(--cs-dropdown-item-negative-fg) 70%, transparent);
+                    color: var(--cs-dropdown-item-negative-fg);
+                    background-color: var(--cs-dropdown-item-negative-bg-hover);
+                }
+            }
+
+            &:focus-visible:not([data-disabled]),
+            .cs-listbox[data-nav="keyboard"] &[data-roving-active]:not([data-disabled]),
+            &[data-highlighted]:not([data-disabled]) {
+                --cs-listbox-item-icon-fg: var(--cs-dropdown-item-negative-fg);
+                --cs-dropdown-shortcut-fg: color-mix(in oklab, var(--cs-dropdown-item-negative-fg) 70%, transparent);
+                color: var(--cs-dropdown-item-negative-fg);
+                background-color: var(--cs-dropdown-item-negative-bg-hover);
+            }
+
+            &:not([data-disabled]):active {
+                --cs-listbox-item-icon-fg: var(--cs-dropdown-item-negative-fg);
+                --cs-dropdown-shortcut-fg: color-mix(in oklab, var(--cs-dropdown-item-negative-fg) 70%, transparent);
+                color: var(--cs-dropdown-item-negative-fg);
+                background-color: var(--cs-dropdown-item-negative-bg-active);
+                scale: 0.97;
+            }
+        }
+
+        &[data-disabled] {
+            --cs-dropdown-shortcut-fg: var(--cs-color-disabled-fg);
+        }
+    }
+
+    .cs-dropdown-item-shortcut {
+        padding-inline-start: 12px;
+        color: var(--cs-dropdown-shortcut-fg);
+        font-size: var(--cs-text-xs);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.02em;
+        text-box: trim-both cap alphabetic;
+        transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+    }
+
+    .cs-dropdown-item-indicator {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: var(--cs-listbox-icon-size);
+        height: var(--cs-listbox-icon-size);
+        color: var(--cs-listbox-item-indicator-fg);
+        pointer-events: none;
+
+        > .cs-dropdown-item-radio-dot {
+            width: round(nearest, calc(var(--cs-listbox-icon-size) * 0.4), 1px);
+            height: round(nearest, calc(var(--cs-listbox-icon-size) * 0.4), 1px);
+            background-color: currentColor;
+            border-radius: var(--cs-radius-full);
+            opacity: 0;
+            scale: 0.4;
+            transition:
+                opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
+                scale var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        }
+    }
+
+    .cs-dropdown-item[data-checked] .cs-dropdown-item-indicator > .cs-dropdown-item-radio-dot {
+        opacity: 1;
+        scale: 1;
+        transition:
+            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            scale var(--cs-dur-effect) var(--cs-spring-snappy);
+    }
+}
