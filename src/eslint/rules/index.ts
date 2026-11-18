@@ -6,10 +6,13 @@ import { browserStorageConfig } from "./browser-storage.ts";
 import { buttonMorphConfig } from "./button-morph.ts";
 import { buttonConfig } from "./button.ts";
 import { cardConfig } from "./card.ts";
+import { chipConfig } from "./chip.ts";
 import { clipboardConfig } from "./clipboard.ts";
 import { closeButtonConfig } from "./close-button.ts";
+import { comboboxConfig } from "./combobox.ts";
 import { componentLayersConfig } from "./component-layers.ts";
 import { cssSafetyConfigs } from "./css-safety.ts";
+import { dropdownConfig } from "./dropdown.ts";
 import { kbdConfigs } from "./kbd.ts";
 import { numberMorphConfig } from "./number-morph.ts";
 import { numberStepperConfig } from "./number-stepper.ts";
@@ -17,6 +20,7 @@ import { overlayConfig } from "./overlay.ts";
 import { progressConfig } from "./progress.ts";
 import { scrollAreaConfig } from "./scroll-area.ts";
 import { segmentedControlConfig } from "./segmented-control.ts";
+import { selectConfig } from "./select.ts";
 import { titleAttributeConfig } from "./title-attribute.ts";
 import { toggleButtonGroupConfig } from "./toggle-button-group.ts";
 import { toggleButtonConfig } from "./toggle-button.ts";
@@ -32,10 +36,13 @@ export {
     buttonMorphRequireItemsRule,
 } from "./button-morph.ts";
 export { cardConfig, cardStructureRule } from "./card.ts";
+export { chipConfig, chipRequireStandalonePropsRule, chipStructureRule } from "./chip.ts";
 export { clipboardConfig, noNativeClipboardRule, preferClipboardIconsRule } from "./clipboard.ts";
 export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
+export { comboboxConfig, comboboxItemTextRule, comboboxStructureRule } from "./combobox.ts";
 export { componentLayersConfig, componentLayersRule } from "./component-layers.ts";
 export { cssSafetyConfigs, noOklchNeutralMixRule, vendorPrefixOrderRule } from "./css-safety.ts";
+export { dropdownConfig, dropdownStructureRule } from "./dropdown.ts";
 export {
     FORBIDDEN_UNICODE_KEYS_REGEX,
     kbdConfigs,
@@ -57,6 +64,7 @@ export {
     scrollAreaStructureRule,
 } from "./scroll-area.ts";
 export { segmentedControlConfig, segmentedControlStructureRule } from "./segmented-control.ts";
+export { selectConfig, selectItemTextRule, selectStructureRule } from "./select.ts";
 export { noTitleAttributeRule, titleAttributeConfig } from "./title-attribute.ts";
 export {
     toggleButtonGroupConfig,
@@ -79,13 +87,17 @@ export const customRulesConfigs: Linter.Config[] = [
     buttonConfig,
     buttonMorphConfig,
     cardConfig,
+    chipConfig,
     clipboardConfig,
     closeButtonConfig,
+    comboboxConfig,
+    dropdownConfig,
     progressConfig,
     toggleButtonConfig,
     toggleButtonGroupConfig,
     scrollAreaConfig,
     segmentedControlConfig,
+    selectConfig,
     componentLayersConfig,
     ...cssSafetyConfigs,
     ...kbdConfigs,

@@ -30,6 +30,146 @@ export function findAttribute(node: AST.SvelteElement, name: string): AST.Svelte
 }
 
 /**
+ * Checks whether a Svelte element has a prop (either standard attribute or shorthand `{prop}`).
+ */
+export function hasProp(node: AST.SvelteElement, name: string): boolean {
+    return node.startTag.attributes.some(
+        (attr) =>
+            (attr.type === "SvelteAttribute" || attr.type === "SvelteShorthandAttribute") &&
+            attr.key.name === name
+    );
+}
+
+/**
+ * Checks whether a Svelte element has a spread attribute (`{...props}`).
+ */
+export function hasSpreadAttribute(node: AST.SvelteElement): boolean {
+    return node.startTag.attributes.some((attr) => attr.type === "SvelteSpreadAttribute");
+}
+
+/**
+ * Walks up the AST parent chain to find the nearest ancestor SvelteElement matching any of `targetNames`.
+ */
+export function findAnyAncestorElement(
+    node: AST.SvelteElement,
+    targetNames: ReadonlySet<string>
+): AST.SvelteElement | undefined {
+    let current = (node as unknown as { parent?: AST.SvelteNode | null }).parent;
+    while (current) {
+        if (current.type === "SvelteElement" && targetNames.has(getElementName(current))) {
+            return current;
+        }
+        current = (current as unknown as { parent?: AST.SvelteNode | null }).parent;
+    }
+    return undefined;
+}
+
+/**
+ * Walks up the AST parent chain to find the nearest ancestor SvelteElement matching `targetName`.
+ */
+export function findAncestorElement(node: AST.SvelteElement, targetName: string): AST.SvelteElement | undefined {
+    return findAnyAncestorElement(node, new Set([targetName]));
+}
+
+/**
+ * Checks whether a Svelte element has an ancestor matching any of `targetNames`,
+ * or is defined inside a `{#snippet}` block (whose parent context is determined at the render call site).
+ */
+export function hasAncestorOrSnippet(node: AST.SvelteElement, targetNames: ReadonlySet<string>): boolean {
+    let current = (node as unknown as { parent?: AST.SvelteNode | null }).parent;
+    while (current) {
+        if (current.type === "SvelteSnippetBlock") {
+            return true;
+        }
+        if (current.type === "SvelteElement" && targetNames.has(getElementName(current))) {
+            return true;
+        }
+        current = (current as unknown as { parent?: AST.SvelteNode | null }).parent;
+    }
+    return false;
+}
+
+/**
+ * Recursively checks whether children contain any SvelteElement (including inside {#if} / {:else} / {#each} blocks).
+ */
+export function hasChildElement(children: AST.SvelteElement["children"]): boolean {
+    for (const child of children) {
+        if (child.type === "SvelteElement") {
+            return true;
+        }
+        if (
+            "children" in child &&
+            Array.isArray(child.children) &&
+            hasChildElement(child.children as AST.SvelteElement["children"])
+        ) {
+            return true;
+        }
+        if (
+            "else" in child &&
+            child.else &&
+            "children" in child.else &&
+            Array.isArray(child.else.children) &&
+            hasChildElement(child.else.children as AST.SvelteElement["children"])
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+export interface ParentConstraint {
+    parents: ReadonlySet<string>;
+    display: string;
+}
+
+/**
+ * Reports when a compound subcomponent is used outside its required parent component(s).
+ */
+export function checkRequiredParent(
+    context: Rule.RuleContext,
+    node: AST.SvelteElement,
+    constraints: Record<string, ParentConstraint>,
+    messageId: string
+): void {
+    const name = getElementName(node);
+    const constraint = constraints[name];
+    if (!constraint) return;
+
+    if (!hasAncestorOrSnippet(node, constraint.parents)) {
+        context.report({
+            node: node.startTag as unknown as Rule.Node,
+            messageId,
+            data: {
+                child: name,
+                parent: constraint.display,
+            },
+        });
+    }
+}
+
+/**
+ * Reports when a listbox item contains child elements (e.g. icon, description, badge)
+ * without wrapping its primary label in the corresponding `*ItemText` component.
+ */
+export function checkItemTextRequirement(
+    context: Rule.RuleContext,
+    node: AST.SvelteElement,
+    itemName: string,
+    textName: string,
+    messageId: string
+): void {
+    if (getElementName(node) !== itemName) return;
+    if (hasSpreadAttribute(node)) return;
+
+    if (hasChildElement(node.children) && !hasDescendantElement(node.children, textName)) {
+        context.report({
+            node: node.startTag as unknown as Rule.Node,
+            messageId,
+        });
+    }
+}
+
+/**
  * Extracts the static literal string value of an attribute if available.
  * Returns undefined for dynamic Mustache tags or complex expressions to avoid false positives.
  */
