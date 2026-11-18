@@ -1,7 +1,8 @@
 ## UI & Polish
 
-- [ ] Toast: teilweise unscharf beim ersten Öffnen (evtl. GPU-Layer?)
-- [ ] Select: Section Title und Separator irgendwie hässlich
+- [ ] erst groß dann klein sieht shceiße aus bei animation
+- [x] Toast: teilweise unscharf beim ersten Öffnen (evtl. GPU-Layer?)
+- [x] Select: Section Title und Separator irgendwie hässlich
 - [x] Modal: stärkerer Schatten?
 - [x] Select: ScrollArea nicht automatisch
 - [x] Select: Soll sich bei Items mit Icon auch das Icon im Button clean ändern?
@@ -11,12 +12,13 @@
 
 - [ ] Dropdown
 - [ ] Combobox
-- [ ] ContextMenu
+- [ ] Data Table
+
+- [ ] Animierte Charts
+- [ ] Tablist
 - [ ] Sidebar
 - [ ] Color Picker
-- [ ] Data Table
-- [ ] Tablist
-- [ ] Animierte Charts
+- [ ] ContextMenu
 - [ ] NLP Parser
 - [ ] Command Palette
 - [x] Select
@@ -36,7 +38,8 @@
 
 ## Work
 
-- KPI Cards
+- [ ] KPI Cards
+- [ ] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
 - [ ] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
 - [ ] Filesystem-Chooser / Verwalter-Element
 - [ ] Verschlüsselte Seiten im Filesystem - Auth-System im Filesystem
@@ -47,8 +50,6 @@
 - [ ] EML-Wizard
 - [ ] Allgemeine EML-Logik (eigene Outlook-E-Mail-Logik für Work)
 - [ ] Diff-Component
-- [ ] PDF Viewer
-- [ ] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
 - [ ] PDF Viewer
 
 ## Done
