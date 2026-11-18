@@ -1,28 +1,26 @@
 ## UI & Polish
 
-- [x] Tastatur-Overlay-Autofocus-Bug fixen
-- [x] Kbd: Enter-Symbol rutscht in zwei Zeilen
-- [x] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
-- [x] Toast: Swipe-to-Dismiss noch minimal hakelig und nicht optimal smooth
-- [x] Toast-Animation beim Verschwinden nochmal gucken und optimieren
-- [x] Stepper (vertical): Unteres Element bekommt zuerst Fokus – fixen
-- [x] Stepper: Immer morphen außer im Input
-- [x] Separatoren sind nicht richtig positioniert, sondern immer am Ende des Elements statt genau zentriert zwischen zwei
-- [x] Input-Zahl springt ein Pixel hoch beim Fokussieren (Alignment prüfen)
-- [x] Sticky Hover auf Mobile lässt Separatoren durch Hover-Auslösung sticky verschwinden (darf auf Mobile nicht passieren); dafür fehlt Interaktionsdarstellung bei `:active` auf Mobile (wie bei Button den Hover-Effekt auf `:active` spiegeln)
-- [x] Umspringen teils bei Ziffernanzahl-Wechsel (kann man das von außen sauber steuern?)
+- [ ] Toast: teilweise unscharf beim ersten Öffnen (evtl. GPU-Layer?)
+- [ ] Select: Section Title und Separator irgendwie hässlich
+- [x] Modal: stärkerer Schatten?
+- [x] Select: ScrollArea nicht automatisch
+- [x] Select: Soll sich bei Items mit Icon auch das Icon im Button clean ändern?
+- [x] Select: stärkerer Scale auf Optionen?
 
 ## Modules
 
-- [ ] Select
 - [ ] Dropdown
 - [ ] Combobox
 - [ ] ContextMenu
-- [ ] Chips
 - [ ] Sidebar
 - [ ] Color Picker
+- [ ] Data Table
+- [ ] Tablist
 - [ ] Animierte Charts
 - [ ] NLP Parser
+- [ ] Command Palette
+- [x] Select
+- [x] Chips
 - [x] Modal
 - [x] Text Morph (z. B. für ToggleButton, wenn sich nur der Text ändert, wie „Offen“ zu „Erledigt“)
 - [x] Number Stepper (`-` / `+` Control für Zooming und Größenstufen)
@@ -40,21 +38,32 @@
 
 - KPI Cards
 - [ ] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
+- [ ] Filesystem-Chooser / Verwalter-Element
+- [ ] Verschlüsselte Seiten im Filesystem - Auth-System im Filesystem
+- [ ] Dokumentationsseite: flexible Bausteine (Factory Pattern)
+- [ ] KI-Integrationen clean dargestellt
+- [ ] ContentEditable-artiges Element für Platzhalter etc.
 - [ ] EML-Logik: Signaturen
 - [ ] EML-Wizard
 - [ ] Allgemeine EML-Logik (eigene Outlook-E-Mail-Logik für Work)
-- [ ] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
-- [ ] KI-Integrationen clean dargestellt
-- [ ] Dokumentationsseite: flexible Bausteine (Factory Pattern)
-- [ ] Filesystem-Chooser / Verwalter-Element
-- [ ] PDF Viewer
-- [ ] Verschlüsselte Seiten im Filesystem
-- [ ] Auth-System im Filesystem
 - [ ] Diff-Component
-- [ ] ContentEditable-artiges Element für Platzhalter etc.
+- [ ] PDF Viewer
+- [ ] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
+- [ ] PDF Viewer
 
 ## Done
 
+- [x] Tastatur-Overlay-Autofocus-Bug fixen
+- [x] Kbd: Enter-Symbol rutscht in zwei Zeilen
+- [x] ToggleButtonGroup: Separatoren und ESLint-Regel refactoren
+- [x] Toast: Swipe-to-Dismiss noch minimal hakelig und nicht optimal smooth
+- [x] Toast-Animation beim Verschwinden nochmal gucken und optimieren
+- [x] Stepper (vertical): Unteres Element bekommt zuerst Fokus – fixen
+- [x] Stepper: Immer morphen außer im Input
+- [x] Separatoren sind nicht richtig positioniert, sondern immer am Ende des Elements statt genau zentriert zwischen zwei
+- [x] Input-Zahl springt ein Pixel hoch beim Fokussieren (Alignment prüfen)
+- [x] Sticky Hover auf Mobile lässt Separatoren durch Hover-Auslösung sticky verschwinden (darf auf Mobile nicht passieren); dafür fehlt Interaktionsdarstellung bei `:active` auf Mobile (wie bei Button den Hover-Effekt auf `:active` spiegeln)
+- [x] Umspringen teils bei Ziffernanzahl-Wechsel (kann man das von außen sauber steuern?)
 - [x] Debugger-Agent löschen
 - [x] ESLint-Regeln für `Card`, `Badge`, `Progress`?
 - [x] Usage Guidance zu bestimmten Components noch anlegen
