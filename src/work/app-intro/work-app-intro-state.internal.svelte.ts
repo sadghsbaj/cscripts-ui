@@ -1,6 +1,7 @@
 import { getLocalStorage, getSessionStorage, setLocalStorage, setSessionStorage } from "cs/svelte/browser-storage";
 
 import type { WorkLocationId } from "../locations";
+import type { WorkAppIntroPhase } from "./index.ts";
 
 const SESSION_STORAGE_KEY = "cs-pfleiderer-boot-session";
 const LOCAL_STORAGE_KEY = "cs-pfleiderer-boot-last-ts";
@@ -12,7 +13,6 @@ const FAST_BOOT_WINDOW_MS = 30 * 60 * 1000;
  */
 export const BOOT_SEQUENCE: readonly WorkLocationId[] = ["neumarkt", "baruth", "guetersloh", "arnsberg", "leutkirch"];
 
-type BootPhase = "idle" | "cad" | "lock" | "brand" | "curtain";
 type BootMode = "cold" | "instant";
 
 /**
@@ -24,7 +24,8 @@ type BootMode = "cold" | "instant";
  * the JavaScript timer schedule minimal (one timer per phase transition).
  */
 class WorkAppIntroManager {
-    phase: BootPhase = $state("idle");
+    phase: WorkAppIntroPhase = $state("idle");
+    settled = $state(false);
     bootMode: BootMode = $state("cold");
     timers: Array<ReturnType<typeof setTimeout>> = [];
 
@@ -49,10 +50,12 @@ class WorkAppIntroManager {
 
         if (mode === "instant") {
             this.phase = "idle";
+            this.settled = true;
             return;
         }
 
         // Act 1 (0ms - 550ms): SVG region outlines self-draw with a 55ms CSS stagger
+        this.settled = false;
         this.phase = "cad";
 
         // Act 2 (550ms - 1450ms): Plant fills, spring pins, sonar rings, and labels lock in at 85ms CSS intervals
@@ -68,6 +71,7 @@ class WorkAppIntroManager {
         // Act 4 (2450ms - 2770ms): Overlay zooms forward and fades out while the workspace scales to 1
         this.schedule(() => {
             this.phase = "curtain";
+            this.settled = true;
         }, 2450);
 
         this.schedule(() => {
@@ -105,6 +109,7 @@ class WorkAppIntroManager {
         if (this.phase === "idle" || this.phase === "curtain") return;
         this.clearBootTimers();
         this.phase = "curtain";
+        this.settled = true;
         this.schedule(() => {
             this.phase = "idle";
         }, 260);

@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { WORK_LOCATIONS, type WorkLocationProps } from "../index.ts";
+    import { WORK_LOCATIONS } from "./locations.ts";
+    import type { WorkLocationProps } from "./index.ts";
 
     let { location, marker = false, class: className, ...rest }: WorkLocationProps = $props();
 

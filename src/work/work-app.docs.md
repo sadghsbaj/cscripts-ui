@@ -55,15 +55,16 @@ Canonical composition recipe for internal Pfleiderer Work applications combining
     const workspace = createFileSystemWorkspace({ namespace: "holzanalysen" });
 
     let showDocs = $state(false);
+    let introSettled = $state(false);
     let headerSegmentRef = $state<HTMLElement | null>(null);
     let gateRef = $state<{ nudge: () => void } | null>(null);
 
     const showGate = $derived(
-        workspace.mountStatus !== "ready" && workspace.mountStatus !== "restoring",
+        introSettled && workspace.mountStatus !== "ready" && workspace.mountStatus !== "restoring",
     );
 </script>
 
-<WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen">
+<WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen" bind:settled={introSettled}>
     <ScrollArea size="lg" direction="vertical" class="h-dvh w-full">
         <ScrollAreaContent {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}>
             <WorkAppFrame>
@@ -196,5 +197,6 @@ Keep `<WorkAppHeader>` mounted and toggle `<WorkAppDocs>` inside `<WorkAppMain>`
 
 - **Navigation tabs in header:** Add a `<WorkAppHeaderSegment align="center">` (or `align="before"` alongside the status segment) containing a `<ToggleButtonGroup type="single" bind:value={activeTab}>` with `<ToggleButton>` items (`cs/svelte/toggle-button`) when the app has top-level views. Keep domain-specific filters and business context inside `<WorkAppMain>`.
 - **Guarding data loading:** Run initial reads and workspace queries only when `workspace.mountStatus === "ready"` (for example inside `$effect(() => { if (workspace.mountStatus !== "ready") return; ... })`). Keeping `<Overlay>` hidden during `"restoring"` avoids a brief blur flash while returning handles are rehydrated.
+- **Waiting for `introSettled` before showing `<Overlay>`:** `showGate` waits for `introSettled` because `<Overlay>` uses `showPopover()` in the browser Top Layer, which would otherwise paint over `<WorkAppIntro>`'s `z-index: 50` stage and capture focus before the intro finishes. Binding `introSettled` syncs the gate entrance with the `"curtain"` transition on cold boot and shows it immediately on instant boot.
 - **Inherited `toolName`:** `<WorkWorkspaceGate>` automatically reads `toolName` from `<WorkAppIntro>` context (`getWorkAppIdentity()`), so `appName` does not need to be passed separately.
 - **Apps without `file-system`:** Omit `<WorkAppStatusDot>`, `<WorkWorkspaceMenu>`, and the `<Overlay>` + `<WorkWorkspaceGate>` block; keep `<WorkAppIntro>`, `<ScrollArea>`, `<WorkAppFrame>`, `<WorkAppHeader>`, `<WorkAppHelpButton>`, `<WorkAppThemeButton>`, and `<WorkAppMain>`.

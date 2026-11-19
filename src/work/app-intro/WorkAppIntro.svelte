@@ -5,10 +5,20 @@
     import { WORK_LOCATIONS } from "../locations/index.ts";
     import WorkLocation from "../locations/WorkLocation.svelte";
     import WorkLogo from "../logo/WorkLogo.svelte";
-    import { setWorkAppIdentity, type WorkAppIntroProps } from "./index.ts";
+    import { setWorkAppIdentity, type WorkAppIntroPhase, type WorkAppIntroProps } from "./index.ts";
     import { BOOT_SEQUENCE, workAppIntroState } from "./work-app-intro-state.internal.svelte.ts";
 
-    let { toolCategory, toolName, persist = true, children, ...rest }: WorkAppIntroProps = $props();
+    let {
+        toolCategory,
+        toolName,
+        persist = true,
+        // eslint-disable-next-line no-useless-assignment -- $bindable() output prop read by parent
+        settled = $bindable(false),
+        // eslint-disable-next-line no-useless-assignment -- $bindable() output prop read by parent
+        phase = $bindable<WorkAppIntroPhase>("idle"),
+        children,
+        ...rest
+    }: WorkAppIntroProps = $props();
 
     setWorkAppIdentity({
         get toolCategory() {
@@ -17,6 +27,17 @@
         get toolName() {
             return toolName;
         },
+        get phase() {
+            return workAppIntroState.phase;
+        },
+        get settled() {
+            return workAppIntroState.settled;
+        },
+    });
+
+    $effect(() => {
+        phase = workAppIntroState.phase;
+        settled = workAppIntroState.settled;
     });
 
     onMount(() => {
