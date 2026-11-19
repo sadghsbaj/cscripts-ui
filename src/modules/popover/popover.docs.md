@@ -39,6 +39,7 @@ Wires a trigger element's `anchor-name: --anchor-${target}` and interaction beha
 | Option | Trigger Modes | Type | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `target` | All | `string` | — | Required ID of the target `<Popover />`. |
+| `anchor` | All | `HTMLElement \| null \| undefined \| (() => HTMLElement \| null \| undefined)` | `undefined` | Attaches `anchor-name: --anchor-${target}` to the resolved element instead of the trigger `node` (useful for anchoring a menu to a wrapping header segment while keeping click/hover on an inner button or dot). |
 | `enabled` | All | `boolean \| (() => boolean)` | `true` | Enables or disables the trigger attachment. |
 | `triggerOn` | All | `"pointerdown" \| "click" \| "hover" \| "manual"` | — | Required. `"pointerdown"` / `"click"` toggle via `popovertarget`; `"hover"` uses JS hover/focus timers (`bindHover`); `"manual"` binds `anchor-name` only. |
 | `delay` | `"hover"` | `[number, number]` | `[400, 150]` | Open and close delays in milliseconds (`[openMs, closeMs]`). |

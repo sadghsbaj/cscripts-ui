@@ -13,7 +13,7 @@ description: "Rules for internal Pfleiderer work applications using cs/svelte/wo
 
 <principles>
   - Use `cs/svelte/work` for all internal company (Pfleiderer) tools instead of inventing custom app headers, brand badges, intro screens, or page frames.
-  - Read the co-located submodule docs (`./node_modules/cs/src/work/<submodule>/<submodule>.docs.md` — `app-layout`, `app-intro`, `app-controls`, `locations`, `logo`) before composing work-shell components or referencing Pfleiderer locations.
+  - Read the co-located submodule docs (`./node_modules/cs/src/work/<submodule>/<submodule>.docs.md` — `app-layout`, `app-intro`, `app-controls`, `locations`, `logo`, `workspace-access`) and the canonical Work-App recipe (`./node_modules/cs/src/work/work-app.docs.md`) before composing work-shell components, `file-system` workspace access, or Pfleiderer locations.
 </principles>
 
 <patterns>
@@ -30,7 +30,8 @@ description: "Rules for internal Pfleiderer work applications using cs/svelte/wo
   </header_and_layout>
 
   <module_docs>
-    - **API & Composition:** Read the matching `./node_modules/cs/src/work/<submodule>/<submodule>.docs.md` (`app-layout`, `app-intro`, `app-controls`, `locations`, `logo`) and `./node_modules/cs/src/work/index.ts` before using `WorkApp*`, `WorkLogo`, `WorkLocation`, or `WORK_LOCATIONS`.
+    - **Canonical Work-App Recipe:** When building a Work app layout (especially with `cs/svelte/file-system` workspace integration), use `./node_modules/cs/src/work/work-app.docs.md` as the canonical basis layout & wiring reference.
+    - **API & Composition:** Read the matching `./node_modules/cs/src/work/<submodule>/<submodule>.docs.md` (`app-layout`, `app-intro`, `app-controls`, `locations`, `logo`, `workspace-access`) and `./node_modules/cs/src/work/index.ts` before using `WorkApp*`, `WorkWorkspace*`, `WorkLogo`, `WorkLocation`, or `WORK_LOCATIONS`.
   </module_docs>
 </patterns>
 

@@ -143,27 +143,32 @@
             /* =========================================================
             * SIZES
             * ========================================================= */
-            &[data-size="xs"] {
+            &[data-size="xs"],
+            &[data-size="xs"] + :global(.cs-checkbox-icon) {
                 --cs-checkbox-width: 12px;
                 --cs-checkbox-radius: 4px;
             }
 
-            &[data-size="sm"] {
+            &[data-size="sm"],
+            &[data-size="sm"] + :global(.cs-checkbox-icon) {
                 --cs-checkbox-width: 16px;
                 --cs-checkbox-radius: 5px;
             }
 
-            &[data-size="md"] {
+            &[data-size="md"],
+            &[data-size="md"] + :global(.cs-checkbox-icon) {
                 --cs-checkbox-width: 20px;
                 --cs-checkbox-radius: 6px;
             }
 
-            &[data-size="lg"] {
+            &[data-size="lg"],
+            &[data-size="lg"] + :global(.cs-checkbox-icon) {
                 --cs-checkbox-width: 24px;
                 --cs-checkbox-radius: 7px;
             }
 
-            &[data-size="xl"] {
+            &[data-size="xl"],
+            &[data-size="xl"] + :global(.cs-checkbox-icon) {
                 --cs-checkbox-width: 28px;
                 --cs-checkbox-radius: 8px;
             }
@@ -253,8 +258,9 @@
             position: absolute;
             top: anchor(center);
             left: anchor(center);
-            width: calc(anchor-size(width) * 0.7);
-            height: calc(anchor-size(height) * 0.7);
+            z-index: 1;
+            width: calc(var(--cs-checkbox-width) * 0.7);
+            height: calc(var(--cs-checkbox-width) * 0.7);
             color: var(--cs-color-accent-solid-fg);
             opacity: 0;
             translate: -50% -50%;

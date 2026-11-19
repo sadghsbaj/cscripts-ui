@@ -23,7 +23,7 @@ globs: "**/*.svelte, **/*.svelte.ts, **/vite.config.ts"
     - **`$bindable()` Props & Function Bindings:** Passing a non-bound expression (e.g. `value={fn()}`, `pressed={fn()}`, `checked={fn()}`) to a `$bindable()` prop passes `svelte-check` without warning—even when `on*Change` is also passed—but throws a runtime error when the component mutates the prop. Always use `bind:*={localState}`, Svelte 5 function bindings `bind:*={getter, setter}`, or omit the `$bindable()` prop for uncontrolled mode.
     - **Attachments over Actions:** Use `{@attach ...}` (`Attachment<HTMLElement>`) instead of legacy `use:action`.
     - **Type-Safe Context:** Use `createContext()` from `"svelte"` instead of `getContext` / `setContext` / `hasContext`.
-    - **Template Declarations:** Use `{const ...}` and `{let ...}` in templates instead of legacy `{@const}`.
+    - **Template Declarations:** Use `{const ...}` and `{let ...}` in templates instead of legacy `{@const}`. Unlike legacy `{@const}` (which was implicitly reactive), plain `{const x = expr}` and `{let x = expr}` evaluate **only once** when the block mounts. Whenever `expr` depends on reactive state (especially inside a keyed `{#each}` or `{#snippet}`), you MUST wrap it in `$derived(...)` (`{const x = $derived(expr)}` or `{let x = $derived(expr)}`), or use `{let x = $state(...)}` for mutable local template state.
     - **Markup & DOM:** Always key `{#each}` loops (`(item.id)`), use `{#snippet}` / `{@render}` instead of `<slot>`, use `<script module lang="ts">` instead of `context="module"`, use `$props.id()` for unique IDs, and use `bind:this` instead of `document.querySelector` / `document.getElementById`.
     - **Static Containers:** Do not wrap simple static layout cards or flex/grid wrappers in redundant `.svelte` components when native HTML + UnoCSS utilities suffice.
   </svelte_5_patterns>
@@ -36,6 +36,7 @@ globs: "**/*.svelte, **/*.svelte.ts, **/vite.config.ts"
 
 <constraints>
   - MUST NOT use `use:action`, `{@const}`, `<slot>`, `context="module"`, `getContext`/`setContext`/`hasContext`, or `document.querySelector`/`getElementById` inside `.svelte` files.
+  - MUST NOT use plain `{const x = expr}` or `{let x = expr}` without `$derived(expr)` inside templates when `expr` reads reactive state.
   - MUST NOT pass non-bound expressions (e.g. `value={fn()}`, `pressed={fn()}`, `checked={fn()}`) to `$bindable()` props; use `bind:*={localState}`, `bind:*={getter, setter}`, or omit the prop for uncontrolled mode.
   - MUST NOT install `@fontsource/*` or `vite-plugin-singlefile`—use `csFont` and `csSingleFile` from `cs/vite`.
   - MUST NOT re-implement native `localStorage`/`sessionStorage`, `navigator.clipboard`, theme stores, or `popovertarget`/`interestfor` wiring when `cs` modules provide them.

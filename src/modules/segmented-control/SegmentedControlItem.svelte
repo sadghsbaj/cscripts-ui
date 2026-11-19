@@ -93,6 +93,9 @@
             height: 100%;
             gap: var(--cs-segmented-control-gap);
             min-width: 0;
+            scale: 1;
+            /* Keep compositor layer active at scale: 1 so text doesn't snap at press/release transitionend. */
+            will-change: scale;
             transition: scale var(--cs-dur-press) var(--cs-ease-press);
 
             .cs-segmented-control-item[data-state="inactive"]:not(:disabled, [aria-disabled="true"], [data-disabled]):active

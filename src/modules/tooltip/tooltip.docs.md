@@ -30,8 +30,8 @@ Lightweight tooltip surface (`<Tooltip />`) and Svelte 5 attachment (`tooltip`) 
 
 ### `tooltip(options: TooltipOptions): Attachment<HTMLElement>`
 Two mutually exclusive modes:
-- **Inline auto-mounted mode:** `{ text: string; icon?: TooltipIconConfig; placement?; offset?; delay?; enabled? }`
-- **Custom target mode:** `{ target: string; placement?; offset?; delay?; enabled? }`
+- **Inline auto-mounted mode:** `{ text: string; icon?: TooltipIconConfig; placement?; offset?; delay?; dismissOnPress?; enabled? }`
+- **Custom target mode:** `{ target: string; placement?; offset?; delay?; dismissOnPress?; enabled? }`
 
 | Option | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
@@ -41,6 +41,7 @@ Two mutually exclusive modes:
 | `placement` | `PopoverPlacement` | No | `"top"` | Anchor placement. |
 | `offset` | `string` | No | `"8px"` (from `Popover`) | Gap between trigger and tooltip. |
 | `delay` | `[number, number]` | No | `[400, 150]` | Open and close delays in milliseconds (`[openMs, closeMs]`). |
+| `dismissOnPress` | `boolean` | No | `true` | Dismisses the tooltip on pointer press or `Enter` / `Space`. |
 | `enabled` | `boolean \| (() => boolean)` | No | `true` | Enables or disables the tooltip attachment. |
 
 ### `<Tooltip />` & Subcomponents

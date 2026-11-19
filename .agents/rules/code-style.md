@@ -28,7 +28,7 @@ globs: "**/*.ts, **/*.svelte, **/*.css"
   <svelte_5>
     - **Attachments over Actions:** Always use `{@attach ...}` (`Attachment<HTMLElement>`) instead of legacy `use:action` (attachments also forward through components via `{...rest}`).
     - **Context:** Use `createContext()` (`[get, set, has]` / typed context helpers) instead of legacy `getContext`, `setContext`, or `hasContext`.
-    - **Template Declarations:** Use `{const ...}` and `{let ...}` in templates instead of legacy `{@const}`. Remember `{let}` can hold `$derived`/`$state` reactive values, whereas plain `{const}` is static.
+    - **Template Declarations:** Use `{const ...}` and `{let ...}` in templates instead of legacy `{@const}`. Unlike legacy `{@const}` (which was implicitly reactive), plain `{const x = expr}` and `{let x = expr}` evaluate **only once** when the block mounts. Whenever `expr` depends on reactive state (especially inside a keyed `{#each}` or `{#snippet}`), you MUST wrap it in `$derived(...)` (`{const x = $derived(expr)}` or `{let x = $derived(expr)}`), or use `{let x = $state(...)}` for mutable local template state.
     - **Reactivity:** Prefer `$derived` and `$derived.by` for computed values. Reserve `$effect` strictly for genuine side effects that cannot be expressed declaratively.
     - **IDs & DOM Access:** Use `$props.id()` inside `.svelte` files for unique IDs. NEVER call `document.querySelector` or `document.getElementById` inside components—use `bind:this` (`ref = $bindable()`) or attachments.
     - **Classes:** Use Svelte 5 array syntax `class={["cs-...", className]}` instead of manual string concatenation.
@@ -53,4 +53,5 @@ globs: "**/*.ts, **/*.svelte, **/*.css"
 
 <constraints>
   - MUST NOT use `any`, `!` non-null assertions, `use:action`, `{@const}`, `getContext`/`setContext`, or `document.querySelector`/`getElementById` in `.svelte`.
+  - MUST NOT use plain `{const x = expr}` or `{let x = expr}` without `$derived(expr)` inside templates when `expr` reads reactive state.
 </constraints>

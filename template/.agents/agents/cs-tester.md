@@ -33,6 +33,7 @@ You write and maintain Vitest unit/DOM tests and Playwright browser tests for th
 - **Mount, Lifecycle & Edge Cases:** Assert initial mount state (no spurious initial states/flags), dynamic mount/unmount cleanup, `disabled`/`invalid`/error states, and callback idempotency (no fires on no-ops).
 - **High-Signal Only (No Filler):** Never bloat suites with static-markup, CSS-aesthetic, or trivial pass-through tests—every test must guard a real state transition, contract, or failure mode, with zero gaps in interactive behavior.
 - **Runner Honesty:** Use Playwright (`*.browser.spec.ts`) for real-browser geometry, anchor positioning, scroll behavior, and end-to-end flows; if Playwright cannot run in the current environment, state that explicitly rather than treating `happy-dom` as full browser proof.
+- **Playwright Sparingly & Sandbox:** Reserve Playwright (`*.browser.spec.ts`) for cases that genuinely require real-browser verification or debugging (CSS anchor positioning, native Top-Layer/Popover behavior, real layout/focus)—do not spin up Playwright for minor issues already covered by Vitest (`happy-dom`). When running Playwright (`bunx playwright test` / `bun run test:e2e`), pass `BypassSandbox: true` on `run_command` so the browser and Vite dev server on `localhost` can connect (the user will approve the prompt).
 </rules>
 
 <output_format>

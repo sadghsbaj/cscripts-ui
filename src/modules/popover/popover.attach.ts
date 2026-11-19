@@ -2,13 +2,20 @@ import type { Attachment } from "svelte/attachments";
 
 import { resolveGetter } from "../../shared/resolve-getter.ts";
 
+type MaybeGetter<T> = T | (() => T);
+
 type PopoverTriggerBaseOptions = {
     target: string;
+    /**
+     * Optional element (or getter) to receive the CSS `--anchor-<target>` anchor-name
+     * instead of the trigger element itself.
+     */
+    anchor?: MaybeGetter<HTMLElement | null | undefined>;
     /**
      * Whether the trigger attachment is active.
      * @default true
      */
-    enabled?: boolean | (() => boolean);
+    enabled?: MaybeGetter<boolean>;
 };
 
 export type PopoverTriggerOptions = PopoverTriggerBaseOptions &
@@ -75,6 +82,15 @@ let documentEscapeBound = false;
 
 function isTriggerDisabled(node: HTMLElement): boolean {
     return node.closest(DISABLED_OR_INERT_SELECTOR) !== null;
+}
+
+function parseAnchorNames(node: HTMLElement): string[] {
+    const raw = node.style.getPropertyValue("anchor-name");
+    if (!raw) return [];
+    return raw
+        .split(",")
+        .map((token) => token.trim())
+        .filter((token) => token.length > 0 && token !== "none");
 }
 
 function getTargetPopover(target: string): PopoverElement | null {
@@ -228,7 +244,7 @@ function bindToggle(node: HTMLElement, target: string, triggerOn: "pointerdown" 
     };
 }
 
-function bindHover(node: HTMLElement, options: HoverOptions): () => void {
+function bindHover(node: HTMLElement, options: HoverOptions, anchorEl: HTMLElement = node): () => void {
     const { target, dismissOnPress = true } = options;
     const [openDelayMs, closeDelayMs] = resolveHoverDelay(options.delay);
 
@@ -548,7 +564,7 @@ function bindHover(node: HTMLElement, options: HoverOptions): () => void {
         // An immediate re-run (reactive update) re-applies the anchor synchronously and keeps the disarmed
         // state. Only a real teardown forgets it.
         queueMicrotask(() => {
-            if (node.style.getPropertyValue("anchor-name")) return;
+            if (parseAnchorNames(anchorEl).includes(`--anchor-${target}`)) return;
             disarmedTriggers.delete(node);
         });
     };
@@ -560,18 +576,29 @@ export function popoverTrigger(options: PopoverTriggerOptions): Attachment<HTMLE
             return () => {};
         }
 
-        node.style.setProperty("anchor-name", `--anchor-${options.target}`);
+        const anchorEl = (options.anchor ? resolveGetter(options.anchor) : null) ?? node;
+        const anchorName = `--anchor-${options.target}`;
+        const existingTokens = parseAnchorNames(anchorEl);
+        if (!existingTokens.includes(anchorName)) {
+            existingTokens.push(anchorName);
+            anchorEl.style.setProperty("anchor-name", existingTokens.join(", "));
+        }
 
         let unbind: (() => void) | undefined;
         if (options.triggerOn === "hover") {
-            unbind = bindHover(node, options);
+            unbind = bindHover(node, options, anchorEl);
         } else if (options.triggerOn !== "manual") {
             unbind = bindToggle(node, options.target, options.triggerOn);
         }
 
         return () => {
             unbind?.();
-            node.style.removeProperty("anchor-name");
+            const remainingTokens = parseAnchorNames(anchorEl).filter((token) => token !== anchorName);
+            if (remainingTokens.length > 0) {
+                anchorEl.style.setProperty("anchor-name", remainingTokens.join(", "));
+            } else {
+                anchorEl.style.removeProperty("anchor-name");
+            }
         };
     };
 }

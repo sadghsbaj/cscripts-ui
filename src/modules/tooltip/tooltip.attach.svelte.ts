@@ -15,6 +15,11 @@ export type TooltipBaseOptions = {
      */
     delay?: [number, number];
     /**
+     * Whether pressing the trigger (pointer or `Enter` / `Space`) dismisses the tooltip.
+     * @default true
+     */
+    dismissOnPress?: boolean;
+    /**
      * Whether the tooltip attachment is active.
      * @default true
      */
@@ -98,7 +103,12 @@ export function tooltip(options: TooltipOptions): Attachment<HTMLElement> {
         }
 
         const id = resolveTooltipId(node, options);
-        const unbindTrigger = popoverTrigger({ target: id, triggerOn: "hover", delay: options.delay })(node);
+        const unbindTrigger = popoverTrigger({
+            target: id,
+            triggerOn: "hover",
+            delay: options.delay,
+            dismissOnPress: options.dismissOnPress,
+        })(node);
 
         node.setAttribute("aria-describedby", id);
         applyTargetStyles(id, options);

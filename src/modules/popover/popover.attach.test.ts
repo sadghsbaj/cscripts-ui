@@ -200,6 +200,125 @@ describe("popoverTrigger Svelte 5 Element Attachment", () => {
             pointerDown(trigger);
             expect(popover.togglePopover).toHaveBeenCalledTimes(1);
         });
+
+        test("preserves multiple comma-separated anchor-name tokens on the same element and detaches each independently", () => {
+            const tooltip = createPopover("tip", "manual");
+            const menu = createPopover("menu", "auto");
+
+            const cleanupHover = popoverTrigger({ target: "tip", triggerOn: "hover" })(trigger);
+            const cleanupClick = popoverTrigger({ target: "menu", triggerOn: "click" })(trigger);
+
+            expect(trigger.style.getPropertyValue("anchor-name")).toBe("--anchor-tip, --anchor-menu");
+            expect(trigger.getAttribute("popovertarget")).toBe("menu");
+
+            // Hover trigger still opens the tooltip while click trigger owns popovertarget
+            pointerEnter(trigger);
+            vi.advanceTimersByTime(400);
+            expect(tooltip.showPopover).toHaveBeenCalledTimes(1);
+            expect(menu.showPopover).not.toHaveBeenCalled();
+
+            // Detaching the first trigger removes only its own token
+            if (typeof cleanupHover === "function") cleanupHover();
+            expect(trigger.style.getPropertyValue("anchor-name")).toBe("--anchor-menu");
+            expect(trigger.getAttribute("popovertarget")).toBe("menu");
+
+            // Detaching the last trigger removes the anchor-name property completely
+            if (typeof cleanupClick === "function") cleanupClick();
+            expect(trigger.style.getPropertyValue("anchor-name")).toBe("");
+            expect(trigger.style.cssText).not.toContain("anchor-name");
+
+            tooltip.remove();
+            menu.remove();
+        });
+
+        test("preserves remaining anchor-name token when the second trigger detaches before the first", () => {
+            const tooltip = createPopover("tip", "manual");
+            const menu = createPopover("menu", "auto");
+
+            const cleanupHover = popoverTrigger({ target: "tip", triggerOn: "hover" })(trigger);
+            const cleanupPointerdown = popoverTrigger({ target: "menu", triggerOn: "pointerdown" })(
+                trigger,
+            );
+
+            expect(trigger.style.getPropertyValue("anchor-name")).toBe("--anchor-tip, --anchor-menu");
+
+            // Detach second trigger first -> first token remains
+            if (typeof cleanupPointerdown === "function") cleanupPointerdown();
+            expect(trigger.style.getPropertyValue("anchor-name")).toBe("--anchor-tip");
+            expect(trigger.hasAttribute("popovertarget")).toBe(false);
+
+            // First trigger still works after second detaches
+            pointerEnter(trigger);
+            vi.advanceTimersByTime(400);
+            expect(tooltip.showPopover).toHaveBeenCalledTimes(1);
+
+            // Detach first trigger last -> anchor-name property is removed completely
+            if (typeof cleanupHover === "function") cleanupHover();
+            expect(trigger.style.getPropertyValue("anchor-name")).toBe("");
+            expect(trigger.style.cssText).not.toContain("anchor-name");
+
+            tooltip.remove();
+            menu.remove();
+        });
+
+        test.each([
+            { label: "element", resolveAnchor: (el: HTMLElement) => el },
+            { label: "getter", resolveAnchor: (el: HTMLElement) => () => el },
+        ])("places anchor-name on anchor $label for pointerdown and hover while keeping events and popovertarget on trigger", ({
+            resolveAnchor,
+        }) => {
+            const container = document.createElement("div");
+            document.body.append(container);
+            const tooltip = createPopover("tip", "manual");
+
+            const cleanupPointerdown = popoverTrigger({
+                target: "pop",
+                triggerOn: "pointerdown",
+                anchor: resolveAnchor(container),
+            })(trigger);
+
+            expect(container.style.getPropertyValue("anchor-name")).toBe("--anchor-pop");
+            expect(trigger.style.getPropertyValue("anchor-name")).toBe("");
+            expect(trigger.getAttribute("popovertarget")).toBe("pop");
+            expect(container.hasAttribute("popovertarget")).toBe(false);
+
+            pointerDown(container);
+            expect(popover.togglePopover).not.toHaveBeenCalled();
+
+            pointerDown(trigger);
+            expect(popover.togglePopover).toHaveBeenCalledTimes(1);
+            expect(popover.togglePopover).toHaveBeenCalledWith({ source: trigger });
+
+            const cleanupHover = popoverTrigger({
+                target: "tip",
+                triggerOn: "hover",
+                anchor: resolveAnchor(container),
+            })(trigger);
+
+            expect(container.style.getPropertyValue("anchor-name")).toBe("--anchor-pop, --anchor-tip");
+            expect(trigger.style.getPropertyValue("anchor-name")).toBe("");
+
+            pointerEnter(container);
+            vi.advanceTimersByTime(400);
+            expect(tooltip.showPopover).not.toHaveBeenCalled();
+
+            pointerEnter(trigger);
+            vi.advanceTimersByTime(400);
+            expect(tooltip.showPopover).toHaveBeenCalledTimes(1);
+            expect(tooltip.showPopover).toHaveBeenCalledWith({ source: trigger });
+
+            // Detaching one trigger removes only its anchor-name from container, leaving sibling intact
+            if (typeof cleanupPointerdown === "function") cleanupPointerdown();
+            expect(container.style.getPropertyValue("anchor-name")).toBe("--anchor-tip");
+            expect(trigger.hasAttribute("popovertarget")).toBe(false);
+
+            if (typeof cleanupHover === "function") cleanupHover();
+            expect(container.style.getPropertyValue("anchor-name")).toBe("");
+            expect(container.style.cssText).not.toContain("anchor-name");
+
+            tooltip.remove();
+            container.remove();
+        });
     });
 
     describe("Manual mode", () => {

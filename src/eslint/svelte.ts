@@ -54,7 +54,7 @@ export const svelteConfig: Linter.Config[] = [
                 {
                     selector: "SvelteConstTag",
                     message:
-                        "The legacy '{@const}' tag is deprecated. Use Svelte 5 '{const ...}' or '{let ...}' declaration tags instead.",
+                        "The legacy '{@const}' tag is deprecated. Use Svelte 5 '{const x = $derived(...)}' (for reactive values), '{let x = $state(...)}' (for mutable state), or plain '{const x = ...}' (for static values evaluated once on mount).",
                 },
             ],
         },

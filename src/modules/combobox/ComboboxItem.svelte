@@ -1,8 +1,8 @@
 <script lang="ts" generics="T extends string = string">
-    import { Check } from "@lucide/svelte";
     import type { Component } from "svelte";
 
     import { extractListboxItemLabel } from "../../shared/listbox/listbox-utils.ts";
+    import { CheckboxMark } from "../checkbox/index.ts";
     import type { ComboboxIconComponentProps, ComboboxItemProps } from "./index.ts";
     import { getComboboxContext, setComboboxItemContext } from "./combobox.context.internal.ts";
 
@@ -146,7 +146,11 @@
 
         {#if !hideIndicator}
             <span class="cs-combobox-item-check cs-listbox-item-check" aria-hidden="true">
-                <Check class="cs-combobox-item-check-icon cs-listbox-item-check-icon" />
+                <CheckboxMark
+                    checked={isSelected}
+                    class="cs-combobox-item-check-icon cs-listbox-item-check-icon"
+                    stroke-width="3"
+                />
             </span>
         {/if}
     </div>

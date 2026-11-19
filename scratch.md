@@ -1,24 +1,30 @@
 ## UI & Polish
 
-- [ x] Fix-Bericht ansehen und beheben
-- kpi übersichtlciher x
-- kpi eslint? x
-- data table basis reviewen testen lassen preview und co
-- excel milestone 0 1 fertig weitermachen
-- workacces zeugs
-- dat table performance
-- data table fitler sotier menu cleaner
-- leer menu cleaner
-- geht auch ohne checkbox
-- cxhcekbox check felht teils
-- status dots und co
-- fußzeile allgemein
-- workspace viel cleaner
+- [x] Docs in App-Layout integrieren (als Gesamtbeispiel und in Work-Docs)
+- [x] Data Table: Basis reviewen, testen lassen (Preview und Co.)
+- [x] Data Table: Performance
+- [x] Data Table: Filter-/Sortier-Menü cleaner
+- [x] Leer-Menü cleaner
+- [x] Unsere `CheckboxMark` im Menü nehmen
+- [x] `ToggleButtonGroup`: Scale ist weird
+- [x] Excel Milestone 0 & 1 fertig, weitermachen
+- [x] Playwright zum Laufen bringen
+- [x] `ToggleButtonGroup`-Bug ist auch bei `SegmentedControl`-Items – fixen mit `will-change: scale`
+- [x] Genau beschreiben, wie Docs zu schreiben sind: per Du, direkter Ton, kurz, prägnant, verständlich, keine unnötigen technischen Details
+- [x] Bug Reaktivität Data Table dokumentieren
+- [x] Fix-Bericht ansehen und beheben
+- [x] KPI übersichtlicher
+- [x] KPI ESLint?
+- [x] Workaccess-Zeugs
+- [x] Geht auch ohne Checkbox
+- [x] Checkbox-Check fehlt teils
+- [x] Status Dots und Co.
+- [x] Fußzeile allgemein
+- [x] Workspace viel cleaner
+- [x] Ordnername muss FS mitgeben
 
 ## Modules
 
-- [x] KPI Cards
-- [x] Virtual Scrolling
 - [ ] Data Table
 - [ ] Animierte Charts
 - [ ] Tablist
@@ -27,6 +33,8 @@
 - [ ] ContextMenu
 - [ ] NLP Parser
 - [ ] Command Palette
+- [x] KPI Cards
+- [x] Virtual Scrolling
 - [x] Dropdown
 - [x] Combobox
 - [x] Select
@@ -46,10 +54,7 @@
 
 ## Work
 
-- [ ] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
-- [ ] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
-- [ ] Filesystem-Chooser / Verwalter-Element
-- [ ] Dokumentationsseite: flexible Bausteine (Factory Pattern)
+- [ ] Animation zwischen MainArea-Switches
 - [ ] KI-Integrationen clean dargestellt
 - [ ] ContentEditable-artiges Element für Platzhalter etc.
 - [ ] EML-Logik: Signaturen
@@ -57,6 +62,10 @@
 - [ ] Allgemeine EML-Logik (eigene Outlook-E-Mail-Logik für Work)
 - [ ] Diff-Component
 - [ ] PDF Viewer
+- [x] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
+- [x] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
+- [x] Filesystem-Chooser / Verwalter-Element
+- [x] Dokumentationsseite: flexible Bausteine (Factory Pattern)
 
 ## Done
 

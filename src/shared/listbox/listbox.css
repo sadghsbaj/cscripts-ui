@@ -157,13 +157,6 @@
             padding-inline-start: calc(var(--cs-listbox-item-px) - 2px);
         }
 
-        &[data-selected] {
-            .cs-listbox-item-check {
-                opacity: 1;
-                scale: 1;
-            }
-        }
-
         @media (hover: hover) {
             .cs-listbox:not([data-nav="keyboard"]) &:hover:not([data-disabled]) {
                 --cs-listbox-item-icon-fg: var(--cs-color-text-main);
@@ -386,17 +379,11 @@
         width: var(--cs-listbox-check-size);
         height: var(--cs-listbox-check-size);
         color: var(--cs-listbox-item-indicator-fg);
-        opacity: 0;
-        scale: 0.75;
-        transition:
-            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
-            scale var(--cs-dur-effect-fast) var(--cs-ease-quart-out);
         pointer-events: none;
 
         > .cs-listbox-item-check-icon {
             width: 100%;
             height: 100%;
-            stroke-width: 2.5;
         }
     }
 

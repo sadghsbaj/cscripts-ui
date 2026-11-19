@@ -372,7 +372,7 @@ ${closeScript}
                 <ScrollAreaContent {@attach basicVirtual.attachViewport}>
                     <div {@attach basicVirtual.attachList} class="flex flex-col gap-1.5 p-2" role="list">
                         {#each basicVirtual.items as item (item.key)}
-                            {const entry = basicItems[item.index]}
+                            {const entry = $derived(basicItems[item.index])}
                             {#if entry}
                                 <div
                                     {@attach basicVirtual.attachItem(item.index)}
@@ -410,9 +410,9 @@ ${closeScript}
             <ScrollAreaContent {@attach scrollAreaVirtual.attachViewport}>
                 <ul {@attach scrollAreaVirtual.attachList} class="flex flex-col gap-2 p-3" role="list">
                     {#each scrollAreaVirtual.items as item (item.key)}
-                        {const msg = activityItems[item.index]}
+                        {const msg = $derived(activityItems[item.index])}
                         {#if msg}
-                            {const isOpen = Boolean(expandedIds[msg.id])}
+                            {const isOpen = $derived(Boolean(expandedIds[msg.id]))}
                             <li
                                 {@attach scrollAreaVirtual.attachItem(item.index)}
                                 {...scrollAreaVirtual.getItemAriaProps(item.index)}
@@ -468,7 +468,7 @@ ${closeScript}
                             </tr>
                         {/if}
                         {#each tableVirtual.items as item (item.key)}
-                            {const row = tableRows[item.index]}
+                            {const row = $derived(tableRows[item.index])}
                             {#if row}
                                 <tr
                                     {@attach tableVirtual.attachItem(item.index)}
@@ -523,7 +523,7 @@ ${closeScript}
                         style="grid-template-columns: repeat({numericLanes}, minmax(0, 1fr));"
                     >
                         {#each gridVirtual.items as item (item.key)}
-                            {const asset = assetItems[item.index]}
+                            {const asset = $derived(assetItems[item.index])}
                             {#if asset}
                                 <div
                                     {@attach gridVirtual.attachItem(item.index)}
@@ -555,7 +555,7 @@ ${closeScript}
             <ScrollAreaContent {@attach horizontalVirtual.attachViewport}>
                 <div {@attach horizontalVirtual.attachList} class="flex items-stretch gap-3 p-3" role="list">
                     {#each horizontalVirtual.items as item (item.key)}
-                        {const card = horizontalItems[item.index]}
+                        {const card = $derived(horizontalItems[item.index])}
                         {#if card}
                             <div
                                 {@attach horizontalVirtual.attachItem(item.index)}

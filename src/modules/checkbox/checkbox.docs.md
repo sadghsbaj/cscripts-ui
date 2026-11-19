@@ -4,11 +4,13 @@ kind: component
 import: cs/svelte/checkbox
 exports:
   - Checkbox
+  - CheckboxMark
   - CHECKBOX_VARIANTS
   - CHECKBOX_SIZES
   - CheckboxVariant
   - CheckboxSize
   - CheckboxProps
+  - CheckboxMarkProps
 ---
 
 # Checkbox
@@ -31,6 +33,15 @@ Extends `Omit<HTMLInputAttributes, "size" | "type">`.
 | `onIndeterminateChange` | `(indeterminate: boolean) => void` | No | `undefined` | Fires with the next `indeterminate` state after `onchange` only when `indeterminate` changes. |
 | `invalid` | `boolean` | No | `undefined` | Sets `aria-invalid="true"` and applies negative ring/fill styling. |
 | `ref` | `HTMLInputElement \| null` | No | `null` | `$bindable` reference to the `<input>` element. |
+
+### `CheckboxMark` Props
+Extends `Omit<SVGAttributes<SVGSVGElement>, "children">`. Renders the standalone animated SVG checkmark/indeterminate dash icon used by `Checkbox` for custom indicator compositions.
+
+| Prop | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `checked` | `boolean` | No | `false` | Renders the checked checkmark path. |
+| `indeterminate` | `boolean` | No | `false` | Renders the horizontal indeterminate dash (takes precedence when morphing between indeterminate and checked). |
+| `ref` | `SVGSVGElement \| null` | No | `null` | `$bindable` reference to the `<svg>` element. |
 
 ### `data-*` Attributes
 - `data-variant={variant}`
