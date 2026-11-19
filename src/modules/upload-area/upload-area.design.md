@@ -42,19 +42,22 @@
 
 `size` is a **required prop** (`"sm" | "md" | "lg"`), matching `Card` and `SurfaceSize` so `UploadArea` participates in `createSurfaceRadius` concentric nesting (`[data-nested]`):
 
-| Token / Metric | `sm` *(Compact / Form Row)* | `md` *(Balanced Default)* | `lg` *(Spacious / Standalone)* |
+| Token / Metric | `sm` *(Compact Stacked)* | `md` *(Balanced Default)* | `lg` *(Spacious / Standalone)* |
 | :--- | :--- | :--- | :--- |
-| `--cs-upload-area-min-height` | `96px` | `136px` | `180px` |
-| `--cs-upload-area-py` | `14px` | `20px` | `28px` |
-| `--cs-upload-area-px` | `16px` | `24px` | `32px` |
-| `--cs-upload-area-gap` | `8px` | `10px` | `12px` |
+| Dropzone layout | `column` (stacked, centered) | `column` (stacked, centered) | `column` (stacked, centered) |
+| `--cs-upload-area-min-height` | `104px` | `140px` | `184px` |
+| `--cs-upload-area-py` | `18px` | `24px` | `32px` |
+| `--cs-upload-area-px` | `18px` | `24px` | `32px` |
+| `--cs-upload-area-gap` *(icon → copy)* | `8px` | `12px` | `14px` |
+| `--cs-upload-area-copy-gap` *(title → hint)* | `2px` | `4px` | `4px` |
 | `--cs-upload-area-radius` *(standalone)* | `var(--cs-radius-2xl)` (`16px`) | `var(--cs-radius-3xl)` (`24px`) | `28px` |
 | `--cs-upload-area-squircle` *(standalone)* | `var(--cs-squircle)` | `var(--cs-squircle)` | `var(--cs-squircle)` |
-| `--cs-upload-area-icon-size` | `20px` | `24px` | `28px` |
-| `--cs-upload-area-title-size` | `var(--cs-text-xs)` (`12px`) | `var(--cs-text-sm)` (`14px`) | `var(--cs-text-base)` (`16px`) |
-| `--cs-upload-area-title-lh` | `16px` | `20px` | `22px` |
-| `--cs-upload-area-hint-size` | `11px` | `var(--cs-text-xs)` (`12px`) | `var(--cs-text-sm)` (`14px`) |
-| `--cs-upload-area-hint-lh` | `16px` | `16px` | `20px` |
+| `--cs-upload-area-icon-size` | `18px` (`strokeWidth: 2`) | `22px` (`strokeWidth: 1.75`) | `26px` (`strokeWidth: 1.75`) |
+| `--cs-upload-area-font-size` *(title)* | `var(--cs-text-sm)` (`14px`) | `var(--cs-text-sm)` (`14px`) | `var(--cs-text-base)` (`16px`) |
+| `--cs-upload-area-title-lh` | `20px` | `20px` | `22px` |
+| `--cs-upload-area-title-tracking` | `-0.006em` | `-0.006em` | `-0.011em` |
+| `--cs-upload-area-description-size` | `var(--cs-text-xs)` (`12px`) | `var(--cs-text-xs)` (`12px`) | `var(--cs-text-xs)` (`12px`) |
+| `--cs-upload-area-description-lh` | `16px` | `16px` | `16px` |
 | Paired `Progress` `size` | `xs` (`4px`) | `sm` (`6px`) | `sm` (`6px`) |
 | Paired action `Button` `size` | `xs` | `xs` | `sm` |
 
@@ -62,25 +65,28 @@
 
 - When placed inside a `Card` or `KpiCard`, `createSurfaceRadius(() => size)` sets `data-nested=""` and `--cs-upload-area-nested-radius` (`8px`–`12px`), stepping `corner-shape` down to `var(--cs-squircle-smooth)` (`1.6`).
 
-### Optical Alignment & Icon Calibration
+### Optical Alignment & Inner Layout Rhythm
 
-- **Bare icon, no wrapper badge:** Use a single Lucide upload icon (`stroke-width: 2` at `sm`/`md`, `1.75` at `lg` so `28px` stays refined rather than chunky) in `--cs-color-text-weak` at rest → `--cs-color-text-strong` on hover → `--cs-color-accent-soft-fg` on `[data-dragging]`.
-- **Optical vertical centering:** Because the icon sits above two text lines, `--cs-upload-area-py` is symmetric while the `2px` internal viewBox padding of Lucide icons naturally gives the top edge a subtle optical lift.
+- **Centered Stacked Layout (`sm` / `md` / `lg`):**
+  - All sizes stack vertically (`flex-direction: column; align-items: center; justify-content: center; text-align: center`) with `.cs-upload-area-copy` constrained to `max-width: min(36ch, 100%)` so long descriptions wrap into a balanced measure rather than spanning edge-to-edge.
+  - `sm` keeps a compact stacked footprint (`min-height: 104px`, `py: 18px`, `px: 18px`, `gap: 8px`, `copy-gap: 2px`) with an `18px` icon centered above the text, while `md` (`140px`) and `lg` (`184px`) open up vertical breathing room.
+- **Gestalt Grouping:** Keeping `--cs-upload-area-copy-gap` tight (`2px` at `sm`, `4px` at `md`/`lg`) while separating the icon by `--cs-upload-area-gap` (`8px`–`14px`) clearly groups the title and hint into one typographic unit.
+- **Bare Icon Calibration:** Use a single Lucide `Upload` icon (`strokeWidth: 1.75` at `md`/`lg` so `22px`–`26px` stays crisp and architectural; `2` at `sm` for `18px` legibility) in `--cs-color-text-weak` at rest → `--cs-color-text-strong` on hover → `--cs-color-accent-soft-fg` on `[data-dragging]`.
 
 ---
 
 ## 4. Short Copy & Information Hierarchy
 
-Keep copy scannable at a glance with zero technical jargon and no hyphens/dashes as separators:
+Keep copy calm, monochrome, and scannable at a glance—with zero fake hyperlink blue spans, zero technical jargon, and no hyphens/dashes as separators:
 
 - **Primary line (`.cs-upload-area-title`):**
-  - Idle: `"Drop file here or browse"` (or `"Drop files here or browse"` when `multiple`).
-  - Styling: `font-weight: 500`, `color: var(--cs-color-text-strong)`. Highlighting the inline `"browse"` span in `var(--cs-color-accent-soft-fg)` signals clickability without nesting a second `<button>` inside the clickable `<label>` / trigger.
+  - Idle: `"Drop file or browse"` / `"Datei ablegen oder auswählen"` (or `"Drop files or browse"` / `"Dateien ablegen oder auswählen"` when `multiple`).
+  - Styling: `font-weight: 500`, `letter-spacing: var(--cs-upload-area-title-tracking)`, uniform `color: var(--cs-upload-area-fg)` (`var(--cs-color-text-strong)`). **No inline `.cs-upload-area-browse` accent-blue span**—the entire dropzone surface is the interactive button and communicates clickability through its hover surface shift.
 - **Secondary line (`.cs-upload-area-hint`):**
   - Idle: `"PDF, PNG · max 10 MB"` (middots `·`, never hyphens `-` or parentheses).
-  - Styling: `font-weight: 400`, `color: var(--cs-color-text-weak)`, `font-variant-numeric: tabular-nums`.
+  - Styling: `font-weight: 400`, `color: var(--cs-upload-area-description-fg)` (`var(--cs-color-text-weak)`), `font-variant-numeric: tabular-nums`.
 - **Drag-over copy shift (zero layout jump):**
-  - On `[data-dragging]`, primary copy swaps to `"Drop to upload"` (single line, identical `line-height` and `font-size`) in `--cs-color-accent-soft-fg`, while `.cs-upload-area-hint` stays visible at `opacity: 0.75` so the dropzone height never twitches by a single pixel.
+  - On `[data-dragging]`, primary copy swaps to `"Drop to upload"` / `"Zum Hochladen ablegen"` (single line, identical `line-height` and `font-size`) in `--cs-color-accent-soft-fg`, while `.cs-upload-area-hint` stays visible at `opacity: 0.75` so the dropzone height never twitches by a single pixel.
 
 ---
 
@@ -113,7 +119,7 @@ Keep copy scannable at a glance with zero technical jargon and no hyphens/dashes
 | State | Surface (`bg`) | `::after` Ring | Icon & Text |
 | :--- | :--- | :--- | :--- |
 | **Idle** | Variant `--cs-upload-area-bg` | `none` | `--cs-color-text-weak` icon, `--cs-color-text-strong` title |
-| **Hover** | Variant hover (`base-soft-hover` / `elevated-hover`) | `none` | Icon lifts to `--cs-color-text-main` |
+| **Hover** | Variant hover (`base-soft-hover` / `elevated-hover`) | `none` | Icon lifts to `--cs-color-text-strong` |
 | **Dragging (`[data-dragging]`)** | `var(--cs-color-accent-soft)` | `inset 0 0 0 2px var(--cs-color-accent-solid)` | Icon & title in `--cs-color-accent-soft-fg`; icon lifts `translateY(-2px) scale(1.06)` |
 | **Uploading (`[data-status="uploading"]`)** | Variant `--cs-upload-area-bg` | `none` | Filename (`min-w-0 truncate`), tabular `%` via `<TextMorph tabular />`, `<Progress color="accent" />`, `Cancel` ghost button |
 | **Done (`[data-status="done"]`)** | Variant `--cs-upload-area-bg` | `none` | Single-file: calm `Check` icon (`--cs-color-positive-soft-fg`), filename + size, `Remove` ghost button. Multi-file: dropzone stays ready; compact `divide-y` list below |
@@ -132,3 +138,13 @@ Keep copy scannable at a glance with zero technical jargon and no hyphens/dashes
   - Open: `var(--cs-dur-enter-sm)` (`260ms`) `var(--cs-ease-enter)`.
   - Collapse (on completion or reset): `var(--cs-dur-exit-sm)` (`100ms`) `var(--cs-ease-exit)`.
 - **Status / Copy Transitions:** Numeric percentages and status labels (`"42%"` → `"Complete"` / `"Upload failed"`) use `<TextMorph tabular />` for zero-jitter horizontal alignment.
+
+---
+
+## 7. Preview Stage Calibration (`UploadArea.preview.svelte`)
+
+`PreviewSection.svelte` renders its stage on `bg-elevated shadow-elevated`. Placing `UploadArea variant="elevated"` directly inside `PreviewSection` creates elevated-on-elevated white-on-white (or double-rimmed dark mode) layering.
+
+- **Canvas stage for `elevated`:** Mirror `Card.preview.svelte` by wrapping every `variant="elevated"` preview instance (both in `Variants` and the disabled `variant="elevated"` example in `States`) inside a dedicated `--cs-color-canvas` stage container:
+  `rounded-2xl squircle-soft bg-canvas p-6` (with `border border-transparent`).
+- **Keep `soft` & `sunken` on their natural surfaces:** `variant="soft"` sits directly on the `PreviewSection` `bg-elevated` stage; `variant="sunken"` sits inside `<Card variant="elevated">`.

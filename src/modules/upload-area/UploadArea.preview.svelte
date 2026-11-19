@@ -5,6 +5,7 @@
 
 <script lang="ts">
     import { onDestroy } from "svelte";
+    import { SvelteMap } from "svelte/reactivity";
     import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "cs/svelte/card";
     import {
         UPLOAD_AREA_SIZES,
@@ -42,7 +43,7 @@
         },
     ]);
 
-    const timers = new Map<string, ReturnType<typeof setInterval>>();
+    const timers = new SvelteMap<string, ReturnType<typeof setInterval>>();
 
     function startSimulatedUpload(itemId: string, startProgress = 0): void {
         const existingTimer = timers.get(itemId);
@@ -141,7 +142,7 @@ ${closeScript}
     variant="soft"
     size="md"
     bind:files
-    description="PDF, PNG, or JPG · max 5 MB"
+    description="PDF, PNG, or JPG up to 5 MB"
 />`;
 
     const variantsCode = `<UploadArea variant="soft" size="md" description="SVG, PNG, or PDF" />
@@ -159,8 +160,8 @@ ${closeScript}
 </Card>`;
 
     const sizesCode = `<UploadArea variant="soft" size="sm" description="Max 5 MB" />
-<UploadArea variant="soft" size="md" description="PDF, PNG · max 5 MB" />
-<UploadArea variant="soft" size="lg" description="PDF, PNG, or SVG · max 10 MB" />`;
+<UploadArea variant="soft" size="md" description="PDF or PNG, max 5 MB" />
+<UploadArea variant="soft" size="lg" description="PDF, PNG, or SVG, max 10 MB" />`;
 
     const modesCode = `<UploadArea
     variant="soft"
@@ -168,7 +169,7 @@ ${closeScript}
     bind:files={avatarFiles}
     accept="image/png,image/jpeg,application/pdf"
     maxSize={5 * 1024 * 1024}
-    description="Single file · PNG, JPG, PDF · max 5 MB"
+    description="Single file, max 5 MB"
 />
 
 <UploadArea
@@ -179,7 +180,7 @@ ${closeScript}
     accept="image/*,.pdf"
     maxSize={5 * 1024 * 1024}
     maxFiles={4}
-    description="Up to 4 files · max 5 MB each"
+    description="Up to 4 files, max 5 MB each"
 />`;
 
     const asyncCode = `<UploadArea
@@ -199,7 +200,7 @@ ${closeScript}
     size="md"
     invalid
     error="File exceeds 5 MB"
-    description="PDF or PNG · max 5 MB"
+    description="PDF or PNG, max 5 MB"
 />
 
 <UploadArea variant="soft" size="md" disabled description="Uploads locked" />
@@ -219,7 +220,7 @@ ${closeScript}
                 variant="soft"
                 size="md"
                 bind:files={basicFiles}
-                description="PDF, PNG, or JPG · max 5 MB"
+                description="PDF, PNG, or JPG up to 5 MB"
             />
         </div>
     </PreviewSection>
@@ -229,20 +230,22 @@ ${closeScript}
         description="Use soft everywhere, elevated on canvas, and sunken inside elevated cards."
         code={variantsCode}
     >
-        <div class="grid w-full max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="grid w-full max-w-3xl grid-cols-1 items-center gap-6 md:grid-cols-2">
             <UploadArea
                 variant="soft"
                 size="md"
                 label="Attach invoice"
-                description="PDF · max 5 MB"
+                description="PDF up to 5 MB"
             />
 
-            <UploadArea
-                variant="elevated"
-                size="md"
-                label="Upload cover image"
-                description="PNG or JPG · max 10 MB"
-            />
+            <div class="rounded-2xl squircle-soft bg-canvas p-6 border border-transparent">
+                <UploadArea
+                    variant="elevated"
+                    size="md"
+                    label="Upload cover image"
+                    description="PNG or JPG up to 10 MB"
+                />
+            </div>
 
             <div class="md:col-span-2">
                 <Card variant="elevated" size="md">
@@ -254,7 +257,7 @@ ${closeScript}
                         <UploadArea
                             variant="sunken"
                             size="md"
-                            description="SVG, PNG, or PDF · max 10 MB"
+                            description="SVG, PNG, or PDF up to 10 MB"
                         />
                     </CardBody>
                 </Card>
@@ -272,7 +275,7 @@ ${closeScript}
                 <UploadArea
                     variant="soft"
                     {size}
-                    description={size === "sm" ? "Max 5 MB" : "PDF, PNG, or SVG · max 10 MB"}
+                    description={size === "sm" ? "Max 5 MB" : "PDF, PNG, or SVG up to 10 MB"}
                 />
             {/each}
         </div>
@@ -290,7 +293,7 @@ ${closeScript}
                 bind:files={singleFiles}
                 accept="image/png,image/jpeg,application/pdf"
                 maxSize={5 * 1024 * 1024}
-                description="Single file · PNG, JPG, PDF · max 5 MB"
+                description="Single file, max 5 MB"
             />
 
             <UploadArea
@@ -301,7 +304,7 @@ ${closeScript}
                 accept="image/*,.pdf"
                 maxSize={5 * 1024 * 1024}
                 maxFiles={4}
-                description="Up to 4 files · max 5 MB each"
+                description="Up to 4 files, max 5 MB each"
             />
         </div>
     </PreviewSection>
@@ -332,14 +335,14 @@ ${closeScript}
         description="Validation errors and disabled surfaces across variants."
         code={statesCode}
     >
-        <div class="grid w-full max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="grid w-full max-w-3xl grid-cols-1 items-center gap-6 md:grid-cols-2">
             <div class="md:col-span-2">
                 <UploadArea
                     variant="soft"
                     size="md"
                     invalid
                     error="File exceeds 5 MB"
-                    description="PDF or PNG · max 5 MB"
+                    description="PDF or PNG, max 5 MB"
                 />
             </div>
 
@@ -350,12 +353,14 @@ ${closeScript}
                 description="Uploads locked"
             />
 
-            <UploadArea
-                variant="elevated"
-                size="md"
-                disabled
-                description="Uploads locked"
-            />
+            <div class="rounded-2xl squircle-soft bg-canvas p-6 border border-transparent">
+                <UploadArea
+                    variant="elevated"
+                    size="md"
+                    disabled
+                    description="Uploads locked"
+                />
+            </div>
         </div>
     </PreviewSection>
 </div>

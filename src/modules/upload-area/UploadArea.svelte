@@ -83,7 +83,7 @@
 
     const progressSize = $derived(size === "sm" ? "xs" : "sm");
     const actionButtonSize = $derived(size === "lg" ? "sm" : "xs");
-    const iconStrokeWidth = $derived(size === "lg" ? 1.75 : 2);
+    const iconStrokeWidth = $derived(size === "sm" ? 2 : 1.75);
     const canRemove = $derived(items === undefined || onRemove !== undefined);
 
     function syncInputFiles(nextFiles: File[]): void {
@@ -377,13 +377,9 @@
                             {:else if label}
                                 {label}
                             {:else if multiple}
-                                {t({ de: "Dateien hierher ziehen oder ", en: "Drop files here or " })}<span
-                                    class="cs-upload-area-browse"
-                                >{t({ de: "auswählen", en: "browse" })}</span>
+                                {t({ de: "Dateien ablegen oder auswählen", en: "Drop files or browse" })}
                             {:else}
-                                {t({ de: "Datei hierher ziehen oder ", en: "Drop file here or " })}<span
-                                    class="cs-upload-area-browse"
-                                >{t({ de: "auswählen", en: "browse" })}</span>
+                                {t({ de: "Datei ablegen oder auswählen", en: "Drop file or browse" })}
                             {/if}
                         </span>
                         {#if description}
@@ -534,45 +530,51 @@
              * SIZES (sm - lg)
              * ========================================================= */
             &[data-size="sm"] {
-                --cs-upload-area-min-height: 96px;
-                --cs-upload-area-py: 14px;
-                --cs-upload-area-px: 16px;
+                --cs-upload-area-min-height: 104px;
+                --cs-upload-area-py: 18px;
+                --cs-upload-area-px: 18px;
                 --cs-upload-area-gap: 8px;
+                --cs-upload-area-copy-gap: 2px;
                 --cs-upload-area-radius: var(--cs-radius-2xl);
                 --cs-upload-area-squircle: var(--cs-squircle);
-                --cs-upload-area-icon-size: 20px;
-                --cs-upload-area-font-size: var(--cs-text-xs);
-                --cs-upload-area-title-lh: 16px;
-                --cs-upload-area-description-size: 11px;
+                --cs-upload-area-icon-size: 18px;
+                --cs-upload-area-font-size: var(--cs-text-sm);
+                --cs-upload-area-title-lh: 20px;
+                --cs-upload-area-title-tracking: -0.006em;
+                --cs-upload-area-description-size: var(--cs-text-xs);
                 --cs-upload-area-description-lh: 16px;
             }
 
             &[data-size="md"] {
-                --cs-upload-area-min-height: 136px;
-                --cs-upload-area-py: 20px;
+                --cs-upload-area-min-height: 140px;
+                --cs-upload-area-py: 24px;
                 --cs-upload-area-px: 24px;
-                --cs-upload-area-gap: 10px;
+                --cs-upload-area-gap: 12px;
+                --cs-upload-area-copy-gap: 4px;
                 --cs-upload-area-radius: var(--cs-radius-3xl);
                 --cs-upload-area-squircle: var(--cs-squircle);
-                --cs-upload-area-icon-size: 24px;
+                --cs-upload-area-icon-size: 22px;
                 --cs-upload-area-font-size: var(--cs-text-sm);
                 --cs-upload-area-title-lh: 20px;
+                --cs-upload-area-title-tracking: -0.006em;
                 --cs-upload-area-description-size: var(--cs-text-xs);
                 --cs-upload-area-description-lh: 16px;
             }
 
             &[data-size="lg"] {
-                --cs-upload-area-min-height: 180px;
-                --cs-upload-area-py: 28px;
+                --cs-upload-area-min-height: 184px;
+                --cs-upload-area-py: 32px;
                 --cs-upload-area-px: 32px;
-                --cs-upload-area-gap: 12px;
+                --cs-upload-area-gap: 14px;
+                --cs-upload-area-copy-gap: 4px;
                 --cs-upload-area-radius: 28px;
                 --cs-upload-area-squircle: var(--cs-squircle);
-                --cs-upload-area-icon-size: 28px;
+                --cs-upload-area-icon-size: 26px;
                 --cs-upload-area-font-size: var(--cs-text-base);
                 --cs-upload-area-title-lh: 22px;
-                --cs-upload-area-description-size: var(--cs-text-sm);
-                --cs-upload-area-description-lh: 20px;
+                --cs-upload-area-title-tracking: -0.011em;
+                --cs-upload-area-description-size: var(--cs-text-xs);
+                --cs-upload-area-description-lh: 16px;
             }
 
             &[data-nested] {
@@ -699,7 +701,7 @@
                 .cs-upload-area:not([data-disabled]) &:has(> .cs-upload-area-dropzone):hover {
                     background-color: var(--cs-upload-area-bg-hover);
                     box-shadow: var(--cs-upload-area-shadow-hover);
-                    --cs-upload-area-icon-fg: var(--cs-color-text-main);
+                    --cs-upload-area-icon-fg: var(--cs-color-text-strong);
                 }
             }
 
@@ -732,6 +734,7 @@
 
         .cs-upload-area-icon {
             display: inline-flex;
+            flex-shrink: 0;
             align-items: center;
             justify-content: center;
             color: var(--cs-upload-area-icon-fg);
@@ -756,24 +759,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
-            max-width: 100%;
+            gap: var(--cs-upload-area-copy-gap);
+            max-width: min(36ch, 100%);
         }
 
         .cs-upload-area-title {
             font-size: var(--cs-upload-area-font-size);
             font-weight: 500;
             line-height: var(--cs-upload-area-title-lh);
+            letter-spacing: var(--cs-upload-area-title-tracking);
             color: var(--cs-upload-area-fg);
             transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
-        }
-
-        .cs-upload-area-browse {
-            color: var(--cs-color-accent-soft-fg);
-
-            .cs-upload-area[data-disabled] & {
-                color: var(--cs-color-disabled-fg);
-            }
         }
 
         .cs-upload-area-hint {
