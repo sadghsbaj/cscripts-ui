@@ -4161,7 +4161,7 @@ export function createPatchSession(baseBytes: Uint8Array | ArrayBuffer, options?
                     resolvedStyleIndices = appended.styleIndices;
                 } else {
                     const appended = appendStylesToStylesXml("", styleBatch, { themeColors });
-                    const stylesPath = "xl/styles.xml";
+                    const stylesPath = resolvePackageTarget(workbookEntry.path, "styles.xml");
                     entriesCopy[stylesPath] = encodeUtf8(appended.xml);
                     resolvedStyleIndices = appended.styleIndices;
                     if (wbRelsEntry) {
@@ -4185,7 +4185,7 @@ export function createPatchSession(baseBytes: Uint8Array | ArrayBuffer, options?
                     const ctEntry = findPackageEntry(entriesCopy, "[Content_Types].xml");
                     if (ctEntry) {
                         entriesCopy[ctEntry.path] = encodeUtf8(
-                            ensureContentTypeOverride(decodeUtf8(ctEntry.bytes), stylesPath, STYLES_CT)
+                            ensureContentTypeOverride(decodeUtf8(ctEntry.bytes), `/${stylesPath}`, STYLES_CT)
                         );
                     }
                 }

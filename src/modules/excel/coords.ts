@@ -234,6 +234,28 @@ export function translateFormulaRefs(
 	let i = 0;
 	while (i < expression.length) {
 		const ch = expression[i];
+		if (bracketDepth > 0) {
+			if (ch === "'" && i + 1 < expression.length) {
+				out += expression.slice(i, i + 2);
+				i += 2;
+				continue;
+			}
+			if (ch === "[") {
+				bracketDepth += 1;
+				out += ch;
+				i += 1;
+				continue;
+			}
+			if (ch === "]") {
+				bracketDepth -= 1;
+				out += ch;
+				i += 1;
+				continue;
+			}
+			out += ch ?? "";
+			i += 1;
+			continue;
+		}
 		if (ch === '"' || ch === "'") {
 			const end = scanQuotedLiteral(expression, i, ch);
 			out += expression.slice(i, end);
@@ -247,15 +269,7 @@ export function translateFormulaRefs(
 			continue;
 		}
 		if (ch === "]") {
-			if (bracketDepth > 0) {
-				bracketDepth -= 1;
-			}
 			out += ch;
-			i += 1;
-			continue;
-		}
-		if (bracketDepth > 0) {
-			out += ch ?? "";
 			i += 1;
 			continue;
 		}

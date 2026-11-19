@@ -283,6 +283,13 @@ describe("translateFormulaRefs", () => {
 		);
 	});
 
+	it("handles Excel single-quote escapes inside structured-reference [...] brackets", () => {
+		expect(translateFormulaRefs("Table1[Col ']] + A1", 1, 2)).toBe("Table1[Col ']] + B3");
+		expect(translateFormulaRefs("Table1[Col ']A1] + B2", 1, 1)).toBe("Table1[Col ']A1] + C3");
+		expect(translateFormulaRefs("Table1[Foo '[Bar] + B2", 1, 1)).toBe("Table1[Foo '[Bar] + C3");
+		expect(translateFormulaRefs("Table1[Col ''] + A1", 1, 1)).toBe("Table1[Col ''] + B2");
+	});
+
 	it("replaces out-of-bounds translated references with #REF!", () => {
 		expect(translateFormulaRefs("A1+B2+$A3+A$1", -1, 0)).toBe("#REF!+A2+$A3+#REF!");
 		expect(translateFormulaRefs("B1+$B$1+B$2", 0, -1)).toBe("#REF!+$B$1+B$2");
