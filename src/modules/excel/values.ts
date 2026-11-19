@@ -15,7 +15,7 @@ export const EXCEL_ERROR_TOKENS = [
 
 const EXCEL_ERROR_TOKEN_SET: ReadonlySet<string> = new Set(EXCEL_ERROR_TOKENS);
 
-const NBSP_RE = /\u{00A0}/gu;
+const NBSP_RE = /[\u{00A0}\u{202F}]/gu;
 const ZERO_WIDTH_RE = /[\u{200B}-\u{200D}\u{FEFF}]/gu;
 const LINE_ENDING_RE = /\r\n|\r/g;
 
@@ -264,7 +264,7 @@ function isDateTimeFormat(pattern: string): boolean {
 	if (unquoted.includes("#") || unquoted.includes("%")) {
 		return false;
 	}
-	return /[ydhs]|am\/pm|a\/p|\[(?:hh?|mm?|ss?)\]/i.test(unquoted);
+	return /[ydhs]|mmm+|am\/pm|a\/p|\[(?:hh?|mm?|ss?)\]/i.test(unquoted);
 }
 
 function extractLiteralText(pattern: string): string {
@@ -542,14 +542,20 @@ function formatNumericWithPattern(
 	const fracPart = dotIdx === -1 ? "" : coreWithoutTrailingCommas.slice(dotIdx + 1);
 
 	const useGrouping = intPart.includes(",");
-	const minFractionDigits = (fracPart.match(/0/g) ?? []).length;
+	const intZeroCount = (intPart.match(/0/g) ?? []).length;
+	const minimumIntegerDigits = Math.max(1, Math.min(21, intZeroCount));
 	const maxFractionDigits = Math.min(20, (fracPart.match(/[0#?]/g) ?? []).length);
+	const minFractionDigits = Math.min(
+		maxFractionDigits,
+		(fracPart.match(/0/g) ?? []).length,
+	);
 
 	const isNegative = value < 0;
 	const absFormatted = new Intl.NumberFormat(locale, {
 		useGrouping,
+		minimumIntegerDigits,
 		minimumFractionDigits: minFractionDigits,
-		maximumFractionDigits: Math.max(minFractionDigits, maxFractionDigits),
+		maximumFractionDigits: maxFractionDigits,
 	}).format(Math.abs(value));
 
 	if (currencyOverride !== undefined) {
@@ -726,6 +732,8 @@ const DOT_THOUSANDS_RE = /^[+-]?[1-9]\d{0,2}(\.\d{3})+$/;
 const COMMA_THOUSANDS_MULTI_RE = /^[+-]?[1-9]\d{0,2}(,\d{3}){2,}$/;
 const DOT_THOUSANDS_BEFORE_COMMA_RE = /^[+-]?\d{1,3}(\.\d{3})*,\d+$/;
 const COMMA_THOUSANDS_BEFORE_DOT_RE = /^[+-]?\d{1,3}(,\d{3})*\.\d+$/;
+const SPACE_GROUPED_RE = /^[+-]?[1-9]\d{0,2}( \d{3})+(?:[.,]\d+)?$/;
+const APOSTROPHE_GROUPED_RE = /^[+-]?[1-9]\d{0,2}(['\u{2019}]\d{3})+(?:[.,]\d+)?$/u;
 const PLAIN_NUMBER_RE = /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/;
 
 function applyPercentageMode(
@@ -808,6 +816,22 @@ export function parseLocaleNumber(
 
 	if (SCIENTIFIC_RE.test(text)) {
 		const parsed = Number(text.replace(",", "."));
+		if (!Number.isFinite(parsed)) {
+			return null;
+		}
+		const signed = isAccountingNegative ? -parsed : parsed;
+		return applyPercentageMode(signed, hasPercent, percentageMode);
+	}
+
+	if (text.includes(" ") || text.includes("'") || text.includes("\u{2019}")) {
+		if (!SPACE_GROUPED_RE.test(text) && !APOSTROPHE_GROUPED_RE.test(text)) {
+			return null;
+		}
+		const stripped = text.replaceAll(/[ '\u{2019}]/gu, "").replace(",", ".");
+		if (!PLAIN_NUMBER_RE.test(stripped)) {
+			return null;
+		}
+		const parsed = Number(stripped);
 		if (!Number.isFinite(parsed)) {
 			return null;
 		}

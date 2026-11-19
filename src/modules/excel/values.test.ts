@@ -79,6 +79,7 @@ describe("normalizeCellText", () => {
 			"A\u{00A0}\u{200B}B\nC",
 		);
 		expect(normalizeCellText("A\r\nB", { normalizeLineEndings: false })).toBe("A\r\nB");
+		expect(normalizeCellText("12\u{202F}345")).toBe("12 345");
 		expect(normalizeCellText(null)).toBe("");
 		expect(normalizeCellText(undefined)).toBe("");
 	});
@@ -100,6 +101,15 @@ describe("parseLocaleNumber", () => {
 		expect(parseLocaleNumber("70.000,00")).toBe(70_000);
 		expect(parseLocaleNumber("70,000.00")).toBe(70_000);
 		expect(parseLocaleNumber("1,234,567")).toBe(1_234_567);
+
+		expect(parseLocaleNumber("12 345")).toBe(12_345);
+		expect(parseLocaleNumber("12 345,67")).toBe(12_345.67);
+		expect(parseLocaleNumber("12 345.67")).toBe(12_345.67);
+		expect(parseLocaleNumber("12\u{00A0}345,67")).toBe(12_345.67);
+		expect(parseLocaleNumber("12\u{202F}345,67")).toBe(12_345.67);
+		expect(parseLocaleNumber("(70 000,00 €)")).toBe(-70_000);
+		expect(parseLocaleNumber("12'345.67")).toBe(12_345.67);
+		expect(parseLocaleNumber("1'234'567,89")).toBe(1_234_567.89);
 
 		expect(parseLocaleNumber("(70.000,00 €)")).toBe(-70_000);
 		expect(parseLocaleNumber("- 70.000,00 €")).toBe(-70_000);
@@ -129,6 +139,8 @@ describe("parseLocaleNumber", () => {
 			"(-10)",
 			"1.23.456",
 			"70.00,00",
+			"12 34",
+			"1 2345",
 			"--€42.50",
 			"-€-42.50",
 			"(-€42.50)",
@@ -369,5 +381,17 @@ describe("formatCellDisplay", () => {
 			"-6:00:00",
 		);
 		expect(formatCellDisplay(-0.25, { numFmt: "[h]:mm:ss" })).toBe("-0.25");
+	});
+
+	it("supports minimumIntegerDigits, clamps >20 fractional zeros without RangeError, and formats month-only date patterns", () => {
+		expect(formatCellDisplay(42, { numFmt: "00000" })).toBe("00042");
+		expect(formatCellDisplay(-42, { numFmt: "00000" })).toBe("-00042");
+
+		const longFractionFmt = `0.${"0".repeat(25)}`;
+		expect(() => formatCellDisplay(1.5, { numFmt: longFractionFmt })).not.toThrow();
+		expect(formatCellDisplay(1.5, { numFmt: longFractionFmt })).toMatch(/^1\.50+$/);
+
+		expect(formatCellDisplay(46_023, { numFmt: "mmmm" })).toBe("January");
+		expect(formatCellDisplay(46_023, { numFmt: "mmm" })).toBe("Jan");
 	});
 });

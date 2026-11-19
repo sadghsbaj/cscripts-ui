@@ -10,11 +10,11 @@
 | :--- | :--- | :--- | :--- |
 | **M0** | Core Contracts, Errors, Coordinates, Dates & Value Normalization | `Done` | — |
 | **M1** | Internal OOXML Engine (XML, Styles, SharedStrings, Package/ZIP) | `Done` | M0 + `fflate` |
-| **M2** | Public OOXML Read, Write, Tables/DefinedNames & Surgical Patcher | `Planned` | M0, M1 |
-| **M3** | CSV / TSV & Declarative Multi-Zone Builder / Themes | `Planned` | M0, M2 |
-| **M4** | Structural Scanners, Profiling, Fuzzy Matching & Patterns A–J | `Planned` | M0 |
-| **M5** | Cleaning, Transformation, Analytics, Diffing, Validation & TableProjection | `Planned` | M0, M3, M4 |
-| **M6** | Browser I/O, Structural File Adapters, Public Barrel & Module Docs | `Planned` | M0–M5 |
+| **M2** | Public OOXML Read, Write, Tables/DefinedNames & Surgical Patcher | `Done` | M0, M1 |
+| **M3** | CSV / TSV & Declarative Multi-Zone Builder / Themes | `Done` | M0, M2 |
+| **M4** | Structural Scanners, Profiling, Fuzzy Matching & Patterns A–J | `Done` | M0 |
+| **M5** | Cleaning, Transformation, Analytics, Diffing, Validation & TableProjection | `Done` | M0, M3, M4 |
+| **M6** | Browser I/O, Structural File Adapters, Public Barrel & Module Docs | `Done` | M0–M5 |
 
 ---
 

@@ -267,6 +267,20 @@ describe("translateFormulaRefs", () => {
 		);
 		expect(translateFormulaRefs("R1C1+A1", 1, 1)).toBe("R1C1+B2");
 		expect(translateFormulaRefs("'A1'!B2", 1, 1)).toBe("'A1'!C3");
+		expect(translateFormulaRefs("SUM(Q1:Q4!B2, Jan1:Dec1!$A1)", 1, 2)).toBe(
+			"SUM(Q1:Q4!C4, Jan1:Dec1!$A3)",
+		);
+	});
+
+	it("preserves structured table column names inside [...] while still shifting cell references outside", () => {
+		expect(translateFormulaRefs("SUM(Sales[Q1])", 1, 1)).toBe("SUM(Sales[Q1])");
+		expect(translateFormulaRefs("[@A1]+B1", 1, 1)).toBe("[@A1]+C2");
+		expect(translateFormulaRefs("Sales[[#Totals],[Q1]]+A1", 1, 1)).toBe(
+			"Sales[[#Totals],[Q1]]+B2",
+		);
+		expect(translateFormulaRefs("SUM(Sales[A1]:Sales[B2])+B1", 2, 3)).toBe(
+			"SUM(Sales[A1]:Sales[B2])+D4",
+		);
 	});
 
 	it("replaces out-of-bounds translated references with #REF!", () => {

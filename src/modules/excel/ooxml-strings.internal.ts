@@ -1,3 +1,4 @@
+import { normalizeHexColor } from "./ooxml-styles.internal.ts";
 import type { CellRichTextRun } from "./types.ts";
 import {
 	applyXmlSlicePatches,
@@ -65,14 +66,8 @@ function serializePlainSiXml(text: string, prefix = ""): string {
 }
 
 function toOoxmlRgb(color: string): string {
-	const clean = color.trim().replace(/^#/, "").toUpperCase();
-	if (clean.length === 6) {
-		return `FF${clean}`;
-	}
-	if (clean.length === 8) {
-		return clean;
-	}
-	return "FF000000";
+	const normalized = normalizeHexColor(color);
+	return normalized ? `FF${normalized.slice(1)}` : "FF000000";
 }
 
 function serializeRichRunXml(run: CellRichTextRun, prefix = ""): string {

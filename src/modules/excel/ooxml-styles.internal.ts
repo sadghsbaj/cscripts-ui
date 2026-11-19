@@ -404,8 +404,8 @@ export function isDateNumFmt(numFmtId: number, formatCode?: string): boolean {
 		return false;
 	}
 
-	const firstSection = code.split(";", 1)[0] ?? code;
-	const stripped = stripNonDateFormatTokens(firstSection);
+	const strippedAll = stripNonDateFormatTokens(code);
+	const stripped = strippedAll.split(";", 1)[0] ?? strippedAll;
 	if (
 		stripped.includes("#") ||
 		stripped.includes("%") ||
@@ -1169,6 +1169,151 @@ function buildSectionPatch(
 	});
 }
 
+const MODELED_XF_ATTRS = new Set([
+	"numFmtId",
+	"fontId",
+	"fillId",
+	"borderId",
+	"xfId",
+	"applyNumberFormat",
+	"applyFont",
+	"applyFill",
+	"applyBorder",
+	"applyAlignment",
+]);
+const MODELED_ALIGN_ATTRS = new Set(["horizontal", "vertical", "wrapText", "indent"]);
+const MODELED_FONT_CHILDREN = new Set(["b", "i", "u", "strike", "sz", "color", "name", "rFont"]);
+const MODELED_BORDER_CHILDREN = new Set(["left", "right", "top", "bottom", "diagonal"]);
+
+function isLosslesslyModeledXf(
+	xfEl: XmlElement,
+	fontEls: readonly XmlElement[],
+	fillEls: readonly XmlElement[],
+	borderEls: readonly XmlElement[],
+): boolean {
+	for (const attrName of Object.keys(xfEl.attrs)) {
+		if (!MODELED_XF_ATTRS.has(attrName)) {
+			return false;
+		}
+	}
+	const xfId = getXmlAttr(xfEl.attrs, "xfId");
+	if (xfId !== undefined && xfId !== "0") {
+		return false;
+	}
+
+	for (const child of xfEl.children) {
+		if (child.localName !== "alignment") {
+			return false;
+		}
+		for (const attrName of Object.keys(child.attrs)) {
+			if (!MODELED_ALIGN_ATTRS.has(attrName)) {
+				return false;
+			}
+		}
+		const h = getXmlAttr(child.attrs, "horizontal");
+		if (h !== undefined && !ALIGN_HORIZONTALS.has(h)) {
+			return false;
+		}
+		const v = getXmlAttr(child.attrs, "vertical");
+		if (v !== undefined && !ALIGN_VERTICALS.has(v)) {
+			return false;
+		}
+	}
+
+	const fontId = parseSafeIntAttr(getXmlAttr(xfEl.attrs, "fontId")) ?? 0;
+	const fontEl = fontEls[fontId];
+	if (fontEl) {
+		for (const child of fontEl.children) {
+			if (!MODELED_FONT_CHILDREN.has(child.localName)) {
+				return false;
+			}
+			if (child.localName === "u") {
+				const uVal = getXmlAttr(child.attrs, "val");
+				if (uVal !== undefined && uVal !== "single" && uVal !== "none") {
+					return false;
+				}
+			}
+		}
+		if (fontId === 0) {
+			// Guard against non-Calibri default font[0] being falsely treated as default Calibri 11.
+			if (
+				findXmlChild(fontEl, "b") ||
+				findXmlChild(fontEl, "i") ||
+				findXmlChild(fontEl, "u") ||
+				findXmlChild(fontEl, "strike") ||
+				findXmlChild(fontEl, "color")
+			) {
+				return false;
+			}
+			const nameEl = findXmlChild(fontEl, "name") ?? findXmlChild(fontEl, "rFont");
+			const nameVal = nameEl ? getXmlAttr(nameEl.attrs, "val") : undefined;
+			if (nameVal !== undefined && nameVal !== "Calibri") {
+				return false;
+			}
+			const szEl = findXmlChild(fontEl, "sz");
+			const szVal = szEl ? getXmlAttr(szEl.attrs, "val") : undefined;
+			if (szVal !== undefined && szVal !== "11") {
+				return false;
+			}
+		}
+	}
+
+	const fillId = parseSafeIntAttr(getXmlAttr(xfEl.attrs, "fillId")) ?? 0;
+	const fillEl = fillEls[fillId];
+	if (fillEl) {
+		const [patternFill] = fillEl.children;
+		if (fillEl.children.length !== 1 || patternFill?.localName !== "patternFill") {
+			return false;
+		}
+		const patternType = getXmlAttr(patternFill.attrs, "patternType");
+		if (patternType !== "none" && patternType !== "gray125" && patternType !== "solid") {
+			return false;
+		}
+		if (patternType === "solid") {
+			for (const child of patternFill.children) {
+				if (child.localName === "fgColor") {
+					continue;
+				}
+				if (
+					child.localName === "bgColor" &&
+					Object.keys(child.attrs).length === 1 &&
+					getXmlAttr(child.attrs, "indexed") === "64"
+				) {
+					continue;
+				}
+				return false;
+			}
+		} else if (patternFill.children.length > 0) {
+			return false;
+		}
+	}
+
+	const borderId = parseSafeIntAttr(getXmlAttr(xfEl.attrs, "borderId")) ?? 0;
+	const borderEl = borderEls[borderId];
+	if (borderEl) {
+		if (Object.keys(borderEl.attrs).length > 0) {
+			return false;
+		}
+		for (const child of borderEl.children) {
+			if (!MODELED_BORDER_CHILDREN.has(child.localName)) {
+				return false;
+			}
+			if (child.localName === "diagonal") {
+				if (Object.keys(child.attrs).length > 0 || child.children.length > 0) {
+					return false;
+				}
+				continue;
+			}
+			const style = getXmlAttr(child.attrs, "style");
+			if (style !== undefined && !BORDER_STYLES.has(style as BorderEdgeSpec["style"])) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 export function appendStylesToStylesXml(
 	stylesXml: string,
 	styles: readonly ExcelStyleSpec[],
@@ -1191,18 +1336,8 @@ export function appendStylesToStylesXml(
 	const fillsEl = findXmlChild(root, "fills");
 	const bordersEl = findXmlChild(root, "borders");
 	const cellXfsEl = findXmlChild(root, "cellXfs");
-	const baseXfCount = cellXfsEl ? findXmlChildren(cellXfsEl, "xf").length : 0;
-
-	const existingXfKeyToIndex = new Map<string, number>();
-	if (baseXfCount > 0) {
-		for (const [idx, existingSpec] of parsed.cellXfs.entries()) {
-			const norm = normalizeStyleSpec(existingSpec);
-			const key = styleKey(norm);
-			if (!existingXfKeyToIndex.has(key)) {
-				existingXfKeyToIndex.set(key, idx);
-			}
-		}
-	}
+	const xfEls = cellXfsEl ? findXmlChildren(cellXfsEl, "xf") : [];
+	const baseXfCount = xfEls.length;
 
 	if (!fontsEl || !fillsEl || !bordersEl || !cellXfsEl) {
 		const registry = new StyleRegistry();
@@ -1213,6 +1348,22 @@ export function appendStylesToStylesXml(
 		}
 		const styleIndices = styles.map((style) => registry.register(style));
 		return { xml: registry.toXml(), styleIndices };
+	}
+
+	const fontEls = findXmlChildren(fontsEl, "font");
+	const fillEls = findXmlChildren(fillsEl, "fill");
+	const borderEls = findXmlChildren(bordersEl, "border");
+	const addedXfKeyToIndex = new Map<string, number>();
+	for (const [idx, existingSpec] of parsed.cellXfs.entries()) {
+		const xfEl = xfEls[idx];
+		if (!xfEl || !isLosslesslyModeledXf(xfEl, fontEls, fillEls, borderEls)) {
+			continue;
+		}
+		const norm = normalizeStyleSpec(existingSpec);
+		const key = styleKey(norm);
+		if (!addedXfKeyToIndex.has(key)) {
+			addedXfKeyToIndex.set(key, idx);
+		}
 	}
 
 	const existingNumFmtCount = numFmtsEl ? findXmlChildren(numFmtsEl, "numFmt").length : 0;
@@ -1267,7 +1418,7 @@ export function appendStylesToStylesXml(
 		addedXfs.push(
 			`<${prefix}xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>`,
 		);
-		existingXfKeyToIndex.set(styleKey(normalizeStyleSpec({})), 0);
+		addedXfKeyToIndex.set(styleKey(normalizeStyleSpec({})), 0);
 	}
 
 	const styleIndices: number[] = [];
@@ -1275,9 +1426,9 @@ export function appendStylesToStylesXml(
 	for (const style of styles) {
 		const norm = normalizeStyleSpec(style);
 		const key = styleKey(norm);
-		const existingXf = existingXfKeyToIndex.get(key);
-		if (existingXf !== undefined) {
-			styleIndices.push(existingXf);
+		const addedXf = addedXfKeyToIndex.get(key);
+		if (addedXf !== undefined) {
+			styleIndices.push(addedXf);
 			continue;
 		}
 
@@ -1352,7 +1503,7 @@ export function appendStylesToStylesXml(
 				prefix,
 			),
 		);
-		existingXfKeyToIndex.set(key, nextXfIndex);
+		addedXfKeyToIndex.set(key, nextXfIndex);
 		styleIndices.push(nextXfIndex);
 	}
 

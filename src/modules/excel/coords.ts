@@ -9,6 +9,7 @@ const CELL_REF_RE = /^(\$?)([A-Za-z]{1,3})(\$?)([1-9]\d{0,6})$/;
 const INLINE_CELL_REF_RE = /^(\$?)([A-Za-z]{1,3})(\$?)([1-9]\d{0,6})/;
 const BEFORE_REF_INVALID_RE = /[A-Za-z0-9_.#$]/;
 const AFTER_REF_INVALID_RE = /[A-Za-z0-9_(!.$]/;
+const UNQUOTED_3D_SHEET_SUFFIX_RE = /^:[A-Za-z0-9_.]+!/;
 
 function tryLetterToCol(letters: string): number | null {
 	if (!COL_LETTERS_RE.test(letters)) {
@@ -229,6 +230,7 @@ export function translateFormulaRefs(
 	}
 
 	let out = "";
+	let bracketDepth = 0;
 	let i = 0;
 	while (i < expression.length) {
 		const ch = expression[i];
@@ -238,6 +240,25 @@ export function translateFormulaRefs(
 			i = end;
 			continue;
 		}
+		if (ch === "[") {
+			bracketDepth += 1;
+			out += ch;
+			i += 1;
+			continue;
+		}
+		if (ch === "]") {
+			if (bracketDepth > 0) {
+				bracketDepth -= 1;
+			}
+			out += ch;
+			i += 1;
+			continue;
+		}
+		if (bracketDepth > 0) {
+			out += ch ?? "";
+			i += 1;
+			continue;
+		}
 
 		const prev = i > 0 ? expression[i - 1] : "";
 		const canStartRef = prev === "" || (prev !== undefined && !BEFORE_REF_INVALID_RE.test(prev));
@@ -245,8 +266,11 @@ export function translateFormulaRefs(
 			const match = INLINE_CELL_REF_RE.exec(expression.slice(i));
 			if (match) {
 				const [full, colDollar, colLetters, rowDollar, rowStr] = match;
-				const nextChar = expression[i + full.length];
-				const canEndRef = nextChar === undefined || !AFTER_REF_INVALID_RE.test(nextChar);
+				const tail = expression.slice(i + full.length);
+				const nextChar = tail[0];
+				const canEndRef =
+					(nextChar === undefined || !AFTER_REF_INVALID_RE.test(nextChar)) &&
+					!UNQUOTED_3D_SHEET_SUFFIX_RE.test(tail);
 				if (canEndRef && colLetters !== undefined && rowStr !== undefined) {
 					const col = tryLetterToCol(colLetters);
 					const row = Number(rowStr) - 1;

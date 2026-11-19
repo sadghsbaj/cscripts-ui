@@ -215,6 +215,7 @@ describe("isDateNumFmt and getBuiltinNumFmtCode", () => {
 		expect(isDateNumFmt(167, "[Red]yyyy/mm/dd")).toBe(true);
 		expect(isDateNumFmt(168, "[h]:mm:ss")).toBe(true);
 		expect(isDateNumFmt(169, "[mm]:ss")).toBe(true);
+		expect(isDateNumFmt(180, '"a;b" yyyy-mm-dd')).toBe(true);
 
 		// Reject non-date format codes that contain date letters inside quotes, color tags, or scientific notation
 		expect(isDateNumFmt(170, "General")).toBe(false);
@@ -498,5 +499,46 @@ describe("parseStylesXml and appendStylesToStylesXml / appendStyleToStylesXml", 
 			font: { family: "Calibri", size: 11, bold: true },
 		});
 		expect(reparsed.cellXfs[3]).toEqual(newStyle);
+	});
+
+	it("does not falsely reuse a pre-existing xf with unmodeled attributes (textRotation / gradientFill) while deduplicating within the appended batch", () => {
+		const unmodeledStylesXml =
+			`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+			`<styleSheet xmlns="${HTTP_SCHEME}schemas.openxmlformats.org/spreadsheetml/2006/main">` +
+			`<fonts count="2">` +
+			`<font><sz val="11"/><name val="Calibri"/></font>` +
+			`<font><b/><sz val="11"/><name val="Calibri"/></font>` +
+			`</fonts>` +
+			`<fills count="3">` +
+			`<fill><patternFill patternType="none"/></fill>` +
+			`<fill><patternFill patternType="gray125"/></fill>` +
+			`<fill><gradientFill degree="90"><stop position="0"><color rgb="FFFFFFFF"/></stop><stop position="1"><color rgb="FF000000"/></stop></gradientFill></fill>` +
+			`</fills>` +
+			`<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>` +
+			`<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>` +
+			`<cellXfs count="3">` +
+			`<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>` +
+			// Index 1: bold font + unmodeled textRotation="90"
+			`<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment textRotation="90"/></xf>` +
+			// Index 2: bold font + unmodeled gradient fillId="2"
+			`<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>` +
+			`</cellXfs>` +
+			`</styleSheet>`;
+
+		const boldStyle = { font: { bold: true } };
+		const { xml: updatedXml, styleIndices } = appendStylesToStylesXml(unmodeledStylesXml, [
+			boldStyle,
+			boldStyle,
+		]);
+
+		// Must NOT reuse index 1 (textRotation="90") or index 2 (gradientFill),
+		// and both identical entries in the same batch must deduplicate to index 3.
+		expect(styleIndices).toEqual([3, 3]);
+
+		const root = parseXmlTree(updatedXml);
+		const cellXfsEl = root ? findXmlChild(root, "cellXfs") : undefined;
+		expect(cellXfsEl?.children).toHaveLength(4);
+		expect(updatedXml).toContain('textRotation="90"');
+		expect(updatedXml).toContain('<gradientFill degree="90">');
 	});
 });
