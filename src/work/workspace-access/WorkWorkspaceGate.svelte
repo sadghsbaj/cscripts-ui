@@ -456,7 +456,7 @@
             opacity: 1;
             scale: 1;
             translate: 0 0;
-            will-change: opacity, translate;
+            will-change: opacity, scale, translate;
             transition:
                 opacity var(--cs-dur-effect) var(--cs-ease-effect),
                 scale var(--cs-dur-enter-md) var(--cs-ease-enter),

@@ -366,8 +366,6 @@
             --cs-work-workspace-menu-padding: 6px;
             --cs-work-workspace-menu-width: 260px;
 
-            display: flex;
-            flex-direction: column;
             min-inline-size: 240px;
             max-inline-size: 296px;
             padding: var(--cs-work-workspace-menu-padding);

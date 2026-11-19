@@ -50,6 +50,10 @@
             transform-origin: var(--cs-popover-origin);
         }
 
+        .cs-popover:not(:popover-open) {
+            pointer-events: none;
+        }
+
         /* =========================================================
         * WIDTHS
         * ========================================================= */
