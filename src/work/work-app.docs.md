@@ -8,6 +8,9 @@ exports:
   - WorkAppHeader
   - WorkAppHeaderSegment
   - WorkAppMain
+  - WorkAppViewStage
+  - workAppViewIn
+  - workAppViewOut
   - WorkAppStatusDot
   - WorkAppHelpButton
   - WorkAppThemeButton
@@ -129,7 +132,7 @@ Canonical composition recipe for internal Pfleiderer Work applications combining
 
 ## In-App Documentation
 
-Keep `<WorkAppHeader>` mounted and toggle `<WorkAppDocs>` inside `<WorkAppMain>` using `<WorkAppHelpButton bind:pressed={showDocs} />`. `<WorkAppDocs>` renders a centered `760px` view and uses `<WorkAppDocsTabs />` (`SegmentedControl`) to split documentation into chapters without leaving the app shell.
+Keep `<WorkAppHeader>` mounted and toggle `<WorkAppDocs>` inside `<WorkAppMain>` using `<WorkAppHelpButton bind:pressed={showDocs} />`. Wrap the conditional views in `<WorkAppViewStage activeKey={showDocs ? "docs" : "app"}>` with `in:workAppViewIn` and `out:workAppViewOut` so view switches overlap cleanly and preserve scroll positions per view. `<WorkAppDocs>` renders a centered `760px` view and uses `<WorkAppDocsTabs />` (`SegmentedControl`) to split documentation into chapters without leaving the app shell.
 
 ```svelte
 <script lang="ts">
@@ -145,6 +148,9 @@ Keep `<WorkAppHeader>` mounted and toggle `<WorkAppDocs>` inside `<WorkAppMain>`
         WorkAppHelpButton,
         WorkAppMain,
         WorkAppThemeButton,
+        WorkAppViewStage,
+        workAppViewIn,
+        workAppViewOut,
     } from "cs/svelte/work";
 
     let showDocs = $state(false);
@@ -159,23 +165,29 @@ Keep `<WorkAppHeader>` mounted and toggle `<WorkAppDocs>` inside `<WorkAppMain>`
     </WorkAppHeader>
 
     <WorkAppMain>
-        {#if showDocs}
-            <WorkAppDocs defaultChapter="overview">
-                <WorkAppDocsHeader title="Holzanalysen" />
-                <WorkAppDocsTabs />
+        <WorkAppViewStage activeKey={showDocs ? "docs" : "app"}>
+            {#if showDocs}
+                <div in:workAppViewIn out:workAppViewOut>
+                    <WorkAppDocs defaultChapter="overview">
+                        <WorkAppDocsHeader title="Holzanalysen" />
+                        <WorkAppDocsTabs />
 
-                <WorkAppDocsContent>
-                    <WorkAppDocsChapter id="overview" title="Overview">
-                        <!-- Chapter content -->
-                    </WorkAppDocsChapter>
-                    <WorkAppDocsChapter id="shortcuts" title="Shortcuts">
-                        <!-- Chapter content -->
-                    </WorkAppDocsChapter>
-                </WorkAppDocsContent>
-            </WorkAppDocs>
-        {:else}
-            <!-- Application content -->
-        {/if}
+                        <WorkAppDocsContent>
+                            <WorkAppDocsChapter id="overview" title="Overview">
+                                <!-- Chapter content -->
+                            </WorkAppDocsChapter>
+                            <WorkAppDocsChapter id="shortcuts" title="Shortcuts">
+                                <!-- Chapter content -->
+                            </WorkAppDocsChapter>
+                        </WorkAppDocsContent>
+                    </WorkAppDocs>
+                </div>
+            {:else}
+                <div in:workAppViewIn out:workAppViewOut>
+                    <!-- Application content -->
+                </div>
+            {/if}
+        </WorkAppViewStage>
     </WorkAppMain>
 </WorkAppFrame>
 ```

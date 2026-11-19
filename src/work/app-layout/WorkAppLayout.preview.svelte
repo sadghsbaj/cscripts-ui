@@ -33,8 +33,11 @@
         WorkAppMain,
         WorkAppStatusDot,
         WorkAppThemeButton,
+        WorkAppViewStage,
         WorkWorkspaceGate,
         WorkWorkspaceMenu,
+        workAppViewIn,
+        workAppViewOut,
         type WorkspaceAccessStatus,
     } from "cs/svelte/work";
 
@@ -101,8 +104,13 @@
                         </WorkAppHeaderSegment>
                     </WorkAppHeader>
                     <WorkAppMain>
-                        {#if showDocs}
-                            <WorkAppDocs defaultChapter="einstieg">
+                        <WorkAppViewStage activeKey={showDocs ? "docs" : "app"}>
+                            {#if showDocs}
+                                <div
+                                    in:workAppViewIn={{ axis: "y", direction: 1 }}
+                                    out:workAppViewOut={{ axis: "y", direction: -1 }}
+                                >
+                                    <WorkAppDocs defaultChapter="einstieg">
                                 <WorkAppDocsHeader
                                     title="Holzanalysen"
                                     lead="Labor- und Eingangsproben erfassen, prüfen und exportieren."
@@ -184,16 +192,24 @@
                                             </WorkAppDocsTableBody>
                                         </WorkAppDocsTable>
                                     </WorkAppDocsChapter>
-                                </WorkAppDocsContent>
-                            </WorkAppDocs>
-                        {:else}
-                            <div class="bg-elevated shadow-elevated rounded-2xl squircle p-6 flex flex-col gap-4">
-                                <h2 class="title-lg">{activeTab}</h2>
-                                <p class="text-weak">Work application shell with segmented header controls.</p>
-                            </div>
+                                    </WorkAppDocsContent>
+                                    </WorkAppDocs>
+                                </div>
+                            {:else}
+                                <div
+                                    class="flex flex-col gap-6"
+                                    in:workAppViewIn={{ axis: "y", direction: -1 }}
+                                    out:workAppViewOut={{ axis: "y", direction: 1 }}
+                                >
+                                    <div class="bg-elevated shadow-elevated rounded-2xl squircle p-6 flex flex-col gap-4">
+                                        <h2 class="title-lg">{activeTab}</h2>
+                                        <p class="text-weak">Work application shell with segmented header controls.</p>
+                                    </div>
 
-                            <div class="min-h-300dvh bg-elevated shadow-elevated rounded-2xl squircle"></div>
-                        {/if}
+                                    <div class="min-h-300dvh bg-elevated shadow-elevated rounded-2xl squircle"></div>
+                                </div>
+                            {/if}
+                        </WorkAppViewStage>
                     </WorkAppMain>
                 </WorkAppFrame>
             </ScrollAreaContent>

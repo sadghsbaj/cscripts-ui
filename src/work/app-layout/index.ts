@@ -6,6 +6,25 @@ export { default as WorkAppHeaderSegment } from "./WorkAppHeaderSegment.svelte";
 export { default as WorkAppMain } from "./WorkAppMain.svelte";
 export { default as WorkAppSignature } from "./WorkAppSignature.svelte";
 export { default as WorkAppBrand } from "./WorkAppBrand.svelte";
+export { default as WorkAppViewStage } from "./WorkAppViewStage.svelte";
+export {
+    WORK_APP_VIEW_TRANSITION_AXES,
+    WORK_APP_VIEW_TRANSITION_DIRECTIONS,
+    workAppViewIn,
+    workAppViewOut,
+    type WorkAppViewTransitionAxis,
+    type WorkAppViewTransitionDirection,
+    type WorkAppViewTransitionOptions,
+} from "./work-app-view-transition.ts";
+
+export type WorkAppViewKey = string | number;
+
+export interface WorkAppViewStageProps extends HTMLAttributes<HTMLDivElement> {
+    ref?: HTMLElement | null;
+    activeKey?: WorkAppViewKey;
+    scrollContainer?: HTMLElement | Window | null;
+    restoreScroll?: boolean;
+}
 
 export const WORK_APP_HEADER_SEGMENT_ALIGNMENTS = ["before", "start", "center", "end", "after"] as const;
 export type WorkAppHeaderSegmentAlignment = (typeof WORK_APP_HEADER_SEGMENT_ALIGNMENTS)[number];

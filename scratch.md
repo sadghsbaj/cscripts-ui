@@ -25,13 +25,14 @@
 
 ## Modules
 
-- [ ] Data Table
+- [x] Data Table
 - [ ] Animierte Charts
 - [ ] Tablist
 - [ ] Sidebar
 - [ ] Color Picker
 - [ ] ContextMenu
 - [ ] NLP Parser
+- [ ] Das ist ein Test
 - [ ] Command Palette
 - [x] KPI Cards
 - [x] Virtual Scrolling
