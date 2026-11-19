@@ -31,7 +31,7 @@
     aria-label={text}
     class={["cs-work-app-signature", className]}
     {@attach blockClicks}
-    {@attach tooltip({ text, placement: "left" })}
+    {@attach tooltip({ text, placement: "left", dismissOnPress: false })}
 >
     <Info aria-hidden="true" class="cs-work-app-signature-icon" />
     <HitArea size="md" />

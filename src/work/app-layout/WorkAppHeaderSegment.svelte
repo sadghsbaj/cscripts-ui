@@ -2,6 +2,7 @@
     import type { WorkAppHeaderSegmentProps } from "./index.ts";
 
     let {
+        ref = $bindable(null),
         align,
         renderIsland,
         island = false,
@@ -14,6 +15,7 @@
 </script>
 
 <div
+    bind:this={ref}
     {...rest}
     class={["cs-work-app-header-segment", className]}
     data-alignment={align}

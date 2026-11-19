@@ -38,12 +38,14 @@ Elevated `48px × 48px` icon-only `<Button />` with `<HitArea size="md" />` and 
 Calls `theme.cycle()` (`cs/svelte/theme`) on click unless `onclick` calls `event.preventDefault()`.
 
 ### `WorkAppHelpButton` (alias: `WorkAppDocsButton`)
-Elevated `48px × 48px` icon-only `<Button />` with `<HitArea size="md" />` and `"Hilfe"` bottom tooltip. Extends `Omit<HTMLButtonAttributes, "color" | "children">`.
+Elevated `48px × 48px` icon-only `<Button />` with `<HitArea size="md" />` and a bottom tooltip (`"Hilfe"` / `"Help"`, switching to `"Hilfe schließen"` / `"Close help"` when `pressed` is `true`). Extends `Omit<HTMLButtonAttributes, "color" | "children">`.
 
 | Prop | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `aria-label` | `string` | No | `"Dokumentation und Hilfe"` | Accessible button label. |
-| `icon` | `Component<ButtonIconComponentProps>` | No | `BookOpen` | Lucide/custom icon component rendered via `<ButtonIcon />`. |
+| `aria-label` | `string` | No | `"Dokumentation und Hilfe"` / `"Documentation and help"` | Accessible button label. |
+| `icon` | `Component<ButtonIconComponentProps>` | No | `BookOpen` | Lucide/custom icon component rendered via `<ButtonIcon />`. Swaps to `X` when `pressed` is `true`. |
+| `pressed` | `boolean` | No | — | `$bindable` pressed state. When defined (`pressed !== undefined`), clicking toggles `pressed` (unless `onclick` calls `event.preventDefault()`), sets `aria-pressed` and `data-pressed`, swaps the icon to `X`, and switches the tooltip to `"Hilfe schließen"` / `"Close help"`. |
+| `onPressedChange` | `(pressed: boolean) => void` | No | — | Callback invoked with the next `pressed` state when toggled by click. |
 
 ### `WorkAppStatusDot` (aliases: `WorkAppStatusPill`, `WorkAppStatusButton`)
 12px circular `<button type="button">` status indicator with optional dual-ring pulse animation and bottom tooltip (`offset: "24px"`). Extends `Omit<HTMLButtonAttributes, "color" | "aria-label">`.

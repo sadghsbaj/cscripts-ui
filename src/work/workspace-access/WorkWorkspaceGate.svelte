@@ -5,7 +5,6 @@
     import { focusTrap as attachFocusTrap } from "../../modules/focus/index.ts";
     import { HitArea } from "../../modules/hit-area/index.ts";
     import { Popover, popoverTrigger } from "../../modules/popover/index.ts";
-    import { tooltip } from "../../modules/tooltip/index.ts";
     import { t } from "../../shared/lang.internal.ts";
     import { getWorkAppIdentity } from "../app-intro/index.ts";
     import type { WorkWorkspaceGateProps } from "./index.ts";
@@ -127,12 +126,12 @@
                 return t(
                     resolvedAppName
                         ? {
-                              de: `Wähle einen lokalen Ordner, in dem die Daten für ${resolvedAppName} sicher gespeichert werden.`,
-                              en: `Choose a local folder where data for ${resolvedAppName} is stored safely.`,
+                              de: `Wähle den Ordner, in dem die Daten für ${resolvedAppName} sicher gespeichert werden.`,
+                              en: `Choose the folder where data for ${resolvedAppName} is stored safely.`,
                           }
                         : {
-                              de: "Wähle einen lokalen Ordner, in dem deine Daten sicher gespeichert werden.",
-                              en: "Choose a local folder where your data is stored safely.",
+                              de: "Wähle den Ordner, in dem die Daten sicher gespeichert werden.",
+                              en: "Choose the folder where data is stored safely.",
                           },
                 );
             }
@@ -182,7 +181,7 @@
         aria-describedby={descId}
         {...rest}
         {@attach attachFocusTrap({
-            enabled: () => isGateVisible,
+            enabled: () => isGateVisible && Boolean(ref?.closest(".cs-overlay")),
             initialFocus: "first-focusable",
             fallbackFocus: "self",
             restoreFocus: true,
@@ -204,43 +203,6 @@
         data-busy={busy ? "" : undefined}
         data-blocked={isBlocked ? "" : undefined}
     >
-        <Button
-            variant="ghost"
-            size="xs"
-            iconOnly
-            class="cs-work-workspace-gate-info-trigger"
-            aria-label={t({
-                de: "Warum wird diese Berechtigung benötigt?",
-                en: "Why is this permission needed?",
-            })}
-            {@attach tooltip({
-                text: t({ de: "Warum ist das nötig?", en: "Why is this needed?" }),
-            })}
-            {@attach popoverTrigger({ target: infoPopoverId, triggerOn: "click" })}
-        >
-            <ButtonIcon icon={CircleHelp} />
-            <HitArea size="md" />
-        </Button>
-
-        <Popover
-            bind:ref={infoPopoverRef}
-            id={infoPopoverId}
-            placement="bottom-end"
-            offset="8px"
-            width="content"
-            class="cs-work-workspace-gate-info"
-        >
-            <p class="cs-work-workspace-gate-info-title">
-                {t({ de: "Warum ist das nötig?", en: "Why is this needed?" })}
-            </p>
-            <p class="cs-work-workspace-gate-info-body">
-                {t({
-                    de: "Deine Dateien bleiben direkt auf deinem Gerät. Aus Sicherheitsgründen fragt der Browser nach jedem Neustart kurz um Erlaubnis.",
-                    en: "Your files stay directly on your device. For security reasons, the browser briefly asks for permission after each restart.",
-                })}
-            </p>
-        </Popover>
-
         <div class="cs-work-workspace-gate-stage" aria-hidden="true">
             <div class="cs-work-workspace-gate-stage-halo"></div>
 
@@ -359,6 +321,37 @@
                 {/if}
             </div>
         {/if}
+
+        <Button
+            variant="ghost"
+            size="xs"
+            iconOnly
+            class="cs-work-workspace-gate-info-trigger"
+            aria-label={t({ de: "Warum ist das nötig?", en: "Why is this needed?" })}
+            {@attach popoverTrigger({ target: infoPopoverId, triggerOn: "click" })}
+        >
+            <ButtonIcon icon={CircleHelp} />
+            <HitArea size="md" />
+        </Button>
+
+        <Popover
+            bind:ref={infoPopoverRef}
+            id={infoPopoverId}
+            placement="bottom-end"
+            offset="8px"
+            width="content"
+            class="cs-work-workspace-gate-info"
+        >
+            <p class="cs-work-workspace-gate-info-title">
+                {t({ de: "Warum ist das nötig?", en: "Why is this needed?" })}
+            </p>
+            <p class="cs-work-workspace-gate-info-body">
+                {t({
+                    de: "Browser dürfen ohne Erlaubnis nicht auf Dateien außerhalb zugreifen. Deshalb fragt der Browser regelmäßig danach, damit er auf die benötigten Daten zugreifen kann.",
+                    en: "Browsers cannot access external files without permission. The browser asks regularly so it can access the required data.",
+                })}
+            </p>
+        </Popover>
     </div>
 {/if}
 
@@ -398,15 +391,6 @@
             corner-shape: var(--cs-work-workspace-gate-squircle);
             box-shadow: var(--cs-work-workspace-gate-shadow);
             transform-origin: center center;
-
-            /* Exit state when Overlay loses :popover-open */
-            opacity: 0;
-            scale: 0.96;
-            translate: 0 4px;
-            transition:
-                opacity var(--cs-dur-exit-md) var(--cs-ease-exit),
-                scale var(--cs-dur-exit-md) var(--cs-ease-exit),
-                translate var(--cs-dur-exit-md) var(--cs-ease-exit);
 
             @media (width < 640px) {
                 --cs-work-workspace-gate-max-width: 100%;
@@ -458,6 +442,16 @@
             }
         }
 
+        :global(.cs-overlay) .cs-work-workspace-gate {
+            opacity: 0;
+            scale: 0.96;
+            translate: 0 4px;
+            transition:
+                opacity var(--cs-dur-exit-md) var(--cs-ease-exit),
+                scale var(--cs-dur-exit-md) var(--cs-ease-exit),
+                translate var(--cs-dur-exit-md) var(--cs-ease-exit);
+        }
+
         :global(.cs-overlay:popover-open) .cs-work-workspace-gate {
             opacity: 1;
             scale: 1;
@@ -485,7 +479,12 @@
             inset-block-start: 16px;
             inset-inline-end: 16px;
             z-index: 2;
-            color: var(--cs-color-text-weak);
+            color: var(--cs-color-text-weaker);
+
+            @media (width < 640px) {
+                inset-block-start: 12px;
+                inset-inline-end: 12px;
+            }
 
             &:hover,
             &:focus-visible {
@@ -497,6 +496,7 @@
             inline-size: 272px;
             padding: 14px 16px;
             text-align: start;
+            line-height: round(up, calc(var(--cs-text-xs) * var(--cs-leading-normal)), 1px);
             background-color: var(--cs-color-elevated);
             border-radius: var(--cs-radius-2xl);
             corner-shape: var(--cs-squircle);
@@ -504,7 +504,8 @@
         }
 
         .cs-work-workspace-gate-info-title {
-            margin: 0 0 4px;
+            margin: 0;
+            margin-block-end: 6px;
             color: var(--cs-color-text-strong);
             font-size: var(--cs-text-xs);
             font-weight: 600;
@@ -515,7 +516,6 @@
             margin: 0;
             color: var(--cs-color-text-weak);
             font-size: var(--cs-text-xs);
-            line-height: var(--cs-leading-normal);
         }
 
         /* =========================================================

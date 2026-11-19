@@ -209,9 +209,45 @@ describe("workspace-access", () => {
             );
             expect(infoTrigger).not.toBeNull();
             expect(infoPopover).not.toBeNull();
-            expect(infoTrigger?.getAttribute("aria-label")).toBe("Why is this permission needed?");
+            expect(infoTrigger?.getAttribute("aria-label")).toBe("Why is this needed?");
             expect(infoPopover?.id).toBeTruthy();
+            expect(infoPopover?.id.endsWith("-info")).toBe(true);
             expect(infoTrigger?.getAttribute("popovertarget")).toBe(infoPopover?.id);
+            expect(infoTrigger?.style.getPropertyValue("anchor-name")).toBe(
+                `--anchor-${infoPopover?.id}`,
+            );
+            expect(infoTrigger?.hasAttribute("aria-describedby")).toBe(false);
+            expect(container.querySelector('[role="tooltip"]')).toBeNull();
+        });
+
+        test("places primary CTA as the first focusable element before the info trigger across actionable states", () => {
+            const { update } = mountReactive(WorkWorkspaceGate, container, instances, {
+                status: "unlinked",
+            });
+
+            const assertPrimaryFirst = (expectedLabel: string): void => {
+                const dialog = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-gate");
+                const buttons = [...dialog.querySelectorAll<HTMLButtonElement>("button")];
+                const primaryCta = mustGetButtonByText(dialog, expectedLabel);
+                const infoTrigger = mustQuery<HTMLButtonElement>(
+                    dialog,
+                    ".cs-work-workspace-gate-info-trigger",
+                );
+
+                expect(buttons[0]).toBe(primaryCta);
+                expect(
+                    primaryCta.compareDocumentPosition(infoTrigger) &
+                        Node.DOCUMENT_POSITION_FOLLOWING,
+                ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+            };
+
+            assertPrimaryFirst("Select folder");
+
+            update({ status: "needs-permission" });
+            assertPrimaryFirst("Grant access");
+
+            update({ status: "stale" });
+            assertPrimaryFirst("Select again");
         });
 
         test("renders expected stage, copy, folder pill, and actions across all visible states", () => {
@@ -233,7 +269,7 @@ describe("workspace-access", () => {
             );
             expect(
                 container.querySelector(".cs-work-workspace-gate-description")?.textContent?.trim(),
-            ).toBe("Choose a local folder where your data is stored safely.");
+            ).toBe("Choose the folder where data is stored safely.");
             expect(container.querySelector(".cs-work-workspace-folder-pill")).toBeNull();
 
             const selectBtn = getButtonByText(container, "Select folder");
@@ -246,7 +282,7 @@ describe("workspace-access", () => {
             update({ appName: "Holzanalysen" });
             expect(
                 container.querySelector(".cs-work-workspace-gate-description")?.textContent?.trim(),
-            ).toBe("Choose a local folder where data for Holzanalysen is stored safely.");
+            ).toBe("Choose the folder where data for Holzanalysen is stored safely.");
 
             // needs-permission with directoryName
             update({ status: "needs-permission", directoryName: "  Projekt-Daten  " });
@@ -404,11 +440,45 @@ describe("workspace-access", () => {
             expect("blocked" in dialog.dataset).toBe(false);
         });
 
-        test("Escape closes open info popover via hidePopover() without nudging, and nudges when info popover is closed", () => {
-            mountReactive(WorkWorkspaceGate, container, instances, { status: "unlinked" });
-            const dialog = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-gate");
+        test("focusTrap is inactive when rendered inline, and active inside .cs-overlay where Escape closes info popover or nudges", () => {
+            // 1. Inline (not inside .cs-overlay): focusTrap does not steal focus or intercept Escape
+            const outsideButton = document.createElement("button");
+            outsideButton.textContent = "Outside";
+            document.body.append(outsideButton);
+            outsideButton.focus();
+            expect(document.activeElement).toBe(outsideButton);
+
+            const inlineTarget = document.createElement("div");
+            container.append(inlineTarget);
+            mountReactive(WorkWorkspaceGate, inlineTarget, instances, { status: "unlinked" });
+            vi.advanceTimersByTime(20);
+
+            const inlineDialog = mustQuery<HTMLDivElement>(inlineTarget, ".cs-work-workspace-gate");
+            expect(document.activeElement).toBe(outsideButton);
+
+            const inlineEscape = dispatchKey("Escape");
+            flushSync();
+            expect(inlineEscape.defaultPrevented).toBe(false);
+            expect("blocked" in inlineDialog.dataset).toBe(false);
+
+            // Unmount inline gate before mounting inside .cs-overlay
+            const inlineInstance = instances.pop();
+            if (inlineInstance) unmount(inlineInstance);
+            inlineTarget.remove();
+
+            // 2. Inside .cs-overlay: focusTrap activates, focuses primary CTA first, and handles Escape
+            const overlay = document.createElement("div");
+            overlay.className = "cs-overlay";
+            container.append(overlay);
+
+            mountReactive(WorkWorkspaceGate, overlay, instances, { status: "unlinked" });
+            vi.advanceTimersByTime(20);
+            const dialog = mustQuery<HTMLDivElement>(overlay, ".cs-work-workspace-gate");
+            const primaryCta = mustGetButtonByText(dialog, "Select folder");
+            expect(document.activeElement).toBe(primaryCta);
+
             const infoPopover = mustQuery<HTMLDivElement>(
-                container,
+                overlay,
                 ".cs-work-workspace-gate-info",
             );
             ensurePopoverStub(infoPopover);
@@ -426,11 +496,13 @@ describe("workspace-access", () => {
             flushSync();
             expect(closedEscape.defaultPrevented).toBe(true);
             expect("blocked" in dialog.dataset).toBe(true);
+
+            outsideButton.remove();
         });
     });
 
     describe("WorkWorkspaceMenu", () => {
-        test("renders semantic dot, status label, folder box/fallback, and state-specific actions across all 6 statuses", () => {
+        test("renders Workspace header, default offset, folder box/fallback, captions/hints, and state-specific actions across all 6 statuses", () => {
             const onselect = vi.fn();
             const ongrant = vi.fn();
             const ondisconnect = vi.fn();
@@ -446,21 +518,34 @@ describe("workspace-access", () => {
 
             const menu = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-menu");
             expect(menu.getAttribute("role")).toBe("region");
-            expect(menu.getAttribute("aria-label")).toBe("Workspace folder");
+            expect(menu.getAttribute("aria-label")).toBe("Workspace");
             expect(menu.getAttribute("popover")).toBe("auto");
+            expect(menu.style.getPropertyValue("--cs-popover-offset")).toBe("24px");
             ensurePopoverStub(menu);
+
+            const readyBadge = mustQuery<HTMLElement>(menu, ".cs-badge");
+            expect(readyBadge.dataset.variant).toBe("soft");
+            expect(readyBadge.dataset.color).toBe("positive");
+            expect(readyBadge.dataset.size).toBe("xs");
+            expect(readyBadge.textContent?.trim()).toBe("Connected");
+            expect(menu.querySelector(".cs-work-workspace-menu-title")?.textContent?.trim()).toBe(
+                "Workspace",
+            );
 
             // 1. ready with directoryName
             expect(menu.dataset.status).toBe("ready");
-            expect(menu.dataset.dotStatus).toBe("positive");
-            expect(menu.querySelector(".cs-work-workspace-menu-status-label")?.textContent?.trim()).toBe(
-                "Selected",
-            );
+            const readyFolder = mustQuery<HTMLDivElement>(menu, ".cs-work-workspace-menu-folder");
+            expect("empty" in readyFolder.dataset).toBe(false);
             expect(menu.querySelector(".cs-work-workspace-menu-folder-name")?.textContent?.trim()).toBe(
                 "Kundenordner",
             );
-            expect(getButtonByText(menu, "Change")).toBeDefined();
-            expect(getButtonByText(menu, "Disconnect")).toBeDefined();
+            expect(menu.querySelector(".cs-work-workspace-menu-caption")).toBeNull();
+            const readyChangeBtn = mustGetButtonByText(menu, "Change");
+            const readyDisconnectBtn = mustGetButtonByText(menu, "Disconnect");
+            expect(readyChangeBtn.classList.contains("cs-work-workspace-menu-item")).toBe(true);
+            expect("destructive" in readyChangeBtn.dataset).toBe(false);
+            expect(readyDisconnectBtn.classList.contains("cs-work-workspace-menu-item")).toBe(true);
+            expect("destructive" in readyDisconnectBtn.dataset).toBe(true);
 
             // ready fallback when directoryName is omitted
             update({ directoryName: null });
@@ -471,16 +556,21 @@ describe("workspace-access", () => {
             // 2. needs-permission
             update({ status: "needs-permission", directoryName: "Holz-DB" });
             expect(menu.dataset.status).toBe("needs-permission");
-            expect(menu.dataset.dotStatus).toBe("caution");
-            expect(menu.querySelector(".cs-work-workspace-menu-status-label")?.textContent?.trim()).toBe(
-                "Permission required",
-            );
+            expect(menu.querySelector(".cs-badge")).toBeNull();
+            const needsPermFolder = mustQuery<HTMLDivElement>(menu, ".cs-work-workspace-menu-folder");
+            expect("empty" in needsPermFolder.dataset).toBe(false);
             expect(menu.querySelector(".cs-work-workspace-menu-folder-name")?.textContent?.trim()).toBe(
                 "Holz-DB",
             );
-            expect(getButtonByText(menu, "Grant access")).toBeDefined();
-            expect(getButtonByText(menu, "Change")).toBeDefined();
-            expect(getButtonByText(menu, "Disconnect")).toBeDefined();
+            expect(menu.querySelector(".cs-work-workspace-menu-caption")?.textContent?.trim()).toBe(
+                "Permission required",
+            );
+            const grantBtn = mustGetButtonByText(menu, "Grant access");
+            const needsPermChangeBtn = mustGetButtonByText(menu, "Change");
+            expect(grantBtn.classList.contains("cs-work-workspace-menu-item")).toBe(true);
+            expect(grantBtn.dataset.emphasis).toBe("accent");
+            expect(needsPermChangeBtn.classList.contains("cs-work-workspace-menu-item")).toBe(true);
+            expect(getButtonByText(menu, "Disconnect")).toBeUndefined();
 
             // needs-permission fallback when directoryName is omitted
             update({ directoryName: null });
@@ -491,37 +581,43 @@ describe("workspace-access", () => {
             // 3. stale
             update({ status: "stale", directoryName: "Alter-Ordner" });
             expect(menu.dataset.status).toBe("stale");
-            expect(menu.dataset.dotStatus).toBe("negative");
-            expect(menu.querySelector(".cs-work-workspace-menu-status-label")?.textContent?.trim()).toBe(
-                "Folder unavailable",
-            );
+            expect(menu.querySelector(".cs-badge")).toBeNull();
+            const staleFolder = mustQuery<HTMLDivElement>(menu, ".cs-work-workspace-menu-folder");
+            expect("empty" in staleFolder.dataset).toBe(false);
             expect(menu.querySelector(".cs-work-workspace-menu-folder-name")?.textContent?.trim()).toBe(
                 "Alter-Ordner",
             );
-            expect(getButtonByText(menu, "Select again")).toBeDefined();
-            expect(getButtonByText(menu, "Disconnect")).toBeDefined();
+            expect(menu.querySelector(".cs-work-workspace-menu-caption")?.textContent?.trim()).toBe(
+                "Folder no longer found",
+            );
+            const selectAgainBtn = mustGetButtonByText(menu, "Select again");
+            const staleDisconnectBtn = mustGetButtonByText(menu, "Disconnect");
+            expect(selectAgainBtn.classList.contains("cs-work-workspace-menu-item")).toBe(true);
+            expect(selectAgainBtn.dataset.emphasis).toBe("accent");
+            expect(staleDisconnectBtn.classList.contains("cs-work-workspace-menu-item")).toBe(true);
+            expect("destructive" in staleDisconnectBtn.dataset).toBe(true);
 
             // 4. unlinked
             update({ status: "unlinked" });
             expect(menu.dataset.status).toBe("unlinked");
-            expect(menu.dataset.dotStatus).toBe("negative");
-            expect(menu.querySelector(".cs-work-workspace-menu-status-label")?.textContent?.trim()).toBe(
+            expect(menu.querySelector(".cs-badge")).toBeNull();
+            const unlinkedFolder = mustQuery<HTMLDivElement>(menu, ".cs-work-workspace-menu-folder");
+            expect("empty" in unlinkedFolder.dataset).toBe(true);
+            expect(menu.querySelector(".cs-work-workspace-menu-folder-name")?.textContent?.trim()).toBe(
                 "No folder selected",
             );
-            expect(menu.querySelector(".cs-work-workspace-menu-folder")).toBeNull();
-            expect(menu.querySelector(".cs-work-workspace-menu-hint")?.textContent?.trim()).toBe(
-                "Please select a workspace folder.",
-            );
-            expect(getButtonByText(menu, "Select folder")).toBeDefined();
+            expect(menu.querySelector(".cs-work-workspace-menu-caption")).toBeNull();
+            expect(menu.querySelector(".cs-work-workspace-menu-hint")).toBeNull();
+            const unlinkedSelectBtn = mustGetButtonByText(menu, "Select folder");
+            expect(unlinkedSelectBtn.classList.contains("cs-work-workspace-menu-item")).toBe(true);
+            expect(unlinkedSelectBtn.dataset.emphasis).toBe("accent");
+            expect(menu.querySelector(".cs-work-workspace-menu-cta")).toBeNull();
             expect(getButtonByText(menu, "Disconnect")).toBeUndefined();
 
             // 5. restoring
             update({ status: "restoring" });
             expect(menu.dataset.status).toBe("restoring");
-            expect(menu.dataset.dotStatus).toBe("caution");
-            expect(menu.querySelector(".cs-work-workspace-menu-status-label")?.textContent?.trim()).toBe(
-                "Restoring...",
-            );
+            expect(menu.querySelector(".cs-work-workspace-menu-folder")).toBeNull();
             expect(menu.querySelector(".cs-work-workspace-menu-hint")?.textContent?.trim()).toBe(
                 "Loading your saved workspace folder.",
             );
@@ -530,10 +626,7 @@ describe("workspace-access", () => {
             // 6. unsupported
             update({ status: "unsupported" });
             expect(menu.dataset.status).toBe("unsupported");
-            expect(menu.dataset.dotStatus).toBe("negative");
-            expect(menu.querySelector(".cs-work-workspace-menu-status-label")?.textContent?.trim()).toBe(
-                "Not supported",
-            );
+            expect(menu.querySelector(".cs-work-workspace-menu-folder")).toBeNull();
             expect(menu.querySelector(".cs-work-workspace-menu-hint")?.textContent?.trim()).toBe(
                 "Please use Chrome or Edge.",
             );
@@ -556,31 +649,223 @@ describe("workspace-access", () => {
             const menu = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-menu");
             ensurePopoverStub(menu);
 
+            const finishClose = (): void => {
+                menu.dispatchEvent(new Event("transitionend"));
+                flushSync();
+            };
+
             getButtonByText(menu, "Grant access")?.click();
             expect(menu.hidePopover).toHaveBeenCalledTimes(1);
             expect(ongrant).toHaveBeenCalledTimes(1);
+            finishClose();
 
             getButtonByText(menu, "Change")?.click();
             expect(menu.hidePopover).toHaveBeenCalledTimes(2);
             expect(onselect).toHaveBeenCalledTimes(1);
+            finishClose();
 
+            update({ status: "ready" });
             getButtonByText(menu, "Disconnect")?.click();
             expect(menu.hidePopover).toHaveBeenCalledTimes(3);
             expect(ondisconnect).toHaveBeenCalledTimes(1);
+            finishClose();
 
-            // Omit Disconnect when ondisconnect is undefined across ready, needs-permission, and stale
+            update({ status: "stale" });
+            getButtonByText(menu, "Disconnect")?.click();
+            expect(menu.hidePopover).toHaveBeenCalledTimes(4);
+            expect(ondisconnect).toHaveBeenCalledTimes(2);
+            finishClose();
+
+            // Omit Disconnect when ondisconnect is undefined across ready and stale
             update({ ondisconnect: undefined });
             expect(getButtonByText(menu, "Disconnect")).toBeUndefined();
+            getButtonByText(menu, "Select again")?.click();
+            expect(onselect).toHaveBeenCalledTimes(2);
+            finishClose();
 
             update({ status: "ready" });
             expect(getButtonByText(menu, "Disconnect")).toBeUndefined();
             getButtonByText(menu, "Change")?.click();
-            expect(onselect).toHaveBeenCalledTimes(2);
-
-            update({ status: "stale" });
-            expect(getButtonByText(menu, "Disconnect")).toBeUndefined();
-            getButtonByText(menu, "Select again")?.click();
             expect(onselect).toHaveBeenCalledTimes(3);
+        });
+
+        test("freezes displayed state while closing after an action until transitionend or open-toggle resets it", () => {
+            const controller: {
+                update?: (next: Partial<{ status: WorkspaceAccessStatus; directoryName: string | null }>) => void;
+            } = {};
+
+            const onselect = vi.fn(() => {
+                controller.update?.({ status: "ready", directoryName: "Kundenordner" });
+            });
+            const ondisconnect = vi.fn(() => {
+                controller.update?.({ status: "unlinked", directoryName: null });
+            });
+
+            const { update } = mountReactive(WorkWorkspaceMenu, container, instances, {
+                id: "ws-menu-freeze",
+                status: "unlinked",
+                directoryName: null,
+                onselect,
+                ondisconnect,
+            });
+            controller.update = update;
+
+            const menu = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-menu");
+            ensurePopoverStub(menu);
+
+            const dispatchOpenToggle = (): void => {
+                openPopovers.add(menu);
+                menu.dispatchEvent(
+                    Object.assign(new Event("beforetoggle"), {
+                        newState: "open",
+                        oldState: "closed",
+                    }),
+                );
+                flushSync();
+            };
+
+            // 1. Open in unlinked state and click "Select folder" -> synchronously transitions status to "ready"
+            dispatchOpenToggle();
+            const selectBtn = mustGetButtonByText(menu, "Select folder");
+            selectBtn.click();
+            flushSync();
+
+            expect(onselect).toHaveBeenCalledTimes(1);
+            expect(menu.hidePopover).toHaveBeenCalledTimes(1);
+            // Frozen on "unlinked" while closing
+            expect(menu.dataset.status).toBe("unlinked");
+            expect(menu.querySelector(".cs-work-workspace-menu-hint")).toBeNull();
+            const frozenUnlinkedFolder = mustQuery<HTMLDivElement>(
+                menu,
+                ".cs-work-workspace-menu-folder",
+            );
+            expect("empty" in frozenUnlinkedFolder.dataset).toBe(true);
+            expect(
+                frozenUnlinkedFolder.querySelector(".cs-work-workspace-menu-folder-name")?.textContent?.trim(),
+            ).toBe("No folder selected");
+            expect(getButtonByText(menu, "Select folder")).toBeDefined();
+
+            // Bubbling child transitionend must NOT unfreeze
+            selectBtn.dispatchEvent(new Event("transitionend", { bubbles: true }));
+            flushSync();
+            expect(menu.dataset.status).toBe("unlinked");
+
+            // Self transitionend while other property animations are still running must NOT unfreeze
+            menu.getAnimations = vi.fn(() => [{} as Animation]);
+            menu.dispatchEvent(new Event("transitionend"));
+            flushSync();
+            expect(menu.dataset.status).toBe("unlinked");
+
+            // Self transitionend when closed and getAnimations() is empty unfreezes and renders "ready"
+            menu.getAnimations = vi.fn(() => []);
+            menu.dispatchEvent(new Event("transitionend"));
+            flushSync();
+            expect(menu.dataset.status).toBe("ready");
+            expect(menu.querySelector(".cs-work-workspace-menu-folder-name")?.textContent?.trim()).toBe(
+                "Kundenordner",
+            );
+            expect(getButtonByText(menu, "Change")).toBeDefined();
+            expect(getButtonByText(menu, "Disconnect")).toBeDefined();
+
+            // 2. Reopen in "ready", click "Disconnect" -> synchronously transitions to "unlinked", frozen until open-toggle
+            dispatchOpenToggle();
+            mustGetButtonByText(menu, "Disconnect").click();
+            flushSync();
+
+            expect(ondisconnect).toHaveBeenCalledTimes(1);
+            expect(menu.dataset.status).toBe("ready");
+            expect(menu.querySelector(".cs-work-workspace-menu-folder-name")?.textContent?.trim()).toBe(
+                "Kundenordner",
+            );
+
+            // Reopening via beforetoggle (newState: "open") resets closing even if transitionend never fired
+            dispatchOpenToggle();
+            expect(menu.dataset.status).toBe("unlinked");
+            expect(getButtonByText(menu, "Select folder")).toBeDefined();
+        });
+
+        test("beforetoggle (newState: 'closed') keeps state frozen while animations run or visible, and unfreezes on second rAF when getAnimations() is empty and display === 'none'", () => {
+            const { update } = mountReactive(WorkWorkspaceMenu, container, instances, {
+                id: "ws-menu-closed-toggle",
+                status: "unlinked",
+                directoryName: null,
+            });
+
+            const menu = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-menu");
+            ensurePopoverStub(menu);
+
+            const dispatchToggle = (newState: "open" | "closed"): void => {
+                if (newState === "open") {
+                    openPopovers.add(menu);
+                    menu.style.display = "block";
+                } else {
+                    openPopovers.delete(menu);
+                }
+                menu.dispatchEvent(
+                    Object.assign(new Event("beforetoggle"), {
+                        newState,
+                        oldState: newState === "open" ? "closed" : "open",
+                    }),
+                );
+                flushSync();
+            };
+
+            // 1. Active exit animation: getAnimations() non-empty keeps state frozen past double rAF
+            dispatchToggle("open");
+            menu.getAnimations = vi.fn(() => [{} as Animation]);
+            menu.style.display = "none";
+            dispatchToggle("closed");
+
+            update({ status: "ready", directoryName: "Kundenordner" });
+            expect(menu.dataset.status).toBe("unlinked");
+
+            vi.advanceTimersByTime(40);
+            flushSync();
+            expect(menu.getAnimations).toHaveBeenCalled();
+            expect(menu.dataset.status).toBe("unlinked");
+            expect(menu.querySelector(".cs-work-workspace-menu-folder")).not.toBeNull();
+
+            // 2. Empty getAnimations() but display !== "none" keeps state frozen past double rAF
+            dispatchToggle("open");
+            expect(menu.dataset.status).toBe("ready");
+
+            menu.getAnimations = vi.fn(() => []);
+            menu.style.display = "block";
+            dispatchToggle("closed");
+
+            update({ status: "stale", directoryName: "Alter-Ordner" });
+            vi.advanceTimersByTime(40);
+            flushSync();
+            expect(menu.getAnimations).toHaveBeenCalled();
+            expect(menu.dataset.status).toBe("ready");
+
+            // 3. Instant / reduced-motion close: getAnimations() empty and display === "none" unfreezes on second rAF
+            dispatchToggle("open");
+            expect(menu.dataset.status).toBe("stale");
+
+            menu.getAnimations = vi.fn(() => []);
+            menu.style.display = "none";
+            dispatchToggle("closed");
+
+            update({ status: "unlinked", directoryName: null });
+            expect(menu.dataset.status).toBe("stale");
+
+            // First rAF tick: still frozen
+            vi.advanceTimersByTime(16);
+            flushSync();
+            expect(menu.getAnimations).not.toHaveBeenCalled();
+            expect(menu.dataset.status).toBe("stale");
+
+            // Second rAF tick: unfreezes and renders "unlinked"
+            vi.advanceTimersByTime(20);
+            flushSync();
+            expect(menu.getAnimations).toHaveBeenCalledTimes(1);
+            expect(menu.dataset.status).toBe("unlinked");
+            const unlinkedFolder = mustQuery<HTMLDivElement>(
+                menu,
+                ".cs-work-workspace-menu-folder",
+            );
+            expect("empty" in unlinkedFolder.dataset).toBe(true);
         });
 
         test("respects busy={true} by setting data-busy and disabling action buttons, and renders errorMessage alert", () => {
@@ -618,6 +903,252 @@ describe("workspace-access", () => {
             expect(menu.querySelector('[role="alert"]')).toBeNull();
             expect(changeBtn.disabled).toBe(false);
             expect(disconnectBtn.disabled).toBe(false);
+        });
+
+        test("activates a menu item on mouse press-drag-release (pointerdown -> beforetoggle open -> pointerup) and freezes/closes cleanly", () => {
+            const onselect = vi.fn();
+            const ondisconnect = vi.fn();
+
+            const { update } = mountReactive(WorkWorkspaceMenu, container, instances, {
+                id: "ws-menu-drag-release",
+                status: "unlinked",
+                directoryName: null,
+                onselect,
+                ondisconnect,
+            });
+
+            const menu = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-menu");
+            ensurePopoverStub(menu);
+
+            const openWithMousePress = (): void => {
+                window.dispatchEvent(
+                    new PointerEvent("pointerdown", {
+                        pointerType: "mouse",
+                        button: 0,
+                        clientX: 0,
+                        clientY: 0,
+                        bubbles: true,
+                    }),
+                );
+                openPopovers.add(menu);
+                menu.dispatchEvent(
+                    Object.assign(new Event("beforetoggle"), {
+                        newState: "open",
+                        oldState: "closed",
+                    }),
+                );
+                flushSync();
+            };
+
+            // Stationary pointerdown -> pointerup at (0, 0) within < 180ms does NOT commit
+            openWithMousePress();
+            const selectBtn = mustGetButtonByText(menu, "Select folder");
+            selectBtn.dispatchEvent(
+                new PointerEvent("pointerup", {
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 0,
+                    clientY: 0,
+                    bubbles: true,
+                }),
+            );
+            flushSync();
+
+            expect(onselect).not.toHaveBeenCalled();
+            expect(menu.hidePopover).not.toHaveBeenCalled();
+
+            // Real pointer drag (clientX: 40, clientY: 80) commits on pointerup
+            openPopovers.delete(menu);
+            openWithMousePress();
+            selectBtn.dispatchEvent(
+                new PointerEvent("pointerup", {
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 40,
+                    clientY: 80,
+                    bubbles: true,
+                }),
+            );
+            flushSync();
+
+            expect(onselect).toHaveBeenCalledTimes(1);
+            expect(menu.hidePopover).toHaveBeenCalledTimes(1);
+            expect(openPopovers.has(menu)).toBe(false);
+
+            // State stays frozen while closing until transitionend/open-toggle
+            update({ status: "ready", directoryName: "Kundenordner" });
+            expect(menu.dataset.status).toBe("unlinked");
+
+            // Reopen in "ready" via mouse press-drag-release on a child span inside "Disconnect"
+            openWithMousePress();
+            expect(menu.dataset.status).toBe("ready");
+
+            const disconnectBtn = mustGetButtonByText(menu, "Disconnect");
+            const disconnectLabel = mustQuery<HTMLSpanElement>(disconnectBtn, "span");
+            disconnectLabel.dispatchEvent(
+                new PointerEvent("pointerup", {
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 40,
+                    clientY: 80,
+                    bubbles: true,
+                }),
+            );
+            flushSync();
+
+            expect(ondisconnect).toHaveBeenCalledTimes(1);
+            expect(menu.hidePopover).toHaveBeenCalledTimes(2);
+            expect(openPopovers.has(menu)).toBe(false);
+        });
+
+        test("ignores pointerup during press-drag-release when busy={true} or pointerup lands outside items", () => {
+            const onselect = vi.fn();
+            const ondisconnect = vi.fn();
+
+            const { update } = mountReactive(WorkWorkspaceMenu, container, instances, {
+                id: "ws-menu-drag-ignore",
+                status: "ready",
+                busy: true,
+                onselect,
+                ondisconnect,
+            });
+
+            const menu = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-menu");
+            ensurePopoverStub(menu);
+
+            const openWithMousePress = (): void => {
+                window.dispatchEvent(
+                    new PointerEvent("pointerdown", {
+                        pointerType: "mouse",
+                        button: 0,
+                        clientX: 0,
+                        clientY: 0,
+                        bubbles: true,
+                    }),
+                );
+                openPopovers.add(menu);
+                menu.dispatchEvent(
+                    Object.assign(new Event("beforetoggle"), {
+                        newState: "open",
+                        oldState: "closed",
+                    }),
+                );
+                flushSync();
+            };
+
+            // 1. Disabled menu item (busy={true})
+            openWithMousePress();
+            mustGetButtonByText(menu, "Change").dispatchEvent(
+                new PointerEvent("pointerup", {
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 40,
+                    clientY: 80,
+                    bubbles: true,
+                }),
+            );
+            flushSync();
+
+            expect(onselect).not.toHaveBeenCalled();
+            expect(ondisconnect).not.toHaveBeenCalled();
+            expect(menu.hidePopover).not.toHaveBeenCalled();
+
+            // 2. pointerup on non-item element inside menu (.cs-work-workspace-menu-title)
+            openPopovers.delete(menu);
+            update({ busy: false });
+            openWithMousePress();
+
+            mustQuery<HTMLSpanElement>(menu, ".cs-work-workspace-menu-title").dispatchEvent(
+                new PointerEvent("pointerup", {
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 40,
+                    clientY: 80,
+                    bubbles: true,
+                }),
+            );
+            flushSync();
+
+            expect(onselect).not.toHaveBeenCalled();
+            expect(ondisconnect).not.toHaveBeenCalled();
+            expect(menu.hidePopover).not.toHaveBeenCalled();
+
+            // 3. pointerup on window outside menu
+            openPopovers.delete(menu);
+            openWithMousePress();
+
+            window.dispatchEvent(
+                new PointerEvent("pointerup", {
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 40,
+                    clientY: 80,
+                    bubbles: true,
+                }),
+            );
+            flushSync();
+
+            expect(onselect).not.toHaveBeenCalled();
+            expect(ondisconnect).not.toHaveBeenCalled();
+            expect(menu.hidePopover).not.toHaveBeenCalled();
+        });
+
+        test("does not fire item.click() on pointerup when menu was opened without a preceding mouse pointerdown", () => {
+            const onselect = vi.fn();
+
+            mountReactive(WorkWorkspaceMenu, container, instances, {
+                id: "ws-menu-keyboard-open",
+                status: "unlinked",
+                onselect,
+            });
+
+            const menu = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-menu");
+            ensurePopoverStub(menu);
+
+            // Open without preceding mouse pointerdown (e.g. keyboard open)
+            openPopovers.add(menu);
+            menu.dispatchEvent(
+                Object.assign(new Event("beforetoggle"), {
+                    newState: "open",
+                    oldState: "closed",
+                }),
+            );
+            flushSync();
+
+            const selectBtn = mustGetButtonByText(menu, "Select folder");
+            const clickSpy = vi.spyOn(selectBtn, "click");
+
+            selectBtn.dispatchEvent(
+                new PointerEvent("pointerup", {
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 40,
+                    clientY: 80,
+                    bubbles: true,
+                }),
+            );
+            flushSync();
+
+            expect(clickSpy).not.toHaveBeenCalled();
+            expect(onselect).not.toHaveBeenCalled();
+            expect(menu.hidePopover).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("WorkspaceAccess.preview.svelte anchor wiring", () => {
+        test("sets menu anchor-name on .cs-work-app-header-segment instead of .cs-work-app-status-dot and uses bottom-start placement", async () => {
+            const { default: WorkspaceAccessPreview } = await import("./WorkspaceAccess.preview.svelte");
+            const instance = mount(WorkspaceAccessPreview, { target: container });
+            instances.push(instance);
+            flushSync();
+
+            const segment = mustQuery<HTMLElement>(container, ".cs-work-app-header-segment");
+            const dot = mustQuery<HTMLElement>(container, ".cs-work-app-status-dot");
+            const menu = mustQuery<HTMLElement>(container, ".cs-work-workspace-menu");
+
+            expect(menu.dataset.placement).toBe("bottom-start");
+            expect(segment.style.getPropertyValue("anchor-name")).toBe(`--anchor-${menu.id}`);
+            expect(dot.style.getPropertyValue("anchor-name")).not.toContain(`--anchor-${menu.id}`);
         });
     });
 });

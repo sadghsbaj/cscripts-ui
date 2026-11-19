@@ -38,6 +38,8 @@ export interface WorkAppThemeButtonProps extends Omit<HTMLButtonAttributes, "col
 export interface WorkAppHelpButtonProps extends Omit<HTMLButtonAttributes, "color" | "children"> {
     "aria-label"?: string;
     icon?: Component<ButtonIconComponentProps>;
+    pressed?: boolean;
+    onPressedChange?: (pressed: boolean) => void;
 }
 
 export type WorkAppDocsButtonProps = WorkAppHelpButtonProps;

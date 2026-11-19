@@ -4,8 +4,7 @@
 </script>
 
 <script lang="ts">
-    import { X } from "@lucide/svelte";
-    import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
+    import { Button, ButtonLabel } from "cs/svelte/button";
     import { HitArea } from "cs/svelte/hit-area";
     import { Overlay } from "cs/svelte/overlay";
     import { popoverTrigger } from "cs/svelte/popover";
@@ -16,7 +15,6 @@
         ToggleButtonGroup,
         ToggleButtonLabel,
     } from "cs/svelte/toggle-button";
-    import { tooltip } from "cs/svelte/tooltip";
     import {
         WORKSPACE_ACCESS_DOT_STATUS_MAP,
         WORKSPACE_ACCESS_STATUSES,
@@ -27,20 +25,19 @@
         type WorkspaceAccessStatus,
     } from "cs/svelte/work";
 
-    import { PreviewHeader, PreviewSection, SunkenWell } from "../../../playground/components/index.ts";
+    import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
 
     let status = $state<WorkspaceAccessStatus>("unlinked");
     let busy = $state(false);
     let directoryName = $state("Holzanalysen-Daten");
     let errorMessage = $state("");
     let overlayOpen = $state(false);
-    let inlineGateOpen = $state(false);
     let gateRef = $state<{ nudge: () => void } | null>(null);
+    let headerSegmentRef = $state<HTMLElement | null>(null);
 
     const uid = $props.id();
     const menuId = `${uid}-menu`;
     const busySwitchId = `${uid}-busy`;
-    const inlineSwitchId = `${uid}-inline`;
     const dirInputId = `${uid}-dir`;
     const errorInputId = `${uid}-error`;
 
@@ -130,12 +127,16 @@
         title="Status Dot & Menu"
         description="Click the header status dot to open WorkWorkspaceMenu anchored below."
     >
-        <div class="flex-center py-2">
-            <WorkAppHeaderSegment align="before" renderIsland>
+        <div class="flex-center h-12">
+            <WorkAppHeaderSegment align="before" renderIsland bind:ref={headerSegmentRef}>
                 <WorkAppStatusDot
                     status={WORKSPACE_ACCESS_DOT_STATUS_MAP[status]}
                     pulse={status !== "ready"}
-                    {@attach popoverTrigger({ target: menuId, triggerOn: "click" })}
+                    {@attach popoverTrigger({
+                        target: menuId,
+                        triggerOn: "pointerdown",
+                        anchor: () => headerSegmentRef,
+                    })}
                 >
                     <HitArea size="md" />
                 </WorkAppStatusDot>
@@ -144,6 +145,7 @@
 
         <WorkWorkspaceMenu
             id={menuId}
+            offset="8px"
             {status}
             {directoryName}
             {busy}
@@ -167,27 +169,26 @@
         title="Inline Gate Stage"
         description="Mount the gate inline outside Overlay to inspect morphing stage states directly."
     >
-        <div class="flex flex-col items-center gap-6 w-full">
-            <div class="flex items-center gap-3">
-                <Switch id={inlineSwitchId} size="sm" bind:checked={inlineGateOpen} />
-                <label for={inlineSwitchId} class="text-sm text-main select-none cursor-pointer">
-                    Show inline gate
-                </label>
-            </div>
-
-            {#if inlineGateOpen}
-                <SunkenWell class="w-full flex justify-center py-8 px-4">
-                    <WorkWorkspaceGate
-                        {status}
-                        {directoryName}
-                        {busy}
-                        {errorMessage}
-                        appName="Holzanalysen"
-                        onselect={handleSelect}
-                        ongrant={handleGrant}
-                        style="opacity: 1; scale: 1; translate: 0 0;"
-                    />
-                </SunkenWell>
+        <div
+            class="w-full rounded-3xl squircle bg-sunken shadow-sunken p-8 sm:p-12 flex-center min-h-420px"
+        >
+            {#if status === "ready"}
+                <div class="flex flex-col items-center gap-3 text-center">
+                    <p class="text-sm text-weak m-0">Status: ready — Gate hidden</p>
+                    <Button variant="tertiary" size="sm" onclick={() => (status = "unlinked")}>
+                        <ButtonLabel>Reset to unlinked</ButtonLabel>
+                    </Button>
+                </div>
+            {:else}
+                <WorkWorkspaceGate
+                    {status}
+                    {directoryName}
+                    {busy}
+                    {errorMessage}
+                    appName="Holzanalysen"
+                    onselect={handleSelect}
+                    ongrant={handleGrant}
+                />
             {/if}
         </div>
     </PreviewSection>
@@ -202,21 +203,6 @@
             }
         }}
     >
-        <Button
-            variant="secondary"
-            size="sm"
-            iconOnly
-            aria-label="Close overlay preview"
-            class="fixed top-4 right-4"
-            {@attach tooltip({ text: "Close overlay preview" })}
-            onclick={() => {
-                overlayOpen = false;
-            }}
-        >
-            <ButtonIcon icon={X} />
-            <HitArea size="md" />
-        </Button>
-
         <WorkWorkspaceGate
             bind:this={gateRef}
             {status}
@@ -227,5 +213,13 @@
             onselect={handleSelect}
             ongrant={handleGrant}
         />
+
+        {#if status === "unsupported" || status === "restoring"}
+            <div class="fixed bottom-5 left-1/2 -translate-x-1/2">
+                <Button variant="elevated" size="sm" onclick={() => (overlayOpen = false)}>
+                    <ButtonLabel>Exit preview</ButtonLabel>
+                </Button>
+            </div>
+        {/if}
     </Overlay>
 {/if}

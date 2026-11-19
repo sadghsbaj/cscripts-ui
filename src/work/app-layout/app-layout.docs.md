@@ -46,6 +46,7 @@ Positioned slot (`<div class="cs-work-app-header-segment">`) inside `<WorkAppHea
 
 | Prop | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
+| `ref` | `HTMLElement \| null` (`$bindable`) | No | `null` | Root `<div>` element reference. |
 | `align` | `WorkAppHeaderSegmentAlignment` | Yes | — | Horizontal flex/overlay slot: `"before" \| "start" \| "center" \| "end" \| "after"`. |
 | `renderIsland` | `boolean` | No | `undefined` | Wraps the segment in an elevated pill surface (`data-island`). |
 | `island` | `boolean` | No | `false` | Deprecated alias for `renderIsland`. |

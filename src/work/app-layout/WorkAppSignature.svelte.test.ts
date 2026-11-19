@@ -95,4 +95,44 @@ describe("WorkAppSignature", () => {
         expect(tooltipEl ? openPopovers.has(tooltipEl) : false).toBe(true);
         expect(tooltipEl?.textContent).toContain("Entwickelt von Colin Schäfer");
     });
+
+    test("keeps the tooltip open when pressed or clicked (dismissOnPress: false)", () => {
+        const instance = mount(WorkAppSignature, {
+            target: container,
+            props: { text: "Entwickelt von Colin Schäfer" },
+        });
+        instances.push(instance);
+        flushSync();
+
+        const button = container.querySelector("button");
+        expect(button).not.toBeNull();
+
+        const tooltipId = button?.getAttribute("aria-describedby");
+        const tooltipEl = tooltipId ? document.getElementById(tooltipId) : null;
+        expect(tooltipEl).not.toBeNull();
+
+        const hidePopoverSpy = vi.spyOn(
+            tooltipEl as HTMLElement & { hidePopover: () => void },
+            "hidePopover"
+        );
+
+        button?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: false, pointerType: "mouse" }));
+        vi.advanceTimersByTime(450);
+
+        expect(tooltipEl?.matches(":popover-open")).toBe(true);
+
+        button?.dispatchEvent(
+            new PointerEvent("pointerdown", {
+                bubbles: true,
+                cancelable: true,
+                pointerType: "mouse",
+                button: 0,
+            })
+        );
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+        vi.advanceTimersByTime(450);
+
+        expect(hidePopoverSpy).not.toHaveBeenCalled();
+        expect(tooltipEl?.matches(":popover-open")).toBe(true);
+    });
 });

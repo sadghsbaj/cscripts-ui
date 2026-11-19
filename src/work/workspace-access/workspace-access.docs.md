@@ -47,19 +47,19 @@ Compact `<Popover popover="auto" role="region" class="cs-work-workspace-menu">` 
 | Prop / Bindable | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `ref` | `HTMLDivElement \| null` (`$bindable`) | No | `null` | Root `<Popover>` element reference. |
-| `id` | `string` | Yes | — | Popover ID targeted by `{@attach popoverTrigger({ target: id, triggerOn: "click" })}`. |
+| `id` | `string` | Yes | — | Popover ID targeted by `{@attach popoverTrigger({ target: id, triggerOn: "pointerdown" })}`. |
 | `status` | `WorkspaceAccessStatus` | Yes | — | Current workspace access state. |
 | `directoryName` | `string \| null` | No | `undefined` | Active or remembered folder name shown in `ready`, `needs-permission`, and `stale`. |
 | `busy` | `boolean` | No | `false` | Disables action buttons and sets `data-busy`. |
 | `errorMessage` | `string \| null` | No | `undefined` | Optional compact error banner (`role="alert"`). |
 | `placement` | `PopoverPlacement` | No | `"bottom-start"` | Anchor placement relative to `<WorkAppStatusDot />`. |
 | `width` | `PopoverWidth` | No | `"content"` | Popover width mode (`--cs-work-workspace-menu-width` applies when `"content"`). |
-| `offset` | `string` | No | `"16px"` | Distance between the status dot trigger and the menu. |
+| `offset` | `string` | No | `"24px"` | Distance between the anchor element and the menu. |
 | `onselect` | `() => void \| Promise<void>` | No | `undefined` | Triggered by **"Wechseln"**, **"Ordner wählen"**, or **"Neu wählen"**. |
 | `ongrant` | `() => void \| Promise<void>` | No | `undefined` | Triggered by **"Freigeben"** (`needs-permission`). |
-| `ondisconnect` | `() => void \| Promise<void>` | No | `undefined` | Triggered by **"Trennen"** (`ready`, `needs-permission`, `stale`) when provided. |
+| `ondisconnect` | `() => void \| Promise<void>` | No | `undefined` | Triggered by **"Trennen"** (`ready`, `stale`) when provided. |
 
-- **DOM Attributes:** `data-status={status}`, `data-dot-status={WORKSPACE_ACCESS_DOT_STATUS_MAP[status]}`, `data-busy` (when `busy` is truthy).
+- **DOM Attributes:** `data-status={status}`, `data-busy` (when `busy` is truthy).
 
 ### Status Constants
 
@@ -93,10 +93,8 @@ Compact `<Popover popover="auto" role="region" class="cs-work-workspace-menu">` 
 | `--cs-work-workspace-menu-shadow` | `var(--cs-shadow-floating)` | Floating shadow. |
 | `--cs-work-workspace-menu-radius` | `20px` | Outer radius. |
 | `--cs-work-workspace-menu-squircle` | `var(--cs-squircle)` | `corner-shape` superellipse. |
-| `--cs-work-workspace-menu-padding` | `12px` | Inner padding. |
-| `--cs-work-workspace-menu-width` | `264px` | Applied when `data-width="content"` (`min: 240px`, `max: 300px`). |
-| `--cs-work-workspace-menu-dot-bg` | `var(--cs-color-negative-solid)` | Status dot fill (mapped from `data-dot-status`). |
-| `--cs-work-workspace-menu-label-fg` | `var(--cs-color-text-weak)` | Status label color (mapped from `data-dot-status`). |
+| `--cs-work-workspace-menu-padding` | `6px` | Inner padding. |
+| `--cs-work-workspace-menu-width` | `260px` | Applied when `data-width="content"` (`min: 240px`, `max: 296px`). |
 
 ## Examples
 
@@ -121,8 +119,8 @@ Compact `<Popover popover="auto" role="region" class="cs-work-workspace-menu">` 
     const workspace = createFileSystemWorkspace({ namespace: "holzanalysen" });
     const MENU_ID = "workspace-access-menu";
 
+    let headerSegmentRef = $state<HTMLElement | null>(null);
     let gateRef = $state<{ nudge: () => void } | null>(null);
-    let directoryName = $state<string | null>(null);
 
     const showGate = $derived(
         workspace.mountStatus !== "ready" && workspace.mountStatus !== "restoring",
@@ -132,11 +130,15 @@ Compact `<Popover popover="auto" role="region" class="cs-work-workspace-menu">` 
 <WorkAppIntro toolCategory="Holzeinkauf" toolName="Holzanalysen">
     <WorkAppFrame>
         <WorkAppHeader>
-            <WorkAppHeaderSegment align="before" renderIsland>
+            <WorkAppHeaderSegment bind:ref={headerSegmentRef} align="before" renderIsland>
                 <WorkAppStatusDot
                     status={WORKSPACE_ACCESS_DOT_STATUS_MAP[workspace.mountStatus]}
                     pulse={workspace.mountStatus !== "ready"}
-                    {@attach popoverTrigger({ target: MENU_ID, triggerOn: "click" })}
+                    {@attach popoverTrigger({
+                        target: MENU_ID,
+                        triggerOn: "pointerdown",
+                        anchor: () => headerSegmentRef,
+                    })}
                 >
                     <HitArea size="md" />
                 </WorkAppStatusDot>
@@ -147,43 +149,47 @@ Compact `<Popover popover="auto" role="region" class="cs-work-workspace-menu">` 
             <!-- Application content -->
         </WorkAppMain>
     </WorkAppFrame>
+
+    <WorkWorkspaceMenu
+        id={MENU_ID}
+        status={workspace.mountStatus}
+        directoryName={workspace.directoryName}
+        offset="8px"
+        busy={workspace.isBusy}
+        errorMessage={workspace.lastError?.message}
+        onselect={() => workspace.pick()}
+        ongrant={() => workspace.requestAccess()}
+        ondisconnect={() => workspace.forget()}
+    />
+
+    {#if showGate}
+        <Overlay
+            variant="blur"
+            onclick={(event) => {
+                if (event.target === event.currentTarget) {
+                    gateRef?.nudge();
+                }
+            }}
+        >
+            <WorkWorkspaceGate
+                bind:this={gateRef}
+                status={workspace.mountStatus}
+                directoryName={workspace.directoryName}
+                busy={workspace.isBusy}
+                errorMessage={workspace.lastError?.message}
+                onselect={() => workspace.pick()}
+                ongrant={() => workspace.requestAccess()}
+            />
+        </Overlay>
+    {/if}
 </WorkAppIntro>
-
-<WorkWorkspaceMenu
-    id={MENU_ID}
-    status={workspace.mountStatus}
-    {directoryName}
-    busy={workspace.isBusy}
-    errorMessage={workspace.lastError?.message}
-    onselect={() => workspace.pick()}
-    ongrant={() => workspace.requestAccess()}
-    ondisconnect={() => workspace.forget()}
-/>
-
-{#if showGate}
-    <Overlay
-        variant="blur"
-        onclick={(event) => {
-            if (event.target === event.currentTarget) {
-                gateRef?.nudge();
-            }
-        }}
-    >
-        <WorkWorkspaceGate
-            bind:this={gateRef}
-            status={workspace.mountStatus}
-            {directoryName}
-            busy={workspace.isBusy}
-            errorMessage={workspace.lastError?.message}
-            onselect={() => workspace.pick()}
-            ongrant={() => workspace.requestAccess()}
-        />
-    </Overlay>
-{/if}
 ```
 
 ## Behavior & Quirks
 
-- **Overlay visibility & `restoring`:** `<WorkWorkspaceGate />` animates to `opacity: 1` when hosted inside `.cs-overlay:popover-open` and renders nothing when `status === "ready"`. Keep `<Overlay>` hidden while `status === "restoring"` to avoid a brief blur flash on returning visits.
-- **Focus trap & `Escape` handling:** `<WorkWorkspaceGate />` attaches `focusTrap` while `status !== "ready"`, allowing backdrop `pointerdown` events to reach the enclosing `.cs-overlay` so `Overlay.onclick` triggers `nudge()`. Pressing `Escape` closes the `?` info `<Popover>` first if open; otherwise it calls `nudge()`.
-- **Menu auto-dismiss on action:** Clicking an action button in `<WorkWorkspaceMenu />` calls `ref?.hidePopover?.()` before invoking `onselect`, `ongrant`, or `ondisconnect` so native folder pickers and permission prompts open without an overlapping popover.
+- **Supplying `directoryName` & `appName`:** Pass `workspace.directoryName` directly from `createFileSystemWorkspace(...)` (which exposes `readonly directoryName: string | null`, derived from `directoryHandle?.name ?? null`). When `<WorkWorkspaceGate />` is rendered inside `<WorkAppIntro>`, it automatically inherits `toolName` from context, so `appName` does not need to be passed explicitly.
+- **Container-anchored status menu:** Binding `headerSegmentRef` on `<WorkAppHeaderSegment bind:ref={headerSegmentRef} />` and passing `anchor: () => headerSegmentRef` to `popoverTrigger(...)` anchors `<WorkWorkspaceMenu />` to the outer pill segment with `offset="8px"` while keeping click handling on `<WorkAppStatusDot />`.
+
+- **Overlay visibility & `restoring`:** `<WorkWorkspaceGate />` entry animation (`opacity` / `scale` / `translate` into `.cs-overlay:popover-open`) is scoped to `.cs-overlay` and renders nothing when `status === "ready"`. Keep `<Overlay>` hidden while `status === "restoring"` to avoid a brief blur flash on returning visits.
+- **Focus trap, info popover & `Escape` handling:** `<WorkWorkspaceGate />` scopes `focusTrap` to `.cs-overlay` while `status !== "ready"`, allowing backdrop `pointerdown` events to reach the enclosing `.cs-overlay` so `Overlay.onclick` triggers `nudge()`. The `?` info button opens the `#info` `<Popover>` on click (without a colliding hover tooltip); pressing `Escape` closes that popover first if open, otherwise calling `nudge()`.
+- **Menu auto-dismiss & exit freeze:** Clicking an action button in `<WorkWorkspaceMenu />` calls `ref?.hidePopover?.()` before invoking `onselect`, `ongrant`, or `ondisconnect` so native folder pickers and permission prompts open without an overlapping popover. Displayed state (`status`, `directoryName`, `errorMessage`, `busy`) freezes while closing until exit transitions finish so clicking an action does not flash the next state. In `unlinked`, the folder box renders as an empty-state sunken well (`data-empty`).

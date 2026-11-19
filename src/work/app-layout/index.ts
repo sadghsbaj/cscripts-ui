@@ -11,6 +11,7 @@ export const WORK_APP_HEADER_SEGMENT_ALIGNMENTS = ["before", "start", "center", 
 export type WorkAppHeaderSegmentAlignment = (typeof WORK_APP_HEADER_SEGMENT_ALIGNMENTS)[number];
 
 export interface WorkAppHeaderSegmentProps extends HTMLAttributes<HTMLDivElement> {
+    ref?: HTMLElement | null;
     align: WorkAppHeaderSegmentAlignment;
     renderIsland?: boolean;
     /** @deprecated Use `renderIsland` instead. */
