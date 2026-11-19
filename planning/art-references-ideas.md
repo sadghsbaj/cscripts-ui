@@ -5,18 +5,17 @@ Goal: (a) check by eye whether components harmonize in a layout, (b) provide ref
 Existing: Badge, Button, ButtonMorph, Card, Checkbox(Group), CloseButton, Kbd, Overlay, Popover, Progress, ScrollArea, SegmentedControl, Switch(Group), TextArea, TextInput, Toast, ToggleButton(Group), Tooltip.
 Planned: Chip (removable badge, for multi-select, combobox, filter bar, tag input), Modal, Select, Dropdown, Combobox, ContextMenu, Sidebar, Color Picker, Autoresize, Animated Charts, NLP Parser, Number Animations, Text Morph, Number Stepper.
 
-## A) Small compound patterns (10)
+## A) Small compound patterns (9)
 
 1. **Login form**: inputs, "Remember me", primary/secondary action, error state.
 2. **Settings row**: label + description + switch; stacked as a settings group.
 3. **Filter bar**: search, segment toggle, select, active filters as badges.
 4. **Confirmation dialog**: destructive and neutral variants side by side.
-5. **Number stepper toolbar**: zoom −/+, size steps, reset, animated percentage readout.
-6. **Upload / progress item**: file name, progress, cancel, done state (text morph).
-7. **Tag / recipient input**: combobox with suggestions and selected entries.
-8. **Task list**: checkbox rows, "Open → Done" toggle via text morph, counter.
-9. **Pricing / plan picker**: billing-period segmented control, plan options, feature list with badges, call-to-action.
-10. **Comment composer**: auto-resizing textarea, attachment/emoji actions, keyboard hint (Kbd), send button with loading state.
+5. **Upload / progress item**: file name, progress, cancel, done state (text morph).
+6. **Tag / recipient input**: combobox with suggestions and selected entries.
+7. **Task list**: checkbox rows, "Open → Done" toggle via text morph, counter.
+8. **Pricing / plan picker**: billing-period segmented control, plan options, feature list with badges, call-to-action.
+9. **Comment composer**: auto-resizing textarea, attachment/emoji actions, keyboard hint (Kbd), send button with loading state.
 
 ## B) Large scenarios (3 + bonus)
 
