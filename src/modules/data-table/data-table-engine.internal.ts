@@ -400,13 +400,26 @@ export function filterRowIndices<TRow>(
     filters: Readonly<Record<string, DataTableColumnFilter>>,
     excludeColumnId?: string
 ): number[] {
+    const count = data.length;
+    const filterEntries = Object.entries(filters);
+    const hasRelevantFilter =
+        filterEntries.length > 0 && (excludeColumnId === undefined || filterEntries.some(([id]) => id !== excludeColumnId));
+
+    if (!hasRelevantFilter) {
+        const all = Array.from<number>({ length: count });
+        for (let i = 0; i < count; i++) {
+            all[i] = i;
+        }
+        return all;
+    }
+
     const columnMap = new Map<string, DataTableColumn<TRow>>();
     for (const column of columns) {
         columnMap.set(column.id, column);
     }
 
     const predicates: CompiledRowPredicate<TRow>[] = [];
-    for (const [columnId, filter] of Object.entries(filters)) {
+    for (const [columnId, filter] of filterEntries) {
         if (columnId === excludeColumnId) continue;
         const column = columnMap.get(columnId);
         if (!column) continue;
@@ -416,7 +429,6 @@ export function filterRowIndices<TRow>(
         }
     }
 
-    const count = data.length;
     if (predicates.length === 0) {
         const all = Array.from<number>({ length: count });
         for (let i = 0; i < count; i++) {

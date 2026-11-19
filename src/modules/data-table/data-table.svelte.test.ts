@@ -737,11 +737,9 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
         expect(shell?.dataset.mode).toBe("selection");
         expect(shell?.querySelector(".cs-data-table-status-bar-summary")?.textContent?.trim()).toBe("1 selected");
 
-        // Click "Clear" button in selection mode -> clears selection and returns to filter mode
-        const clearBtn = [...(shell?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((btn) =>
-            btn.textContent?.includes("Clear")
-        );
-        expect(clearBtn).toBeDefined();
+        // Click "Clear selection" icon button in selection mode -> clears selection and returns to filter mode
+        const clearBtn = shell?.querySelector<HTMLButtonElement>('button[aria-label="Clear selection"]');
+        expect(clearBtn).not.toBeNull();
         clearBtn?.click();
         flushSync();
 
@@ -802,7 +800,7 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
         const emptyEl = container.querySelector<HTMLDivElement>(".cs-data-table-empty");
         expect(emptyEl).not.toBeNull();
         expect(emptyEl?.querySelector(".cs-data-table-empty-title")?.textContent).toBe("No matching rows");
-        expect(emptyEl?.querySelector(".cs-data-table-empty-description")?.textContent).toContain("Adjust or clear");
+        expect(emptyEl?.querySelector(".cs-data-table-empty-description")).toBeNull();
         const resetButton = emptyEl?.querySelector<HTMLButtonElement>(":scope .cs-data-table-empty-actions button");
         expect(resetButton).not.toBeNull();
 
@@ -820,12 +818,12 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
         expect(table.rowCount).toBe(5);
         expect(container.querySelector(".cs-data-table-empty")).toBeNull();
 
-        // Truly empty dataset (unfiltered) shows "No rows yet" with no reset button
+        // Truly empty dataset (unfiltered) shows "No entries" with no reset button
         data = [];
         flushSync();
         const defaultEmpty = container.querySelector<HTMLDivElement>(".cs-data-table-empty");
         expect(defaultEmpty).not.toBeNull();
-        expect(defaultEmpty?.querySelector(".cs-data-table-empty-title")?.textContent).toBe("No rows yet");
+        expect(defaultEmpty?.querySelector(".cs-data-table-empty-title")?.textContent).toBe("No entries");
         expect(defaultEmpty?.querySelector(".cs-data-table-empty-actions")).toBeNull();
 
         unmount(instance);
@@ -920,6 +918,20 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
         const popover = popovers[0];
         if (!popover) throw new Error("Missing column popover");
 
+        const headerCells = [...container.querySelectorAll<HTMLDivElement>(".cs-data-table-header-cell")];
+        expect(headerCells).toHaveLength(4);
+        const [sortOnlyHeader, statusHeader, categoryHeader, codeHeader] = headerCells;
+        if (!sortOnlyHeader || !statusHeader || !categoryHeader || !codeHeader) {
+            throw new Error("Missing header cells");
+        }
+
+        // Dual-chevron sort indicator renders on sortable columns; non-sortable filterable column renders cue chevron
+        expect(sortOnlyHeader.querySelector(".cs-data-table-header-sort-dual")).not.toBeNull();
+        expect(statusHeader.querySelector(".cs-data-table-header-sort-dual")).not.toBeNull();
+        expect(categoryHeader.querySelector(".cs-data-table-header-sort-dual")).toBeNull();
+        expect(categoryHeader.querySelector(".cs-data-table-header-cue")).not.toBeNull();
+        expect(codeHeader.querySelector(".cs-data-table-header-sort-dual")).not.toBeNull();
+
         const triggers = [...container.querySelectorAll<HTMLButtonElement>(".cs-data-table-header-trigger")];
         expect(triggers).toHaveLength(4);
         const [sortOnlyTrigger, statusTrigger, categoryTrigger, codeTrigger] = triggers;
@@ -927,19 +939,46 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
             throw new Error("Missing header triggers");
         }
 
-        // 1. Sort-only header cycles sort directly without opening popover
+        // 1. Sort-only header cycles sort directly without opening popover and reactively updates header data-sort
+        expect(sortOnlyHeader.dataset.sort).toBeUndefined();
         sortOnlyTrigger.click();
         flushSync();
         expect(table.getColumnSort("sortOnly")).toEqual({ direction: "asc", priority: 1 });
+        expect(sortOnlyHeader.dataset.sort).toBe("asc");
         expect(table.openPopoverColumnId).toBeNull();
 
         sortOnlyTrigger.click();
         flushSync();
         expect(table.getColumnSort("sortOnly")).toEqual({ direction: "desc", priority: 1 });
+        expect(sortOnlyHeader.dataset.sort).toBe("desc");
 
         sortOnlyTrigger.click();
         flushSync();
         expect(table.getColumnSort("sortOnly")).toBeNull();
+        expect(sortOnlyHeader.dataset.sort).toBeUndefined();
+
+        // Programmatic table.toggleSort / table.setColumnFilter / table.clearAllFilters after mount reactively update header DOM
+        table.toggleSort("status");
+        flushSync();
+        expect(statusHeader.dataset.sort).toBe("asc");
+        table.toggleSort("status");
+        flushSync();
+        expect(statusHeader.dataset.sort).toBe("desc");
+        table.toggleSort("status");
+        flushSync();
+        expect(statusHeader.dataset.sort).toBeUndefined();
+
+        expect(statusHeader.dataset.filtered).toBeUndefined();
+        expect(statusHeader.querySelector(".cs-data-table-header-filter-icon")).toBeNull();
+        table.setColumnFilter("status", { kind: "values", selected: ["Open"] });
+        flushSync();
+        expect(statusHeader.dataset.filtered).toBe("");
+        expect(statusHeader.querySelector(".cs-data-table-header-filter-icon")).not.toBeNull();
+
+        table.clearAllFilters();
+        flushSync();
+        expect(statusHeader.dataset.filtered).toBeUndefined();
+        expect(statusHeader.querySelector(".cs-data-table-header-filter-icon")).toBeNull();
 
         // 2. Filterable low-cardinality column (`status`, 3 distinct <= 7): opens popover on Values tab with NO search input
         statusTrigger.click();
@@ -948,8 +987,8 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
         expect(statusTrigger.getAttribute("aria-expanded")).toBe("true");
         expect(popover.querySelector(".cs-data-table-popover-search-input")).toBeNull();
 
-        // 2-up sort toggle buttons inside popover update sort and aria-pressed
-        const sortBtns = [...popover.querySelectorAll<HTMLButtonElement>(".cs-data-table-popover-sort-btn")];
+        // 2-up sort toggle buttons inside popover update sort and data-selected
+        const sortBtns = [...popover.querySelectorAll<HTMLButtonElement>(".cs-data-table-popover-sort-item")];
         expect(sortBtns).toHaveLength(2);
         const [ascBtn, descBtn] = sortBtns;
         if (!ascBtn || !descBtn) throw new Error("Missing sort buttons");
@@ -957,14 +996,16 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
         ascBtn.click();
         flushSync();
         expect(table.getColumnSort("status")).toEqual({ direction: "asc", priority: 1 });
-        expect(ascBtn.getAttribute("aria-pressed")).toBe("true");
-        expect(descBtn.getAttribute("aria-pressed")).toBe("false");
+        expect(statusHeader.dataset.sort).toBe("asc");
+        expect(ascBtn.dataset.selected).toBe("");
+        expect(descBtn.dataset.selected).toBeUndefined();
 
         // Clicking active sort toggle clears sort
         ascBtn.click();
         flushSync();
         expect(table.getColumnSort("status")).toBeNull();
-        expect(ascBtn.getAttribute("aria-pressed")).toBe("false");
+        expect(statusHeader.dataset.sort).toBeUndefined();
+        expect(ascBtn.dataset.selected).toBeUndefined();
 
         // Additive checklist: all unchecked at rest, checking one filters, unchecking clears back to unfiltered
         const facetCheckboxes = [
@@ -978,11 +1019,15 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
         firstFacetCb.click(); // "Done" (sorted alphabetically: Done, Open, Review)
         flushSync();
         expect(table.filters.status).toEqual({ kind: "values", selected: ["Done"] });
+        expect(statusHeader.dataset.filtered).toBe("");
+        expect(statusHeader.querySelector(".cs-data-table-header-filter-icon")).not.toBeNull();
         expect(table.rowCount).toBe(4);
 
         firstFacetCb.click(); // Uncheck last selected value -> clears filter
         flushSync();
         expect(table.filters.status).toBeUndefined();
+        expect(statusHeader.dataset.filtered).toBeUndefined();
+        expect(statusHeader.querySelector(".cs-data-table-header-filter-icon")).toBeNull();
         expect(table.rowCount).toBe(12);
 
         // 3. Switch to `category` (9 distinct > 7): search input IS visible and filters options
@@ -1046,7 +1091,138 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
         unmount(instance);
     });
 
-    it("virtualizes large datasets with windowed DOM subset, header-offset aria-rowindex, and logical data-even parity", () => {
+    it("keeps column filter/sort popover open across pointerdown, pointerup, and click on trigger and supports drag-release item activation", () => {
+        const table = createDataTable({
+            data: SAMPLE_DATA,
+            columns: SAMPLE_COLUMNS,
+            getRowId: (row) => row.id,
+        });
+
+        const instance = mount(DataTableTestHost<PersonRow>, {
+            target: container,
+            props: {
+                variant: "elevated",
+                size: "md",
+                table,
+            },
+        });
+        flushSync();
+
+        const triggers = [...container.querySelectorAll<HTMLButtonElement>(".cs-data-table-header-trigger")];
+        const [nameTrigger, departmentTrigger] = triggers;
+        expect(nameTrigger).toBeDefined();
+        expect(departmentTrigger).toBeDefined();
+        if (!nameTrigger || !departmentTrigger) throw new Error("Missing header triggers");
+
+        const dispatchFullClick = (el: HTMLElement): void => {
+            el.dispatchEvent(
+                new PointerEvent("pointerdown", {
+                    bubbles: true,
+                    cancelable: true,
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 10,
+                    clientY: 10,
+                })
+            );
+            el.dispatchEvent(
+                new PointerEvent("pointerup", {
+                    bubbles: true,
+                    cancelable: true,
+                    pointerType: "mouse",
+                    button: 0,
+                    clientX: 10,
+                    clientY: 10,
+                })
+            );
+            el.click();
+            flushSync();
+        };
+
+        // Opening via pointerdown -> pointerup -> click keeps popover open
+        dispatchFullClick(nameTrigger);
+        expect(table.openPopoverColumnId).toBe("name");
+        expect(nameTrigger.getAttribute("aria-expanded")).toBe("true");
+
+        // Switching to another column trigger via pointerdown -> pointerup -> click keeps popover open on the new column
+        dispatchFullClick(departmentTrigger);
+        expect(table.openPopoverColumnId).toBe("department");
+        expect(departmentTrigger.getAttribute("aria-expanded")).toBe("true");
+        expect(nameTrigger.getAttribute("aria-expanded")).toBe("false");
+
+        // Drag-release (pointerdown on trigger -> pointerup >= 4px travel on sort item) commits sort and suppresses trailing synthetic click
+        nameTrigger.dispatchEvent(
+            new PointerEvent("pointerdown", {
+                bubbles: true,
+                cancelable: true,
+                pointerType: "mouse",
+                button: 0,
+                clientX: 10,
+                clientY: 10,
+            })
+        );
+        flushSync();
+        expect(table.openPopoverColumnId).toBe("name");
+
+        const ascSortBtn = container.querySelector<HTMLButtonElement>(".cs-data-table-popover-sort-item");
+        expect(ascSortBtn).not.toBeNull();
+        if (!ascSortBtn) throw new Error("Missing asc sort button");
+
+        ascSortBtn.dispatchEvent(
+            new PointerEvent("pointerup", {
+                bubbles: true,
+                cancelable: true,
+                pointerType: "mouse",
+                button: 0,
+                clientX: 10,
+                clientY: 40,
+            })
+        );
+        ascSortBtn.click();
+        flushSync();
+
+        expect(table.getColumnSort("name")).toEqual({ direction: "asc", priority: 1 });
+        expect(ascSortBtn.dataset.selected).toBe("");
+
+        // Drag-release (pointerdown on trigger -> pointerup >= 4px travel on checklist option) commits filter and suppresses trailing synthetic click
+        departmentTrigger.dispatchEvent(
+            new PointerEvent("pointerdown", {
+                bubbles: true,
+                cancelable: true,
+                pointerType: "mouse",
+                button: 0,
+                clientX: 10,
+                clientY: 10,
+            })
+        );
+        flushSync();
+        expect(table.openPopoverColumnId).toBe("department");
+
+        const firstOption = container.querySelector<HTMLLabelElement>(".cs-data-table-popover-option");
+        expect(firstOption).not.toBeNull();
+        if (!firstOption) throw new Error("Missing popover option");
+
+        firstOption.dispatchEvent(
+            new PointerEvent("pointerup", {
+                bubbles: true,
+                cancelable: true,
+                pointerType: "mouse",
+                button: 0,
+                clientX: 10,
+                clientY: 40,
+            })
+        );
+        firstOption.click();
+        flushSync();
+
+        expect(table.filters.department).toEqual({ kind: "values", selected: ["Design"] });
+        expect(firstOption.dataset.checked).toBe("");
+        expect(firstOption.querySelector<HTMLInputElement>("input.cs-checkbox")?.checked).toBe(true);
+
+        unmount(instance);
+    });
+
+    it("virtualizes large datasets with windowed DOM subset, header-offset aria-rowindex, logical data-even parity, and reactive selection", () => {
         interface BigRow extends Record<string, unknown> {
             id: string;
             label: string;
@@ -1066,6 +1242,7 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
             data: bigData,
             columns: cols,
             getRowId: (row) => row.id,
+            selectable: true,
             virtualize: { overscan: 2, initialViewportSize: 220, initialRenderCount: 10 },
         });
 
@@ -1129,6 +1306,27 @@ describe("DataTable compound components (Svelte 5 + happy-dom)", () => {
             expect(rowEl.getAttribute("aria-rowindex")).toBe(String(viewIdx + 2));
             expect(rowEl.dataset.even !== undefined).toBe(viewIdx % 2 === 1);
         }
+
+        // Reactive virtualized row selection updates data-selected and checkbox checked state on rendered virtual row
+        const row50El = container.querySelector<HTMLDivElement>('.cs-data-table-row[data-row-index="50"]');
+        expect(row50El).not.toBeNull();
+        if (!row50El) throw new Error("Missing virtual row 50");
+        const row50Checkbox = row50El.querySelector<HTMLInputElement>("input.cs-checkbox");
+        expect(row50Checkbox).not.toBeNull();
+        if (!row50Checkbox) throw new Error("Missing virtual row 50 checkbox");
+
+        expect(row50El.dataset.selected).toBeUndefined();
+        expect(row50Checkbox.checked).toBe(false);
+
+        table.toggleRowSelection("row-50");
+        flushSync();
+        expect(row50El.dataset.selected).toBe("");
+        expect(row50Checkbox.checked).toBe(true);
+
+        table.toggleRowSelection("row-50");
+        flushSync();
+        expect(row50El.dataset.selected).toBeUndefined();
+        expect(row50Checkbox.checked).toBe(false);
 
         unmount(instance);
     });

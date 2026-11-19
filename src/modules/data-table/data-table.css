@@ -38,16 +38,7 @@
             color-mix(in oklab, var(--cs-color-accent-500) 8%, transparent),
             color-mix(in oklab, var(--cs-color-accent-500) 16%, transparent)
         );
-        --cs-data-table-header-pill-filtered-bg: light-dark(
-            color-mix(in oklab, var(--cs-color-accent-500) 8%, transparent),
-            color-mix(in oklab, var(--cs-color-accent-500) 15%, transparent)
-        );
-        --cs-data-table-header-pill-filtered-bg-hover: light-dark(
-            color-mix(in oklab, var(--cs-color-accent-500) 12%, transparent),
-            color-mix(in oklab, var(--cs-color-accent-500) 21%, transparent)
-        );
         --cs-data-table-row-hover-dur: var(--cs-dur-60);
-        --cs-data-table-popover-pad: 6px;
 
         isolation: isolate;
         position: relative;
@@ -80,14 +71,13 @@
             --cs-data-table-radius: 12px;
             --cs-data-table-squircle: var(--cs-squircle-smooth);
             --cs-data-table-selection-width: 36px;
-            --cs-data-table-status-bar-height: 32px;
+            --cs-data-table-status-bar-height: 36px;
             --cs-data-table-header-pill-inset-y: 2px;
             --cs-data-table-header-pill-inset-x: 2px;
             --cs-data-table-header-pill-radius: 7px;
-            --cs-data-table-header-icon-size: 12px;
+            --cs-data-table-header-trigger-gap: 4px;
+            --cs-data-table-header-icon-size: 13px;
             --cs-data-table-empty-py: 36px;
-            --cs-data-table-popover-radius: 16px;
-            --cs-data-table-popover-sort-height: 30px;
         }
 
         &[data-size="sm"] {
@@ -104,14 +94,12 @@
             --cs-data-table-radius: 16px;
             --cs-data-table-squircle: var(--cs-squircle);
             --cs-data-table-selection-width: 40px;
-            --cs-data-table-status-bar-height: 34px;
+            --cs-data-table-status-bar-height: 38px;
             --cs-data-table-header-pill-inset-y: 3px;
             --cs-data-table-header-pill-inset-x: 4px;
             --cs-data-table-header-pill-radius: 7px;
-            --cs-data-table-header-icon-size: 12px;
+            --cs-data-table-header-icon-size: 14px;
             --cs-data-table-empty-py: 48px;
-            --cs-data-table-popover-radius: 16px;
-            --cs-data-table-popover-sort-height: 30px;
         }
 
         &[data-size="md"] {
@@ -128,14 +116,12 @@
             --cs-data-table-radius: 24px;
             --cs-data-table-squircle: var(--cs-squircle);
             --cs-data-table-selection-width: 44px;
-            --cs-data-table-status-bar-height: 38px;
+            --cs-data-table-status-bar-height: 42px;
             --cs-data-table-header-pill-inset-y: 3px;
             --cs-data-table-header-pill-inset-x: 4px;
             --cs-data-table-header-pill-radius: 8px;
-            --cs-data-table-header-icon-size: 13px;
+            --cs-data-table-header-icon-size: 14px;
             --cs-data-table-empty-py: 48px;
-            --cs-data-table-popover-radius: 18px;
-            --cs-data-table-popover-sort-height: 32px;
         }
 
         &[data-size="lg"] {
@@ -152,14 +138,12 @@
             --cs-data-table-radius: 28px;
             --cs-data-table-squircle: var(--cs-squircle);
             --cs-data-table-selection-width: 52px;
-            --cs-data-table-status-bar-height: 42px;
+            --cs-data-table-status-bar-height: 46px;
             --cs-data-table-header-pill-inset-y: 3px;
             --cs-data-table-header-pill-inset-x: 4px;
             --cs-data-table-header-pill-radius: 8px;
-            --cs-data-table-header-icon-size: 13px;
+            --cs-data-table-header-icon-size: 15px;
             --cs-data-table-empty-py: 64px;
-            --cs-data-table-popover-radius: 18px;
-            --cs-data-table-popover-sort-height: 32px;
         }
 
         /* =========================================================
@@ -384,7 +368,7 @@
 
         position: relative;
         display: flex;
-        gap: 4px;
+        gap: var(--cs-data-table-header-trigger-gap, 6px);
         align-items: center;
         inline-size: 100%;
         min-inline-size: 0;
@@ -397,7 +381,8 @@
         letter-spacing: inherit;
         background: transparent;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--cs-data-table-header-pill-radius);
+        corner-shape: var(--cs-squircle-soft);
         transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
         cursor: default;
 
@@ -419,7 +404,9 @@
             background-color: var(--cs-data-table-header-pill-bg);
             border-radius: var(--cs-data-table-header-pill-radius);
             corner-shape: var(--cs-squircle-soft);
-            transition: background-color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            transition:
+                background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+                scale var(--cs-dur-effect-fast) var(--cs-ease-effect);
             pointer-events: none;
         }
 
@@ -455,7 +442,7 @@
                 color: var(--cs-color-text-strong);
 
                 .cs-data-table-header-cue {
-                    opacity: 1;
+                    color: var(--cs-color-text-strong);
                 }
             }
         }
@@ -463,6 +450,10 @@
         &:active {
             --cs-data-table-header-pill-bg: var(--cs-color-base-soft-hover);
             color: var(--cs-color-text-strong);
+
+            &::before {
+                scale: 0.98;
+            }
         }
 
         .cs-data-table-header-cell[data-open] > & {
@@ -470,29 +461,18 @@
             color: var(--cs-color-text-strong);
 
             .cs-data-table-header-cue {
-                opacity: 1;
+                color: var(--cs-color-text-strong);
             }
         }
 
-        /* Sorted-only stays pill-free at rest */
-        .cs-data-table-header-cell[data-sort] > & {
-            color: var(--cs-color-text-strong);
-        }
-
-        /* Filtered headers receive whisper accent inset pill */
+        /* Sorted and filtered headers use typographic elevation without a resting pill */
+        .cs-data-table-header-cell[data-sort] > &,
         .cs-data-table-header-cell[data-filtered] > & {
-            --cs-data-table-header-pill-bg: var(--cs-data-table-header-pill-filtered-bg);
             color: var(--cs-color-text-strong);
 
-            @media (hover: hover) {
-                &:hover {
-                    --cs-data-table-header-pill-bg: var(--cs-data-table-header-pill-filtered-bg-hover);
-                }
+            .cs-data-table-header-label {
+                font-weight: 600;
             }
-        }
-
-        .cs-data-table-header-cell[data-filtered][data-open] > & {
-            --cs-data-table-header-pill-bg: var(--cs-data-table-header-pill-filtered-bg-hover);
         }
     }
 
@@ -519,25 +499,59 @@
 
     .cs-data-table-header-cue {
         color: var(--cs-color-text-weaker);
-        opacity: 0;
+        opacity: 1;
+        rotate: 0deg;
         transition:
-            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            color var(--cs-dur-effect-fast) var(--cs-ease-effect),
             rotate var(--cs-dur-exit-md) var(--cs-ease-exit);
 
         .cs-data-table-header-cell[data-open] & {
+            color: var(--cs-color-text-strong);
             rotate: 180deg;
             transition:
-                opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
+                color var(--cs-dur-effect-fast) var(--cs-ease-effect),
                 rotate var(--cs-dur-200) var(--cs-ease-quart-out);
         }
     }
 
-    .cs-data-table-header-sort-icon {
-        color: var(--cs-color-accent-soft-fg);
-        transition: rotate var(--cs-dur-effect) var(--cs-ease-quart-out);
+    .cs-data-table-header-sort-up,
+    .cs-data-table-header-sort-down {
+        stroke: currentColor;
+        color: var(--cs-color-text-weaker);
+        opacity: 0.75;
+        transition:
+            color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
 
-        .cs-data-table-header-cell[data-sort="desc"] & {
-            rotate: 180deg;
+        @media (hover: hover) {
+            .cs-data-table-header-trigger:hover & {
+                color: var(--cs-color-text-weak);
+                opacity: 1;
+            }
+        }
+    }
+
+    .cs-data-table-header-cell[data-sort="asc"] {
+        .cs-data-table-header-sort-up {
+            color: var(--cs-color-accent-soft-fg);
+            opacity: 1;
+        }
+
+        .cs-data-table-header-sort-down {
+            color: var(--cs-color-text-weaker);
+            opacity: 0.25;
+        }
+    }
+
+    .cs-data-table-header-cell[data-sort="desc"] {
+        .cs-data-table-header-sort-up {
+            color: var(--cs-color-text-weaker);
+            opacity: 0.25;
+        }
+
+        .cs-data-table-header-sort-down {
+            color: var(--cs-color-accent-soft-fg);
+            opacity: 1;
         }
     }
 
@@ -551,6 +565,16 @@
 
     .cs-data-table-header-filter-icon {
         color: var(--cs-color-accent-soft-fg);
+        opacity: 1;
+        scale: 1;
+        transition:
+            opacity var(--cs-dur-160) var(--cs-ease-effect),
+            scale var(--cs-dur-160) var(--cs-ease-effect);
+
+        @starting-style {
+            opacity: 0;
+            scale: 0.75;
+        }
     }
 
     /* =========================================================
@@ -984,12 +1008,28 @@
     }
 
     .cs-data-table-selection-hit {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
         inline-size: 100%;
         block-size: 100%;
         cursor: default;
+    }
+
+    .cs-data-table-checkbox-wrap {
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+
+        /* Center checkmark reliably inside top-layer popovers and virtualized rows */
+        > .cs-checkbox + .cs-checkbox-icon {
+            top: 50%;
+            left: 50%;
+            z-index: 1;
+        }
     }
 
     /* =========================================================
@@ -1033,7 +1073,7 @@
         align-items: center;
         justify-content: center;
         inline-size: var(--cs-data-table-viewport-width, 100%);
-        padding-block: var(--cs-data-table-empty-py, 48px);
+        padding-block: var(--cs-data-table-empty-py, 36px);
         padding-inline: var(--cs-data-table-edge-px, 20px);
         text-align: center;
     }
@@ -1041,9 +1081,9 @@
     .cs-data-table-empty-inner {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         align-items: center;
-        max-inline-size: 280px;
+        max-inline-size: 260px;
     }
 
     .cs-data-table-empty-icon {
@@ -1056,10 +1096,16 @@
 
     .cs-data-table-empty-title {
         margin: 0;
-        color: var(--cs-color-text-strong);
-        font-size: 13px;
-        font-weight: 500;
+        color: var(--cs-color-text-weak);
+        font-size: var(--cs-data-table-font-size, 12px);
+        font-weight: 400;
         line-height: 18px;
+
+        .cs-data-table-empty[data-filtered] &,
+        .cs-data-table-empty[data-has-description] & {
+            color: var(--cs-color-text-main);
+            font-weight: 500;
+        }
     }
 
     .cs-data-table-empty-description {
@@ -1070,7 +1116,7 @@
     }
 
     .cs-data-table-empty-actions {
-        margin-block-start: 6px;
+        margin-block-start: 2px;
     }
 
     /* =========================================================
@@ -1114,8 +1160,8 @@
 
         &[data-mode="selection"] {
             background-color: light-dark(
-                color-mix(in oklab, var(--cs-color-accent-500) 7%, var(--cs-data-table-header-bg)),
-                color-mix(in oklab, var(--cs-color-accent-500) 14%, var(--cs-data-table-header-bg))
+                color-mix(in oklab, var(--cs-color-accent-500) 4%, var(--cs-data-table-header-bg)),
+                color-mix(in oklab, var(--cs-color-accent-500) 9%, var(--cs-data-table-header-bg))
             );
         }
     }
@@ -1138,67 +1184,41 @@
     }
 
     .cs-data-table-status-bar-summary {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
         color: var(--cs-color-text-weak);
         font-variant-numeric: tabular-nums lining-nums;
         white-space: nowrap;
-
-        .cs-data-table-status-bar[data-mode="selection"] & {
-            color: var(--cs-color-accent-soft-fg);
-            font-weight: 500;
-        }
     }
 
-    .cs-data-table-status-bar-dot {
-        flex-shrink: 0;
-        inline-size: 3px;
-        block-size: 3px;
-        background-color: var(--cs-color-text-weaker);
-        border-radius: 50%;
-        user-select: none;
-    }
-
-    .cs-data-table-status-bar-columns {
-        display: inline-flex;
-        gap: 2px;
-        align-items: center;
-        min-inline-size: 0;
-        overflow: hidden;
-    }
-
-    .cs-data-table-status-bar-column-btn {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 6px;
-        color: var(--cs-color-text-main);
-        font: inherit;
-        font-weight: 500;
+    .cs-data-table-status-bar-count-pill {
+        padding: 2px 7px;
+        color: var(--cs-color-accent-soft-fg);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
         line-height: 16px;
-        white-space: nowrap;
-        background: transparent;
-        border: none;
+        background-color: var(--cs-color-accent-soft);
         border-radius: 6px;
         corner-shape: var(--cs-squircle-soft);
-        transition:
-            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
-            color var(--cs-dur-effect-fast) var(--cs-ease-effect);
-        cursor: default;
-
-        @media (hover: hover) {
-            &:hover {
-                color: var(--cs-color-text-strong);
-                background-color: var(--cs-color-base-soft);
-            }
-        }
-
-        &:active {
-            background-color: var(--cs-color-base-soft-hover);
-        }
     }
 
-    .cs-data-table-status-bar-more {
-        color: var(--cs-color-text-weak);
-        font-variant-numeric: tabular-nums lining-nums;
-        white-space: nowrap;
+    .cs-data-table-status-bar-count-label {
+        color: var(--cs-color-text-main);
+    }
+
+    .cs-data-table-status-bar-divider {
+        flex-shrink: 0;
+        inline-size: 1px;
+        background-color: var(--cs-data-table-header-divider);
+
+        &[data-height="sm"] {
+            block-size: 12px;
+        }
+
+        &[data-height="md"] {
+            block-size: 14px;
+        }
     }
 
     /* =========================================================
@@ -1209,145 +1229,86 @@
         --cs-popover-anim-scale-start: 0.94;
         --cs-popover-anim-dur-in: var(--cs-dur-enter-sm);
         --cs-popover-anim-dur-out: var(--cs-dur-exit-sm);
-        --cs-data-table-popover-inner-radius: calc(
-            var(--cs-data-table-popover-radius, 16px) - var(--cs-data-table-popover-pad, 6px)
-        );
-        --cs-data-table-popover-separator: var(
-            --cs-listbox-separator-bg,
-            color-mix(in oklab, var(--cs-color-text-main) 10%, transparent)
-        );
 
-        flex-direction: column;
         inline-size: 256px;
         max-inline-size: min(288px, calc(100vw - 32px));
-        overflow: hidden;
         color: var(--cs-color-text-main);
         font-family: var(--cs-font-sans);
-        background-color: var(--cs-color-elevated);
-        border-radius: var(--cs-data-table-popover-radius, 16px);
-        corner-shape: var(--cs-squircle-soft);
-        box-shadow: var(--cs-shadow-floating);
 
-        &:popover-open {
-            display: flex;
-            overflow: hidden;
+        > .cs-listbox-separator {
+            margin-block: 0;
         }
     }
 
-    .cs-data-table-popover-separator {
-        flex-shrink: 0;
-        block-size: 1px;
-        background-color: var(--cs-data-table-popover-separator);
+    /* Zone 1: Sort menu items */
+    .cs-data-table-popover-sort-group {
+        padding: var(--cs-listbox-content-padding);
     }
 
-    /* Zone 1: 2-up horizontal sort toggle pair */
-    .cs-data-table-popover-sort {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4px;
-        padding: var(--cs-data-table-popover-pad, 6px);
-    }
-
-    .cs-data-table-popover-sort-btn {
-        display: inline-flex;
-        gap: 5px;
-        align-items: center;
-        justify-content: center;
-        block-size: var(--cs-data-table-popover-sort-height, 30px);
-        padding-inline: 8px;
-        color: var(--cs-color-text-main);
+    .cs-data-table-popover-sort-item {
+        gap: var(--cs-listbox-item-gap);
+        inline-size: 100%;
         font-family: inherit;
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 16px;
-        white-space: nowrap;
-        background-color: var(--cs-color-base-soft);
+        text-align: start;
         border: none;
-        border-radius: var(--cs-data-table-popover-inner-radius);
-        corner-shape: var(--cs-squircle-soft);
-        transition:
-            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
-            color var(--cs-dur-effect-fast) var(--cs-ease-effect),
-            scale var(--cs-dur-press) var(--cs-ease-press);
-        cursor: default;
 
-        @media (hover: hover) {
-            &:hover {
-                color: var(--cs-color-text-strong);
-                background-color: var(--cs-color-base-soft-hover);
-            }
+        > .cs-listbox-item-content {
+            flex: 1 1 auto;
         }
 
-        &:active {
-            scale: 0.97;
-        }
-
-        &[aria-pressed="true"] {
-            color: var(--cs-color-accent-soft-fg);
-            background-color: var(--cs-color-accent-soft);
+        &[data-selected] {
+            --cs-listbox-item-icon-fg: var(--cs-listbox-item-indicator-fg);
 
             @media (hover: hover) {
-                &:hover {
-                    background-color: var(--cs-color-accent-soft-hover);
+                .cs-listbox:not([data-nav="keyboard"]) &:hover {
+                    --cs-listbox-item-icon-fg: var(--cs-listbox-item-indicator-fg);
                 }
+            }
+
+            &:active {
+                --cs-listbox-item-icon-fg: var(--cs-listbox-item-indicator-fg);
             }
         }
     }
 
-    .cs-data-table-popover-sort-icon {
-        flex-shrink: 0;
-        inline-size: 13px;
-        block-size: 13px;
-        stroke-width: 2.25;
-    }
-
-    .cs-data-table-popover-sort-label {
-        overflow-x: clip;
-        overflow-y: visible;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        text-box: trim-both cap alphabetic;
-    }
-
-    /* Zone 1b: Conditional SegmentedControl mode switch */
     .cs-data-table-popover-mode {
-        padding: var(--cs-data-table-popover-pad, 6px);
-
-        .cs-data-table-popover-sort + & {
-            padding-block-start: 0;
-        }
+        padding: 4px;
     }
 
-    /* Zone 2A: Flush borderless search row */
+    /* Zone 2A: ComboboxControl[data-size="xs"]-matched search input */
+    .cs-data-table-popover-search-wrap {
+        padding: 4px;
+    }
+
     .cs-data-table-popover-search {
         position: relative;
         display: flex;
-        gap: 8px;
+        gap: 6px;
         align-items: center;
-        block-size: 34px;
-        padding-inline: 12px;
-        background: transparent;
+        block-size: 28px;
+        padding-inline: 6px 8px;
+        background-color: var(--cs-color-base-soft);
+        border-radius: 9px;
+        corner-shape: var(--cs-squircle-soft);
 
         &::after {
             content: "";
             position: absolute;
-            inset-block-end: 0;
-            inset-inline: 0;
-            block-size: 2px;
-            background-color: var(--cs-color-accent-solid);
-            opacity: 0;
-            transition: opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            inset: 0;
+            z-index: 1;
+            border-radius: inherit;
+            corner-shape: inherit;
+            box-shadow: inset 0 0 0 0px transparent;
+            transition: box-shadow var(--cs-dur-120) var(--cs-ease-quart-out);
             pointer-events: none;
         }
 
-        &:focus-within {
-            .cs-data-table-popover-search-icon {
-                color: var(--cs-color-accent-soft-fg);
-            }
+        &:focus-within::after {
+            box-shadow: inset 0 0 0 2px var(--cs-color-accent-solid);
+        }
 
-            &::after {
-                opacity: 1;
-            }
+        &:focus-within .cs-data-table-popover-search-icon {
+            color: var(--cs-color-accent-soft-fg);
         }
     }
 
@@ -1433,36 +1394,10 @@
         max-block-size: 204px;
     }
 
-    .cs-data-table-popover-list {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        padding: 4px;
-    }
-
     .cs-data-table-popover-option {
-        display: flex;
         gap: 8px;
-        align-items: center;
         block-size: 30px;
-        padding-inline: 8px;
-        color: var(--cs-color-text-main);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 18px;
-        border-radius: var(--cs-data-table-popover-inner-radius);
-        corner-shape: var(--cs-squircle-soft);
-        user-select: none;
-        transition:
-            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
-            color var(--cs-dur-effect-fast) var(--cs-ease-effect);
-        cursor: default;
-
-        @media (hover: hover) {
-            &:hover {
-                background-color: var(--cs-color-base-soft);
-            }
-        }
+        font-weight: 500;
 
         &[data-checked] {
             color: var(--cs-color-text-strong);
@@ -1478,6 +1413,7 @@
         flex: 1 1 auto;
         min-inline-size: 0;
         overflow: hidden;
+        font-weight: 500;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -1491,28 +1427,20 @@
         line-height: 16px;
     }
 
-    .cs-data-table-popover-empty,
-    .cs-data-table-popover-truncated {
-        padding: 12px 10px;
-        color: var(--cs-color-text-weak);
-        font-size: 12px;
-        line-height: 18px;
-        text-align: center;
-    }
-
     .cs-data-table-popover-truncated {
         padding: 6px 8px;
         color: var(--cs-color-text-weaker);
         font-size: 11px;
         line-height: 16px;
+        text-align: center;
     }
 
     /* Zone 2B: Condition filter builder */
     .cs-data-table-popover-condition {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding: 8px;
+        gap: 6px;
+        padding: 4px;
     }
 
     .cs-data-table-popover-condition-range {
@@ -1527,15 +1455,18 @@
         gap: 8px;
         align-items: center;
         justify-content: space-between;
-        block-size: 34px;
-        padding-inline: 6px 12px;
+        padding: 4px;
+        box-shadow: inset 0 1px 0 0 var(--cs-listbox-separator-bg);
     }
 
     .cs-data-table-popover-footer-count {
-        color: var(--cs-color-text-weak);
+        overflow: hidden;
+        padding-inline-end: 8px;
+        color: var(--cs-color-text-weaker);
         font-size: 11px;
         font-variant-numeric: tabular-nums lining-nums;
         line-height: 16px;
+        text-overflow: ellipsis;
         white-space: nowrap;
     }
 }

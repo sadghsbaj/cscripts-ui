@@ -45,22 +45,24 @@
             {#if table.selectable}
                 <DataTableHeaderCell selection aria-colindex={1}>
                     <label class="cs-data-table-selection-hit">
-                        <Checkbox
-                            variant={checkboxVariant}
-                            size={checkboxSize}
-                            aria-label={t({ de: "Alle Zeilen auswählen", en: "Select all rows" })}
-                            disabled={table.rowCount === 0}
-                            bind:checked={() => table.allVisibleSelected, handleToggleAllVisible}
-                            bind:indeterminate={() => table.someVisibleSelected, () => {}}
-                        />
+                        <span class="cs-data-table-checkbox-wrap">
+                            <Checkbox
+                                variant={checkboxVariant}
+                                size={checkboxSize}
+                                aria-label={t({ de: "Alle Zeilen auswählen", en: "Select all rows" })}
+                                disabled={table.rowCount === 0}
+                                bind:checked={() => table.allVisibleSelected, handleToggleAllVisible}
+                                bind:indeterminate={() => table.someVisibleSelected, () => {}}
+                            />
+                        </span>
                     </label>
                 </DataTableHeaderCell>
             {/if}
 
             {#each table.columns as column, idx (column.id)}
-                {const sortInfo = table.getColumnSort(column.id)}
-                {const isFiltered = isFilterActive(table.filters[column.id])}
-                {const colIndex = (table.selectable ? 2 : 1) + idx}
+                {const sortInfo = $derived(table.getColumnSort(column.id))}
+                {const isFiltered = $derived(isFilterActive(table.filters[column.id]))}
+                {const colIndex = $derived((table.selectable ? 2 : 1) + idx)}
                 <DataTableHeaderCell
                     columnId={column.id}
                     align={resolveColumnAlign(column)}

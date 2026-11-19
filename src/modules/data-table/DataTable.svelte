@@ -4,6 +4,7 @@
 
     import "./data-table.css";
 
+    import { createPointerDragRelease } from "../../shared/listbox/pointer-drag-release.ts";
     import { createSurfaceRadius } from "../../shared/surface-radius/index.ts";
     import { ScrollArea, ScrollAreaContent, type ScrollAreaSize } from "../scroll-area/index.ts";
     import type { VirtualScrollScrollToIndexOptions } from "../virtual-scroll/index.ts";
@@ -69,6 +70,11 @@
     let switchingPopover = false;
     let suppressNextClickColumnId: string | null = null;
     let suppressResetTimer: ReturnType<typeof setTimeout> | null = null;
+    let cleanupSuppressListeners: (() => void) | null = null;
+
+    const { beginPointerOpen, shouldCommitPointerRelease, clearPointerOpen } = createPointerDragRelease(
+        () => activeTriggerEl
+    );
 
     const scrollAreaSize = $derived<ScrollAreaSize>(size === "xs" || size === "sm" ? "sm" : "md");
 
@@ -159,26 +165,36 @@
             clearTimeout(suppressResetTimer);
             suppressResetTimer = null;
         }
+        if (cleanupSuppressListeners !== null) {
+            cleanupSuppressListeners();
+            cleanupSuppressListeners = null;
+        }
     }
 
     function armSuppressNextClick(columnId: string): void {
+        clearSuppressNextClick();
         suppressNextClickColumnId = columnId;
-        if (suppressResetTimer !== null) {
-            clearTimeout(suppressResetTimer);
-            suppressResetTimer = null;
-        }
-        if (typeof window !== "undefined") {
-            const onPointerRelease = (): void => {
-                window.removeEventListener("pointerup", onPointerRelease);
-                window.removeEventListener("pointercancel", onPointerRelease);
-                suppressResetTimer = setTimeout(() => {
-                    suppressResetTimer = null;
-                    suppressNextClickColumnId = null;
-                }, 0);
-            };
-            window.addEventListener("pointerup", onPointerRelease, { once: true });
-            window.addEventListener("pointercancel", onPointerRelease, { once: true });
-        }
+        if (typeof window === "undefined") return;
+
+        // Releasing outside the trigger emits no click, so clear on the next task to avoid leaking.
+        const resetSuppression = (): void => {
+            cleanupSuppressListeners?.();
+            cleanupSuppressListeners = null;
+
+            if (suppressResetTimer !== null) {
+                clearTimeout(suppressResetTimer);
+            }
+            suppressResetTimer = setTimeout(() => {
+                clearSuppressNextClick();
+            }, 0);
+        };
+
+        window.addEventListener("pointerup", resetSuppression);
+        window.addEventListener("pointercancel", resetSuppression);
+        cleanupSuppressListeners = () => {
+            window.removeEventListener("pointerup", resetSuppression);
+            window.removeEventListener("pointercancel", resetSuppression);
+        };
     }
 
     function scrollToColumn(columnId: string, options?: { behavior?: "auto" | "instant" | "smooth" }): void {
@@ -267,6 +283,8 @@
     }
 
     function closeColumnPopover(options?: { restoreFocus?: boolean }): void {
+        clearSuppressNextClick();
+        clearPointerOpen();
         const pop = popoverEl;
         const restore = options?.restoreFocus ?? false;
         const triggerToFocus = lastTriggerEl;
@@ -288,6 +306,8 @@
     }
 
     function markPopoverClosedFromNative(restoreFocus: boolean): void {
+        clearSuppressNextClick();
+        clearPointerOpen();
         const triggerToFocus = lastTriggerEl;
 
         if (activeTriggerEl) {
@@ -306,12 +326,14 @@
         if (event.pointerType !== "mouse" || event.button !== 0) return;
 
         if (table?.openPopoverColumnId === columnId && isPopoverDomOpen(popoverEl)) {
+            clearPointerOpen();
             closeColumnPopover({ restoreFocus: false });
             armSuppressNextClick(columnId);
             return;
         }
 
         openColumnPopover(columnId, triggerEl);
+        beginPointerOpen(event.clientX, event.clientY);
         armSuppressNextClick(columnId);
     }
 
@@ -321,6 +343,9 @@
             event.preventDefault();
             return;
         }
+
+        // Prevent native `popovertarget` from double-toggling after custom open/close logic.
+        event.preventDefault();
 
         if (table?.openPopoverColumnId === columnId && isPopoverDomOpen(popoverEl)) {
             closeColumnPopover({ restoreFocus: false });
@@ -360,8 +385,13 @@
         }
     });
 
-    // Clean up any pending click-suppression timer on teardown.
-    $effect(() => clearSuppressNextClick);
+    function cleanupPointerInteraction(): void {
+        clearSuppressNextClick();
+        clearPointerOpen();
+    }
+
+    // Clean up any pending click-suppression timer and drag-release listeners on teardown.
+    $effect(() => cleanupPointerInteraction);
 
     setDataTableContext<TRow>({
         get variant() {
@@ -444,12 +474,25 @@
             });
         },
         registerHeaderTrigger(columnId: string, el: HTMLElement | null): () => void {
-            if (el) {
-                headerTriggers.set(columnId, el);
-            } else {
+            if (!el) {
                 headerTriggers.delete(columnId);
+                return () => {};
             }
+
+            headerTriggers.set(columnId, el);
+
+            // Prevent native `popovertarget` click from double-toggling after `pointerdown` already handled it.
+            const onClickCapture = (event: MouseEvent): void => {
+                if (suppressNextClickColumnId !== columnId) return;
+                clearSuppressNextClick();
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            };
+
+            el.addEventListener("click", onClickCapture, { capture: true });
+
             return () => {
+                el.removeEventListener("click", onClickCapture, { capture: true });
                 if (headerTriggers.get(columnId) === el) {
                     headerTriggers.delete(columnId);
                 }
@@ -476,6 +519,8 @@
             return switchingPopover;
         },
         markPopoverClosedFromNative,
+        shouldCommitPointerRelease,
+        clearPointerOpen,
     });
 </script>
 

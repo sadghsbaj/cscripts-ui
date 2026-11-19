@@ -1,8 +1,11 @@
 <script lang="ts">
     import type { Attachment } from "svelte/attachments";
+    import { X } from "@lucide/svelte";
 
     import { t } from "../../shared/lang.internal.ts";
-    import { Button, ButtonLabel } from "../button/index.ts";
+    import { Button, ButtonIcon, ButtonLabel } from "../button/index.ts";
+    import { HitArea } from "../hit-area/index.ts";
+    import { tooltip } from "../tooltip/index.ts";
     import { getDataTableContext, hasDataTableContext } from "./data-table.context.ts";
     import type { DataTableStatusBarProps } from "./index.ts";
 
@@ -22,17 +25,6 @@
     const isFilterMode = $derived(Boolean(table && !isSelectionMode && table.activeFilterCount > 0));
     const isOpen = $derived(Boolean(children || isSelectionMode || isFilterMode));
     const mode = $derived<"selection" | "filter">(isSelectionMode ? "selection" : "filter");
-
-    const displayedFilterColumns = $derived.by(() => {
-        const cols = table?.activeFilterColumns ?? [];
-        if (cols.length <= 3) return cols;
-        return cols.slice(0, 2);
-    });
-
-    const overflowFilterColumnCount = $derived.by(() => {
-        const total = table?.activeFilterColumns.length ?? 0;
-        return total > 3 ? total - 2 : 0;
-    });
 
     $effect(() => {
         if (!ctx) return;
@@ -72,12 +64,15 @@
             {:else if table && isSelectionMode}
                 <div class="cs-data-table-status-bar-start">
                     <span class="cs-data-table-status-bar-summary" role="status" aria-live="polite">
-                        {t({
-                            de: `${table.selectedCount.toLocaleString()} ausgewählt`,
-                            en: `${table.selectedCount.toLocaleString()} selected`,
-                        })}
+                        <span class="cs-data-table-status-bar-count-pill">
+                            {table.selectedCount.toLocaleString()}
+                        </span>
+                        <span class="cs-data-table-status-bar-count-label">
+                            {t({ de: "ausgewählt", en: "selected" })}
+                        </span>
                     </span>
                     {#if !table.allVisibleSelected && table.rowCount > 0}
+                        <span class="cs-data-table-status-bar-divider" data-height="sm" aria-hidden="true"></span>
                         <Button variant="ghost" size="xs" onclick={() => table.selectAllMatching()}>
                             <ButtonLabel>
                                 {t({
@@ -94,9 +89,18 @@
                             selectedCount: table.selectedCount,
                             clearSelection: table.clearSelection,
                         })}
+                        <span class="cs-data-table-status-bar-divider" data-height="md" aria-hidden="true"></span>
                     {/if}
-                    <Button variant="ghost" size="xs" onclick={() => table.clearSelection()}>
-                        <ButtonLabel>{t({ de: "Leeren", en: "Clear" })}</ButtonLabel>
+                    <Button
+                        variant="ghost"
+                        size="xs"
+                        iconOnly
+                        aria-label={t({ de: "Auswahl aufheben", en: "Clear selection" })}
+                        onclick={() => table.clearSelection()}
+                        {@attach tooltip({ text: t({ de: "Auswahl aufheben", en: "Clear selection" }) })}
+                    >
+                        <HitArea size="sm" />
+                        <ButtonIcon icon={X} />
                     </Button>
                 </div>
             {:else if table && isFilterMode}
@@ -107,28 +111,6 @@
                             en: `${table.rowCount.toLocaleString()} of ${table.totalRowCount.toLocaleString()} rows`,
                         })}
                     </span>
-                    {#if displayedFilterColumns.length > 0}
-                        <span class="cs-data-table-status-bar-dot" aria-hidden="true"></span>
-                        <div class="cs-data-table-status-bar-columns">
-                            {#each displayedFilterColumns as col (col.id)}
-                                <button
-                                    type="button"
-                                    class="cs-data-table-status-bar-column-btn"
-                                    onclick={() => table.openColumnPopover(col.id)}
-                                >
-                                    {col.label}
-                                </button>
-                            {/each}
-                            {#if overflowFilterColumnCount > 0}
-                                <span class="cs-data-table-status-bar-more">
-                                    {t({
-                                        de: `+${overflowFilterColumnCount} weitere`,
-                                        en: `+${overflowFilterColumnCount} more`,
-                                    })}
-                                </span>
-                            {/if}
-                        </div>
-                    {/if}
                 </div>
                 <div class="cs-data-table-status-bar-end">
                     {#if filterActions}

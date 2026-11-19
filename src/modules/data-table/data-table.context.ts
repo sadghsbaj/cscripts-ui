@@ -45,6 +45,8 @@ export interface DataTableContext<TRow = unknown> {
     readonly scrollToColumn: (columnId: string, options?: { behavior?: ScrollBehavior }) => void;
     readonly isSwitchingPopover: () => boolean;
     readonly markPopoverClosedFromNative: (restoreFocus: boolean) => void;
+    readonly shouldCommitPointerRelease: (event: PointerEvent) => boolean;
+    readonly clearPointerOpen: () => void;
 }
 
 const [getRawDataTableContext, setRawDataTableContext, hasDataTableContext] = createContext<unknown>();

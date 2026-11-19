@@ -1,6 +1,6 @@
+/* eslint-disable svelte/prefer-svelte-reactivity -- Controller uses $state.raw with immutable Set snapshots */
 import type { Snippet } from "svelte";
 import type { Attachment } from "svelte/attachments";
-import { SvelteSet } from "svelte/reactivity";
 
 import { resolveGetter } from "../../shared/resolve-getter.ts";
 import {
@@ -246,7 +246,7 @@ export class DataTableController<TRow = Record<string, unknown>> {
 
     #sorting = $state.raw<readonly DataTableSortRule[]>([]);
     #filters = $state.raw<Readonly<Record<string, DataTableColumnFilter>>>({});
-    #selectedRowIds = $state.raw<ReadonlySet<DataTableRowId>>(new SvelteSet());
+    #selectedRowIds = $state.raw<ReadonlySet<DataTableRowId>>(new Set());
     #openPopoverColumnId = $state<string | null>(null);
     #lastSelectionAnchorIndex: number | null = null;
 
@@ -309,17 +309,34 @@ export class DataTableController<TRow = Record<string, unknown>> {
         sortRowIndices(this.#data, this.#filteredIndices, this.#visibleColumns, this.#sorting, this.#locale)
     );
 
-    // Intersect stored selection with current dataset only when non-empty.
-    readonly #effectiveSelectedIds = $derived.by<ReadonlySet<DataTableRowId>>(() => {
-        if (this.#selectedRowIds.size === 0) return this.#selectedRowIds;
+    readonly #validRowIdSet = $derived.by<ReadonlySet<DataTableRowId>>(() => {
         const data = this.#data;
         const getRowId = this.#options.getRowId ?? defaultGetRowId;
-        const valid = new SvelteSet<DataTableRowId>();
+        const valid = new Set<DataTableRowId>();
         for (const [i, row] of data.entries()) {
-            const id = getRowId(row, i);
-            if (this.#selectedRowIds.has(id)) {
+            valid.add(getRowId(row, i));
+        }
+        return valid;
+    });
+
+    // Intersect stored selection with cached dataset IDs only when non-empty.
+    readonly #effectiveSelectedIds = $derived.by<ReadonlySet<DataTableRowId>>(() => {
+        if (this.#selectedRowIds.size === 0) return this.#selectedRowIds;
+        const validRowIds = this.#validRowIdSet;
+
+        let allValid = true;
+        for (const id of this.#selectedRowIds) {
+            if (!validRowIds.has(id)) {
+                allValid = false;
+                break;
+            }
+        }
+        if (allValid) return this.#selectedRowIds;
+
+        const valid = new Set<DataTableRowId>();
+        for (const id of this.#selectedRowIds) {
+            if (validRowIds.has(id)) {
                 valid.add(id);
-                if (valid.size === this.#selectedRowIds.size) break;
             }
         }
         return valid;
@@ -346,6 +363,9 @@ export class DataTableController<TRow = Record<string, unknown>> {
             selectableCount += 1;
             if (selected.has(getRowId(row, sourceIndex))) {
                 selectedVisibleCount += 1;
+            }
+            if (selectedVisibleCount > 0 && selectedVisibleCount < selectableCount) {
+                break;
             }
         }
 
@@ -393,7 +413,7 @@ export class DataTableController<TRow = Record<string, unknown>> {
         this.#options = options;
         this.#sorting = options.initialSorting ? [...options.initialSorting] : [];
         this.#filters = sanitizeFilters(options.initialFilters);
-        this.#selectedRowIds = options.initialSelection ? new SvelteSet(options.initialSelection) : new SvelteSet();
+        this.#selectedRowIds = options.initialSelection ? new Set(options.initialSelection) : new Set();
 
         const initialCfg = resolveGetter(options.virtualize);
         if (initialCfg !== undefined && initialCfg !== false) {
@@ -661,7 +681,7 @@ export class DataTableController<TRow = Record<string, unknown>> {
 
         const isRowSelectable = this.#options.isRowSelectable ?? defaultIsRowSelectable;
         const getRowId = this.#options.getRowId ?? defaultGetRowId;
-        const next = new SvelteSet(this.#effectiveSelectedIds);
+        const next = new Set(this.#effectiveSelectedIds);
         const shouldSelect = !next.has(rowId);
 
         if (
@@ -727,7 +747,7 @@ export class DataTableController<TRow = Record<string, unknown>> {
         const getRowId = this.#options.getRowId ?? defaultGetRowId;
         const isRowSelectable = this.#options.isRowSelectable ?? defaultIsRowSelectable;
 
-        const next = new SvelteSet(this.#effectiveSelectedIds);
+        const next = new Set(this.#effectiveSelectedIds);
         for (const sourceIndex of indices) {
             const row = data[sourceIndex];
             if (row === undefined) continue;
@@ -745,7 +765,7 @@ export class DataTableController<TRow = Record<string, unknown>> {
         const indices = this.#sortedIndices;
         const getRowId = this.#options.getRowId ?? defaultGetRowId;
 
-        const next = new SvelteSet(this.#effectiveSelectedIds);
+        const next = new Set(this.#effectiveSelectedIds);
         for (const sourceIndex of indices) {
             const row = data[sourceIndex];
             if (row === undefined) continue;
@@ -762,13 +782,13 @@ export class DataTableController<TRow = Record<string, unknown>> {
 
     clearSelection = (): void => {
         if (this.#selectedRowIds.size === 0) return;
-        this.#selectedRowIds = new SvelteSet();
+        this.#selectedRowIds = new Set();
         this.#lastSelectionAnchorIndex = null;
         this.#options.onSelectionChange?.([]);
     };
 
     setSelection = (ids: readonly DataTableRowId[]): void => {
-        const next = new SvelteSet(ids);
+        const next = new Set(ids);
         this.#selectedRowIds = next;
         this.#options.onSelectionChange?.([...next]);
     };

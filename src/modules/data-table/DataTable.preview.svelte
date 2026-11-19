@@ -5,6 +5,7 @@
 
 <script lang="ts">
     import { Check } from "@lucide/svelte";
+    import { onMount } from "svelte";
     import { Badge, BadgeLabel, type BadgeColor, type BadgeSize } from "cs/svelte/badge";
     import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "cs/svelte/card";
@@ -332,7 +333,7 @@
     let striped = $state(false);
     let gridlines = $state(false);
 
-    const badgeSize = $derived<BadgeSize>(size === "xs" ? "xs" : size === "lg" ? "md" : "sm");
+    const badgeSize = $derived<BadgeSize>(size === "xs" ? "xs" : "sm");
 
     const invoiceColumns: readonly DataTableColumn<InvoiceRow>[] = [
         {
@@ -586,8 +587,6 @@
         data: BUDGET_ROWS,
         columns: budgetColumns,
         getRowId: (row) => row.id,
-        selectable: true,
-        isRowSelectable: (row) => !row.isSummary,
         rowTone: (row) => (row.isSummary ? "base" : undefined),
     });
 
@@ -670,14 +669,28 @@
         return rows;
     }
 
-    const LEDGER_STATUS_TONES: Record<LedgerStatus, DataTableTone | undefined> = {
+    const LEDGER_STATUS_BADGE_COLORS: Record<LedgerStatus, BadgeColor> = {
         Active: "positive",
         Renewal: "accent",
-        Trial: "caution",
+        Trial: "base",
         "At Risk": "negative",
     };
 
-    const ledgerRows = $state.raw<readonly LedgerRow[]>(generateLedgerRows(LEDGER_ROW_COUNT));
+    let ledgerRows = $state.raw<readonly LedgerRow[]>([]);
+
+    onMount(() => {
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        const frameId = requestAnimationFrame(() => {
+            timeoutId = setTimeout(() => {
+                ledgerRows = generateLedgerRows(LEDGER_ROW_COUNT);
+            }, 0);
+        });
+
+        return () => {
+            cancelAnimationFrame(frameId);
+            if (timeoutId !== undefined) clearTimeout(timeoutId);
+        };
+    });
 
     const ledgerColumns: readonly DataTableColumn<LedgerRow>[] = [
         {
@@ -720,7 +733,6 @@
             sortable: true,
             filterable: true,
             filterMode: "values",
-            tone: (_value, row) => LEDGER_STATUS_TONES[row.status],
         },
         {
             id: "channel",
@@ -836,7 +848,7 @@
         columns: filteredEmptyColumns,
         getRowId: (row) => row.id,
         initialFilters: {
-            status: { kind: "values", selected: ["Archived"] },
+            customer: { kind: "condition", operator: "contains", value: "Acme" },
         },
     });
 
@@ -872,7 +884,7 @@ ${closeScript}
     <DataTableBody>
         {#snippet cell(ctx)}
             {#if ctx.column.id === "status"}
-                <Badge variant="dot" color={statusColor(ctx.row.status)} size="sm">
+                <Badge variant="soft" color={statusColor(ctx.row.status)} size="sm">
                     <BadgeLabel>{ctx.row.status}</BadgeLabel>
                 </Badge>
             {:else}
@@ -883,7 +895,7 @@ ${closeScript}
     <DataTableEmpty />
     <DataTableStatusBar>
         {#snippet selectionActions()}
-            <Button variant="secondary" size="xs" onclick={markSelectedPaid}>
+            <Button variant="primary" size="xs" onclick={markSelectedPaid}>
                 <ButtonLabel>Mark paid</ButtonLabel>
             </Button>
         {/snippet}
@@ -899,8 +911,6 @@ ${closeScript}
         { id: "health", label: "Health", tone: (_v, row) => HEALTH_TONES[row.health] },
     ],
     getRowId: (row) => row.id,
-    selectable: true,
-    isRowSelectable: (row) => !row.isSummary,
     rowTone: (row) => (row.isSummary ? "base" : undefined),
 });
 
@@ -923,7 +933,17 @@ const ledgerTable = createDataTable({
 
 <DataTable variant="elevated" size="xs" gridlines table={ledgerTable} class="h-440px">
     <DataTableHead />
-    <DataTableBody />
+    <DataTableBody>
+        {#snippet cell(ctx)}
+            {#if ctx.column.id === "status"}
+                <Badge variant="soft" color={LEDGER_STATUS_BADGE_COLORS[ctx.row.status]} size="xs">
+                    <BadgeLabel>{ctx.row.status}</BadgeLabel>
+                </Badge>
+            {:else}
+                {ctx.formatted}
+            {/if}
+        {/snippet}
+    </DataTableBody>
     <DataTableEmpty />
     <DataTableStatusBar />
 </DataTable>`;
@@ -947,7 +967,7 @@ const ledgerTable = createDataTable({
                         <DataTableCell emphasis="strong">{payout.id}</DataTableCell>
                         <DataTableCell>{payout.destination}</DataTableCell>
                         <DataTableCell>
-                            <Badge variant="dot" color={payout.status === "Settled" ? "positive" : "caution"} size="sm">
+                            <Badge variant="soft" color={payout.status === "Settled" ? "positive" : "caution"} size="sm">
                                 <BadgeLabel>{payout.status}</BadgeLabel>
                             </Badge>
                         </DataTableCell>
@@ -1026,7 +1046,7 @@ const ledgerTable = createDataTable({
                     <DataTableBody>
                         {#snippet cell(ctx: DataTableCellRenderContext<InvoiceRow>)}
                             {#if ctx.column.id === "status"}
-                                <Badge variant="dot" color={STATUS_BADGE_COLORS[ctx.row.status]} size={badgeSize}>
+                                <Badge variant="soft" color={STATUS_BADGE_COLORS[ctx.row.status]} size={badgeSize}>
                                     <BadgeLabel>{ctx.row.status}</BadgeLabel>
                                 </Badge>
                             {:else}
@@ -1037,7 +1057,7 @@ const ledgerTable = createDataTable({
                     <DataTableEmpty />
                     <DataTableStatusBar>
                         {#snippet selectionActions()}
-                            <Button variant="secondary" size="xs" onclick={markSelectedPaid}>
+                            <Button variant="primary" size="xs" onclick={markSelectedPaid}>
                                 <ButtonIcon icon={Check} />
                                 <ButtonLabel>Mark paid</ButtonLabel>
                             </Button>
@@ -1091,7 +1111,17 @@ const ledgerTable = createDataTable({
                 class="h-440px"
             >
                 <DataTableHead />
-                <DataTableBody />
+                <DataTableBody>
+                    {#snippet cell(ctx: DataTableCellRenderContext<LedgerRow>)}
+                        {#if ctx.column.id === "status"}
+                            <Badge variant="soft" color={LEDGER_STATUS_BADGE_COLORS[ctx.row.status]} size="xs">
+                                <BadgeLabel>{ctx.row.status}</BadgeLabel>
+                            </Badge>
+                        {:else}
+                            {ctx.formatted}
+                        {/if}
+                    {/snippet}
+                </DataTableBody>
                 <DataTableEmpty />
                 <DataTableStatusBar />
             </DataTable>
@@ -1127,7 +1157,7 @@ const ledgerTable = createDataTable({
                                     <DataTableCell>{payout.destination}</DataTableCell>
                                     <DataTableCell>
                                         <Badge
-                                            variant="dot"
+                                            variant="soft"
                                             color={payout.status === "Settled" ? "positive" : "caution"}
                                             size="sm"
                                         >

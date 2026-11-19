@@ -7,10 +7,11 @@
 
     import { t } from "../../shared/lang.internal.ts";
     import { Button, ButtonLabel } from "../button/index.ts";
-    import { Checkbox } from "../checkbox/index.ts";
+    import { Checkbox, CheckboxMark } from "../checkbox/index.ts";
     import { HitArea } from "../hit-area/index.ts";
     import { Popover } from "../popover/index.ts";
     import { ScrollArea, ScrollAreaContent } from "../scroll-area/index.ts";
+    import { scrollFade } from "../scroll-fade/index.ts";
     import { SegmentedControl, SegmentedControlItem, SegmentedControlLabel } from "../segmented-control/index.ts";
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select/index.ts";
     import { TextInput, TextInputField } from "../text-input/index.ts";
@@ -41,6 +42,7 @@
 
     let popoverRef = $state<HTMLDivElement | null>(null);
     let searchInputRef = $state<HTMLInputElement | null>(null);
+    let conditionValueInputRef = $state<HTMLInputElement | null>(null);
     let checklistViewportRef = $state<HTMLDivElement | null>(null);
 
     let activeTab = $state<ActiveTab>("values");
@@ -54,6 +56,8 @@
 
     let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
     let conditionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let suppressItemClickTimer: ReturnType<typeof setTimeout> | null = null;
+    let suppressNextItemClick = false;
     let outsidePointerDownInteractive = false;
 
     const table = $derived(ctx.table);
@@ -250,6 +254,22 @@
             clearTimeout(conditionDebounceTimer);
             conditionDebounceTimer = null;
         }
+        if (suppressItemClickTimer !== null) {
+            clearTimeout(suppressItemClickTimer);
+            suppressItemClickTimer = null;
+        }
+        suppressNextItemClick = false;
+    }
+
+    function armSuppressNextItemClick(): void {
+        suppressNextItemClick = true;
+        if (suppressItemClickTimer !== null) {
+            clearTimeout(suppressItemClickTimer);
+        }
+        suppressItemClickTimer = setTimeout(() => {
+            suppressItemClickTimer = null;
+            suppressNextItemClick = false;
+        }, 0);
     }
 
     function handleDocumentPointerDown(event: PointerEvent): void {
@@ -523,20 +543,13 @@
 
     function handleModeChange(nextMode: ActiveTab): void {
         activeTab = nextMode;
-    }
-
-    function formatMatchCount(count: number, isSearch: boolean): string {
-        const formatted = count.toLocaleString();
-        if (isSearch) {
-            return t({
-                de: `${formatted} Treffer`,
-                en: `${formatted} matches`,
+        if (nextMode === "condition" && typeof requestAnimationFrame !== "undefined") {
+            requestAnimationFrame(() => {
+                if (conditionOperator !== "isEmpty" && conditionOperator !== "isNotEmpty") {
+                    conditionValueInputRef?.focus({ preventScroll: true });
+                }
             });
         }
-        return t({
-            de: `${formatted} passend`,
-            en: `${formatted} matching`,
-        });
     }
 </script>
 
@@ -550,99 +563,166 @@
     role="dialog"
     aria-modal="false"
     aria-label={popoverTitle}
-    class="cs-data-table-column-popover"
+    class={["cs-data-table-column-popover", "cs-listbox"]}
+    data-size="sm"
     ontoggle={handleToggle}
 >
     {#if activeColumn}
         {#if activeColumn.sortable}
-            <div class="cs-data-table-popover-sort">
+            <div class="cs-listbox-group cs-data-table-popover-sort-group">
                 <button
                     type="button"
-                    class="cs-data-table-popover-sort-btn"
+                    class="cs-listbox-item cs-data-table-popover-sort-item"
                     aria-pressed={currentSort?.direction === "asc" ? "true" : "false"}
-                    onclick={() => handleSortClick("asc")}
+                    data-selected={currentSort?.direction === "asc" ? "" : undefined}
+                    onpointerup={(event) => {
+                        if (!ctx.shouldCommitPointerRelease(event)) return;
+                        handleSortClick("asc");
+                        ctx.clearPointerOpen();
+                        armSuppressNextItemClick();
+                        event.preventDefault();
+                    }}
+                    onclick={(event) => {
+                        if (suppressNextItemClick) {
+                            suppressNextItemClick = false;
+                            event.preventDefault();
+                            event.stopPropagation();
+                            return;
+                        }
+                        handleSortClick("asc");
+                    }}
                 >
-                    <ArrowUp class="cs-data-table-popover-sort-icon" aria-hidden="true" />
-                    <span class="cs-data-table-popover-sort-label">{sortLabels.asc}</span>
+                    <ArrowUp class="cs-listbox-item-icon" aria-hidden="true" />
+                    <span class="cs-listbox-item-content">{sortLabels.asc}</span>
+                    <span class="cs-listbox-item-check" aria-hidden="true">
+                        <CheckboxMark
+                            checked={currentSort?.direction === "asc"}
+                            class="cs-listbox-item-check-icon"
+                            stroke-width="3"
+                        />
+                    </span>
                 </button>
                 <button
                     type="button"
-                    class="cs-data-table-popover-sort-btn"
+                    class="cs-listbox-item cs-data-table-popover-sort-item"
                     aria-pressed={currentSort?.direction === "desc" ? "true" : "false"}
-                    onclick={() => handleSortClick("desc")}
+                    data-selected={currentSort?.direction === "desc" ? "" : undefined}
+                    onpointerup={(event) => {
+                        if (!ctx.shouldCommitPointerRelease(event)) return;
+                        handleSortClick("desc");
+                        ctx.clearPointerOpen();
+                        armSuppressNextItemClick();
+                        event.preventDefault();
+                    }}
+                    onclick={(event) => {
+                        if (suppressNextItemClick) {
+                            suppressNextItemClick = false;
+                            event.preventDefault();
+                            event.stopPropagation();
+                            return;
+                        }
+                        handleSortClick("desc");
+                    }}
                 >
-                    <ArrowDown class="cs-data-table-popover-sort-icon" aria-hidden="true" />
-                    <span class="cs-data-table-popover-sort-label">{sortLabels.desc}</span>
+                    <ArrowDown class="cs-listbox-item-icon" aria-hidden="true" />
+                    <span class="cs-listbox-item-content">{sortLabels.desc}</span>
+                    <span class="cs-listbox-item-check" aria-hidden="true">
+                        <CheckboxMark
+                            checked={currentSort?.direction === "desc"}
+                            class="cs-listbox-item-check-icon"
+                            stroke-width="3"
+                        />
+                    </span>
                 </button>
-            </div>
-        {/if}
-
-        {#if showModeSwitch}
-            <div class="cs-data-table-popover-mode">
-                <SegmentedControl size="xs" width="equal" bind:value={() => activeTab, handleModeChange}>
-                    <SegmentedControlItem value="values">
-                        <SegmentedControlLabel>{t({ de: "Werte", en: "Values" })}</SegmentedControlLabel>
-                    </SegmentedControlItem>
-                    <SegmentedControlItem value="condition">
-                        <SegmentedControlLabel>{t({ de: "Bedingung", en: "Condition" })}</SegmentedControlLabel>
-                    </SegmentedControlItem>
-                </SegmentedControl>
             </div>
         {/if}
 
         {#if activeColumn.filterable}
-            {#if activeColumn.sortable || showModeSwitch}
-                <div class="cs-data-table-popover-separator" aria-hidden="true"></div>
+            {#if activeColumn.sortable}
+                <div class="cs-listbox-separator" aria-hidden="true"></div>
+            {/if}
+
+            {#if showModeSwitch}
+                <div class="cs-data-table-popover-mode">
+                    <SegmentedControl size="xs" width="equal" bind:value={() => activeTab, handleModeChange}>
+                        <SegmentedControlItem value="values">
+                            <SegmentedControlLabel>{t({ de: "Werte", en: "Values" })}</SegmentedControlLabel>
+                        </SegmentedControlItem>
+                        <SegmentedControlItem value="condition">
+                            <SegmentedControlLabel>{t({ de: "Bedingung", en: "Condition" })}</SegmentedControlLabel>
+                        </SegmentedControlItem>
+                    </SegmentedControl>
+                </div>
             {/if}
 
             {#if activeTab === "values" && columnFilterCapabilities.supportsValues}
                 {#if showSearch}
-                    <div class="cs-data-table-popover-search">
-                        <Search class="cs-data-table-popover-search-icon" aria-hidden="true" />
-                        <input
-                            bind:this={searchInputRef}
-                            type="text"
-                            class="cs-data-table-popover-search-input"
-                            value={searchQuery}
-                            placeholder={t({ de: "Suchen", en: "Search" })}
-                            aria-label={t({ de: "Werte durchsuchen", en: "Search values" })}
-                            oninput={handleSearchInput}
-                        />
-                        <button
-                            type="button"
-                            tabindex={-1}
-                            class="cs-data-table-popover-search-clear"
-                            aria-label={t({ de: "Suche leeren", en: "Clear search" })}
-                            aria-hidden={searchQuery === "" ? "true" : undefined}
-                            data-visible={searchQuery !== "" ? "" : "false"}
-                            onpointerdown={(event) => event.preventDefault()}
-                            onclick={handleClearSearch}
-                        >
-                            <HitArea size="sm" />
-                            <X aria-hidden="true" />
-                        </button>
+                    <div class="cs-data-table-popover-search-wrap">
+                        <div class="cs-data-table-popover-search">
+                            <Search class="cs-data-table-popover-search-icon" aria-hidden="true" />
+                            <input
+                                bind:this={searchInputRef}
+                                type="text"
+                                class="cs-data-table-popover-search-input"
+                                value={searchQuery}
+                                placeholder={t({ de: "Suchen", en: "Search" })}
+                                aria-label={t({ de: "Werte durchsuchen", en: "Search values" })}
+                                oninput={handleSearchInput}
+                            />
+                            <button
+                                type="button"
+                                tabindex={-1}
+                                class="cs-data-table-popover-search-clear"
+                                aria-label={t({ de: "Suche leeren", en: "Clear search" })}
+                                aria-hidden={searchQuery === "" ? "true" : undefined}
+                                data-visible={searchQuery !== "" ? "" : "false"}
+                                onpointerdown={(event) => event.preventDefault()}
+                                onclick={handleClearSearch}
+                            >
+                                <HitArea size="sm" />
+                                <X aria-hidden="true" />
+                            </button>
+                        </div>
                     </div>
-                    <div class="cs-data-table-popover-separator" aria-hidden="true"></div>
                 {/if}
 
                 <ScrollArea size="sm" direction="vertical" class="cs-data-table-popover-scroll">
                     {#if shouldVirtualizeChecklist}
-                        <ScrollAreaContent bind:ref={checklistViewportRef} {@attach checklistVirtual.attachViewport}>
-                            <div class="cs-data-table-popover-list" {@attach checklistVirtual.attachList}>
+                        <ScrollAreaContent
+                            bind:ref={checklistViewportRef}
+                            {@attach scrollFade({ size: "sm", direction: "vertical", edges: "both" })}
+                            {@attach checklistVirtual.attachViewport}
+                        >
+                            <div class="cs-listbox-list" {@attach checklistVirtual.attachList}>
                                 {#each checklistVirtual.items as vItem (vItem.key)}
-                                    {const item = filteredFacets[vItem.index]}
+                                    {const item = $derived(filteredFacets[vItem.index])}
                                     {#if item}
-                                        {const isChecked = selectedValueSet.has(item.key)}
+                                        {const isChecked = $derived(selectedValueSet.has(item.key))}
                                         <label
-                                            class="cs-data-table-popover-option"
+                                            class="cs-data-table-popover-option cs-listbox-item"
                                             data-checked={isChecked ? "" : undefined}
                                             data-empty={item.isEmpty ? "" : undefined}
+                                            onpointerup={(event) => {
+                                                if (!ctx.shouldCommitPointerRelease(event)) return;
+                                                handleToggleFacet(item.key);
+                                                ctx.clearPointerOpen();
+                                                armSuppressNextItemClick();
+                                                event.preventDefault();
+                                            }}
+                                            onclickcapture={(event) => {
+                                                if (!suppressNextItemClick) return;
+                                                suppressNextItemClick = false;
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                            }}
                                         >
-                                            <Checkbox
-                                                variant="soft"
-                                                size="sm"
-                                                bind:checked={() => isChecked, () => handleToggleFacet(item.key)}
-                                            />
+                                            <span class="cs-data-table-checkbox-wrap">
+                                                <Checkbox
+                                                    variant="soft"
+                                                    size="sm"
+                                                    bind:checked={() => isChecked, () => handleToggleFacet(item.key)}
+                                                />
+                                            </span>
                                             <span class="cs-data-table-popover-option-label">{item.label}</span>
                                             <span class="cs-data-table-popover-option-count">
                                                 {item.count.toLocaleString()}
@@ -661,25 +741,43 @@
                             {/if}
                         </ScrollAreaContent>
                     {:else}
-                        <ScrollAreaContent bind:ref={checklistViewportRef}>
+                        <ScrollAreaContent
+                            bind:ref={checklistViewportRef}
+                            {@attach scrollFade({ size: "sm", direction: "vertical", edges: "both" })}
+                        >
                             {#if filteredFacets.length === 0}
-                                <div class="cs-data-table-popover-empty">
+                                <div class="cs-listbox-empty">
                                     {t({ de: "Keine passenden Werte", en: "No matching values" })}
                                 </div>
                             {:else}
-                                <div class="cs-data-table-popover-list">
+                                <div class="cs-listbox-list">
                                     {#each filteredFacets as item (item.key)}
-                                        {const isChecked = selectedValueSet.has(item.key)}
+                                        {const isChecked = $derived(selectedValueSet.has(item.key))}
                                         <label
-                                            class="cs-data-table-popover-option"
+                                            class="cs-data-table-popover-option cs-listbox-item"
                                             data-checked={isChecked ? "" : undefined}
                                             data-empty={item.isEmpty ? "" : undefined}
+                                            onpointerup={(event) => {
+                                                if (!ctx.shouldCommitPointerRelease(event)) return;
+                                                handleToggleFacet(item.key);
+                                                ctx.clearPointerOpen();
+                                                armSuppressNextItemClick();
+                                                event.preventDefault();
+                                            }}
+                                            onclickcapture={(event) => {
+                                                if (!suppressNextItemClick) return;
+                                                suppressNextItemClick = false;
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                            }}
                                         >
-                                            <Checkbox
-                                                variant="soft"
-                                                size="sm"
-                                                bind:checked={() => isChecked, () => handleToggleFacet(item.key)}
-                                            />
+                                            <span class="cs-data-table-checkbox-wrap">
+                                                <Checkbox
+                                                    variant="soft"
+                                                    size="sm"
+                                                    bind:checked={() => isChecked, () => handleToggleFacet(item.key)}
+                                                />
+                                            </span>
                                             <span class="cs-data-table-popover-option-label">{item.label}</span>
                                             <span class="cs-data-table-popover-option-count">
                                                 {item.count.toLocaleString()}
@@ -718,6 +816,7 @@
                         <div class="cs-data-table-popover-condition-range">
                             <TextInput variant="soft" size="xs">
                                 <TextInputField
+                                    bind:ref={conditionValueInputRef}
                                     bind:value={() => conditionValue, handleConditionValueChange}
                                     inputmode={conditionInputMode}
                                     placeholder={t({ de: "Min", en: "Min" })}
@@ -736,6 +835,7 @@
                     {:else if !isUnaryOperator}
                         <TextInput variant="soft" size="xs">
                             <TextInputField
+                                bind:ref={conditionValueInputRef}
                                 bind:value={() => conditionValue, handleConditionValueChange}
                                 inputmode={conditionInputMode}
                                 placeholder={t({ de: "Wert", en: "Value" })}
@@ -747,7 +847,6 @@
             {/if}
 
             {#if showFooter}
-                <div class="cs-data-table-popover-separator" aria-hidden="true"></div>
                 <div class="cs-data-table-popover-footer">
                     {#if isSearchingValues}
                         <Button
@@ -759,15 +858,15 @@
                             <ButtonLabel>{t({ de: "Treffer wählen", en: "Select matches" })}</ButtonLabel>
                         </Button>
                         <span class="cs-data-table-popover-footer-count">
-                            {formatMatchCount(filteredFacets.length, true)}
+                            {t({
+                                de: `${filteredFacets.length.toLocaleString()} Treffer`,
+                                en: `${filteredFacets.length.toLocaleString()} matches`,
+                            })}
                         </span>
                     {:else}
                         <Button variant="ghost" size="xs" onclick={handleClearColumnFilter}>
-                            <ButtonLabel>{t({ de: "Leeren", en: "Clear" })}</ButtonLabel>
+                            <ButtonLabel>{t({ de: "Filter zurücksetzen", en: "Clear filter" })}</ButtonLabel>
                         </Button>
-                        <span class="cs-data-table-popover-footer-count">
-                            {formatMatchCount(table?.rowCount ?? 0, false)}
-                        </span>
                     {/if}
                 </div>
             {/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { untrack } from "svelte";
-    import { ArrowUp, ChevronDown, ChevronsUpDown, ListFilter } from "@lucide/svelte";
+    import { ChevronDown, ListFilter } from "@lucide/svelte";
 
     import { getDataTableContext, hasDataTableContext } from "./data-table.context.ts";
     import type { DataTableHeaderCellProps } from "./index.ts";
@@ -127,6 +127,7 @@
             bind:this={triggerRef}
             type="button"
             class="cs-data-table-header-trigger"
+            popovertarget={filterable && ctx ? ctx.popoverId : undefined}
             aria-haspopup={filterable ? "dialog" : undefined}
             aria-expanded={filterable ? (isOpen ? "true" : "false") : undefined}
             aria-controls={filterable && isOpen && ctx ? ctx.popoverId : undefined}
@@ -139,21 +140,27 @@
                 {@render children?.()}
             </span>
             <span class="cs-data-table-header-indicators" aria-hidden="true">
-                {#if sort}
-                    <ArrowUp class="cs-data-table-header-icon cs-data-table-header-sort-icon" />
-                    {#if sortPriority !== undefined && sortPriority > 0}
+                {#if sortable}
+                    <svg
+                        class="cs-data-table-header-icon cs-data-table-header-sort-dual"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path class="cs-data-table-header-sort-up" stroke="currentColor" d="M5 6.25 8 3.25 11 6.25" />
+                        <path class="cs-data-table-header-sort-down" stroke="currentColor" d="M5 9.75 8 12.75 11 9.75" />
+                    </svg>
+                    {#if sort && sortPriority !== undefined && sortPriority > 0}
                         <span class="cs-data-table-header-sort-priority">{sortPriority}</span>
                     {/if}
                 {/if}
                 {#if filtered}
                     <ListFilter class="cs-data-table-header-icon cs-data-table-header-filter-icon" />
                 {/if}
-                {#if !sort && !filtered}
-                    {#if filterable}
-                        <ChevronDown class="cs-data-table-header-icon cs-data-table-header-cue" />
-                    {:else if sortable}
-                        <ChevronsUpDown class="cs-data-table-header-icon cs-data-table-header-cue" />
-                    {/if}
+                {#if (filterable || onTrigger) && !sortable}
+                    <ChevronDown class="cs-data-table-header-icon cs-data-table-header-cue" />
                 {/if}
             </span>
         </button>

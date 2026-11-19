@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { FilterX, Inbox } from "@lucide/svelte";
-
     import { t } from "../../shared/lang.internal.ts";
     import { Button, ButtonLabel } from "../button/index.ts";
     import { getDataTableContext, hasDataTableContext } from "./data-table.context.ts";
@@ -27,31 +25,30 @@
         if (title !== undefined) return title;
         return t(
             isFiltered
-                ? { de: "Keine passenden Einträge", en: "No matching rows" }
-                : { de: "Noch keine Einträge", en: "No rows yet" }
+                ? { de: "Keine Treffer", en: "No matching rows" }
+                : { de: "Keine Einträge", en: "No entries" }
         );
     });
 
-    const resolvedDescription = $derived.by(() => {
-        if (description !== undefined) return description;
-        return isFiltered
-            ? t({
-                  de: "Filter anpassen oder zurücksetzen, um Ergebnisse anzuzeigen.",
-                  en: "Adjust or clear active filters to see results.",
-              })
-            : undefined;
-    });
-
-    const ResolvedIcon = $derived(icon ?? (isFiltered ? FilterX : Inbox));
+    const resolvedDescription = $derived(description);
+    const ResolvedIcon = $derived(icon);
 </script>
 
 {#if shouldRender}
-    <div bind:this={ref} {...rest} class={["cs-data-table-empty", className]}>
+    <div
+        bind:this={ref}
+        {...rest}
+        class={["cs-data-table-empty", className]}
+        data-filtered={isFiltered ? "" : undefined}
+        data-has-description={resolvedDescription ? "" : undefined}
+    >
         {#if children}
             {@render children()}
         {:else}
             <div class="cs-data-table-empty-inner">
-                <ResolvedIcon class="cs-data-table-empty-icon" aria-hidden="true" />
+                {#if ResolvedIcon}
+                    <ResolvedIcon class="cs-data-table-empty-icon" aria-hidden="true" />
+                {/if}
                 <p class="cs-data-table-empty-title">{resolvedTitle}</p>
                 {#if resolvedDescription}
                     <p class="cs-data-table-empty-description">{resolvedDescription}</p>
