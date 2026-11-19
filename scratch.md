@@ -26,6 +26,7 @@
 
 ## Modules
 
+- UploadArea
 - [x] Data Table
 - [ ] Animierte Charts
 - [ ] Tablist
