@@ -1333,7 +1333,7 @@
         line-height: 18px;
         background: transparent;
         border: none;
-        caret-color: var(--cs-color-accent-solid);
+        caret-color: auto;
         cursor: text;
 
         &::placeholder {

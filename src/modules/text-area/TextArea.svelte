@@ -48,7 +48,7 @@
         .cs-text-area {
             --cs-text-area-fg: var(--cs-color-text-strong);
             --cs-text-area-placeholder-fg: var(--cs-color-text-weak);
-            --cs-text-area-caret: var(--cs-color-accent-solid);
+            --cs-text-area-caret: auto;
             --cs-text-area-shadow: 0 0 #0000;
             --cs-text-area-shadow-hover: var(--cs-text-area-shadow);
             --cs-text-area-ring-shadow: inset 0 0 0 0px transparent;

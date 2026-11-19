@@ -71,7 +71,7 @@
         .cs-combobox-control {
             --cs-combobox-fg: var(--cs-color-text-strong);
             --cs-combobox-placeholder-fg: var(--cs-color-text-weak);
-            --cs-combobox-caret: var(--cs-color-accent-solid);
+            --cs-combobox-caret: auto;
             --cs-combobox-icon-fg: var(--cs-color-text-weak);
             --cs-combobox-indicator-fg: var(--cs-color-text-weak);
             --cs-combobox-shadow: none;

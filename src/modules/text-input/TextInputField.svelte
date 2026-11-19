@@ -55,7 +55,7 @@
             outline: none;
             font: inherit;
             color: inherit;
-            caret-color: var(--cs-text-input-caret, var(--cs-color-accent-solid));
+            caret-color: var(--cs-text-input-caret, auto);
             transition: color var(--cs-dur-effect) var(--cs-ease-effect);
             cursor: inherit;
 

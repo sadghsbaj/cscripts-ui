@@ -172,7 +172,7 @@
             font: inherit;
             font-weight: 400;
             color: inherit;
-            caret-color: var(--cs-combobox-caret, var(--cs-color-accent-solid));
+            caret-color: var(--cs-combobox-caret, auto);
             transition: color var(--cs-dur-effect) var(--cs-ease-effect);
             cursor: inherit;
 

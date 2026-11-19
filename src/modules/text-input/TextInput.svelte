@@ -65,7 +65,7 @@
         .cs-text-input {
             --cs-text-input-fg: var(--cs-color-text-strong);
             --cs-text-input-placeholder-fg: var(--cs-color-text-weak);
-            --cs-text-input-caret: var(--cs-color-accent-solid);
+            --cs-text-input-caret: auto;
             --cs-text-input-icon-fg: var(--cs-color-text-weak);
             --cs-text-input-shadow: none;
             --cs-text-input-shadow-hover: var(--cs-text-input-shadow);

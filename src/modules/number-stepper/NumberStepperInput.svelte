@@ -261,7 +261,7 @@
             letter-spacing: inherit;
             line-height: normal;
             text-align: center;
-            caret-color: var(--cs-number-stepper-well-caret, var(--cs-color-accent-solid));
+            caret-color: var(--cs-number-stepper-well-caret, auto);
 
             .cs-number-stepper-input-stage > & {
                 grid-area: 1 / 1;
