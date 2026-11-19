@@ -20,18 +20,21 @@
         PREVIEW_CATEGORIES,
         PREVIEW_CATEGORY_LABELS,
         type PreviewCategory,
+        type PreviewLayout,
     } from "./components/index.ts";
 
     interface SvelteModule {
         default: Component;
         id: string;
         label: string;
+        layout?: PreviewLayout;
     }
 
     interface PreviewItem {
         id: string;
         label: string;
         category: PreviewCategory;
+        layout: PreviewLayout;
         preview: Component;
         docs?: string;
     }
@@ -49,15 +52,26 @@
     const CONTROLS_IDLE_MS = 2200;
 
     const modules = import.meta.glob<SvelteModule>(
-        ["../src/modules/**/*.preview.svelte", "../src/work/**/*.preview.svelte"],
+        [
+            "../src/modules/**/*.preview.svelte",
+            "../src/work/**/*.preview.svelte",
+            "../src/references/**/*.preview.svelte",
+        ],
         { eager: true }
     );
 
-    const docsModules = import.meta.glob<string>(["../src/modules/**/*.docs.md", "../src/work/**/*.docs.md"], {
-        query: "?raw",
-        import: "default",
-        eager: true,
-    });
+    const docsModules = import.meta.glob<string>(
+        [
+            "../src/modules/**/*.docs.md",
+            "../src/work/**/*.docs.md",
+            "../src/references/**/*.docs.md",
+        ],
+        {
+            query: "?raw",
+            import: "default",
+            eager: true,
+        }
+    );
 
     function dirFromPath(filePath: string): string {
         const lastSlash = filePath.lastIndexOf("/");
@@ -86,7 +100,9 @@
     );
 
     function categoryFromPath(path: string): PreviewCategory {
-        return path.includes("/work/") ? "work" : "modules";
+        if (path.includes("/references/")) return "references";
+        if (path.includes("/work/")) return "work";
+        return "modules";
     }
 
     const previews: PreviewItem[] = Object.entries(modules)
@@ -94,6 +110,7 @@
             id: module.id,
             label: module.label,
             category: categoryFromPath(path),
+            layout: module.layout ?? "default",
             preview: module.default,
             docs: docsByPath.get(docsPathForPreview(path)) ?? docsByDir.get(dirFromPath(path)),
         }))
@@ -130,6 +147,9 @@
         }
 
         void effectiveViewMode;
+        if (mainScrollContainer) {
+            mainScrollContainer.scrollTop = 0;
+        }
         const viewport = mainScrollContainer?.querySelector<HTMLElement>(".cs-scroll-area-content");
         if (viewport) {
             viewport.scrollTop = 0;
@@ -261,20 +281,28 @@
 
     <!-- Main Preview Stage -->
     <div bind:this={mainScrollContainer} class="flex-1 min-w-0 h-full">
-        <ScrollArea size="lg" direction="vertical" class="size-full">
-            <ScrollAreaContent
-                class="px-6 py-10 md:px-12 md:py-14"
-                {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
-            >
-                <div class="relative w-full max-w-4xl mx-auto flex flex-col gap-10">
-                    {#if effectiveViewMode === "docs" && activePreviewItem?.docs}
-                        <DocsProse markdown={activePreviewItem.docs} />
-                    {:else if ActivePreview}
-                        <ActivePreview />
-                    {/if}
-                </div>
-            </ScrollAreaContent>
-        </ScrollArea>
+        {#if effectiveViewMode !== "docs" && activePreviewItem?.layout === "stage"}
+            <div class="size-full">
+                {#if ActivePreview}
+                    <ActivePreview />
+                {/if}
+            </div>
+        {:else}
+            <ScrollArea size="lg" direction="vertical" class="size-full">
+                <ScrollAreaContent
+                    class="px-6 py-10 md:px-12 md:py-14"
+                    {@attach scrollFade({ size: "lg", direction: "vertical", edges: "both" })}
+                >
+                    <div class="relative w-full max-w-4xl mx-auto flex flex-col gap-10">
+                        {#if effectiveViewMode === "docs" && activePreviewItem?.docs}
+                            <DocsProse markdown={activePreviewItem.docs} />
+                        {:else if ActivePreview}
+                            <ActivePreview />
+                        {/if}
+                    </div>
+                </ScrollAreaContent>
+            </ScrollArea>
+        {/if}
     </div>
 </div>
 

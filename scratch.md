@@ -1,5 +1,6 @@
 ## UI & Polish
 
+- caret color neutral?
 - [x] Docs in App-Layout integrieren (als Gesamtbeispiel und in Work-Docs)
 - [x] Data Table: Basis reviewen, testen lassen (Preview und Co.)
 - [x] Data Table: Performance
@@ -55,7 +56,7 @@
 
 ## Work
 
-- [ ] Animation zwischen MainArea-Switches
+- [x] Animation zwischen MainArea-Switches
 - [ ] KI-Integrationen clean dargestellt
 - [ ] ContentEditable-artiges Element für Platzhalter etc.
 - [ ] EML-Logik: Signaturen
