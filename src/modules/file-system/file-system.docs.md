@@ -402,6 +402,7 @@ Indexed collections (`defineCollection({ ..., index: ... })`) expose reactive Sv
 
 Workspace reactive status properties:
 - `mountStatus`: `"unlinked" | "restoring" | "needs-permission" | "ready" | "stale" | "unsupported"`.
+- `directoryName`: `string | null` — reflects the mounted or restored `FileSystemDirectoryHandle.name`. Available as soon as a handle is loaded (including in `"needs-permission"` and `"stale"` states), `null` when `"unlinked"`, `"unsupported"`, or using a custom `config.backend`, and resets to `null` on `forget()`.
 - `activity`: `"idle" | "restoring" | "reading" | "writing" | "healing"`.
 - `isBusy`: `true` when `activity !== "idle" || pendingMutationCount > 0` (orthogonal to `health`).
 - `pendingMutationCount`: Number of in-flight optimistic mutations.

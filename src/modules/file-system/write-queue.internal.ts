@@ -317,6 +317,9 @@ export class WriteQueue {
 
 		if (normalizedFrom === normalizedTo) {
 			return this.withPathLock(normalizedFrom, async () => {
+				if (options?.expectedRevision !== undefined) {
+					await this.#assertExpectedRevision(normalizedFrom, options.expectedRevision);
+				}
 				const stat = await this.#backend.stat(normalizedFrom);
 				if (!stat) {
 					throw new FsError("NOT_FOUND", `File not found: "${normalizedFrom}".`, {

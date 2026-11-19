@@ -1390,4 +1390,109 @@ describe("cache-engine: hardenings (dirty generations, heal/flush serialization,
 			engine2.destroy();
 		}
 	});
+
+	it("serializes concurrent heal() calls arriving while flush() is active without overlapping run() or premature #isHealing reset", async () => {
+		const backend = new MemoryFsBackend();
+		const writeQueue = new WriteQueue(backend);
+
+		const diskDoc: InvoiceDoc = { id: "inv-disk", year: "2026", title: "OnDisk", amount: 500 };
+		const diskRev = await backend.injectExternalFile(
+			"invoices/2026/inv-disk.json",
+			encodeJsonBytes(diskDoc),
+		);
+
+		const engine = new CacheEngine({
+			backend,
+			writeQueue,
+			collections: [makeInvoiceCollection()],
+			indexFlushMs: 0,
+		});
+
+		await engine.upsertEntry("invoices", "invoices/2026/inv-disk.json", { year: "2026", id: "inv-disk" }, diskRev, diskDoc);
+
+		const { promise: flushWriteStarted, resolve: markFlushWriteStarted } = Promise.withResolvers<void>();
+		const { promise: flushGate, resolve: releaseFlush } = Promise.withResolvers<void>();
+
+		const origWriteBytes = backend.writeBytes.bind(backend);
+		let gatedFlushWrite = true;
+		let flushPhaseWrites = 0;
+		const writeSpy = vi.spyOn(backend, "writeBytes").mockImplementation(async (path, bytes, opts) => {
+			if (gatedFlushWrite && path.includes("_cs-fs/index/invoices/")) {
+				gatedFlushWrite = false;
+				markFlushWriteStarted();
+				await flushGate;
+			}
+			if (path.includes("_cs-fs/index/")) {
+				flushPhaseWrites += 1;
+			}
+			return origWriteBytes(path, bytes, opts);
+		});
+
+		const { promise: walk1Started, resolve: markWalk1Started } = Promise.withResolvers<void>();
+		const { promise: walk1Gate, resolve: releaseWalk1 } = Promise.withResolvers<void>();
+		const { promise: walk2Started, resolve: markWalk2Started } = Promise.withResolvers<void>();
+		const { promise: walk2Gate, resolve: releaseWalk2 } = Promise.withResolvers<void>();
+
+		const origWalkFiles = backend.walkFiles.bind(backend);
+		let walkCount = 0;
+		let activeWalks = 0;
+		let maxConcurrentWalks = 0;
+		const walkSpy = vi.spyOn(backend, "walkFiles").mockImplementation(async (dir, options) => {
+			walkCount += 1;
+			const currentWalk = walkCount;
+			activeWalks += 1;
+			maxConcurrentWalks = Math.max(maxConcurrentWalks, activeWalks);
+			try {
+				if (currentWalk === 1) {
+					markWalk1Started();
+					await walk1Gate;
+				} else if (currentWalk === 2) {
+					markWalk2Started();
+					await walk2Gate;
+				}
+				return await origWalkFiles(dir, options);
+			} finally {
+				activeWalks -= 1;
+			}
+		});
+
+		const flushPromise = engine.flush();
+		await flushWriteStarted;
+
+		// Fire two concurrent heal() calls while flush() is mid-flight.
+		const heal1 = engine.heal({ mode: "full" });
+		const heal2 = engine.heal({ mode: "full" });
+
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(walkSpy).toHaveBeenCalledTimes(0);
+
+		// Release flush() -> heal1 should start, heal2 must wait for heal1.
+		releaseFlush();
+		await flushPromise;
+		await walk1Started;
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(walkSpy).toHaveBeenCalledTimes(1);
+		expect(maxConcurrentWalks).toBe(1);
+
+		// Release heal1 -> heal2 should start sequentially after heal1 finishes.
+		releaseWalk1();
+		await heal1;
+		await walk2Started;
+		expect(walkSpy).toHaveBeenCalledTimes(2);
+		expect(maxConcurrentWalks).toBe(1);
+
+		// While heal2 is still running, #isHealing must remain true so upsertEntry() does not schedule a flush.
+		const writesBeforeUpsert = flushPhaseWrites;
+		await engine.upsertEntry("invoices", "invoices/2026/inv-disk.json", { year: "2026", id: "inv-disk" }, diskRev, diskDoc);
+		await new Promise((r) => setTimeout(r, 10));
+		expect(flushPhaseWrites).toBe(writesBeforeUpsert);
+
+		releaseWalk2();
+		await heal2;
+		expect(maxConcurrentWalks).toBe(1);
+		expect(writeSpy).toHaveBeenCalled();
+		engine.destroy();
+	});
 });

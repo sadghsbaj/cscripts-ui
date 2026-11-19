@@ -440,6 +440,31 @@ describe("write-queue: OCC revisions, clock skew, move, verification, and backup
 		expect(conflictDel.details?.remoteRevision).toBeNull();
 	});
 
+	it("enforces expectedRevision OCC check when WriteQueue.move() is called with fromPath === toPath", async () => {
+		const backend = new MemoryFsBackend();
+		const queue = new WriteQueue(backend, { useWebLocks: false, verifyAfterWrite: true });
+
+		const rev1 = await queue.write("same.json", encode("v1"));
+		const rev2 = await backend.injectExternalFile("same.json", encode("v2-longer"));
+
+		// Stale expectedRevision on same-path move must throw CONFLICT
+		await expectFsError(
+			queue.move("same.json", "same.json", { expectedRevision: rev1 }),
+			"CONFLICT",
+		);
+
+		// Explicit expectedRevision: null on existing file must also throw CONFLICT
+		await expectFsError(
+			queue.move("same.json", "same.json", { expectedRevision: null }),
+			"CONFLICT",
+		);
+
+		// Matching expectedRevision succeeds and returns current revision
+		const sameRev = await queue.move("same.json", "same.json", { expectedRevision: rev2 });
+		expect(sameRev.size).toBe(rev2.size);
+		expect(sameRev.lastModified).toBe(rev2.lastModified);
+	});
+
 	it("handles positive and negative clock skew cleanly without relying on Date.now() for OCC", async () => {
 		const aheadBackend = new MemoryFsBackend({ clockSkewMs: 3_600_000 });
 		const aheadQueue = new WriteQueue(aheadBackend, { useWebLocks: false, verifyAfterWrite: true });

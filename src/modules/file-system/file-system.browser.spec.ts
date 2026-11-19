@@ -10,12 +10,14 @@ let testServer: ViteDevServer | undefined;
 let testServerUrl = "";
 
 test.describe("FileSystem real Chromium OPFS, IndexedDB & csSingleFile", () => {
+    test.describe.configure({ mode: "serial" });
+
     test.beforeAll(async () => {
         testServer = await createServer({
             root: process.cwd(),
             configFile: false,
             logLevel: "silent",
-            server: { port: 0, host: "127.0.0.1" },
+            server: { port: 0, host: "127.0.0.1", hmr: false },
             plugins: [svelte()],
         });
         await testServer.listen();

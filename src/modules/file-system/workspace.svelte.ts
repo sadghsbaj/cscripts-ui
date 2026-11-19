@@ -418,6 +418,7 @@ export interface Workspace<
 	readonly systemDir: string;
 	readonly support: FileSystemSupportReport;
 	readonly mountStatus: MountStatus;
+	readonly directoryName: string | null;
 	readonly activity: WorkspaceActivity;
 	readonly isBusy: boolean;
 	readonly pendingMutationCount: number;
@@ -806,7 +807,8 @@ export function defineWorkspace<
 	let backend: FsBackend | null = config.backend ?? null;
 	let writeQueue: WriteQueue | null = null;
 	let cacheEngine: CacheEngine | null = null;
-	let directoryHandle: PermissionAwareDirectoryHandle | null = null;
+	let directoryHandle = $state.raw<PermissionAwareDirectoryHandle | null>(null);
+	const directoryName = $derived<string | null>(directoryHandle?.name ?? null);
 	let destroyed = false;
 	let mountEpoch = 0;
 	let activeRestoreEpoch = -1;
@@ -953,7 +955,7 @@ export function defineWorkspace<
 		return configs;
 	}
 
-	function initializeEngine(nextBackend: FsBackend): void {
+	function initializeEngine(nextBackend: FsBackend): CacheEngine {
 		cacheEngine?.destroy();
 
 		const nextQueue = new WriteQueue(nextBackend, {
@@ -987,6 +989,7 @@ export function defineWorkspace<
 		} else {
 			logger.setBackend(undefined, undefined);
 		}
+		return nextCache;
 	}
 
 	if (config.backend) {
@@ -1403,7 +1406,7 @@ export function defineWorkspace<
 					try {
 						await runBootCheck(epoch, activeCache);
 					} catch (error) {
-						if (epoch !== mountEpoch) {
+						if (destroyed || epoch !== mountEpoch) {
 							return;
 						}
 						handleInfrastructureError(error, "Workspace boot check failed.", undefined, epoch);
@@ -1427,10 +1430,11 @@ export function defineWorkspace<
 		const promise = withActivity("restoring", async () => {
 			try {
 				const handle = (await idbStore.loadHandle()) as PermissionAwareDirectoryHandle | null;
-				if (epoch !== mountEpoch) {
+				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
 				}
 				if (!handle) {
+					directoryHandle = null;
 					mountStatus = "unlinked";
 					return mountStatus;
 				}
@@ -1439,7 +1443,7 @@ export function defineWorkspace<
 				const permission = handle.queryPermission
 					? await handle.queryPermission({ mode })
 					: "granted";
-				if (epoch !== mountEpoch) {
+				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
 				}
 
@@ -1464,17 +1468,18 @@ export function defineWorkspace<
 					message: "Workspace restored and ready.",
 				});
 				await runBootCheck(epoch, cacheEngine as CacheEngine);
-				if (epoch !== mountEpoch) {
+				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
 				}
 				return mountStatus;
 			} catch (error) {
-				if (epoch !== mountEpoch) {
+				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
 				}
 				handleInfrastructureError(error, "Failed to restore workspace handle.", undefined, epoch);
-				if (epoch === mountEpoch && mountStatus === "restoring") {
+				if (!destroyed && epoch === mountEpoch && mountStatus === "restoring") {
 					mountStatus = "unlinked";
+					directoryHandle = null;
 				}
 				return mountStatus;
 			} finally {
@@ -1525,22 +1530,40 @@ export function defineWorkspace<
 		}
 
 		return withActivity("restoring", async () => {
-			mountEpoch += 1;
-			activeRestorePromise = null;
-			activeRestoreEpoch = -1;
-			const epoch = mountEpoch;
+			let activeEpoch = mountEpoch;
 			try {
-				directoryHandle = pickedHandle as PermissionAwareDirectoryHandle;
 				if (idbStore) {
 					await idbStore.saveHandle(pickedHandle);
 				}
-				if (epoch !== mountEpoch) {
+				if (destroyed || activeEpoch !== mountEpoch) {
 					return mountStatus;
 				}
+
+				mountEpoch += 1;
+				activeEpoch = mountEpoch;
+				activeRestorePromise = null;
+				activeRestoreEpoch = -1;
+				activeAbortController?.abort();
+				activeAbortController = null;
+				cacheEngine?.destroy();
+				cacheEngine = null;
+				writeQueue = null;
+				backend = null;
+				logger.setBackend(undefined, undefined);
+
+				trackedDocs.clear();
+				conflictTargets.clear();
+				pendingMutations = [];
+				confirmedEntries = {};
+				unresolvedConflicts = [];
+				corruptEntries = [];
+				syncProgress = null;
+
+				directoryHandle = pickedHandle as PermissionAwareDirectoryHandle;
 				const nextBackend = config.createBackend
 					? config.createBackend(pickedHandle)
 					: new BrowserFsBackend(pickedHandle, { maxFileBytes: config.maxFileBytes });
-				initializeEngine(nextBackend);
+				const nextCache = initializeEngine(nextBackend);
 				mountStatus = "ready";
 				lastError = null;
 				logger.log({
@@ -1548,10 +1571,24 @@ export function defineWorkspace<
 					event: "mount",
 					message: `Mounted directory "${pickedHandle.name}".`,
 				});
-				await runBootCheck(epoch, cacheEngine as CacheEngine);
+				await runBootCheck(activeEpoch, nextCache);
+				if (destroyed || activeEpoch !== mountEpoch) {
+					return mountStatus;
+				}
 				return mountStatus;
 			} catch (error) {
-				handleInfrastructureError(error, "Failed to initialize mounted directory.", undefined, epoch);
+				if (destroyed || activeEpoch !== mountEpoch) {
+					return mountStatus;
+				}
+				handleInfrastructureError(
+					error,
+					"Failed to initialize mounted directory.",
+					undefined,
+					activeEpoch,
+				);
+				if (mountStatus === "restoring") {
+					mountStatus = directoryHandle ? "needs-permission" : "unlinked";
+				}
 				return mountStatus;
 			}
 		});
@@ -1573,10 +1610,9 @@ export function defineWorkspace<
 		let handle = directoryHandle;
 		if (!handle) {
 			handle = (await idbStore.loadHandle()) as PermissionAwareDirectoryHandle | null;
-			if (epoch !== mountEpoch) {
+			if (destroyed || epoch !== mountEpoch) {
 				return mountStatus;
 			}
-			directoryHandle = handle;
 		}
 		if (!handle) {
 			mountStatus = "unlinked";
@@ -1588,10 +1624,11 @@ export function defineWorkspace<
 				const permission = handle.requestPermission
 					? await handle.requestPermission({ mode })
 					: "granted";
-				if (epoch !== mountEpoch) {
+				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
 				}
 
+				directoryHandle = handle;
 				if (permission !== "granted") {
 					mountStatus = "needs-permission";
 					logger.log({
@@ -1614,12 +1651,12 @@ export function defineWorkspace<
 					message: "Directory permission granted.",
 				});
 				await runBootCheck(epoch, cacheEngine as CacheEngine);
-				if (epoch !== mountEpoch) {
+				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
 				}
 				return mountStatus;
 			} catch (error) {
-				if (epoch !== mountEpoch) {
+				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
 				}
 				handleInfrastructureError(error, "Failed to request directory access.", undefined, epoch);
@@ -1630,6 +1667,7 @@ export function defineWorkspace<
 
 	async function forget(): Promise<void> {
 		mountEpoch += 1;
+		const epoch = mountEpoch;
 		activeRestorePromise = null;
 		activeRestoreEpoch = -1;
 		activeAbortController?.abort();
@@ -1656,6 +1694,9 @@ export function defineWorkspace<
 			} catch {
 				// Ignore IDB errors when forgetting an already-broken handle.
 			}
+		}
+		if (destroyed || epoch !== mountEpoch) {
+			return;
 		}
 
 		mountStatus = support.supported || config.backend ? "unlinked" : "unsupported";
@@ -1694,6 +1735,9 @@ export function defineWorkspace<
 					...options,
 					signal: controller.signal,
 					onProgress: (progress) => {
+						if (epoch !== mountEpoch) {
+							return;
+						}
 						syncProgress = progress;
 						config.onSyncProgress?.(progress);
 						options?.onProgress?.(progress);
@@ -1895,6 +1939,51 @@ export function defineWorkspace<
 		})();
 	}
 
+	function runTrackedMutation<T>(params: {
+		epoch: number;
+		context: MutationContext;
+		errorMessage: string;
+		createPendingMutation: (id: string) => PendingMutation;
+		execute: (mutId: string) => Promise<{ result: T; revision?: FileRevision }>;
+	}): Promise<T> {
+		const { epoch, context, errorMessage, createPendingMutation, execute } = params;
+		const mutId = nextMutationId();
+		pushPendingMutation(createPendingMutation(mutId));
+
+		const task = withActivity("writing", async (): Promise<T> => {
+			try {
+				const { result, revision } = await execute(mutId);
+				if (destroyed || epoch !== mountEpoch) {
+					return result;
+				}
+				lastError = null;
+				config.onMutationSettled?.({
+					...context,
+					status: "committed",
+					...(revision !== undefined && { revision }),
+				});
+				return result;
+			} catch (error) {
+				const fsError = handleInfrastructureError(error, errorMessage, context, epoch);
+				if (epoch === mountEpoch) {
+					config.onMutationSettled?.({
+						...context,
+						status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
+						error: fsError,
+					});
+				}
+				throw fsError;
+			} finally {
+				if (epoch === mountEpoch) {
+					removePendingMutation(mutId);
+				}
+			}
+		});
+
+		trackMutationPromise(task);
+		return task;
+	}
+
 	function buildSingletonHandle(
 		name: string,
 		def: SingletonDefinition<unknown>,
@@ -1956,16 +2045,21 @@ export function defineWorkspace<
 				assertWritable();
 				const { backend: activeBackend, writeQueue: activeQueue } = assertMounted();
 				const epoch = mountEpoch;
-				const context: MutationContext = {
-					operation: "write",
-					singleton: name,
-					path: def.path,
-				};
-				const mutId = nextMutationId();
-				pushPendingMutation({ id: mutId, kind: "pending", collection: "", path: def.path });
-
-				const task = withActivity("writing", async (): Promise<WriteResult> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "write",
+						singleton: name,
+						path: def.path,
+					},
+					errorMessage: `Failed to write singleton "${name}".`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "pending",
+						collection: "",
+						path: def.path,
+					}),
+					execute: async () => {
 						const expectedRevision =
 							options?.expectedRevision !== undefined
 								? options.expectedRevision
@@ -1984,70 +2078,47 @@ export function defineWorkspace<
 							target: { adapter: def.adapter, singleton: name },
 							epoch,
 						});
-						if (epoch !== mountEpoch) {
-							return result;
+						if (destroyed || epoch !== mountEpoch) {
+							return { result };
 						}
 
-						lastError = null;
 						logger.log({
 							level: "info",
 							event: "write",
 							path: def.path,
 							message: `Wrote singleton "${name}".`,
 						});
-						config.onMutationSettled?.({
-							...context,
-							status: "committed",
-							revision: result.revision,
-						});
-						return result;
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to write singleton "${name}".`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result, revision: result.revision };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 
 			async update(updater, options) {
 				assertWritable();
 				const { backend: activeBackend, writeQueue: activeQueue } = assertMounted();
 				const epoch = mountEpoch;
-				const context: MutationContext = {
-					operation: "update",
-					singleton: name,
-					path: def.path,
-				};
-				const mutId = nextMutationId();
-				pushPendingMutation({ id: mutId, kind: "pending", collection: "", path: def.path });
-
-				const task = withActivity("writing", async (): Promise<WriteResult> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "update",
+						singleton: name,
+						path: def.path,
+					},
+					errorMessage: `Failed to update singleton "${name}".`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "pending",
+						collection: "",
+						path: def.path,
+					}),
+					execute: async () => {
 						const current = await decodeWithRevision(
 							activeBackend,
 							def.path,
 							def.adapter,
 							options?.signal,
 						);
-						if (epoch !== mountEpoch) {
+						if (destroyed || epoch !== mountEpoch) {
 							throw new FsError("ABORTED", "Workspace was unmounted.");
 						}
 						if (current) {
@@ -2056,6 +2127,9 @@ export function defineWorkspace<
 							removeTrackedDoc(def.path, epoch);
 						}
 						const nextData = await updater(current ? current.data : null);
+						if (destroyed || epoch !== mountEpoch) {
+							throw new FsError("ABORTED", "Workspace was unmounted.");
+						}
 						const expectedRevision =
 							options?.expectedRevision !== undefined
 								? options.expectedRevision
@@ -2074,41 +2148,9 @@ export function defineWorkspace<
 							target: { adapter: def.adapter, singleton: name },
 							epoch,
 						});
-						if (epoch !== mountEpoch) {
-							return result;
-						}
-
-						lastError = null;
-						config.onMutationSettled?.({
-							...context,
-							status: "committed",
-							revision: result.revision,
-						});
-						return result;
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to update singleton "${name}".`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result, revision: result.revision };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 
 			async exists() {
@@ -2120,61 +2162,45 @@ export function defineWorkspace<
 				assertWritable();
 				const { writeQueue: activeQueue } = assertMounted();
 				const epoch = mountEpoch;
-				const context: MutationContext = {
-					operation: "delete",
-					singleton: name,
-					path: def.path,
-				};
-				const mutId = nextMutationId();
-				pushPendingMutation({ id: mutId, kind: "pending", collection: "", path: def.path });
-
-				const task = withActivity("writing", async (): Promise<void> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "delete",
+						singleton: name,
+						path: def.path,
+					},
+					errorMessage: `Failed to delete singleton "${name}".`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "pending",
+						collection: "",
+						path: def.path,
+					}),
+					execute: async () => {
 						const policy = options?.conflictPolicy ?? defaultConflictPolicy;
 						const expectedRevision =
 							policy === "last-write-wins"
 								? undefined
-								: (options?.expectedRevision ?? trackedDocs.get(def.path)?.revision);
+								: options?.expectedRevision !== undefined
+									? options.expectedRevision
+									: trackedDocs.get(def.path)?.revision;
 						await activeQueue.delete(def.path, {
 							expectedRevision,
 							backup: options?.backup,
 						});
-						if (epoch !== mountEpoch) {
-							return;
+						if (destroyed || epoch !== mountEpoch) {
+							return { result: undefined };
 						}
 						removeTrackedDoc(def.path, epoch);
-						lastError = null;
 						logger.log({
 							level: "info",
 							event: "delete",
 							path: def.path,
 							message: `Deleted singleton "${name}".`,
 						});
-						config.onMutationSettled?.({ ...context, status: "committed" });
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to delete singleton "${name}".`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result: undefined };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 		};
 	}
@@ -2302,23 +2328,23 @@ export function defineWorkspace<
 					assertMounted();
 				const epoch = mountEpoch;
 				const path = def.template.build(params);
-				const context: MutationContext = {
-					operation: "write",
-					collection: name,
-					path,
-				};
-				const mutId = nextMutationId();
-				pushPendingMutation({
-					id: mutId,
-					kind: "upsert",
-					collection: name,
-					path,
-					params,
-					projected: def.hasIndex ? projectDoc(data, params) : data,
-				});
-
-				const task = withActivity("writing", async (): Promise<WriteResult> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "write",
+						collection: name,
+						path,
+					},
+					errorMessage: `Failed to write "${path}".`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "upsert",
+						collection: name,
+						path,
+						params,
+						projected: def.hasIndex ? projectDoc(data, params) : data,
+					}),
+					execute: async () => {
 						const expectedRevision =
 							options?.expectedRevision !== undefined
 								? options.expectedRevision
@@ -2348,8 +2374,8 @@ export function defineWorkspace<
 							},
 							epoch,
 						});
-						if (epoch !== mountEpoch) {
-							return result;
+						if (destroyed || epoch !== mountEpoch) {
+							return { result };
 						}
 
 						if (def.hasIndex) {
@@ -2367,43 +2393,15 @@ export function defineWorkspace<
 							refreshConfirmedSnapshot(name, epoch);
 						}
 
-						lastError = null;
 						logger.log({
 							level: "info",
 							event: "write",
 							path,
 							message: `Wrote record in "${name}".`,
 						});
-						config.onMutationSettled?.({
-							...context,
-							status: "committed",
-							revision: result.revision,
-						});
-						return result;
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to write "${path}".`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result, revision: result.revision };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 
 			async writeRaw(params, fileOrBytes, options) {
@@ -2412,16 +2410,21 @@ export function defineWorkspace<
 					assertMounted();
 				const epoch = mountEpoch;
 				const path = def.template.build(params);
-				const context: MutationContext = {
-					operation: "writeRaw",
-					collection: name,
-					path,
-				};
-				const mutId = nextMutationId();
-				pushPendingMutation({ id: mutId, kind: "pending", collection: name, path });
-
-				const task = withActivity("writing", async (): Promise<WriteResult> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "writeRaw",
+						collection: name,
+						path,
+					},
+					errorMessage: `Failed to write raw file "${path}".`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "pending",
+						collection: name,
+						path,
+					}),
+					execute: async () => {
 						const bytes = await rawInputToUint8Array(fileOrBytes);
 						const policy = options?.conflictPolicy ?? defaultConflictPolicy;
 						const expectedRevision =
@@ -2439,8 +2442,8 @@ export function defineWorkspace<
 							signal: options?.signal,
 						});
 						const revision = await withHash(rawRevision, bytes);
-						if (epoch !== mountEpoch) {
-							return { path, revision };
+						if (destroyed || epoch !== mountEpoch) {
+							return { result: { path, revision } };
 						}
 
 						removeTrackedDoc(path, epoch);
@@ -2479,39 +2482,15 @@ export function defineWorkspace<
 							refreshConfirmedSnapshot(name, epoch);
 						}
 
-						lastError = null;
 						logger.log({
 							level: "info",
 							event: "write",
 							path,
 							message: `Wrote raw file in "${name}".`,
 						});
-						config.onMutationSettled?.({ ...context, status: "committed", revision });
-						return { path, revision };
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to write raw file "${path}".`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result: { path, revision }, revision };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 
 			async writeWithCompanion(params, data, companionFile, options) {
@@ -2522,24 +2501,24 @@ export function defineWorkspace<
 				const epoch = mountEpoch;
 				const path = def.template.build(params);
 				const companionPath = companionTemplate.build(params);
-				const context: MutationContext = {
-					operation: "writeWithCompanion",
-					collection: name,
-					path,
-				};
-				const mutId = nextMutationId();
-				pushPendingMutation({
-					id: mutId,
-					kind: "upsert",
-					collection: name,
-					path,
-					params,
-					projected: def.hasIndex ? projectDoc(data, params) : data,
-					companionStatus: "present",
-				});
-
-				const task = withActivity("writing", async (): Promise<WriteResult> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "writeWithCompanion",
+						collection: name,
+						path,
+					},
+					errorMessage: `Failed to write "${path}" with companion.`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "upsert",
+						collection: name,
+						path,
+						params,
+						projected: def.hasIndex ? projectDoc(data, params) : data,
+						companionStatus: "present",
+					}),
+					execute: async () => {
 						// Validate/encode primary record before writing companion so invalid data never overwrites companion.
 						toUint8Array(await def.adapter.encode(data, { path }));
 
@@ -2579,6 +2558,15 @@ export function defineWorkspace<
 						const companionBytes = await rawInputToUint8Array(companionFile);
 						let result: WriteResult;
 						if (conflictPrechecked) {
+							const prevTrackedEntry = trackedDocs.get(path);
+							let prevPrimaryBytes: Uint8Array | null = null;
+							if (policy === "auto-merge" && (await activeBackend.exists(path))) {
+								const prevPrimaryRead = await activeBackend.readBytes(path, {
+									maxFileBytes: config.maxFileBytes,
+									signal: options?.signal,
+								});
+								prevPrimaryBytes = prevPrimaryRead.bytes;
+							}
 							result = await performConflictAwareWrite({
 								activeBackend,
 								activeQueue,
@@ -2598,11 +2586,36 @@ export function defineWorkspace<
 								epoch,
 							});
 							if (result.merged) {
-								await activeQueue.write(companionPath, companionBytes, {
-									backup: options?.backup,
-									maxFileBytes: config.maxFileBytes,
-									signal: options?.signal,
-								});
+								try {
+									await activeQueue.write(companionPath, companionBytes, {
+										backup: options?.backup,
+										maxFileBytes: config.maxFileBytes,
+										signal: options?.signal,
+									});
+								} catch (companionError) {
+									try {
+										if (prevPrimaryBytes !== null) {
+											await activeQueue.write(path, prevPrimaryBytes, {
+												maxFileBytes: config.maxFileBytes,
+											});
+										} else {
+											await activeQueue.delete(path);
+										}
+										if (prevTrackedEntry) {
+											setTrackedDoc(
+												path,
+												prevTrackedEntry.revision,
+												prevTrackedEntry.data,
+												epoch,
+											);
+										} else {
+											removeTrackedDoc(path, epoch);
+										}
+									} catch {
+										// Best-effort rollback: preserve original companion error.
+									}
+									throw companionError;
+								}
 							}
 						} else {
 							// Snapshot any existing companion so a primary TOCTOU failure can roll it back.
@@ -2654,8 +2667,8 @@ export function defineWorkspace<
 								throw primaryError;
 							}
 						}
-						if (epoch !== mountEpoch) {
-							return result;
+						if (destroyed || epoch !== mountEpoch) {
+							return { result };
 						}
 
 						if (def.hasIndex) {
@@ -2673,43 +2686,15 @@ export function defineWorkspace<
 							refreshConfirmedSnapshot(name, epoch);
 						}
 
-						lastError = null;
 						logger.log({
 							level: "info",
 							event: "write",
 							path,
 							message: `Wrote record with companion in "${name}".`,
 						});
-						config.onMutationSettled?.({
-							...context,
-							status: "committed",
-							revision: result.revision,
-						});
-						return result;
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to write "${path}" with companion.`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result, revision: result.revision };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 
 			async readCompanion(params, options) {
@@ -2750,23 +2735,28 @@ export function defineWorkspace<
 					assertMounted();
 				const epoch = mountEpoch;
 				const path = def.template.build(params);
-				const context: MutationContext = {
-					operation: "update",
-					collection: name,
-					path,
-				};
-				const mutId = nextMutationId();
-				pushPendingMutation({ id: mutId, kind: "pending", collection: name, path });
-
-				const task = withActivity("writing", async (): Promise<WriteResult> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "update",
+						collection: name,
+						path,
+					},
+					errorMessage: `Failed to update "${path}".`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "pending",
+						collection: name,
+						path,
+					}),
+					execute: async (mutId) => {
 						const current = await decodeWithRevision(
 							activeBackend,
 							path,
 							def.adapter,
 							options?.signal,
 						);
-						if (epoch !== mountEpoch) {
+						if (destroyed || epoch !== mountEpoch) {
 							throw new FsError("ABORTED", "Workspace was unmounted.");
 						}
 						if (current) {
@@ -2776,13 +2766,19 @@ export function defineWorkspace<
 						}
 
 						const nextData = await updater(current ? current.data : null);
+						if (destroyed || epoch !== mountEpoch) {
+							throw new FsError("ABORTED", "Workspace was unmounted.");
+						}
 						const existingCompanionStatus = await resolveExistingCompanionStatus(
 							activeBackend,
 							activeCache,
 							path,
 							params,
 						);
-						if (def.hasIndex && epoch === mountEpoch) {
+						if (destroyed || epoch !== mountEpoch) {
+							throw new FsError("ABORTED", "Workspace was unmounted.");
+						}
+						if (def.hasIndex) {
 							updatePendingMutation(mutId, {
 								id: mutId,
 								kind: "upsert",
@@ -2817,8 +2813,8 @@ export function defineWorkspace<
 							},
 							epoch,
 						});
-						if (epoch !== mountEpoch) {
-							return result;
+						if (destroyed || epoch !== mountEpoch) {
+							return { result };
 						}
 
 						if (def.hasIndex) {
@@ -2836,37 +2832,9 @@ export function defineWorkspace<
 							refreshConfirmedSnapshot(name, epoch);
 						}
 
-						lastError = null;
-						config.onMutationSettled?.({
-							...context,
-							status: "committed",
-							revision: result.revision,
-						});
-						return result;
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to update "${path}".`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result, revision: result.revision };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 
 			async move(fromParams, toParams, options) {
@@ -2876,37 +2844,37 @@ export function defineWorkspace<
 				const epoch = mountEpoch;
 				const fromPath = def.template.build(fromParams);
 				const toPath = def.template.build(toParams);
-				const context: MutationContext = {
-					operation: "move",
-					collection: name,
-					path: toPath,
-				};
 				const prevTracked = trackedDocs.get(fromPath);
 				const projected =
 					prevTracked !== undefined && def.index?.project
 						? def.index.project(prevTracked.data, toParams)
 						: undefined;
-				const mutId = nextMutationId();
-				pushPendingMutation({
-					id: mutId,
-					kind: "move",
-					collection: name,
-					fromPath,
-					toPath,
-					toParams,
-					projected,
-				});
-
-				const task = withActivity("writing", async (): Promise<WriteResult> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "move",
+						collection: name,
+						path: toPath,
+					},
+					errorMessage: `Failed to move "${fromPath}" to "${toPath}".`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "move",
+						collection: name,
+						fromPath,
+						toPath,
+						toParams,
+						projected,
+					}),
+					execute: async () => {
 						const policy = options?.conflictPolicy ?? defaultConflictPolicy;
 						const prevCachedRevision = activeCache.getRevision(name, fromPath);
 						const expectedRevision =
 							policy === "last-write-wins"
 								? undefined
-								: (options?.expectedRevision ??
-									prevTracked?.revision ??
-									prevCachedRevision);
+								: options?.expectedRevision !== undefined
+									? options.expectedRevision
+									: (prevTracked?.revision ?? prevCachedRevision);
 
 						const rawRevision = await activeQueue.move(fromPath, toPath, {
 							expectedRevision,
@@ -2945,14 +2913,17 @@ export function defineWorkspace<
 							}
 						}
 
-						if (epoch !== mountEpoch) {
-							return { path: toPath, revision: newRevision };
+						if (destroyed || epoch !== mountEpoch) {
+							return { result: { path: toPath, revision: newRevision } };
 						}
 
 						removeTrackedDoc(fromPath, epoch);
 						let docForIndex = prevTracked?.data;
 						if (docForIndex === undefined && def.hasIndex) {
 							const decoded = await decodeWithRevision(activeBackend, toPath, def.adapter);
+							if (destroyed || epoch !== mountEpoch) {
+								return { result: { path: toPath, revision: newRevision } };
+							}
 							docForIndex = decoded?.data;
 						}
 						if (docForIndex !== undefined) {
@@ -2971,46 +2942,24 @@ export function defineWorkspace<
 									def.companion ? (companionMoved ? "present" : "missing") : undefined,
 								);
 							}
+							if (destroyed || epoch !== mountEpoch) {
+								return { result: { path: toPath, revision: newRevision } };
+							}
 							refreshConfirmedSnapshot(name, epoch);
 						}
 
-						lastError = null;
+						if (destroyed || epoch !== mountEpoch) {
+							return { result: { path: toPath, revision: newRevision } };
+						}
 						logger.log({
 							level: "info",
 							event: "move",
 							path: toPath,
 							message: `Moved "${fromPath}" -> "${toPath}".`,
 						});
-						config.onMutationSettled?.({
-							...context,
-							status: "committed",
-							revision: newRevision,
-						});
-						return { path: toPath, revision: newRevision };
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to move "${fromPath}" to "${toPath}".`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result: { path: toPath, revision: newRevision }, revision: newRevision };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 
 			async delete(params, options) {
@@ -3019,23 +2968,28 @@ export function defineWorkspace<
 					assertMounted();
 				const epoch = mountEpoch;
 				const path = def.template.build(params);
-				const context: MutationContext = {
-					operation: "delete",
-					collection: name,
-					path,
-				};
-				const mutId = nextMutationId();
-				pushPendingMutation({ id: mutId, kind: "delete", collection: name, path });
-
-				const task = withActivity("writing", async (): Promise<void> => {
-					try {
+				return runTrackedMutation({
+					epoch,
+					context: {
+						operation: "delete",
+						collection: name,
+						path,
+					},
+					errorMessage: `Failed to delete "${path}".`,
+					createPendingMutation: (id) => ({
+						id,
+						kind: "delete",
+						collection: name,
+						path,
+					}),
+					execute: async () => {
 						const policy = options?.conflictPolicy ?? defaultConflictPolicy;
 						const expectedRevision =
 							policy === "last-write-wins"
 								? undefined
-								: (options?.expectedRevision ??
-									trackedDocs.get(path)?.revision ??
-									activeCache.getRevision(name, path));
+								: options?.expectedRevision !== undefined
+									? options.expectedRevision
+									: (trackedDocs.get(path)?.revision ?? activeCache.getRevision(name, path));
 
 						await activeQueue.delete(path, {
 							expectedRevision,
@@ -3051,48 +3005,28 @@ export function defineWorkspace<
 							}
 						}
 
-						if (epoch !== mountEpoch) {
-							return;
+						if (destroyed || epoch !== mountEpoch) {
+							return { result: undefined };
 						}
 
 						removeTrackedDoc(path, epoch);
 						if (def.hasIndex) {
 							await activeCache.removeEntry(name, path);
+							if (destroyed || epoch !== mountEpoch) {
+								return { result: undefined };
+							}
 							refreshConfirmedSnapshot(name, epoch);
 						}
 
-						lastError = null;
 						logger.log({
 							level: "info",
 							event: "delete",
 							path,
 							message: `Deleted "${path}".`,
 						});
-						config.onMutationSettled?.({ ...context, status: "committed" });
-					} catch (error) {
-						const fsError = handleInfrastructureError(
-							error,
-							`Failed to delete "${path}".`,
-							context,
-							epoch,
-						);
-						if (epoch === mountEpoch) {
-							config.onMutationSettled?.({
-								...context,
-								status: fsError.code === "CONFLICT" ? "conflict" : "rolled-back",
-								error: fsError,
-							});
-						}
-						throw fsError;
-					} finally {
-						if (epoch === mountEpoch) {
-							removePendingMutation(mutId);
-						}
-					}
+						return { result: undefined };
+					},
 				});
-
-				trackMutationPromise(task);
-				return task;
 			},
 
 			async exists(params) {
@@ -3190,14 +3124,22 @@ export function defineWorkspace<
 
 			async loadPartitions(keys) {
 				const { cacheEngine: activeCache } = assertMounted();
+				const epoch = mountEpoch;
 				await activeCache.loadPartitions(name, keys);
-				refreshConfirmedSnapshot(name);
+				if (destroyed || epoch !== mountEpoch) {
+					return;
+				}
+				refreshConfirmedSnapshot(name, epoch);
 			},
 
 			async loadAllPartitions() {
 				const { cacheEngine: activeCache } = assertMounted();
+				const epoch = mountEpoch;
 				await activeCache.loadAllPartitions(name);
-				refreshConfirmedSnapshot(name);
+				if (destroyed || epoch !== mountEpoch) {
+					return;
+				}
+				refreshConfirmedSnapshot(name, epoch);
 			},
 		};
 
@@ -3303,6 +3245,9 @@ export function defineWorkspace<
 		activeAbortController?.abort();
 		activeAbortController = null;
 		cacheEngine?.destroy();
+		cacheEngine = null;
+		writeQueue = null;
+		backend = null;
 		logger.destroy();
 
 		if (typeof window !== "undefined") {
@@ -3325,6 +3270,9 @@ export function defineWorkspace<
 		support,
 		get mountStatus() {
 			return mountStatus;
+		},
+		get directoryName() {
+			return directoryName;
 		},
 		get activity() {
 			return activity;

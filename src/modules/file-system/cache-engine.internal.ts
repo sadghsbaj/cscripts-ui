@@ -528,11 +528,13 @@ export class CacheEngine {
 		const startedAt = performance.now();
 
 		this.#clearFlushTimers();
-		while (this.#activeHeal) {
-			await waitForSettled(this.#activeHeal);
-		}
-		while (this.#activeFlush) {
-			await waitForSettled(this.#activeFlush);
+		while (this.#activeHeal || this.#activeFlush) {
+			if (this.#activeHeal) {
+				await waitForSettled(this.#activeHeal);
+			}
+			if (this.#activeFlush) {
+				await waitForSettled(this.#activeFlush);
+			}
 		}
 
 		const run = async (): Promise<HealReport> => {

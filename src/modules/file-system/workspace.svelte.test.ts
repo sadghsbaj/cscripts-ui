@@ -513,6 +513,257 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 			// Subsequent operations throw ABORTED
 			await expectFsErrorCode(() => ws.heal(), "ABORTED");
 		});
+
+		it("directoryName is initially null for unlinked, unsupported, and injected backend workspaces", async () => {
+			const unsupportedWs = trackWorkspace(createWorkspace({ namespace: "dir-unsupported-ws" }));
+			expect(unsupportedWs.mountStatus).toBe("unsupported");
+			expect(unsupportedWs.directoryName).toBeNull();
+
+			const memoryWs = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-memory-ws",
+					backend: new MemoryFsBackend(),
+				}),
+			);
+			expect(memoryWs.mountStatus).toBe("ready");
+			expect(memoryWs.directoryName).toBeNull();
+			expect(await memoryWs.restore()).toBe("ready");
+			expect(memoryWs.directoryName).toBeNull();
+
+			stubSupportedEnvironment();
+			const unlinkedWs = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-unlinked-ws",
+					idbStore: createMockIdbStore(null),
+				}),
+			);
+			expect(unlinkedWs.mountStatus).toBe("unlinked");
+			expect(unlinkedWs.directoryName).toBeNull();
+		});
+
+		it("pick() updates directoryName on success and preserves previous directoryName on AbortError or saveHandle failure", async () => {
+			const firstHandle = makeFakeDirHandle("first-folder");
+			const secondHandle = makeFakeDirHandle("second-folder");
+			const failingHandle = makeFakeDirHandle("failing-folder");
+
+			const picker = vi
+				.fn<() => Promise<FileSystemDirectoryHandle>>()
+				.mockRejectedValueOnce(new DOMException("Cancelled", "AbortError"))
+				.mockResolvedValueOnce(failingHandle)
+				.mockResolvedValueOnce(firstHandle)
+				.mockRejectedValueOnce(new DOMException("Cancelled", "AbortError"))
+				.mockResolvedValueOnce(secondHandle);
+
+			stubSupportedEnvironment(picker);
+			const idb = createMockIdbStore(null);
+			const saveSpy = vi
+				.spyOn(idb, "saveHandle")
+				.mockRejectedValueOnce(new Error("IDB quota exceeded"));
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-pick-ws",
+					idbStore: idb,
+					showDirectoryPicker: picker,
+					createBackend: () => new MemoryFsBackend(),
+				}),
+			);
+
+			// AbortError when unlinked keeps directoryName === null
+			expect(await ws.pick()).toBe("unlinked");
+			expect(ws.directoryName).toBeNull();
+
+			// saveHandle failure when unlinked keeps directoryName === null
+			expect(await ws.pick()).toBe("unlinked");
+			expect(ws.directoryName).toBeNull();
+			expect(ws.lastError).not.toBeNull();
+
+			// Successful pick sets directoryName
+			expect(await ws.pick()).toBe("ready");
+			expect(ws.directoryName).toBe("first-folder");
+
+			// AbortError when already mounted preserves prior directoryName
+			expect(await ws.pick()).toBe("ready");
+			expect(ws.directoryName).toBe("first-folder");
+
+			// saveHandle failure when already mounted preserves prior directoryName
+			saveSpy.mockRejectedValueOnce(new Error("IDB write failed"));
+			expect(await ws.pick()).toBe("ready");
+			expect(ws.directoryName).toBe("first-folder");
+		});
+
+		it("restore() handles empty IDB, needs-permission, ready, and unexpected error fallback for directoryName", async () => {
+			stubSupportedEnvironment();
+
+			// Empty IDB -> null
+			const emptyWs = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-restore-empty-ws",
+					idbStore: createMockIdbStore(null),
+				}),
+			);
+			expect(await emptyWs.restore()).toBe("unlinked");
+			expect(emptyWs.directoryName).toBeNull();
+
+			// needs-permission -> handle.name
+			const promptHandle = makeFakeDirHandle("vault-prompt", { queryPermission: "prompt" });
+			const promptWs = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-restore-prompt-ws",
+					idbStore: createMockIdbStore(promptHandle),
+				}),
+			);
+			expect(await promptWs.restore()).toBe("needs-permission");
+			expect(promptWs.directoryName).toBe("vault-prompt");
+
+			// ready -> handle.name
+			const grantedHandle = makeFakeDirHandle("vault-ready", { queryPermission: "granted" });
+			const readyWs = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-restore-ready-ws",
+					idbStore: createMockIdbStore(grantedHandle),
+					createBackend: () => new MemoryFsBackend(),
+				}),
+			);
+			expect(await readyWs.restore()).toBe("ready");
+			expect(readyWs.directoryName).toBe("vault-ready");
+
+			// Unexpected restore error after handle load clears directoryName back to null
+			const brokenHandle = makeFakeDirHandle("vault-broken") as FileSystemDirectoryHandle & {
+				queryPermission: ReturnType<typeof vi.fn>;
+			};
+			brokenHandle.queryPermission.mockRejectedValueOnce(new Error("Permission query exploded"));
+			const brokenWs = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-restore-error-ws",
+					idbStore: createMockIdbStore(brokenHandle),
+				}),
+			);
+			expect(await brokenWs.restore()).toBe("unlinked");
+			expect(brokenWs.directoryName).toBeNull();
+		});
+
+		it("requestAccess() preserves directoryName across denied/prompt/ready and resets to null when handle is missing", async () => {
+			stubSupportedEnvironment();
+
+			// Missing handle -> unlinked & null
+			const missingWs = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-req-missing-ws",
+					idbStore: createMockIdbStore(null),
+				}),
+			);
+			expect(await missingWs.requestAccess()).toBe("unlinked");
+			expect(missingWs.directoryName).toBeNull();
+
+			// Denied, then prompt, then granted
+			const handle = makeFakeDirHandle("reauth-folder", {
+				queryPermission: "prompt",
+			}) as FileSystemDirectoryHandle & {
+				requestPermission: ReturnType<typeof vi.fn>;
+			};
+			const reqPermSpy = handle.requestPermission
+				.mockResolvedValueOnce("denied")
+				.mockResolvedValueOnce("prompt")
+				.mockResolvedValueOnce("granted");
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-req-ws",
+					idbStore: createMockIdbStore(handle),
+					createBackend: () => new MemoryFsBackend(),
+				}),
+			);
+			expect(await ws.restore()).toBe("needs-permission");
+			expect(ws.directoryName).toBe("reauth-folder");
+
+			expect(await ws.requestAccess()).toBe("needs-permission");
+			expect(ws.directoryName).toBe("reauth-folder");
+
+			expect(await ws.requestAccess()).toBe("needs-permission");
+			expect(ws.directoryName).toBe("reauth-folder");
+
+			expect(await ws.requestAccess()).toBe("ready");
+			expect(ws.directoryName).toBe("reauth-folder");
+			expect(reqPermSpy).toHaveBeenCalledTimes(3);
+		});
+
+		it("forget() resets directoryName to null", async () => {
+			stubSupportedEnvironment();
+			const handle = makeFakeDirHandle("forgotten-folder", { queryPermission: "granted" });
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-forget-ws",
+					idbStore: createMockIdbStore(handle),
+					createBackend: () => new MemoryFsBackend(),
+				}),
+			);
+
+			expect(await ws.restore()).toBe("ready");
+			expect(ws.directoryName).toBe("forgotten-folder");
+
+			await ws.forget();
+			expect(ws.mountStatus).toBe("unlinked");
+			expect(ws.directoryName).toBeNull();
+		});
+
+		it("forget() or destroy() while pick() saveHandle() is pending does not leak the new directoryName", async () => {
+			// Case 1: forget() during pending saveHandle()
+			const newHandle1 = makeFakeDirHandle("leaked-on-forget");
+			const picker1 = vi.fn(async () => newHandle1);
+			stubSupportedEnvironment(picker1);
+
+			const saveDeferred1 = createDeferred<void>();
+			const idb1 = createMockIdbStore(null);
+			idb1.saveHandle = vi.fn(() => saveDeferred1.promise);
+
+			const ws1 = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-race-forget-ws",
+					idbStore: idb1,
+					showDirectoryPicker: picker1,
+					createBackend: () => new MemoryFsBackend(),
+				}),
+			);
+
+			const pickPromise1 = ws1.pick();
+			await vi.waitFor(() => {
+				expect(idb1.saveHandle).toHaveBeenCalledTimes(1);
+			});
+
+			await ws1.forget();
+			saveDeferred1.resolve();
+			expect(await pickPromise1).toBe("unlinked");
+			expect(ws1.directoryName).toBeNull();
+
+			// Case 2: destroy() during pending saveHandle()
+			const newHandle2 = makeFakeDirHandle("leaked-on-destroy");
+			const picker2 = vi.fn(async () => newHandle2);
+			stubSupportedEnvironment(picker2);
+
+			const saveDeferred2 = createDeferred<void>();
+			const idb2 = createMockIdbStore(null);
+			idb2.saveHandle = vi.fn(() => saveDeferred2.promise);
+
+			const ws2 = trackWorkspace(
+				createWorkspace({
+					namespace: "dir-race-destroy-ws",
+					idbStore: idb2,
+					showDirectoryPicker: picker2,
+					createBackend: () => new MemoryFsBackend(),
+				}),
+			);
+
+			const pickPromise2 = ws2.pick();
+			await vi.waitFor(() => {
+				expect(idb2.saveHandle).toHaveBeenCalledTimes(1);
+			});
+
+			ws2.destroy();
+			saveDeferred2.resolve();
+			expect(await pickPromise2).toBe("unlinked");
+			expect(ws2.directoryName).toBeNull();
+		});
 	});
 
 	describe("3. Reactive State & Lifecycle ($state.raw, health, lastError, beforeunload)", () => {
@@ -2566,6 +2817,516 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 			if (isFsError(caught)) {
 				expect(caught.code).toBe("INVALID_CONFIG");
 			}
+		});
+
+		it("pick() clears old trackedDocs/unresolvedConflicts, keeps pendingMutationCount consistent across in-flight mutations, and does not orphan pendingMutations when saveHandle fails", async () => {
+			stubSupportedEnvironment();
+			const backendA = new MemoryFsBackend();
+			const backendB = new MemoryFsBackend();
+			const handleA = makeFakeDirHandle("dir-a");
+			const handleB = makeFakeDirHandle("dir-b");
+			const idbStore = createMockIdbStore();
+
+			const settings = defineSingleton({
+				path: "settings.json",
+				adapter: jsonAdapter({ schema: settingsSchema }),
+			});
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "unknown" },
+			});
+
+			let nextHandle = handleA;
+			let nextBackend = backendA;
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "pick-switch-cleanup-ws",
+					idbStore,
+					showDirectoryPicker: async () => nextHandle,
+					createBackend: () => nextBackend,
+					singletons: { settings },
+					collections: { invoices },
+				}),
+			);
+
+			await ws.pick();
+			expect(ws.mountStatus).toBe("ready");
+
+			// Populate trackedDocs and unresolvedConflicts in Dir A
+			await ws.singletons.settings.write({ theme: "dark", currency: "EUR" });
+			const invRev = await ws.collections.invoices.write(
+				{ year: "2025", id: "1" },
+				{ id: "1", year: "2025", title: "Local", amount: 10 },
+			);
+			await backendA.injectExternalFile(
+				"invoices/2025/1.json",
+				encodeJson({ id: "1", year: "2025", title: "External", amount: 99 }),
+			);
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.write(
+						{ year: "2025", id: "1" },
+						{ id: "1", year: "2025", title: "Local2", amount: 20 },
+						{ expectedRevision: invRev.revision, conflictPolicy: "detect" },
+					),
+				"CONFLICT",
+			);
+			expect(ws.unresolvedConflicts).toHaveLength(1);
+
+			// Seed Dir B with a different settings.json (so if Dir A's trackedDocs leaked, delete() would CONFLICT)
+			await backendB.injectExternalFile(
+				"settings.json",
+				encodeJson({ theme: "light", currency: "USD" }),
+			);
+
+			// Start an in-flight mutation in Dir A and gate its writeBytes
+			const { promise: writeStarted, resolve: markWriteStarted } = Promise.withResolvers<void>();
+			const { promise: writeGate, resolve: releaseWrite } = Promise.withResolvers<void>();
+			const origWriteA = backendA.writeBytes.bind(backendA);
+			vi.spyOn(backendA, "writeBytes").mockImplementationOnce(async (path, bytes, opts) => {
+				markWriteStarted();
+				await writeGate;
+				return origWriteA(path, bytes, opts);
+			});
+
+			const inFlightA = ws.collections.invoices.write(
+				{ year: "2025", id: "2" },
+				{ id: "2", year: "2025", title: "InFlight", amount: 5 },
+			);
+			await writeStarted;
+			expect(ws.pendingMutationCount).toBe(1);
+			expect(ws.isBusy).toBe(true);
+
+			// Switch to Dir B while Dir A's mutation is in-flight
+			nextHandle = handleB;
+			nextBackend = backendB;
+			const statusB = await ws.pick();
+			expect(statusB).toBe("ready");
+			expect(ws.pendingMutationCount).toBe(0);
+			expect(ws.unresolvedConflicts).toEqual([]);
+
+			// Release Dir A's stale write; it must not re-dirty Dir B's pendingMutationCount or isBusy
+			releaseWrite();
+			await inFlightA;
+			expect(ws.pendingMutationCount).toBe(0);
+			expect(ws.isBusy).toBe(false);
+			expect(ws.unresolvedConflicts).toEqual([]);
+
+			// Old Dir A trackedDocs for settings.json were cleared, so delete() in Dir B succeeds without Dir A's revision
+			await ws.singletons.settings.delete();
+			expect(await backendB.exists("settings.json")).toBe(false);
+
+			// Now test pick() failing in saveHandle while already mounted on Dir B with an in-flight mutation
+			const { promise: bWriteStarted, resolve: markBWriteStarted } = Promise.withResolvers<void>();
+			const { promise: bWriteGate, resolve: releaseBWrite } = Promise.withResolvers<void>();
+			const origWriteB = backendB.writeBytes.bind(backendB);
+			vi.spyOn(backendB, "writeBytes").mockImplementationOnce(async (path, bytes, opts) => {
+				markBWriteStarted();
+				await bWriteGate;
+				return origWriteB(path, bytes, opts);
+			});
+
+			const inFlightB = ws.collections.invoices.write(
+				{ year: "2026", id: "3" },
+				{ id: "3", year: "2026", title: "PendingOnB", amount: 15 },
+			);
+			await bWriteStarted;
+			expect(ws.pendingMutationCount).toBe(1);
+
+			vi.spyOn(idbStore, "saveHandle").mockRejectedValueOnce(new Error("IDB quota exceeded"));
+			const failedPickStatus = await ws.pick();
+			expect(failedPickStatus).toBe("ready");
+			expect(ws.lastError?.code).toBe("IO_FAILED");
+
+			// Existing mount's in-flight mutation completes cleanly without orphaning pendingMutations
+			releaseBWrite();
+			await inFlightB;
+			expect(ws.pendingMutationCount).toBe(0);
+			expect(ws.isBusy).toBe(false);
+		});
+
+		it("pick() failing (saveHandle rejects) while restore() is in restoring state falls back cleanly instead of staying stuck in restoring", async () => {
+			stubSupportedEnvironment();
+
+			// Case A: directoryHandle is null -> falls back to "unlinked"
+			const { promise: loadGate, resolve: releaseLoad } =
+				Promise.withResolvers<FileSystemDirectoryHandle | null>();
+			const { promise: loadStarted, resolve: markLoadStarted } = Promise.withResolvers<void>();
+
+			const idbA = createMockIdbStore();
+			vi.spyOn(idbA, "loadHandle").mockImplementationOnce(async () => {
+				markLoadStarted();
+				return loadGate;
+			});
+			vi.spyOn(idbA, "saveHandle").mockRejectedValueOnce(new Error("IDB save failed"));
+
+			const wsA = trackWorkspace(
+				createWorkspace({
+					namespace: "pick-fail-during-restore-unlinked",
+					idbStore: idbA,
+					showDirectoryPicker: async () => makeFakeDirHandle("picked"),
+					createBackend: () => new MemoryFsBackend(),
+				}),
+			);
+
+			const restoreA = wsA.restore();
+			await loadStarted;
+			expect(wsA.mountStatus).toBe("restoring");
+
+			const pickStatusA = await wsA.pick();
+			expect(pickStatusA).toBe("unlinked");
+			expect(wsA.mountStatus).toBe("unlinked");
+			expect(wsA.lastError?.code).toBe("IO_FAILED");
+
+			releaseLoad(null);
+			await restoreA;
+			expect(wsA.mountStatus).toBe("unlinked");
+
+			// Case B: directoryHandle is already set -> falls back to "needs-permission"
+			const { promise: permGate, resolve: releasePerm } = Promise.withResolvers<PermissionState>();
+			const { promise: permStarted, resolve: markPermStarted } = Promise.withResolvers<void>();
+			const handleWithGatedPerm = {
+				...makeFakeDirHandle("restored-dir"),
+				queryPermission: vi.fn(async () => {
+					markPermStarted();
+					return permGate;
+				}),
+			} as unknown as FileSystemDirectoryHandle;
+
+			const idbB = createMockIdbStore(handleWithGatedPerm);
+			vi.spyOn(idbB, "saveHandle").mockRejectedValueOnce(new Error("IDB save failed"));
+
+			const wsB = trackWorkspace(
+				createWorkspace({
+					namespace: "pick-fail-during-restore-perm",
+					idbStore: idbB,
+					showDirectoryPicker: async () => makeFakeDirHandle("picked-2"),
+					createBackend: () => new MemoryFsBackend(),
+				}),
+			);
+
+			const restoreB = wsB.restore();
+			await permStarted;
+			expect(wsB.mountStatus).toBe("restoring");
+
+			const pickStatusB = await wsB.pick();
+			expect(pickStatusB).toBe("needs-permission");
+			expect(wsB.mountStatus).toBe("needs-permission");
+			expect(wsB.lastError?.code).toBe("IO_FAILED");
+
+			releasePerm("prompt");
+			await restoreB;
+			expect(wsB.mountStatus).toBe("needs-permission");
+		});
+
+		it("writeWithCompanion() with auto-merge rolls back primary file bytes and trackedDocs when companion write fails after conflictPrechecked", async () => {
+			const backend = new MemoryFsBackend();
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				companion: { pattern: "invoices/{year}/{id}.pdf" },
+				index: { partitionBy: (p) => p.year ?? "unknown" },
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "companion-automerge-rollback",
+					backend,
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			// Write initial record + companion (populates trackedDocs with base doc)
+			const baseRes = await ws.collections.invoices.writeWithCompanion(
+				{ year: "2025", id: "m1" },
+				{ id: "m1", year: "2025", title: "BaseTitle", amount: 10 },
+				new TextEncoder().encode("old-pdf"),
+			);
+
+			// External non-conflicting edit on disk (changes title while local will change amount)
+			await backend.injectExternalFile(
+				"invoices/2025/m1.json",
+				encodeJson({ id: "m1", year: "2025", title: "RemoteTitle", amount: 10 }),
+			);
+			const readBefore = await backend.readBytes("invoices/2025/m1.json");
+			const diskBefore = readBefore.bytes;
+
+			// Fail companion write after auto-merge succeeds on primary
+			const origWriteBytes = backend.writeBytes.bind(backend);
+			const spy = vi.spyOn(backend, "writeBytes").mockImplementation(async (path, bytes, opts) => {
+				if (path === "invoices/2025/m1.pdf") {
+					throw new Error("Companion disk error");
+				}
+				return origWriteBytes(path, bytes, opts);
+			});
+
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.writeWithCompanion(
+						{ year: "2025", id: "m1" },
+						{ id: "m1", year: "2025", title: "BaseTitle", amount: 20 },
+						new TextEncoder().encode("new-pdf"),
+						{ conflictPolicy: "auto-merge" },
+					),
+				"IO_FAILED",
+			);
+			spy.mockRestore();
+
+			// Primary file bytes on disk must be rolled back to diskBefore
+			const readAfter = await backend.readBytes("invoices/2025/m1.json");
+			const diskAfter = readAfter.bytes;
+			expect(diskAfter).toEqual(diskBefore);
+
+			// Companion file must still have old-pdf
+			const pdfAfter = await backend.readBytes("invoices/2025/m1.pdf");
+			expect(new TextDecoder().decode(pdfAfter.bytes)).toBe("old-pdf");
+
+			// trackedDocs must be rolled back to baseRes.revision (not the aborted merged revision),
+			// so a manual-policy delete without explicit expectedRevision conflicts with expectedRevision = baseRes.revision
+			const conflictErr = await expectFsErrorCode(
+				() => ws.collections.invoices.delete({ year: "2025", id: "m1" }, { conflictPolicy: "detect" }),
+				"CONFLICT",
+			);
+			expect((conflictErr.details?.expectedRevision as { hash?: string })?.hash).toBe(
+				baseRes.revision.hash,
+			);
+		});
+
+		it("loadPartitions() and loadAllPartitions() racing with forget(), pick(), or destroy() do not mutate confirmedEntries or corruptEntries", async () => {
+			const backend = new MemoryFsBackend();
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: {
+					partitionBy: (p) => p.year ?? "unknown",
+					eagerPartitions: (key) => key === "2026",
+				},
+			});
+
+			await backend.injectExternalFile(
+				"invoices/2025/old.json",
+				encodeJson({ id: "old", year: "2025", title: "Old", amount: 10 }),
+			);
+			await backend.injectExternalFile(
+				"invoices/2026/cur.json",
+				encodeJson({ id: "cur", year: "2026", title: "Cur", amount: 20 }),
+			);
+
+			// Seed index shards on disk
+			const seeder = trackWorkspace(
+				createWorkspace({
+					namespace: "partition-race-seeder",
+					backend,
+					collections: { invoices },
+				}),
+			);
+			await seeder.restore();
+			await seeder.heal({ mode: "full" });
+			seeder.destroy();
+
+			// Race 1: loadPartitions(["2025"]) vs forget()
+			stubSupportedEnvironment();
+			const idb = createMockIdbStore(makeFakeDirHandle("dir-1"));
+			const wsForget = trackWorkspace(
+				createWorkspace({
+					namespace: "partition-race-forget",
+					idbStore: idb,
+					createBackend: () => backend,
+					bootCheck: "cache-only",
+					collections: { invoices },
+				}),
+			);
+			await wsForget.restore();
+			expect(wsForget.collections.invoices.hasUnloadedPartitions()).toBe(true);
+
+			const { promise: shardReadStarted, resolve: markShardReadStarted } = Promise.withResolvers<void>();
+			const { promise: shardReadGate, resolve: releaseShardRead } = Promise.withResolvers<void>();
+			const origRead = backend.readBytes.bind(backend);
+			const readSpy = vi.spyOn(backend, "readBytes").mockImplementation(async (path, opts) => {
+				if (path === "_cs-fs/index/invoices/2025.json") {
+					markShardReadStarted();
+					await shardReadGate;
+				}
+				return origRead(path, opts);
+			});
+
+			const loadPromise = wsForget.collections.invoices.loadPartitions(["2025"]);
+			await shardReadStarted;
+			await wsForget.forget();
+			releaseShardRead();
+			await loadPromise;
+			readSpy.mockRestore();
+
+			expect(wsForget.collections.invoices.entries).toEqual([]);
+			expect(wsForget.corruptEntries).toEqual([]);
+
+			// Race 2: loadAllPartitions() vs destroy()
+			const wsDestroy = trackWorkspace(
+				createWorkspace({
+					namespace: "partition-race-destroy",
+					backend,
+					bootCheck: "cache-only",
+					collections: { invoices },
+				}),
+			);
+			await wsDestroy.restore();
+
+			const { promise: shard2Started, resolve: markShard2Started } = Promise.withResolvers<void>();
+			const { promise: shard2Gate, resolve: releaseShard2 } = Promise.withResolvers<void>();
+			const readSpy2 = vi.spyOn(backend, "readBytes").mockImplementation(async (path, opts) => {
+				if (path === "_cs-fs/index/invoices/2025.json") {
+					markShard2Started();
+					await shard2Gate;
+				}
+				return origRead(path, opts);
+			});
+
+			const loadAllPromise = wsDestroy.collections.invoices.loadAllPartitions();
+			await shard2Started;
+			wsDestroy.destroy();
+			releaseShard2();
+			await loadAllPromise;
+			readSpy2.mockRestore();
+
+			expect(wsDestroy.collections.invoices.entries.map((e) => e.path)).toEqual(["invoices/2026/cur.json"]);
+			expect(wsDestroy.corruptEntries).toEqual([]);
+		});
+
+		it("async updater() in singleton.update() and collection.update() racing with forget() or destroy() rejects with ABORTED without writing", async () => {
+			stubSupportedEnvironment();
+			const backend = new MemoryFsBackend();
+			const settings = defineSingleton({
+				path: "settings.json",
+				adapter: jsonAdapter({ schema: settingsSchema }),
+			});
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "unknown" },
+			});
+
+			// Race 1: singleton.update() vs forget()
+			const idbStore1 = createMockIdbStore(makeFakeDirHandle("dir-1"));
+			const ws1 = trackWorkspace(
+				createWorkspace({
+					namespace: "updater-race-forget",
+					idbStore: idbStore1,
+					createBackend: () => backend,
+					singletons: { settings },
+					collections: { invoices },
+				}),
+			);
+			await ws1.restore();
+
+			const writeSpy1 = vi.spyOn(backend, "writeBytes");
+			const { promise: sEntered, resolve: markSEntered } = Promise.withResolvers<void>();
+			const { promise: sGate, resolve: releaseS } = Promise.withResolvers<void>();
+
+			const settingsHandle = ws1.singletons.settings;
+			const sUpdate = settingsHandle.update(async () => {
+				markSEntered();
+				await sGate;
+				return { theme: "dark", currency: "EUR" };
+			});
+			await sEntered;
+			await ws1.forget();
+			releaseS();
+
+			await expectFsErrorCode(() => sUpdate, "ABORTED");
+			expect(writeSpy1).not.toHaveBeenCalledWith("settings.json", expect.anything(), expect.anything());
+			expect(ws1.pendingMutationCount).toBe(0);
+			writeSpy1.mockRestore();
+
+			// Race 2: collection.update() vs destroy()
+			const ws2 = trackWorkspace(
+				createWorkspace({
+					namespace: "updater-race-destroy",
+					backend,
+					singletons: { settings },
+					collections: { invoices },
+				}),
+			);
+			await ws2.restore();
+
+			const writeSpy2 = vi.spyOn(backend, "writeBytes");
+			const { promise: cEntered, resolve: markCEntered } = Promise.withResolvers<void>();
+			const { promise: cGate, resolve: releaseC } = Promise.withResolvers<void>();
+
+			const invoicesHandle = ws2.collections.invoices;
+			const cUpdate = invoicesHandle.update({ year: "2025", id: "u1" }, async () => {
+				markCEntered();
+				await cGate;
+				return { id: "u1", year: "2025", title: "Aborted", amount: 1 };
+			});
+			await cEntered;
+			ws2.destroy();
+			releaseC();
+
+			await expectFsErrorCode(() => cUpdate, "ABORTED");
+			expect(writeSpy2).not.toHaveBeenCalledWith(
+				"invoices/2025/u1.json",
+				expect.anything(),
+				expect.anything(),
+			);
+			expect(ws2.collections.invoices.entries).toEqual([]);
+			expect(await backend.exists("invoices/2025/u1.json")).toBe(false);
+			writeSpy2.mockRestore();
+		});
+
+		it("singleton.delete(), collection.move(), and collection.delete() preserve explicit expectedRevision: null and fail with CONFLICT when file exists on disk", async () => {
+			const backend = new MemoryFsBackend();
+			const settings = defineSingleton({
+				path: "settings.json",
+				adapter: jsonAdapter({ schema: settingsSchema }),
+			});
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "unknown" },
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "explicit-null-occ-ws",
+					backend,
+					singletons: { settings },
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			// Populate trackedDocs and cacheEngine with existing files on disk
+			await ws.singletons.settings.write({ theme: "dark", currency: "EUR" });
+			await ws.collections.invoices.write(
+				{ year: "2025", id: "d1" },
+				{ id: "d1", year: "2025", title: "Existing", amount: 50 },
+			);
+
+			await expectFsErrorCode(
+				() => ws.singletons.settings.delete({ expectedRevision: null }),
+				"CONFLICT",
+			);
+			expect(await backend.exists("settings.json")).toBe(true);
+
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.move(
+						{ year: "2025", id: "d1" },
+						{ year: "2026", id: "d1" },
+						{ expectedRevision: null },
+					),
+				"CONFLICT",
+			);
+			expect(await backend.exists("invoices/2025/d1.json")).toBe(true);
+			expect(await backend.exists("invoices/2026/d1.json")).toBe(false);
+
+			await expectFsErrorCode(
+				() => ws.collections.invoices.delete({ year: "2025", id: "d1" }, { expectedRevision: null }),
+				"CONFLICT",
+			);
+			expect(await backend.exists("invoices/2025/d1.json")).toBe(true);
 		});
 	});
 });
