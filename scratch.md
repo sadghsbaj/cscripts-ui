@@ -1,6 +1,5 @@
 ## UI & Polish
 
-- caret color neutral?
 - [x] Docs in App-Layout integrieren (als Gesamtbeispiel und in Work-Docs)
 - [x] Data Table: Basis reviewen, testen lassen (Preview und Co.)
 - [x] Data Table: Performance
@@ -23,18 +22,18 @@
 - [x] Fußzeile allgemein
 - [x] Workspace viel cleaner
 - [x] Ordnername muss FS mitgeben
+- [x] Caret color neutral?
 
 ## Modules
 
-- UploadArea
+- Aufklappbarer Bereich
 - [x] Data Table
-- [ ] Animierte Charts
+- [ ] Charts
 - [ ] Tablist
 - [ ] Sidebar
 - [ ] Color Picker
 - [ ] ContextMenu
 - [ ] NLP Parser
-- [ ] Das ist ein Test
 - [ ] Command Palette
 - [x] KPI Cards
 - [x] Virtual Scrolling
@@ -54,6 +53,7 @@
 - [x] Middle Click Attachment
 - [x] Zahlen-Animationen
 - [x] Progress
+- [x] UploadArea
 
 ## Work
 
