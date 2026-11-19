@@ -20,13 +20,12 @@ Companion to [art-references-ideas.md](art-references-ideas.md). Each idea has i
 | 3   | [Filter Bar](reference-wireframes/03-filter-bar.md)                           | Compound pattern |
 | 4   | [Confirmation Dialog](reference-wireframes/04-confirmation-dialog.md)         | Compound pattern |
 | 5   | [Upload / Progress Item](reference-wireframes/05-upload-item.md)              | Compound pattern |
-| 6   | [Tag / Recipient Input](reference-wireframes/06-tag-input.md)                 | Compound pattern |
-| 7   | [Task List](reference-wireframes/07-task-list.md)                             | Compound pattern |
-| 8   | [Pricing / Plan Picker](reference-wireframes/08-plan-picker.md)               | Compound pattern |
-| 9   | [Comment Composer](reference-wireframes/09-comment-composer.md)               | Compound pattern |
-| 10  | [Email Client](reference-wireframes/10-email-client.md)                       | Large scenario   |
-| 11  | [Analytics Dashboard](reference-wireframes/11-analytics-dashboard.md)         | Large scenario   |
-| 12  | [Settings / Admin Area](reference-wireframes/12-settings-admin.md)            | Large scenario   |
-| 13  | [Kanban Project Board](reference-wireframes/13-kanban-board.md)               | Large scenario   |
-| 14  | [Chat / Assistant with NLP Parser](reference-wireframes/14-assistant-chat.md) | Large scenario   |
-| 15  | [Design / Editor Tool](reference-wireframes/15-design-editor.md)              | Large scenario   |
+| 6   | [Task List](reference-wireframes/06-task-list.md)                             | Compound pattern |
+| 7   | [Pricing / Plan Picker](reference-wireframes/07-plan-picker.md)               | Compound pattern |
+| 8   | [Comment Composer](reference-wireframes/08-comment-composer.md)               | Compound pattern |
+| 9   | [Email Client](reference-wireframes/09-email-client.md)                       | Large scenario   |
+| 10  | [Analytics Dashboard](reference-wireframes/10-analytics-dashboard.md)         | Large scenario   |
+| 11  | [Settings / Admin Area](reference-wireframes/11-settings-admin.md)            | Large scenario   |
+| 12  | [Kanban Project Board](reference-wireframes/12-kanban-board.md)               | Large scenario   |
+| 13  | [Chat / Assistant with NLP Parser](reference-wireframes/13-assistant-chat.md) | Large scenario   |
+| 14  | [Design / Editor Tool](reference-wireframes/14-design-editor.md)              | Large scenario   |
