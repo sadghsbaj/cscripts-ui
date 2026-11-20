@@ -46,42 +46,37 @@ type NormalizedOptions = TooltipBaseOptions & {
 
 type MountedTooltipState = {
     id: string;
-    props: {
-        id: string;
-        text: string;
-        icon?: TooltipIconConfig;
-    };
     instance: Record<string, unknown>;
 };
 
 const mountedTooltips = new WeakMap<HTMLElement, MountedTooltipState>();
 
 function resolveTooltipId(node: HTMLElement, opts: NormalizedOptions): string {
+    const existing = mountedTooltips.get(node);
+
     if (typeof opts.target === "string") {
+        if (existing) {
+            unmount(existing.instance);
+            mountedTooltips.delete(node);
+        }
         return opts.target;
     }
 
-    const text = opts.text ?? "";
-    const existing = mountedTooltips.get(node);
-
+    const id = existing?.id ?? `tooltip-${crypto.randomUUID()}`;
     if (existing) {
-        existing.props.text = text;
-        existing.props.icon = opts.icon;
-        return existing.id;
+        unmount(existing.instance);
     }
 
-    const id = `tooltip-${crypto.randomUUID()}`;
-    const reactiveProps = $state({
-        id,
-        text,
-        icon: opts.icon,
-    });
     const instance = mount(Tooltip, {
         target: document.body,
-        props: reactiveProps,
+        props: {
+            id,
+            text: opts.text ?? "",
+            icon: opts.icon,
+        },
     });
 
-    mountedTooltips.set(node, { id, props: reactiveProps, instance });
+    mountedTooltips.set(node, { id, instance });
     return id;
 }
 

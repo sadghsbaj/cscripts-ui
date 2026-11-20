@@ -1,9 +1,12 @@
 import { flushSync, mount, unmount } from "svelte";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { Popover, popoverTrigger } from "../popover";
+import { Popover, type PopoverPlacement, popoverTrigger } from "../popover";
 import Tooltip from "./Tooltip.svelte";
 import TooltipCompoundHost from "./TooltipCompoundHost.internal.svelte";
+import TooltipReactiveHost from "./TooltipReactiveHost.internal.svelte";
+import TooltipTestIcon from "./TooltipTestIcon.internal.svelte";
+import type { TooltipIconConfig } from "./index.ts";
 import { tooltip } from "./tooltip.attach.svelte";
 
 const openPopovers = new WeakSet<HTMLElement>();
@@ -281,5 +284,136 @@ describe("Tooltip & Popover Integration", () => {
         expect(btn.hasAttribute("aria-describedby")).toBe(false);
         expect(btn.style.getPropertyValue("anchor-name")).toBe("");
         expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    });
+
+    test("reactive tooltip() updates text, icon, and placement without duplicating or breaking hover", async () => {
+        const props = $state<{
+            text: string;
+            icon?: TooltipIconConfig;
+            placement: PopoverPlacement;
+        }>({
+            text: "Initial tip",
+            placement: "top",
+        });
+
+        const inst = mount(TooltipReactiveHost, {
+            target: container,
+            props,
+        });
+        instances.push(inst);
+        flushSync();
+
+        const btn = container.querySelector("button");
+        if (!btn) throw new Error("Expected button element");
+        const initialId = btn.getAttribute("aria-describedby") ?? "";
+        expect(initialId).toMatch(/^tooltip-/);
+        expect(document.querySelectorAll('[role="tooltip"]')).toHaveLength(1);
+        expect(document.getElementById(initialId)?.textContent).toContain("Initial tip");
+        expect(document.getElementById(initialId)?.dataset.placement).toBe("top");
+        expect(document.getElementById(initialId)?.querySelector('[data-testid="tooltip-test-icon"]')).toBeNull();
+
+        props.text = "Updated tip";
+        props.icon = { component: TooltipTestIcon, position: "end" };
+        props.placement = "bottom";
+        flushSync();
+        await Promise.resolve();
+
+        expect(btn.getAttribute("aria-describedby")).toBe(initialId);
+        expect(document.querySelectorAll('[role="tooltip"]')).toHaveLength(1);
+
+        const updatedTipEl = document.getElementById(initialId);
+        expect(updatedTipEl?.textContent).toContain("Updated tip");
+        expect(updatedTipEl?.textContent).not.toContain("Initial tip");
+        expect(updatedTipEl?.dataset.placement).toBe("bottom");
+        expect(updatedTipEl?.querySelector('[data-testid="tooltip-test-icon"]')).not.toBeNull();
+
+        pointerEnter(btn);
+        vi.advanceTimersByTime(100);
+        expect(updatedTipEl?.matches(":popover-open")).toBe(true);
+    });
+
+    test("reactive enabled toggle (true -> false -> true) unmounts and re-mounts tooltip cleanly", async () => {
+        const props = $state<{ enabled: boolean; text: string }>({
+            enabled: true,
+            text: "Toggleable tip",
+        });
+
+        const inst = mount(TooltipReactiveHost, {
+            target: container,
+            props,
+        });
+        instances.push(inst);
+        flushSync();
+
+        const btn = container.querySelector("button");
+        if (!btn) throw new Error("Expected button element");
+        const firstId = btn.getAttribute("aria-describedby") ?? "";
+        expect(firstId).toMatch(/^tooltip-/);
+        expect(document.querySelectorAll('[role="tooltip"]')).toHaveLength(1);
+
+        props.enabled = false;
+        flushSync();
+        await Promise.resolve();
+
+        expect(btn.hasAttribute("aria-describedby")).toBe(false);
+        expect(document.getElementById(firstId)).toBeNull();
+        expect(document.querySelectorAll('[role="tooltip"]')).toHaveLength(0);
+
+        props.enabled = true;
+        flushSync();
+        await Promise.resolve();
+
+        const secondId = btn.getAttribute("aria-describedby") ?? "";
+        expect(secondId).toMatch(/^tooltip-/);
+        expect(document.querySelectorAll('[role="tooltip"]')).toHaveLength(1);
+
+        const remountedEl = document.getElementById(secondId);
+        expect(remountedEl?.textContent).toContain("Toggleable tip");
+
+        pointerEnter(btn);
+        vi.advanceTimersByTime(100);
+        expect(remountedEl?.matches(":popover-open")).toBe(true);
+    });
+
+    test("reactive switch from text mode to target mode unmounts inline Tooltip cleanly", async () => {
+        const targetInst = mount(Tooltip, {
+            target: container,
+            props: { id: "external-tip", text: "External target tip" },
+        });
+        instances.push(targetInst);
+
+        const props = $state<{ text: string; target?: string }>({
+            text: "Inline tip",
+            target: undefined,
+        });
+
+        const hostInst = mount(TooltipReactiveHost, {
+            target: container,
+            props,
+        });
+        instances.push(hostInst);
+        flushSync();
+
+        const btn = container.querySelector("button");
+        if (!btn) throw new Error("Expected button element");
+        const inlineId = btn.getAttribute("aria-describedby") ?? "";
+        expect(inlineId).toMatch(/^tooltip-/);
+        expect(document.querySelectorAll('[role="tooltip"]')).toHaveLength(2);
+        expect(document.getElementById(inlineId)).not.toBeNull();
+
+        props.target = "external-tip";
+        flushSync();
+        await Promise.resolve();
+
+        expect(btn.getAttribute("aria-describedby")).toBe("external-tip");
+        expect(document.getElementById(inlineId)).toBeNull();
+
+        const tooltips = [...document.querySelectorAll('[role="tooltip"]')];
+        expect(tooltips).toHaveLength(1);
+        expect(tooltips[0]?.id).toBe("external-tip");
+
+        pointerEnter(btn);
+        vi.advanceTimersByTime(100);
+        expect(document.getElementById("external-tip")?.matches(":popover-open")).toBe(true);
     });
 });
