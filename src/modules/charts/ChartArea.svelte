@@ -33,7 +33,9 @@
     let {
         ref = $bindable(null),
         seriesId,
+        seriesIds,
         mode = "overlay",
+        part = "all",
         curve = "monotone",
         gradient = true,
         showLine = true,
@@ -49,9 +51,12 @@
     const uid = $props.id();
     const revealClipId = `cs-chart-area-reveal-${uid}`;
 
+    const renderFill = $derived(part === "all" || part === "fill");
+    const renderLine = $derived(part === "all" || part === "line");
+
     $effect.pre(() => {
-        if (mode !== "stacked") return;
-        if (untrack(() => chart.stacked)) return;
+        if (mode !== "stacked" || part === "line") return;
+        if (untrack(() => chart.stacked || chart.stackedArea !== null)) return;
         chart.stacked = true;
         return () => {
             chart.stacked = false;
@@ -61,6 +66,9 @@
     const targetSeries = $derived.by((): readonly ChartSeries[] => {
         if (seriesId !== undefined) {
             return chart.visibleSeries.filter((item) => item.id === seriesId);
+        }
+        if (seriesIds !== undefined) {
+            return chart.visibleSeries.filter((item) => seriesIds.includes(item.id));
         }
         return chart.visibleSeries.filter(
             (item) => item.type === undefined || item.type === "area",
@@ -156,26 +164,29 @@
                 });
             }
 
-            const areaPath = buildAreaPath(areaPoints, { curve, connectNulls });
-            const linePath = showLine ? buildLinePath(linePoints, { curve, connectNulls }) : "";
+            const areaPath = renderFill ? buildAreaPath(areaPoints, { curve, connectNulls }) : "";
+            const linePath =
+                renderLine && showLine ? buildLinePath(linePoints, { curve, connectNulls }) : "";
             const dots: AreaDot[] = [];
 
-            for (let index = 0; index < linePoints.length; index++) {
-                const point = linePoints[index];
-                if (!point || !point.defined || point.y === null) continue;
+            if (renderLine) {
+                for (let index = 0; index < linePoints.length; index++) {
+                    const point = linePoints[index];
+                    if (!point || !point.defined || point.y === null) continue;
 
-                const isIsolated =
-                    definedCount === 1 ||
-                    (!connectNulls &&
-                        !linePoints[index - 1]?.defined &&
-                        !linePoints[index + 1]?.defined);
+                    const isIsolated =
+                        definedCount === 1 ||
+                        (!connectNulls &&
+                            !linePoints[index - 1]?.defined &&
+                            !linePoints[index + 1]?.defined);
 
-                if (showDots === true || isIsolated) {
-                    dots.push({
-                        index: point.index,
-                        cx: point.x,
-                        cy: point.y,
-                    });
+                    if (showDots === true || isIsolated) {
+                        dots.push({
+                            index: point.index,
+                            cx: point.x,
+                            cy: point.y,
+                        });
+                    }
                 }
             }
 
@@ -199,37 +210,42 @@
         {...rest}
         class={["cs-chart-area", className]}
         data-mode={mode}
+        data-part={part}
     >
-        <defs>
-            <clipPath id={revealClipId}>
-                <rect
-                    class="cs-chart-reveal-rect"
-                    x={-12}
-                    y={-24}
-                    width={chart.plotWidth + 24}
-                    height={chart.plotHeight + 48}
-                />
-            </clipPath>
+        {#if renderLine || (renderFill && gradient)}
+            <defs>
+                {#if renderLine}
+                    <clipPath id={revealClipId}>
+                        <rect
+                            class="cs-chart-reveal-rect"
+                            x={-12}
+                            y={-24}
+                            width={chart.plotWidth + 24}
+                            height={chart.plotHeight + 48}
+                        />
+                    </clipPath>
+                {/if}
 
-            {#if gradient}
-                {#each preparedSeries as item (item.id)}
-                    <linearGradient id={item.gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                            offset="0%"
-                            class="cs-chart-area-stop-top"
-                            data-mode={mode}
-                            style:stop-color={item.color}
-                        />
-                        <stop
-                            offset="100%"
-                            class="cs-chart-area-stop-bottom"
-                            data-mode={mode}
-                            style:stop-color={item.color}
-                        />
-                    </linearGradient>
-                {/each}
-            {/if}
-        </defs>
+                {#if renderFill && gradient}
+                    {#each preparedSeries as item (item.id)}
+                        <linearGradient id={item.gradientId} x1="0" y1="0" x2="0" y2="1">
+                            <stop
+                                offset="0%"
+                                class="cs-chart-area-stop-top"
+                                data-mode={mode}
+                                style:stop-color={item.color}
+                            />
+                            <stop
+                                offset="100%"
+                                class="cs-chart-area-stop-bottom"
+                                data-mode={mode}
+                                style:stop-color={item.color}
+                            />
+                        </linearGradient>
+                    {/each}
+                {/if}
+            </defs>
+        {/if}
 
         {#each preparedSeries as item (item.id)}
             <g
@@ -238,7 +254,7 @@
                 data-series-id={item.id}
                 data-dimmed={item.dimmed ? "" : undefined}
             >
-                {#if item.areaPath}
+                {#if renderFill && item.areaPath}
                     <path
                         class="cs-chart-area-fill"
                         d={item.areaPath}
@@ -249,7 +265,7 @@
                     />
                 {/if}
 
-                {#if item.linePath || item.dots.length > 0}
+                {#if renderLine && (item.linePath || item.dots.length > 0)}
                     <g clip-path={`url(#${revealClipId})`}>
                         {#if item.linePath}
                             <path

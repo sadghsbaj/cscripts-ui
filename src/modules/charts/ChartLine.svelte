@@ -31,6 +31,7 @@
     let {
         ref = $bindable(null),
         seriesId,
+        seriesIds,
         curve = "monotone",
         strokeWidth,
         dashed,
@@ -49,6 +50,9 @@
     const targetSeries = $derived.by((): readonly ChartSeries<TDatum>[] => {
         if (seriesId !== undefined) {
             return chart.visibleSeries.filter((item) => item.id === seriesId);
+        }
+        if (seriesIds !== undefined) {
+            return chart.visibleSeries.filter((item) => seriesIds.includes(item.id));
         }
         return chart.visibleSeries.filter(
             (item) => item.type === undefined || item.type === "line",

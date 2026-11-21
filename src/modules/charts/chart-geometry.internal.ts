@@ -69,11 +69,19 @@ export interface ChartBarRect {
     capSide: BarCapSide;
     radius: number;
     path: string;
+    stackKey?: string;
 }
 
 export interface GroupedBarSeriesInput {
     id: string;
     values: readonly (number | null | undefined)[];
+    stack?: string;
+}
+
+export interface BarStackSlot<T extends { id: string; stack?: string }> {
+    readonly key: string;
+    readonly stackKey: string | undefined;
+    readonly series: readonly T[];
 }
 
 export interface ComputeGroupedBarsOptions {
@@ -98,6 +106,11 @@ export interface ComputeStackedBarsOptions {
     maxBarWidth?: number;
     segmentGap?: number;
     minBarLength?: number;
+}
+
+export interface ComputeGroupedStackedBarsOptions extends ComputeStackedBarsOptions {
+    barGap?: number;
+    stackUnstacked?: boolean;
 }
 
 export interface PieSliceInput {
@@ -483,6 +496,38 @@ function recordLayerExtremes(
     }
 }
 
+export function partitionSeriesIntoStackSlots<T extends { id: string; stack?: string }>(
+    series: readonly T[],
+    stackUnstacked = false,
+): readonly BarStackSlot<T>[] {
+    const slots: { key: string; stackKey: string | undefined; series: T[] }[] = [];
+    const slotByKey = new Map<
+        string,
+        { key: string; stackKey: string | undefined; series: T[] }
+    >();
+
+    for (const item of series) {
+        const hasNamedStack = typeof item.stack === "string" && item.stack.length > 0;
+        const key = hasNamedStack
+            ? `stack:${item.stack}`
+            : stackUnstacked
+              ? "default"
+              : `series:${item.id}`;
+        const stackKey = hasNamedStack ? item.stack : undefined;
+
+        const existing = slotByKey.get(key);
+        if (existing) {
+            existing.series.push(item);
+        } else {
+            const slot = { key, stackKey, series: [item] };
+            slotByKey.set(key, slot);
+            slots.push(slot);
+        }
+    }
+
+    return slots;
+}
+
 function buildStackedLayerRects(
     layer: StackedSeriesLayer,
     layerIndex: number,
@@ -491,6 +536,7 @@ function buildStackedLayerRects(
     barThickness: number,
     baselineCoord: number,
     options: ComputeStackedBarsOptions,
+    stackKey?: string,
 ): ChartBarRect[] {
     const {
         categoryStarts,
@@ -562,6 +608,7 @@ function buildStackedLayerRects(
                     clampedRadius,
                     capSide,
                 ),
+                ...(stackKey !== undefined && { stackKey }),
             });
         } else {
             const y = snapInt(categoryStart + barOffset);
@@ -608,6 +655,7 @@ function buildStackedLayerRects(
                     clampedRadius,
                     capSide,
                 ),
+                ...(stackKey !== undefined && { stackKey }),
             });
         }
     }
@@ -657,6 +705,68 @@ export function computeStackedBarRects(options: ComputeStackedBarsOptions): Char
                 options,
             ),
         );
+    }
+
+    return rects;
+}
+
+export function computeGroupedStackedBarRects(
+    options: ComputeGroupedStackedBarsOptions,
+): ChartBarRect[] {
+    const {
+        series,
+        categoryStarts,
+        bandwidth,
+        valueScale,
+        maxBarWidth = 52,
+        barGap = 4,
+        stackUnstacked = false,
+    } = options;
+
+    if (series.length === 0 || categoryStarts.length === 0 || bandwidth <= 0) return [];
+
+    const slots = partitionSeriesIntoStackSlots(series, stackUnstacked);
+    if (slots.length === 0) return [];
+
+    const slotCount = slots.length;
+    const totalGap = barGap * Math.max(0, slotCount - 1);
+    const availableThickness = Math.max(1, bandwidth - totalGap);
+    const barThickness = Math.min(maxBarWidth, availableThickness / slotCount);
+    const groupThickness = barThickness * slotCount + totalGap;
+    const groupOffset = (bandwidth - groupThickness) / 2;
+    const baselineCoord = snapInt(valueScale.baseline);
+
+    const rects: ChartBarRect[] = [];
+
+    for (const [slotIndex, slot] of slots.entries()) {
+        const slotOffset = groupOffset + slotIndex * (barThickness + barGap);
+        const { layers } = computeStackedSeries(slot.series);
+
+        const trackers: StackLayerTrackers = {
+            outermostPositive: new Map(),
+            outermostNegative: new Map(),
+            positiveCount: new Map(),
+            negativeCount: new Map(),
+        };
+
+        for (const [layerIndex, layer] of layers.entries()) {
+            recordLayerExtremes(layer, layerIndex, trackers);
+        }
+
+        for (const [layerIndex, layer] of layers.entries()) {
+            rects.push(
+                ...buildStackedLayerRects(
+                    layer,
+                    layerIndex,
+                    trackers,
+                    slotOffset,
+                    barThickness,
+                    baselineCoord,
+                    options,
+                    slot.stackKey,
+                ),
+            );
+        }
     }
 
     return rects;

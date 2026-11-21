@@ -1,6 +1,7 @@
 <script lang="ts" generics="TDatum = ChartDatum">
     import Chart from "./Chart.svelte";
     import ChartActions from "./ChartActions.svelte";
+    import ChartAnnotation from "./ChartAnnotation.svelte";
     import ChartArea from "./ChartArea.svelte";
     import ChartAxis from "./ChartAxis.svelte";
     import ChartCanvas from "./ChartCanvas.svelte";
@@ -11,6 +12,8 @@
     import ChartHeader from "./ChartHeader.svelte";
     import ChartLegend from "./ChartLegend.svelte";
     import ChartLoading from "./ChartLoading.svelte";
+    import ChartReferenceBand from "./ChartReferenceBand.svelte";
+    import ChartReferenceLine from "./ChartReferenceLine.svelte";
     import ChartTitle from "./ChartTitle.svelte";
     import ChartTooltip from "./ChartTooltip.svelte";
     import { ChartState, type ChartDatum } from "./chart-state.svelte.ts";
@@ -32,12 +35,16 @@
         strokeWidth,
         showDots = "active",
         connectNulls = false,
+        referenceLines,
+        referenceBands,
+        annotations,
         grid = true,
         xAxis,
         yAxis,
         y2Axis,
         legend = "top",
         tooltip = true,
+        tooltipMode = "axis",
         showTotal,
         palette = "categorical",
         monotone,
@@ -82,7 +89,9 @@
     const gridZeroLine = $derived(typeof grid === "object" ? (grid.zeroLine ?? true) : true);
     const resolvedShowTotal = $derived(showTotal ?? mode === "stacked");
     const customTooltip = $derived(typeof tooltip === "function" ? tooltip : undefined);
-    const showTooltip = $derived(interactive && tooltip !== false && !loading && !isEmptyState);
+    const showTooltip = $derived(
+        interactive && tooltip !== false && tooltipMode !== "none" && !loading && !isEmptyState,
+    );
 </script>
 
 {#snippet plotStage()}
@@ -117,6 +126,20 @@
                 />
             {/if}
 
+            {#if referenceBands}
+                {#each referenceBands as band, index (band.id ?? `band-${index}`)}
+                    <ChartReferenceBand
+                        part="fill"
+                        axis={band.axis}
+                        from={band.from}
+                        to={band.to}
+                        label={band.label}
+                        tone={band.tone}
+                        color={band.color}
+                    />
+                {/each}
+            {/if}
+
             <ChartArea
                 {mode}
                 {curve}
@@ -126,6 +149,49 @@
                 {showDots}
                 {connectNulls}
             />
+
+            {#if referenceLines}
+                {#each referenceLines as line, index (line.id ?? `ref-${index}`)}
+                    <ChartReferenceLine
+                        axis={line.axis}
+                        value={line.value}
+                        label={line.label}
+                        labelPosition={line.labelPosition}
+                        tone={line.tone}
+                        color={line.color}
+                        dashed={line.dashed}
+                    />
+                {/each}
+            {/if}
+
+            {#if referenceBands}
+                {#each referenceBands as band, index (band.id ?? `band-label-${index}`)}
+                    <ChartReferenceBand
+                        part="label"
+                        axis={band.axis}
+                        from={band.from}
+                        to={band.to}
+                        label={band.label}
+                        tone={band.tone}
+                        color={band.color}
+                    />
+                {/each}
+            {/if}
+
+            {#if annotations}
+                {#each annotations as annotation, index (annotation.id ?? `ann-${index}`)}
+                    <ChartAnnotation
+                        x={annotation.x}
+                        y={annotation.y}
+                        yAxis={annotation.yAxis}
+                        dx={annotation.dx}
+                        dy={annotation.dy}
+                        label={annotation.label}
+                        tone={annotation.tone}
+                        color={annotation.color}
+                    />
+                {/each}
+            {/if}
 
             <ChartAxis position="bottom" />
             <ChartAxis position="left" />
@@ -162,6 +228,7 @@
     bind:hiddenSeriesIds
     bind:activeIndex
     bind:hoveredSeriesId
+    {tooltipMode}
     {loading}
     empty={isEmptyState}
     {label}

@@ -5,6 +5,7 @@
         --cs-chart-subtitle-fg: var(--cs-color-text-weak);
         --cs-chart-tick-fg: var(--cs-color-text-weak);
         --cs-chart-label-fg: var(--cs-color-text-main);
+        --cs-chart-inside-label-fg: light-dark(white, var(--cs-color-base-950));
         --cs-chart-legend-hover-bg: var(--cs-color-base-soft);
 
         /* Structural & chrome hairlines */
@@ -15,6 +16,14 @@
         --cs-chart-axis: light-dark(
             color-mix(in oklch, var(--cs-color-base-900) 14%, transparent),
             color-mix(in oklch, var(--cs-color-base-100) 15%, transparent)
+        );
+        --cs-chart-zero-line: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 24%, transparent),
+            color-mix(in oklab, var(--cs-color-base-100) 28%, transparent)
+        );
+        --cs-chart-zero-line-strong: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 34%, transparent),
+            color-mix(in oklab, var(--cs-color-base-100) 38%, transparent)
         );
         --cs-chart-crosshair: light-dark(
             color-mix(in oklch, var(--cs-color-base-900) 18%, transparent),
@@ -38,6 +47,7 @@
         --cs-chart-area-bottom-opacity: 0;
         --cs-chart-area-stacked-top-opacity: 0.45;
         --cs-chart-area-stacked-bottom-opacity: 0.25;
+        --cs-chart-ref-band-opacity: 0.065;
         --cs-chart-dim-opacity: 0.24;
 
         /* Tooltip surface tokens */
@@ -331,6 +341,7 @@
         --cs-chart-area-top-opacity: 0.28;
         --cs-chart-area-stacked-top-opacity: 0.5;
         --cs-chart-area-stacked-bottom-opacity: 0.22;
+        --cs-chart-ref-band-opacity: 0.095;
     }
 
     /* =========================================================
@@ -425,8 +436,24 @@
 
     .cs-chart-grid-zero {
         fill: none;
-        stroke: var(--cs-chart-axis);
+        stroke: var(--cs-chart-zero-line);
         stroke-width: 1px;
+
+        &[data-style="solid"] {
+            stroke: var(--cs-chart-zero-line);
+            stroke-width: 1px;
+        }
+
+        &[data-style="dashed"] {
+            stroke: var(--cs-chart-zero-line);
+            stroke-width: 1px;
+            stroke-dasharray: 4 3;
+        }
+
+        &[data-style="strong"] {
+            stroke: var(--cs-chart-zero-line-strong);
+            stroke-width: 1.5px;
+        }
     }
 
     .cs-chart-axis-line {
@@ -650,6 +677,89 @@
     }
 
     /* =========================================================
+     * BAR & COLUMN MARKS (SVG)
+     * ========================================================= */
+    .cs-chart-bar {
+        pointer-events: none;
+    }
+
+    .cs-chart-bar-rect {
+        /* Anchor baseline growth in plot user coordinates so positive and negative bars grow from zero. */
+        transform-box: view-box;
+        transform-origin: var(--cs-chart-bar-origin, 0px 0px);
+        animation: cs-chart-bar-grow-y var(--cs-chart-dur-bar, 420ms)
+            var(--cs-chart-ease-data, var(--cs-ease-quart-out))
+            var(--cs-chart-bar-delay, 0ms) both;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-orientation="horizontal"] {
+            animation-name: cs-chart-bar-grow-x;
+        }
+
+        &[data-dimmed] {
+            opacity: var(--cs-chart-dim-opacity);
+        }
+
+        .cs-chart-bar[data-tooltip-mode="item"] & {
+            pointer-events: all;
+        }
+    }
+
+    .cs-chart-bar-value-label {
+        fill: var(--cs-chart-label-fg);
+        stroke: var(--cs-chart-point-ring-bg);
+        stroke-width: 3px;
+        stroke-linejoin: round;
+        paint-order: stroke fill;
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-value-label-size, 11px);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums lining-nums;
+        pointer-events: none;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-dimmed] {
+            opacity: var(--cs-chart-dim-opacity);
+        }
+    }
+
+    .cs-chart-bar-inside-label {
+        fill: var(--cs-chart-inside-label-fg);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-value-label-size, 11px);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums lining-nums;
+        pointer-events: none;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-dimmed] {
+            opacity: var(--cs-chart-dim-opacity);
+        }
+    }
+
+    .cs-chart-bar-above-label {
+        fill: var(--cs-color-text-main);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-legend-font-size, 12px);
+        font-weight: 400;
+        pointer-events: none;
+
+        &[data-active] {
+            fill: var(--cs-color-text-strong);
+            font-weight: 500;
+        }
+    }
+
+    .cs-chart-bar-above-value {
+        fill: var(--cs-color-text-strong);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-legend-font-size, 12px);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums lining-nums;
+        pointer-events: none;
+    }
+
+    /* =========================================================
      * SERIES ISOLATION & CROSSHAIR (SVG)
      * ========================================================= */
     .cs-chart-series,
@@ -684,6 +794,363 @@
         r: var(--cs-chart-point-radius, 4px);
         stroke: var(--cs-chart-point-ring-bg);
         stroke-width: 2px;
+    }
+
+    /* =========================================================
+     * REFERENCE LINES, BANDS & ANNOTATIONS (PURE SVG)
+     * ========================================================= */
+    .cs-chart-ref-line {
+        --cs-chart-ref-stroke: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 28%, transparent),
+            color-mix(in oklab, var(--cs-color-base-100) 32%, transparent)
+        );
+        --cs-chart-ref-pill-bg: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 6%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 11%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-ref-pill-border: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 16%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 20%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-ref-pill-fg: var(--cs-color-text-strong);
+        pointer-events: none;
+
+        &[data-tone="accent"] {
+            --cs-chart-ref-stroke: var(--cs-chart-series-1);
+            --cs-chart-ref-pill-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-series-1) 11%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-series-1) 18%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-series-1) 28%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-series-1) 36%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-fg: var(--cs-color-accent-soft-fg);
+        }
+
+        &[data-tone="positive"] {
+            --cs-chart-ref-stroke: var(--cs-chart-positive);
+            --cs-chart-ref-pill-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-positive) 11%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-positive) 18%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-positive) 28%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-positive) 36%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-fg: var(--cs-chart-positive-fg);
+        }
+
+        &[data-tone="caution"] {
+            --cs-chart-ref-stroke: var(--cs-chart-caution);
+            --cs-chart-ref-pill-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-caution) 11%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-caution) 18%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-caution) 28%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-caution) 36%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-fg: var(--cs-chart-caution-fg);
+        }
+
+        &[data-tone="negative"] {
+            --cs-chart-ref-stroke: var(--cs-chart-negative);
+            --cs-chart-ref-pill-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-negative) 11%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-negative) 18%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-negative) 28%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-negative) 36%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-fg: var(--cs-chart-negative-fg);
+        }
+
+        &[data-custom-color] {
+            --cs-chart-ref-stroke: var(--cs-chart-ref-color);
+            --cs-chart-ref-pill-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-ref-color) 11%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-ref-color) 18%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-ref-color) 28%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-ref-color) 36%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-pill-fg: var(--cs-chart-ref-color);
+        }
+    }
+
+    .cs-chart-ref-line-rule {
+        fill: none;
+        stroke: var(--cs-chart-ref-stroke);
+        stroke-width: 1.25px;
+    }
+
+    .cs-chart-ref-line-pill {
+        fill: var(--cs-chart-ref-pill-bg);
+        stroke: var(--cs-chart-ref-pill-border);
+        stroke-width: 1px;
+    }
+
+    .cs-chart-ref-line-label {
+        fill: var(--cs-chart-ref-pill-fg);
+        font-family: var(--cs-font-sans);
+        font-size: 11px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .cs-chart-ref-band {
+        --cs-chart-ref-band-fill: var(--cs-color-text-weak);
+        --cs-chart-ref-band-edge: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 14%, transparent),
+            color-mix(in oklab, var(--cs-color-base-100) 16%, transparent)
+        );
+        --cs-chart-ref-band-tag-bg: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 5%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 10%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-ref-band-tag-border: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 14%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 18%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-ref-band-fg: var(--cs-color-text-main);
+        pointer-events: none;
+
+        &[data-tone="accent"] {
+            --cs-chart-ref-band-fill: var(--cs-chart-series-1);
+            --cs-chart-ref-band-edge: light-dark(
+                color-mix(in oklch, var(--cs-chart-series-1) 24%, transparent),
+                color-mix(in oklch, var(--cs-chart-series-1) 30%, transparent)
+            );
+            --cs-chart-ref-band-tag-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-series-1) 10%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-series-1) 16%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-tag-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-series-1) 24%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-series-1) 32%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-fg: var(--cs-color-accent-soft-fg);
+        }
+
+        &[data-tone="positive"] {
+            --cs-chart-ref-band-fill: var(--cs-chart-positive);
+            --cs-chart-ref-band-edge: light-dark(
+                color-mix(in oklch, var(--cs-chart-positive) 24%, transparent),
+                color-mix(in oklch, var(--cs-chart-positive) 30%, transparent)
+            );
+            --cs-chart-ref-band-tag-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-positive) 10%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-positive) 16%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-tag-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-positive) 24%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-positive) 32%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-fg: var(--cs-chart-positive-fg);
+        }
+
+        &[data-tone="caution"] {
+            --cs-chart-ref-band-fill: var(--cs-chart-caution);
+            --cs-chart-ref-band-edge: light-dark(
+                color-mix(in oklch, var(--cs-chart-caution) 24%, transparent),
+                color-mix(in oklch, var(--cs-chart-caution) 30%, transparent)
+            );
+            --cs-chart-ref-band-tag-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-caution) 10%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-caution) 16%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-tag-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-caution) 24%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-caution) 32%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-fg: var(--cs-chart-caution-fg);
+        }
+
+        &[data-tone="negative"] {
+            --cs-chart-ref-band-fill: var(--cs-chart-negative);
+            --cs-chart-ref-band-edge: light-dark(
+                color-mix(in oklch, var(--cs-chart-negative) 24%, transparent),
+                color-mix(in oklch, var(--cs-chart-negative) 30%, transparent)
+            );
+            --cs-chart-ref-band-tag-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-negative) 10%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-negative) 16%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-tag-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-negative) 24%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-negative) 32%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-fg: var(--cs-chart-negative-fg);
+        }
+
+        &[data-custom-color] {
+            --cs-chart-ref-band-fill: var(--cs-chart-ref-color);
+            --cs-chart-ref-band-edge: light-dark(
+                color-mix(in oklch, var(--cs-chart-ref-color) 24%, transparent),
+                color-mix(in oklch, var(--cs-chart-ref-color) 30%, transparent)
+            );
+            --cs-chart-ref-band-tag-bg: light-dark(
+                color-mix(in oklch, var(--cs-chart-ref-color) 10%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-ref-color) 16%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-tag-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-ref-color) 24%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-ref-color) 32%, var(--cs-chart-point-ring-bg))
+            );
+            --cs-chart-ref-band-fg: var(--cs-chart-ref-color);
+        }
+    }
+
+    .cs-chart-ref-band-rect {
+        fill: var(--cs-chart-ref-band-fill);
+        fill-opacity: var(--cs-chart-ref-band-opacity, 0.065);
+        stroke: none;
+    }
+
+    .cs-chart-ref-band-edge {
+        fill: none;
+        stroke: var(--cs-chart-ref-band-edge);
+        stroke-width: 1px;
+    }
+
+    .cs-chart-ref-band-tag {
+        fill: var(--cs-chart-ref-band-tag-bg);
+        stroke: var(--cs-chart-ref-band-tag-border);
+        stroke-width: 1px;
+    }
+
+    .cs-chart-ref-band-label {
+        fill: var(--cs-chart-ref-band-fg);
+        font-family: var(--cs-font-sans);
+        font-size: 10.5px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .cs-chart-annotation {
+        --cs-chart-annotation-tone: var(--cs-chart-title-fg);
+        --cs-chart-annotation-leader: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 28%, transparent),
+            color-mix(in oklab, var(--cs-color-base-100) 32%, transparent)
+        );
+        --cs-chart-annotation-pill-bg: light-dark(
+            var(--cs-chart-point-ring-bg),
+            color-mix(in oklab, var(--cs-color-base-100) 7%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-annotation-pill-border: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 16%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 20%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-annotation-pill-fg: var(--cs-color-text-strong);
+        pointer-events: none;
+
+        &[data-tone="accent"] {
+            --cs-chart-annotation-tone: var(--cs-chart-series-1);
+            --cs-chart-annotation-leader: light-dark(
+                color-mix(in oklch, var(--cs-chart-series-1) 52%, transparent),
+                color-mix(in oklch, var(--cs-chart-series-1) 58%, transparent)
+            );
+            --cs-chart-annotation-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-series-1) 30%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-series-1) 38%, var(--cs-chart-point-ring-bg))
+            );
+        }
+
+        &[data-tone="positive"] {
+            --cs-chart-annotation-tone: var(--cs-chart-positive);
+            --cs-chart-annotation-leader: light-dark(
+                color-mix(in oklch, var(--cs-chart-positive) 52%, transparent),
+                color-mix(in oklch, var(--cs-chart-positive) 58%, transparent)
+            );
+            --cs-chart-annotation-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-positive) 30%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-positive) 38%, var(--cs-chart-point-ring-bg))
+            );
+        }
+
+        &[data-tone="caution"] {
+            --cs-chart-annotation-tone: var(--cs-chart-caution);
+            --cs-chart-annotation-leader: light-dark(
+                color-mix(in oklch, var(--cs-chart-caution) 52%, transparent),
+                color-mix(in oklch, var(--cs-chart-caution) 58%, transparent)
+            );
+            --cs-chart-annotation-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-caution) 30%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-caution) 38%, var(--cs-chart-point-ring-bg))
+            );
+        }
+
+        &[data-tone="negative"] {
+            --cs-chart-annotation-tone: var(--cs-chart-negative);
+            --cs-chart-annotation-leader: light-dark(
+                color-mix(in oklch, var(--cs-chart-negative) 52%, transparent),
+                color-mix(in oklch, var(--cs-chart-negative) 58%, transparent)
+            );
+            --cs-chart-annotation-pill-border: light-dark(
+                color-mix(in oklch, var(--cs-chart-negative) 30%, var(--cs-chart-point-ring-bg)),
+                color-mix(in oklch, var(--cs-chart-negative) 38%, var(--cs-chart-point-ring-bg))
+            );
+        }
+
+        &[data-custom-color] {
+            --cs-chart-annotation-tone: var(--cs-chart-annotation-color);
+            --cs-chart-annotation-leader: light-dark(
+                color-mix(in oklch, var(--cs-chart-annotation-color) 52%, transparent),
+                color-mix(in oklch, var(--cs-chart-annotation-color) 58%, transparent)
+            );
+            --cs-chart-annotation-pill-border: light-dark(
+                color-mix(
+                    in oklch,
+                    var(--cs-chart-annotation-color) 30%,
+                    var(--cs-chart-point-ring-bg)
+                ),
+                color-mix(
+                    in oklch,
+                    var(--cs-chart-annotation-color) 38%,
+                    var(--cs-chart-point-ring-bg)
+                )
+            );
+        }
+    }
+
+    .cs-chart-annotation-leader {
+        fill: none;
+        stroke: var(--cs-chart-annotation-leader);
+        stroke-width: 1.25px;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .cs-chart-annotation-halo {
+        fill: var(--cs-chart-annotation-tone);
+        opacity: 0.16;
+    }
+
+    .cs-chart-annotation-dot {
+        fill: var(--cs-chart-annotation-tone);
+        stroke: var(--cs-chart-point-ring-bg);
+        stroke-width: 2px;
+    }
+
+    .cs-chart-annotation-pill {
+        fill: var(--cs-chart-annotation-pill-bg);
+        stroke: var(--cs-chart-annotation-pill-border);
+        stroke-width: 1px;
+    }
+
+    .cs-chart-annotation-badge-dot {
+        fill: var(--cs-chart-annotation-tone);
+    }
+
+    .cs-chart-annotation-text {
+        fill: var(--cs-chart-annotation-pill-fg);
+        font-family: var(--cs-font-sans);
+        font-size: 11px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums lining-nums;
     }
 
     /* =========================================================
@@ -966,6 +1433,24 @@
         }
         to {
             opacity: 1;
+        }
+    }
+
+    @keyframes cs-chart-bar-grow-y {
+        from {
+            transform: scaleY(0);
+        }
+        to {
+            transform: scaleY(1);
+        }
+    }
+
+    @keyframes cs-chart-bar-grow-x {
+        from {
+            transform: scaleX(0);
+        }
+        to {
+            transform: scaleX(1);
         }
     }
 }

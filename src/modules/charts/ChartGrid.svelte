@@ -1,5 +1,6 @@
 <script lang="ts">
     import { snapHalf } from "./chart-geometry.internal.ts";
+    import type { ChartZeroLineStyle } from "./chart-state.svelte.ts";
     import { getChartContext } from "./chart.context.ts";
     import type { ChartGridProps } from "./index.ts";
 
@@ -15,7 +16,10 @@
 
     const chart = getChartContext();
 
-    const showZeroBaseline = $derived(zeroLine && chart.yScale.crossesZero);
+    const resolvedZeroLineStyle = $derived<ChartZeroLineStyle | null>(
+        zeroLine === false ? null : zeroLine === true ? "solid" : zeroLine,
+    );
+    const showZeroBaseline = $derived(resolvedZeroLineStyle !== null && chart.yScale.crossesZero);
 
     const horizontalCoords = $derived.by((): readonly number[] => {
         if (!horizontal || !chart.hasSize) return [];
@@ -83,6 +87,7 @@
             {#if chart.orientation === "horizontal"}
                 <line
                     class="cs-chart-grid-zero"
+                    data-style={resolvedZeroLineStyle ?? undefined}
                     x1={zeroCoord}
                     x2={zeroCoord}
                     y1="0"
@@ -92,6 +97,7 @@
             {:else}
                 <line
                     class="cs-chart-grid-zero"
+                    data-style={resolvedZeroLineStyle ?? undefined}
                     x1="0"
                     x2={chart.plotWidth}
                     y1={zeroCoord}

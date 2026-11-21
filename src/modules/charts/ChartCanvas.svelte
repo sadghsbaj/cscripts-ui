@@ -2,8 +2,12 @@
     import { untrack } from "svelte";
 
     import { t } from "../../shared/lang.internal.ts";
-    import { bisectSortedValues, findNearestCoordinateIndex } from "./chart-geometry.internal.ts";
-    import type { ChartDatum } from "./chart-state.svelte.ts";
+    import {
+        bisectSortedValues,
+        findNearestCoordinateIndex,
+        partitionSeriesIntoStackSlots,
+    } from "./chart-geometry.internal.ts";
+    import type { ChartDatum, ChartNumericScale, ChartSeries } from "./chart-state.svelte.ts";
     import { getChartContext } from "./chart.context.ts";
     import type { ChartCanvasProps } from "./index.ts";
 
@@ -126,6 +130,167 @@
         return { plotX, plotY, index };
     }
 
+    function resolveNearestSeriesId(index: number, plotX: number, plotY: number): string | null {
+        const datum = chart.data[index];
+        if (datum === undefined || chart.visibleSeries.length === 0) return null;
+
+        const isHorizontal = chart.orientation === "horizontal";
+        const pointerCoord = isHorizontal ? plotX : plotY;
+
+        if ((chart.hasStackedMarks || chart.hasNamedStacks) && chart.visibleSeries.length > 0) {
+            let bestBandId: string | null = null;
+            let bestBandDist = Infinity;
+            let bestId: string | null = null;
+            let bestDist = Infinity;
+
+            const evaluateStackedSlot = (
+                slotSeries: readonly ChartSeries<TDatum>[],
+                scale: ChartNumericScale,
+            ): void => {
+                let posSum = 0;
+                let negSum = 0;
+                for (const seriesItem of slotSeries) {
+                    const value = chart.extractSeriesValue(seriesItem, datum, index);
+                    if (value === null) continue;
+
+                    let y0: number;
+                    let y1: number;
+                    if (value >= 0) {
+                        y0 = posSum;
+                        y1 = posSum + value;
+                        posSum = y1;
+                    } else {
+                        y0 = negSum;
+                        y1 = negSum + value;
+                        negSum = y1;
+                    }
+
+                    const c0 = scale.scale(y0);
+                    const c1 = scale.scale(y1);
+                    if (!Number.isFinite(c0) || !Number.isFinite(c1)) continue;
+
+                    const minC = Math.min(c0, c1);
+                    const maxC = Math.max(c0, c1);
+                    const center = (minC + maxC) / 2;
+                    const dist = Math.abs(pointerCoord - center);
+
+                    if (pointerCoord >= minC && pointerCoord <= maxC && dist < bestBandDist) {
+                        bestBandDist = dist;
+                        bestBandId = seriesItem.id;
+                    }
+
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestId = seriesItem.id;
+                    }
+                }
+            };
+
+            const evaluateGroup = (
+                groupSeries: readonly ChartSeries<TDatum>[],
+                scale: ChartNumericScale,
+                stackUnstacked: boolean,
+            ): void => {
+                const slots = partitionSeriesIntoStackSlots(groupSeries, stackUnstacked);
+                for (const slot of slots) {
+                    const isStackedSlot =
+                        slot.series.length > 1 || Boolean(slot.stackKey) || stackUnstacked;
+
+                    if (isStackedSlot) {
+                        evaluateStackedSlot(slot.series, scale);
+                        continue;
+                    }
+
+                    const seriesItem = slot.series[0];
+                    if (!seriesItem) continue;
+                    const value = chart.extractSeriesValue(seriesItem, datum, index);
+                    if (value === null) continue;
+                    const coord = scale.scale(value);
+                    if (!Number.isFinite(coord)) continue;
+                    const dist = Math.abs(coord - pointerCoord);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestId = seriesItem.id;
+                    }
+                }
+            };
+
+            const evaluateAxis = (
+                axisSeries: readonly ChartSeries<TDatum>[],
+                scale: ChartNumericScale,
+                allowStacking: boolean,
+            ): void => {
+                const groups = chart.partitionAxisSeriesByMarkType(axisSeries);
+                for (const group of groups) {
+                    const stackUnstacked = allowStacking && chart.isMarkTypeStacked(group.markType);
+                    evaluateGroup(group.series, scale, stackUnstacked);
+                }
+            };
+
+            if (chart.leftSeries.length > 0) {
+                evaluateAxis(chart.leftSeries, chart.yScale, true);
+            }
+
+            if (!isHorizontal && chart.y2Scale !== null && chart.rightSeries.length > 0) {
+                evaluateAxis(chart.rightSeries, chart.y2Scale, false);
+            }
+
+            const stackedHit = bestBandId ?? bestId;
+            if (stackedHit !== null) return stackedHit;
+        }
+
+        let bestId: string | null = null;
+        let bestDist = Infinity;
+
+        for (const seriesItem of chart.visibleSeries) {
+            const value = chart.extractSeriesValue(seriesItem, datum, index);
+            if (value === null) continue;
+
+            const isRightAxis =
+                !isHorizontal && seriesItem.yAxis === "right" && chart.y2Scale !== null;
+            const scale = isRightAxis && chart.y2Scale ? chart.y2Scale : chart.yScale;
+            const coord = scale.scale(value);
+            if (!Number.isFinite(coord)) continue;
+
+            const dist = Math.abs(coord - pointerCoord);
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestId = seriesItem.id;
+            }
+        }
+
+        return bestId;
+    }
+
+    function ensureActiveSeriesForItemMode(): void {
+        if (chart.tooltipMode !== "item") return;
+        if (chart.activeSeriesId !== null) return;
+        const first = chart.visibleSeries[0];
+        if (first) {
+            chart.setActiveSeries(first.id);
+        }
+    }
+
+    function cycleActiveSeries(delta: number): void {
+        const seriesList = chart.visibleSeries;
+        if (seriesList.length === 0) return;
+
+        const currentId = chart.activeSeriesId;
+        const currentIdx =
+            currentId === null ? -1 : seriesList.findIndex((item) => item.id === currentId);
+        const nextIdx =
+            currentIdx === -1
+                ? delta >= 0
+                    ? 0
+                    : seriesList.length - 1
+                : (currentIdx + delta + seriesList.length) % seriesList.length;
+
+        const nextSeries = seriesList[nextIdx];
+        if (nextSeries) {
+            chart.setActiveSeries(nextSeries.id);
+        }
+    }
+
     function handlePointerEnter(
         event: PointerEvent & { currentTarget: EventTarget & HTMLDivElement },
     ): void {
@@ -140,15 +305,28 @@
         onpointermove?.(event);
         if (!interactive) return;
 
+        const isDirectBarHit =
+            chart.tooltipMode === "item" &&
+            event.target instanceof Element &&
+            event.target.closest(".cs-chart-bar-rect") !== null;
+
         const hit = resolvePointerPlotPoint(event.clientX, event.clientY);
         if (!hit) {
-            chart.setActiveIndex(null);
-            chart.setPointerPosition(null);
+            if (!isDirectBarHit) {
+                chart.setActiveIndex(null);
+                chart.setActiveSeries(null);
+                chart.setPointerPosition(null);
+            }
             return;
         }
 
-        chart.setActiveIndex(hit.index);
         chart.setPointerPosition({ x: hit.plotX, y: hit.plotY });
+        if (isDirectBarHit) return;
+
+        chart.setActiveIndex(hit.index);
+        if (chart.tooltipMode === "item") {
+            chart.setActiveSeries(resolveNearestSeriesId(hit.index, hit.plotX, hit.plotY));
+        }
     }
 
     function handlePointerLeave(
@@ -157,6 +335,7 @@
         onpointerleave?.(event);
         if (!interactive) return;
         chart.setActiveIndex(null);
+        chart.setActiveSeries(null);
         chart.setPointerPosition(null);
     }
 
@@ -193,6 +372,7 @@
         onblur?.(event);
         if (!interactive) return;
         chart.setActiveIndex(null);
+        chart.setActiveSeries(null);
         chart.setPointerPosition(null);
     }
 
@@ -202,37 +382,93 @@
         onkeydown?.(event);
         if (event.defaultPrevented || !interactive || chart.data.length === 0) return;
 
+        const isItemMode = chart.tooltipMode === "item";
+        const isHorizontal = chart.orientation === "horizontal";
+
         switch (event.key) {
-            case "ArrowRight":
+            case "ArrowRight": {
+                event.preventDefault();
+                syncSvgRect();
+                if (isItemMode && isHorizontal) {
+                    if (chart.activeIndex === null) {
+                        chart.stepActiveIndex(1);
+                        ensureActiveSeriesForItemMode();
+                    } else {
+                        cycleActiveSeries(1);
+                    }
+                } else {
+                    chart.stepActiveIndex(1);
+                    ensureActiveSeriesForItemMode();
+                }
+                return;
+            }
             case "ArrowDown": {
                 event.preventDefault();
                 syncSvgRect();
-                chart.stepActiveIndex(1);
+                if (isItemMode && !isHorizontal) {
+                    if (chart.activeIndex === null) {
+                        chart.stepActiveIndex(1);
+                        ensureActiveSeriesForItemMode();
+                    } else {
+                        cycleActiveSeries(1);
+                    }
+                } else {
+                    chart.stepActiveIndex(1);
+                    ensureActiveSeriesForItemMode();
+                }
                 return;
             }
-            case "ArrowLeft":
+            case "ArrowLeft": {
+                event.preventDefault();
+                syncSvgRect();
+                if (isItemMode && isHorizontal) {
+                    if (chart.activeIndex === null) {
+                        chart.stepActiveIndex(-1);
+                        ensureActiveSeriesForItemMode();
+                    } else {
+                        cycleActiveSeries(-1);
+                    }
+                } else {
+                    chart.stepActiveIndex(-1);
+                    ensureActiveSeriesForItemMode();
+                }
+                return;
+            }
             case "ArrowUp": {
                 event.preventDefault();
                 syncSvgRect();
-                chart.stepActiveIndex(-1);
+                if (isItemMode && !isHorizontal) {
+                    if (chart.activeIndex === null) {
+                        chart.stepActiveIndex(-1);
+                        ensureActiveSeriesForItemMode();
+                    } else {
+                        cycleActiveSeries(-1);
+                    }
+                } else {
+                    chart.stepActiveIndex(-1);
+                    ensureActiveSeriesForItemMode();
+                }
                 return;
             }
             case "Home": {
                 event.preventDefault();
                 syncSvgRect();
                 chart.setActiveIndex(0);
+                ensureActiveSeriesForItemMode();
                 return;
             }
             case "End": {
                 event.preventDefault();
                 syncSvgRect();
                 chart.setActiveIndex(chart.data.length - 1);
+                ensureActiveSeriesForItemMode();
                 return;
             }
             case "Escape": {
-                if (chart.activeIndex !== null) {
+                if (chart.activeIndex !== null || chart.activeSeriesId !== null) {
                     event.preventDefault();
                     chart.setActiveIndex(null);
+                    chart.setActiveSeries(null);
                     chart.setPointerPosition(null);
                 }
                 return;
@@ -256,6 +492,9 @@
 
     $effect.pre(() => {
         chart.plotClipId = clipId;
+        if (untrack(() => chart.interactive) !== interactive) {
+            chart.interactive = interactive;
+        }
         if (orientation !== undefined) {
             chart.orientation = orientation;
         }

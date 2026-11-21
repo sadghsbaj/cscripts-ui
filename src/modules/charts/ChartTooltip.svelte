@@ -40,6 +40,7 @@
     const chart = getChartContext<TDatum>();
 
     const tooltipContext = $derived.by((): ChartTooltipContext<TDatum> | null => {
+        if (chart.tooltipMode === "none") return null;
         const ctx = chart.getTooltipContext();
         if (!ctx) return null;
         if (!formatX) return ctx;
@@ -49,7 +50,10 @@
         };
     });
 
-    const isOpen = $derived(tooltipContext !== null && chart.activeAnchor !== null);
+    const isOpen = $derived(
+        chart.tooltipMode !== "none" && tooltipContext !== null && chart.activeAnchor !== null,
+    );
+    const isItemTooltip = $derived(chart.tooltipMode === "item" && chart.activeSeriesId !== null);
     const yAxisPosition = $derived(chart.orientation === "horizontal" ? "bottom" : "left");
     const effectiveYFormat = $derived(chart.getEffectiveAxisConfig(yAxisPosition).format);
     const effectiveY2Format = $derived(chart.getEffectiveAxisConfig("right").format);
@@ -238,7 +242,7 @@
                 </div>
             {/if}
 
-            {#if showTotal && tooltipContext.total !== undefined}
+            {#if showTotal && tooltipContext.total !== undefined && !isItemTooltip}
                 <div class="cs-chart-tooltip-total">
                     <span class="cs-chart-tooltip-total-label">
                         {t({ de: "Gesamt", en: "Total" })}

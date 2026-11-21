@@ -1,6 +1,9 @@
 import { untrack } from "svelte";
 
-import { computeStackedSeries } from "./chart-geometry.internal.ts";
+import {
+    computeStackedSeries,
+    partitionSeriesIntoStackSlots,
+} from "./chart-geometry.internal.ts";
 import { computeChartMargins, measureTextWidth } from "./chart-measure.internal.ts";
 import {
     createNumericScale,
@@ -26,11 +29,16 @@ export const CHART_TONES = ["base", "accent", "positive", "caution", "negative"]
 export const CHART_CURVES = ["linear", "monotone", "step"] as const;
 export const CHART_ORIENTATIONS = ["vertical", "horizontal"] as const;
 export const CHART_BAR_MODES = ["grouped", "stacked"] as const;
+export const CHART_BAR_VALUE_LABELS = ["none", "outside", "inside", "both"] as const;
+export const CHART_BAR_INSIDE_LABEL_ORIENTATIONS = ["auto", "horizontal", "vertical"] as const;
+export const CHART_BAR_LABEL_LAYOUTS = ["gutter", "above"] as const;
 export const CHART_AREA_MODES = ["overlay", "stacked"] as const;
 export const CHART_AXIS_POSITIONS = ["bottom", "left", "right"] as const;
 export const CHART_LEGEND_POSITIONS = ["top", "bottom", "end", "none"] as const;
 export const CHART_LEGEND_PLACEMENTS = ["top", "bottom", "end"] as const;
 export const CHART_LEGEND_MARKERS = ["auto", "line", "bar", "dot", "dashed"] as const;
+export const CHART_TOOLTIP_MODES = ["axis", "item", "none"] as const;
+export const CHART_ZERO_LINE_STYLES = ["solid", "dashed", "strong"] as const;
 export const CHART_X_SCALE_TYPES = ["auto", "band", "point", "time", "linear"] as const;
 export const CHART_TICK_ANGLES = ["auto", 0, -35, -45] as const;
 export const CHART_TITLE_ELEMENTS = ["h2", "h3", "h4", "h5", "h6", "div"] as const;
@@ -43,11 +51,17 @@ export type ChartTone = (typeof CHART_TONES)[number];
 export type ChartCurve = (typeof CHART_CURVES)[number];
 export type ChartOrientation = (typeof CHART_ORIENTATIONS)[number];
 export type ChartBarMode = (typeof CHART_BAR_MODES)[number];
+export type ChartBarValueLabelsMode = (typeof CHART_BAR_VALUE_LABELS)[number];
+export type ChartBarValueLabels = boolean | ChartBarValueLabelsMode;
+export type ChartBarInsideLabelOrientation = (typeof CHART_BAR_INSIDE_LABEL_ORIENTATIONS)[number];
+export type ChartBarLabelLayout = (typeof CHART_BAR_LABEL_LAYOUTS)[number];
 export type ChartAreaMode = (typeof CHART_AREA_MODES)[number];
 export type ChartAxisPosition = (typeof CHART_AXIS_POSITIONS)[number];
 export type ChartLegendPosition = (typeof CHART_LEGEND_POSITIONS)[number];
 export type ChartLegendPlacement = (typeof CHART_LEGEND_PLACEMENTS)[number];
 export type ChartLegendMarker = (typeof CHART_LEGEND_MARKERS)[number];
+export type ChartTooltipMode = (typeof CHART_TOOLTIP_MODES)[number];
+export type ChartZeroLineStyle = (typeof CHART_ZERO_LINE_STYLES)[number];
 export type ChartXScaleType = (typeof CHART_X_SCALE_TYPES)[number];
 export type ChartResolvedXScaleType = Exclude<ChartXScaleType, "auto">;
 export type ChartTickAngle = (typeof CHART_TICK_ANGLES)[number];
@@ -55,6 +69,7 @@ export type ChartTitleElement = (typeof CHART_TITLE_ELEMENTS)[number];
 
 export type ChartDatum = Record<string, unknown>;
 export type ChartXValue = string | number | Date;
+export type ChartSeriesType = "line" | "area" | "bar";
 export type ChartAxisDomainBound = number | "auto" | "dataMin" | "dataMax";
 export type ChartAxisDomain = readonly [ChartAxisDomainBound, ChartAxisDomainBound];
 
@@ -111,8 +126,10 @@ export interface ChartSeries<TDatum = ChartDatum> {
     accessor?: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
     /** Target Y-axis (`"left"` primary or `"right"` secondary). @default "left" */
     yAxis?: "left" | "right";
+    /** Optional stack group key. Series sharing a `stack` value stack together while distinct stacks sit side-by-side. */
+    stack?: string;
     /** Mark type when used inside `ComposedChart`. @default "line" */
-    type?: "line" | "area" | "bar";
+    type?: ChartSeriesType;
     /** Semantic status tone override (`base | accent | positive | caution | negative`). */
     tone?: ChartTone;
     /** Explicit CSS color override (e.g. `"var(--cs-color-teal-500)"` or hex/oklch). */
@@ -154,6 +171,18 @@ export interface ChartReferenceBandConfig {
     from: ChartXValue;
     to: ChartXValue;
     label?: string;
+    tone?: ChartTone;
+    color?: string;
+}
+
+export interface ChartAnnotationConfig {
+    id?: string;
+    x: ChartXValue;
+    y: number;
+    yAxis?: "left" | "right";
+    dx?: number;
+    dy?: number;
+    label: string;
     tone?: ChartTone;
     color?: string;
 }
@@ -205,6 +234,7 @@ export interface ChartStateOptions<TDatum = ChartDatum> {
     hiddenSeriesIds?: readonly string[];
     activeIndex?: number | null;
     hoveredSeriesId?: string | null;
+    tooltipMode?: ChartTooltipMode;
 }
 
 const SEMANTIC_SERIES_TOKENS = [
@@ -277,16 +307,21 @@ export class ChartState<TDatum = ChartDatum> {
     yAxis = $state<ChartAxisConfig>({});
     y2Axis = $state<ChartAxisConfig>({});
     stacked = $state<boolean>(false);
+    stackedBar = $state<boolean | null>(null);
+    stackedArea = $state<boolean | null>(null);
     containerWidth = $state<number>(0);
     containerHeight = $state<number>(0);
     marginOverrides = $state<Partial<ChartMargins>>({});
     hiddenSeriesIds = $state.raw<readonly string[]>([]);
     hoveredSeriesId = $state<string | null>(null);
+    interactive = $state<boolean>(true);
+    tooltipMode = $state<ChartTooltipMode>("axis");
     plotClipId = $state<string>("");
     svgRect = $state.raw<ChartSvgRect | null>(null);
     pointerPosition = $state.raw<{ readonly x: number; readonly y: number } | null>(null);
     private axisOverrides = $state.raw<Partial<Record<ChartAxisPosition, ChartAxisConfig>>>({});
     private rawActiveIndex = $state<number | null>(null);
+    private rawActiveSeriesId = $state<string | null>(null);
 
     readonly visibleSeries = $derived.by((): readonly ChartSeries<TDatum>[] => {
         if (this.hiddenSeriesIds.length === 0) return this.series;
@@ -302,6 +337,12 @@ export class ChartState<TDatum = ChartDatum> {
     );
 
     readonly hasY2Axis = $derived(this.rightSeries.length > 0 && this.y2Axis.show !== false);
+    readonly hasStackedMarks = $derived(
+        this.stacked || this.stackedBar === true || this.stackedArea === true,
+    );
+    readonly hasNamedStacks = $derived(
+        this.visibleSeries.some((item) => item.stack !== undefined && item.stack.length > 0),
+    );
     readonly isEmpty = $derived(this.data.length === 0);
     readonly allSeriesHidden = $derived(this.series.length > 0 && this.visibleSeries.length === 0);
     readonly scrubbing = $derived(this.activeIndex !== null);
@@ -310,43 +351,13 @@ export class ChartState<TDatum = ChartDatum> {
         this.data.map((datum, index) => this.extractX(datum, index)),
     );
 
-    private readonly leftValues = $derived.by((): readonly (number | null)[] => {
-        if (this.stacked && this.leftSeries.length > 0) {
-            const { extent } = computeStackedSeries(
-                this.leftSeries.map((item) => ({
-                    id: item.id,
-                    values: this.data.map((datum, index) =>
-                        this.extractSeriesValue(item, datum, index),
-                    ),
-                })),
-            );
-            return [extent[0], extent[1]];
-        }
+    private readonly leftValues = $derived.by((): readonly (number | null)[] =>
+        this.collectAxisValues(this.leftSeries, true),
+    );
 
-        const collected: (number | null)[] = [];
-        for (const item of this.leftSeries) {
-            for (let index = 0; index < this.data.length; index++) {
-                const datum = this.data[index];
-                if (datum !== undefined) {
-                    collected.push(this.extractSeriesValue(item, datum, index));
-                }
-            }
-        }
-        return collected;
-    });
-
-    private readonly rightValues = $derived.by((): readonly (number | null)[] => {
-        const collected: (number | null)[] = [];
-        for (const item of this.rightSeries) {
-            for (let index = 0; index < this.data.length; index++) {
-                const datum = this.data[index];
-                if (datum !== undefined) {
-                    collected.push(this.extractSeriesValue(item, datum, index));
-                }
-            }
-        }
-        return collected;
-    });
+    private readonly rightValues = $derived.by((): readonly (number | null)[] =>
+        this.collectAxisValues(this.rightSeries, false),
+    );
 
     private readonly probeYScale = $derived.by(
         (): ChartNumericScale =>
@@ -557,7 +568,16 @@ export class ChartState<TDatum = ChartDatum> {
         let plotX: number;
         let plotY: number;
 
-        if (this.orientation === "horizontal") {
+        const itemCoord = this.resolveActiveItemAnchorCoord(index, datum);
+        if (itemCoord !== null) {
+            if (this.orientation === "horizontal") {
+                plotY = this.xScale.center(xValue);
+                plotX = Math.max(0, Math.min(this.plotWidth, itemCoord));
+            } else {
+                plotX = this.xScale.center(xValue);
+                plotY = Math.max(0, Math.min(this.plotHeight, itemCoord));
+            }
+        } else if (this.orientation === "horizontal") {
             plotY = this.xScale.center(xValue);
             const coords = this.collectActiveValueCoords(index, datum, true);
             plotX = coords.length > 0 ? Math.max(...coords) : this.plotWidth * 0.5;
@@ -603,6 +623,7 @@ export class ChartState<TDatum = ChartDatum> {
         if (options.height !== undefined) this.containerHeight = options.height;
         if (options.margin !== undefined) this.marginOverrides = options.margin;
         if (options.hoveredSeriesId !== undefined) this.hoveredSeriesId = options.hoveredSeriesId;
+        if (options.tooltipMode !== undefined) this.tooltipMode = options.tooltipMode;
 
         const initialHidden: string[] = [];
         const providedHidden = options.hiddenSeriesIds ?? [];
@@ -632,17 +653,40 @@ export class ChartState<TDatum = ChartDatum> {
         this.setActiveIndex(value);
     }
 
+    get activeSeriesId(): string | null {
+        if (this.tooltipMode !== "item" || this.activeIndex === null || this.rawActiveSeriesId === null) {
+            return null;
+        }
+        return this.visibleSeries.some((item) => item.id === this.rawActiveSeriesId)
+            ? this.rawActiveSeriesId
+            : null;
+    }
+
+    set activeSeriesId(value: string | null) {
+        this.setActiveSeries(value);
+    }
+
     setActiveIndex(index: number | null): void {
         if (index === null || !Number.isFinite(index) || this.data.length === 0) {
             this.rawActiveIndex = null;
+            this.rawActiveSeriesId = null;
             return;
         }
         this.rawActiveIndex = Math.max(0, Math.min(this.data.length - 1, Math.trunc(index)));
     }
 
+    setActiveSeries(id: string | null): void {
+        if (id === null || this.tooltipMode !== "item" || this.hiddenSeriesIds.includes(id)) {
+            this.rawActiveSeriesId = null;
+            return;
+        }
+        this.rawActiveSeriesId = id;
+    }
+
     stepActiveIndex(delta: number): void {
         if (this.data.length === 0) {
             this.rawActiveIndex = null;
+            this.rawActiveSeriesId = null;
             return;
         }
         const current = this.activeIndex;
@@ -694,43 +738,199 @@ export class ChartState<TDatum = ChartDatum> {
         this.pointerPosition = position;
     }
 
-    private collectActiveValueCoords(index: number, datum: TDatum, isHorizontal: boolean): number[] {
-        const coords: number[] = [];
+    isMarkTypeStacked(type: ChartSeriesType | undefined): boolean {
+        if (type === "line") return false;
+        if (type === "bar") return this.stackedBar ?? this.stacked;
+        if (type === "area") return this.stackedArea ?? this.stacked;
+        // When explicit per-mark-type stacking is active (e.g. ComposedChart),
+        // untyped series default to "line" and must not inherit bar/area stacking.
+        if (this.stackedBar !== null || this.stackedArea !== null) return false;
+        return this.stacked;
+    }
 
-        if (this.stacked && this.leftSeries.length > 0) {
-            let positiveSum = 0;
-            let negativeSum = 0;
-            let hasPositive = false;
-            let hasNegative = false;
-            for (const item of this.leftSeries) {
-                const value = this.extractSeriesValue(item, datum, index);
-                if (value === null) continue;
-                if (value >= 0) {
-                    positiveSum += value;
-                    hasPositive = true;
-                } else {
-                    negativeSum += value;
-                    hasNegative = true;
+    partitionAxisSeriesByMarkType(
+        axisSeries: readonly ChartSeries<TDatum>[],
+    ): readonly {
+        readonly markType: ChartSeriesType | undefined;
+        readonly series: readonly ChartSeries<TDatum>[];
+    }[] {
+        if (axisSeries.length === 0) return [];
+        const firstRawType = axisSeries[0]?.type;
+        const hasMixedTypes = axisSeries.some((item) => item.type !== firstRawType);
+        if (!hasMixedTypes) {
+            return [{ markType: firstRawType, series: axisSeries }];
+        }
+
+        const barSeries = axisSeries.filter((item) => item.type === "bar");
+        const areaSeries = axisSeries.filter((item) => item.type === "area");
+        const lineSeries = axisSeries.filter(
+            (item) => item.type === undefined || item.type === "line",
+        );
+
+        const groups: {
+            readonly markType: ChartSeriesType | undefined;
+            readonly series: readonly ChartSeries<TDatum>[];
+        }[] = [];
+        if (barSeries.length > 0) groups.push({ markType: "bar", series: barSeries });
+        if (areaSeries.length > 0) groups.push({ markType: "area", series: areaSeries });
+        if (lineSeries.length > 0) groups.push({ markType: "line", series: lineSeries });
+        return groups;
+    }
+
+    private collectAxisValues(
+        axisSeries: readonly ChartSeries<TDatum>[],
+        allowStacking: boolean,
+    ): readonly (number | null)[] {
+        if (axisSeries.length === 0) return [];
+
+        const groups = this.partitionAxisSeriesByMarkType(axisSeries);
+        const collected: (number | null)[] = [];
+
+        for (const group of groups) {
+            const stackUnstacked = allowStacking && this.isMarkTypeStacked(group.markType);
+            const hasNamedStack = group.series.some(
+                (item) => item.stack !== undefined && item.stack.length > 0,
+            );
+
+            if (stackUnstacked || hasNamedStack) {
+                const slots = partitionSeriesIntoStackSlots(group.series, stackUnstacked);
+                for (const slot of slots) {
+                    const { extent } = computeStackedSeries(
+                        slot.series.map((item) => ({
+                            id: item.id,
+                            values: this.data.map((datum, index) =>
+                                this.extractSeriesValue(item, datum, index),
+                            ),
+                        })),
+                    );
+                    collected.push(extent[0], extent[1]);
                 }
+                continue;
             }
-            if (hasPositive) coords.push(this.yScale.scale(positiveSum));
-            if (hasNegative) coords.push(this.yScale.scale(negativeSum));
-        } else {
-            for (const item of this.leftSeries) {
-                const value = this.extractSeriesValue(item, datum, index);
-                if (value !== null) {
-                    coords.push(this.yScale.scale(value));
+
+            for (const item of group.series) {
+                for (let index = 0; index < this.data.length; index++) {
+                    const datum = this.data[index];
+                    if (datum !== undefined) {
+                        collected.push(this.extractSeriesValue(item, datum, index));
+                    }
                 }
             }
         }
 
-        if (!isHorizontal && this.y2Scale !== null) {
-            for (const item of this.rightSeries) {
+        return collected;
+    }
+
+    private resolveActiveItemAnchorCoord(index: number, datum: TDatum): number | null {
+        if (this.tooltipMode !== "item" || this.activeSeriesId === null) return null;
+        const seriesItem = this.visibleSeries.find((item) => item.id === this.activeSeriesId);
+        if (!seriesItem) return null;
+
+        const isRightAxis =
+            this.orientation !== "horizontal" && seriesItem.yAxis === "right" && this.y2Scale !== null;
+        const scale = isRightAxis && this.y2Scale ? this.y2Scale : this.yScale;
+        const axisSeries = isRightAxis ? this.rightSeries : this.leftSeries;
+        const stackUnstacked = !isRightAxis && this.isMarkTypeStacked(seriesItem.type);
+        const hasNamedStack = Boolean(seriesItem.stack);
+
+        if (hasNamedStack || stackUnstacked) {
+            const matchingGroup =
+                this.partitionAxisSeriesByMarkType(axisSeries).find((group) =>
+                    group.series.some((item) => item.id === seriesItem.id),
+                )?.series ?? axisSeries;
+            const stackGroup = hasNamedStack
+                ? matchingGroup.filter((item) => item.stack === seriesItem.stack)
+                : matchingGroup.filter((item) => !item.stack);
+
+            let posSum = 0;
+            let negSum = 0;
+            for (const item of stackGroup) {
                 const value = this.extractSeriesValue(item, datum, index);
-                if (value !== null) {
-                    coords.push(this.y2Scale.scale(value));
+                if (value === null) continue;
+                let y0: number;
+                let y1: number;
+                if (value >= 0) {
+                    y0 = posSum;
+                    y1 = posSum + value;
+                    posSum = y1;
+                } else {
+                    y0 = negSum;
+                    y1 = negSum + value;
+                    negSum = y1;
+                }
+                if (item.id === seriesItem.id) {
+                    const coord = scale.scale((y0 + y1) / 2);
+                    return Number.isFinite(coord) ? coord : null;
                 }
             }
+            return null;
+        }
+
+        const value = this.extractSeriesValue(seriesItem, datum, index);
+        if (value === null) return null;
+        const coord = scale.scale(value);
+        return Number.isFinite(coord) ? coord : null;
+    }
+
+    private pushAxisValueCoords(
+        coords: number[],
+        axisSeries: readonly ChartSeries<TDatum>[],
+        scale: ChartNumericScale,
+        index: number,
+        datum: TDatum,
+        allowStacking: boolean,
+    ): void {
+        const groups = this.partitionAxisSeriesByMarkType(axisSeries);
+
+        for (const group of groups) {
+            const stackUnstacked = allowStacking && this.isMarkTypeStacked(group.markType);
+            const hasNamedStack = group.series.some(
+                (item) => item.stack !== undefined && item.stack.length > 0,
+            );
+
+            if (!stackUnstacked && !hasNamedStack) {
+                for (const item of group.series) {
+                    const value = this.extractSeriesValue(item, datum, index);
+                    if (value !== null) {
+                        coords.push(scale.scale(value));
+                    }
+                }
+                continue;
+            }
+
+            const slots = partitionSeriesIntoStackSlots(group.series, stackUnstacked);
+            for (const slot of slots) {
+                let positiveSum = 0;
+                let negativeSum = 0;
+                let hasPositive = false;
+                let hasNegative = false;
+                for (const item of slot.series) {
+                    const value = this.extractSeriesValue(item, datum, index);
+                    if (value !== null) {
+                        if (value >= 0) {
+                            positiveSum += value;
+                            hasPositive = true;
+                        } else {
+                            negativeSum += value;
+                            hasNegative = true;
+                        }
+                    }
+                }
+                if (hasPositive) coords.push(scale.scale(positiveSum));
+                if (hasNegative) coords.push(scale.scale(negativeSum));
+            }
+        }
+    }
+
+    private collectActiveValueCoords(index: number, datum: TDatum, isHorizontal: boolean): number[] {
+        const coords: number[] = [];
+
+        if (this.leftSeries.length > 0) {
+            this.pushAxisValueCoords(coords, this.leftSeries, this.yScale, index, datum, true);
+        }
+
+        if (!isHorizontal && this.y2Scale !== null && this.rightSeries.length > 0) {
+            this.pushAxisValueCoords(coords, this.rightSeries, this.y2Scale, index, datum, false);
         }
 
         return coords;
@@ -793,13 +993,23 @@ export class ChartState<TDatum = ChartDatum> {
     }
 
     isSeriesDimmed(seriesId: string): boolean {
-        return this.hoveredSeriesId !== null && this.hoveredSeriesId !== seriesId;
+        if (this.hoveredSeriesId !== null) {
+            return this.hoveredSeriesId !== seriesId;
+        }
+        if (this.tooltipMode === "item" && this.activeSeriesId !== null) {
+            return this.activeSeriesId !== seriesId;
+        }
+        return false;
     }
 
     toggleSeries(seriesId: string): void {
-        this.hiddenSeriesIds = this.hiddenSeriesIds.includes(seriesId)
+        const nextHidden = this.hiddenSeriesIds.includes(seriesId)
             ? this.hiddenSeriesIds.filter((id) => id !== seriesId)
             : [...this.hiddenSeriesIds, seriesId];
+        this.hiddenSeriesIds = nextHidden;
+        if (this.rawActiveSeriesId === seriesId && nextHidden.includes(seriesId)) {
+            this.rawActiveSeriesId = null;
+        }
     }
 
     showAllSeries(): void {
@@ -870,10 +1080,15 @@ export class ChartState<TDatum = ChartDatum> {
         const y2AxisFormat = this.getEffectiveAxisConfig("right").format;
         const xLabel = formatX(xValue);
 
+        const isItemMode = this.tooltipMode === "item" && this.activeSeriesId !== null;
+        const targetSeries = isItemMode
+            ? this.visibleSeries.filter((item) => item.id === this.activeSeriesId)
+            : this.visibleSeries;
+
         let total = 0;
         let hasNumeric = false;
 
-        const items = this.visibleSeries.map((seriesItem) => {
+        const items = targetSeries.map((seriesItem) => {
             const value = this.extractSeriesValue(seriesItem, datum, clamped);
             const axisFormat = seriesItem.yAxis === "right" ? y2AxisFormat : yAxisFormat;
             const formatted =
@@ -904,7 +1119,7 @@ export class ChartState<TDatum = ChartDatum> {
             xValue,
             xLabel,
             items,
-            total: hasNumeric ? total : undefined,
+            total: isItemMode ? undefined : hasNumeric ? total : undefined,
         };
     }
 }

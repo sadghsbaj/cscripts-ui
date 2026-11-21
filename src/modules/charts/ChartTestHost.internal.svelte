@@ -3,10 +3,13 @@
     import type { NumberMorphFormat } from "../number-morph/index.ts";
     import {
         AreaChart,
+        BarChart,
         Chart,
         ChartActions,
+        ChartAnnotation,
         ChartArea,
         ChartAxis,
+        ChartBar,
         ChartCanvas,
         ChartCrosshair,
         ChartDescription,
@@ -17,11 +20,19 @@
         ChartLine,
         ChartLoading,
         ChartOverlay,
+        ChartReferenceBand,
+        ChartReferenceLine,
         ChartTitle,
         ChartTooltip,
+        ComposedChart,
         LineChart,
+        type ChartAnnotationConfig,
         type ChartAreaMode,
         type ChartAxisConfig,
+        type ChartBarInsideLabelOrientation,
+        type ChartBarLabelLayout,
+        type ChartBarMode,
+        type ChartBarValueLabels,
         type ChartCurve,
         type ChartDatum,
         type ChartGridOption,
@@ -33,15 +44,20 @@
         type ChartMonotoneHue,
         type ChartOrientation,
         type ChartPalette,
+        type ChartReferenceBandConfig,
+        type ChartReferenceLineConfig,
         type ChartSeries,
         type ChartSize,
         type ChartState,
         type ChartTickAngle,
         type ChartTitleElement,
+        type ChartTone,
         type ChartTooltipContext,
+        type ChartTooltipMode,
         type ChartVariant,
         type ChartXScaleType,
         type ChartXValue,
+        type ChartZeroLineStyle,
     } from "./index.ts";
 
     interface Props {
@@ -53,7 +69,9 @@
             | "one-way-controlled"
             | "uncontrolled"
             | "line-chart"
-            | "area-chart";
+            | "area-chart"
+            | "bar-chart"
+            | "composed-chart";
 
         cardVariant?: CardVariant;
         cardSize?: CardSize;
@@ -77,6 +95,7 @@
         hiddenSeriesIds?: readonly string[];
         activeIndex?: number | null;
         hoveredSeriesId?: string | null;
+        tooltipMode?: ChartTooltipMode;
         loading?: boolean;
         empty?: boolean;
         label?: string;
@@ -152,7 +171,7 @@
         showGrid?: boolean;
         gridHorizontal?: boolean;
         gridVertical?: boolean;
-        gridZeroLine?: boolean;
+        gridZeroLine?: boolean | ChartZeroLineStyle;
         gridTickCount?: number;
         gridAttrs?: Record<string, unknown>;
         gridRef?: SVGGElement | null;
@@ -229,6 +248,25 @@
         areaAttrs?: Record<string, unknown>;
         areaRef?: SVGGElement | null;
 
+        showBar?: boolean;
+        barSeriesId?: string;
+        barMode?: ChartBarMode;
+        barRadius?: number;
+        barMaxBarWidth?: number;
+        barGap?: number;
+        barMinBarLength?: number;
+        barSegmentGap?: number;
+        barValueLabels?: ChartBarValueLabels;
+        barInsideLabelOrientation?: ChartBarInsideLabelOrientation;
+        barFormatLabel?: (
+            value: number,
+            datum: ChartDatum,
+            series: ChartSeries<ChartDatum>,
+        ) => string;
+        barLabelLayout?: ChartBarLabelLayout;
+        barAttrs?: Record<string, unknown>;
+        barRef?: SVGGElement | null;
+
         tier2Grid?: ChartGridOption;
         tier2Legend?: ChartLegendPosition;
         tier2Tooltip?: boolean;
@@ -239,6 +277,45 @@
         tier2AspectRatio?: string;
         tier2Interactive?: boolean;
         tier2CustomLayerText?: string;
+
+        showRefLine?: boolean;
+        refLineAxis?: "x" | "y" | "y2";
+        refLineValue?: ChartXValue;
+        refLineLabel?: string;
+        refLineLabelPosition?: "start" | "center" | "end";
+        refLineTone?: ChartTone;
+        refLineColor?: string;
+        refLineDashed?: boolean;
+        refLineAttrs?: Record<string, unknown>;
+        refLineRef?: SVGGElement | null;
+
+        showRefBand?: boolean;
+        refBandAxis?: "x" | "y" | "y2";
+        refBandFrom?: ChartXValue;
+        refBandTo?: ChartXValue;
+        refBandLabel?: string;
+        refBandTone?: ChartTone;
+        refBandColor?: string;
+        refBandAttrs?: Record<string, unknown>;
+        refBandRef?: SVGGElement | null;
+
+        showAnnotation?: boolean;
+        annotationX?: ChartXValue;
+        annotationY?: number;
+        annotationYAxis?: "left" | "right";
+        annotationDx?: number;
+        annotationDy?: number;
+        annotationLabel?: string;
+        annotationTone?: ChartTone;
+        annotationColor?: string;
+        annotationAttrs?: Record<string, unknown>;
+        annotationRef?: SVGGElement | null;
+
+        referenceLines?: readonly ChartReferenceLineConfig[];
+        referenceBands?: readonly ChartReferenceBandConfig[];
+        annotations?: readonly ChartAnnotationConfig[];
+
+        composedShowAreaLine?: boolean;
     }
 
     let {
@@ -266,6 +343,7 @@
         hiddenSeriesIds = $bindable(),
         activeIndex = $bindable(),
         hoveredSeriesId = $bindable(),
+        tooltipMode,
         loading = false,
         empty,
         label,
@@ -414,6 +492,21 @@
         areaAttrs = {},
         areaRef = $bindable(null),
 
+        showBar = false,
+        barSeriesId,
+        barMode,
+        barRadius,
+        barMaxBarWidth,
+        barGap,
+        barMinBarLength,
+        barSegmentGap,
+        barValueLabels,
+        barInsideLabelOrientation,
+        barFormatLabel,
+        barLabelLayout,
+        barAttrs = {},
+        barRef = $bindable(null),
+
         tier2Grid = true,
         tier2Legend = "top",
         tier2Tooltip = true,
@@ -424,6 +517,45 @@
         tier2AspectRatio,
         tier2Interactive = true,
         tier2CustomLayerText,
+
+        showRefLine = false,
+        refLineAxis = "y",
+        refLineValue = 0,
+        refLineLabel,
+        refLineLabelPosition = "end",
+        refLineTone,
+        refLineColor,
+        refLineDashed = true,
+        refLineAttrs = {},
+        refLineRef = $bindable(null),
+
+        showRefBand = false,
+        refBandAxis = "y",
+        refBandFrom = 0,
+        refBandTo = 100,
+        refBandLabel,
+        refBandTone,
+        refBandColor,
+        refBandAttrs = {},
+        refBandRef = $bindable(null),
+
+        showAnnotation = false,
+        annotationX = 0,
+        annotationY = 0,
+        annotationYAxis = "left",
+        annotationDx,
+        annotationDy,
+        annotationLabel = "",
+        annotationTone,
+        annotationColor,
+        annotationAttrs = {},
+        annotationRef = $bindable(null),
+
+        referenceLines,
+        referenceBands,
+        annotations,
+
+        composedShowAreaLine = true,
     }: Props = $props();
 </script>
 
@@ -449,6 +581,7 @@
         {orientation}
         {stacked}
         {margin}
+        {tooltipMode}
         {loading}
         {empty}
         {label}
@@ -525,6 +658,19 @@
                     />
                 {/if}
 
+                {#if showRefBand}
+                    <ChartReferenceBand
+                        bind:ref={refBandRef}
+                        axis={refBandAxis}
+                        from={refBandFrom}
+                        to={refBandTo}
+                        label={refBandLabel}
+                        tone={refBandTone}
+                        color={refBandColor}
+                        {...refBandAttrs}
+                    />
+                {/if}
+
                 {#if showBottomAxis}
                     <ChartAxis
                         bind:ref={bottomAxisRef}
@@ -595,8 +741,55 @@
                     />
                 {/if}
 
+                {#if showBar}
+                    <ChartBar
+                        bind:ref={barRef}
+                        seriesId={barSeriesId}
+                        mode={barMode}
+                        radius={barRadius}
+                        maxBarWidth={barMaxBarWidth}
+                        barGap={barGap}
+                        minBarLength={barMinBarLength}
+                        segmentGap={barSegmentGap}
+                        valueLabels={barValueLabels}
+                        insideLabelOrientation={barInsideLabelOrientation}
+                        formatLabel={barFormatLabel}
+                        labelLayout={barLabelLayout}
+                        {...barAttrs}
+                    />
+                {/if}
+
                 {#if showCustomMark}
                     <circle data-testid="custom-mark" cx="10" cy="10" r="4" />
+                {/if}
+
+                {#if showRefLine}
+                    <ChartReferenceLine
+                        bind:ref={refLineRef}
+                        axis={refLineAxis}
+                        value={refLineValue}
+                        label={refLineLabel}
+                        labelPosition={refLineLabelPosition}
+                        tone={refLineTone}
+                        color={refLineColor}
+                        dashed={refLineDashed}
+                        {...refLineAttrs}
+                    />
+                {/if}
+
+                {#if showAnnotation}
+                    <ChartAnnotation
+                        bind:ref={annotationRef}
+                        x={annotationX}
+                        y={annotationY}
+                        yAxis={annotationYAxis}
+                        dx={annotationDx}
+                        dy={annotationDy}
+                        label={annotationLabel}
+                        tone={annotationTone}
+                        color={annotationColor}
+                        {...annotationAttrs}
+                    />
                 {/if}
 
                 {#if showCrosshair}
@@ -791,12 +984,16 @@
         connectNulls={lineConnectNulls}
         showLabels={lineShowLabels}
         formatLabel={lineFormatLabel}
+        {referenceLines}
+        {referenceBands}
+        {annotations}
         grid={tier2Grid}
         {xAxis}
         {yAxis}
         {y2Axis}
         legend={tier2Legend}
         tooltip={tooltipCustomRenderer ? customTier2Tooltip : tier2Tooltip}
+        {tooltipMode}
         showTotal={tier2ShowTotal}
         {palette}
         {monotone}
@@ -839,12 +1036,131 @@
         strokeWidth={areaStrokeWidth}
         showDots={areaShowDots}
         connectNulls={areaConnectNulls}
+        {referenceLines}
+        {referenceBands}
+        {annotations}
         grid={tier2Grid}
         {xAxis}
         {yAxis}
         {y2Axis}
         legend={tier2Legend}
         tooltip={tooltipCustomRenderer ? customTier2Tooltip : tier2Tooltip}
+        {tooltipMode}
+        showTotal={tier2ShowTotal}
+        {palette}
+        {monotone}
+        title={tier2Title}
+        description={tier2Description}
+        actions={showActions ? customTier2Actions : undefined}
+        height={tier2Height}
+        aspectRatio={tier2AspectRatio}
+        {margin}
+        {loading}
+        {empty}
+        {emptyTitle}
+        {emptyDescription}
+        interactive={tier2Interactive}
+        {onPointClick}
+        {label}
+        {labelledBy}
+        children={tier2CustomLayerText ? customTier2Layer : undefined}
+        overlay={showOverlay ? customTier2Overlay : undefined}
+        class={chartClass}
+        {...chartAttrs}
+    />
+{:else if mode === "bar-chart"}
+    <BarChart
+        bind:ref={chartRef}
+        bind:svgRef
+        bind:hiddenSeriesIds
+        bind:activeIndex
+        bind:hoveredSeriesId
+        {variant}
+        {size}
+        data={data ?? []}
+        x={x ?? "x"}
+        series={series ?? []}
+        {xScaleType}
+        {orientation}
+        mode={barMode}
+        radius={barRadius}
+        maxBarWidth={barMaxBarWidth}
+        {barGap}
+        minBarLength={barMinBarLength}
+        segmentGap={barSegmentGap}
+        valueLabels={barValueLabels}
+        insideLabelOrientation={barInsideLabelOrientation}
+        formatLabel={barFormatLabel}
+        labelLayout={barLabelLayout}
+        {referenceLines}
+        {referenceBands}
+        {annotations}
+        grid={tier2Grid}
+        {xAxis}
+        {yAxis}
+        {y2Axis}
+        legend={tier2Legend}
+        tooltip={tooltipCustomRenderer ? customTier2Tooltip : tier2Tooltip}
+        {tooltipMode}
+        showTotal={tier2ShowTotal}
+        {palette}
+        {monotone}
+        title={tier2Title}
+        description={tier2Description}
+        actions={showActions ? customTier2Actions : undefined}
+        height={tier2Height}
+        aspectRatio={tier2AspectRatio}
+        {margin}
+        {loading}
+        {empty}
+        {emptyTitle}
+        {emptyDescription}
+        interactive={tier2Interactive}
+        {onPointClick}
+        {label}
+        {labelledBy}
+        children={tier2CustomLayerText ? customTier2Layer : undefined}
+        overlay={showOverlay ? customTier2Overlay : undefined}
+        class={chartClass}
+        {...chartAttrs}
+    />
+{:else if mode === "composed-chart"}
+    <ComposedChart
+        bind:ref={chartRef}
+        bind:svgRef
+        bind:hiddenSeriesIds
+        bind:activeIndex
+        bind:hoveredSeriesId
+        {variant}
+        {size}
+        data={data ?? []}
+        x={x ?? "x"}
+        series={series ?? []}
+        {xScaleType}
+        curve={lineCurve}
+        {barMode}
+        {areaMode}
+        strokeWidth={lineStrokeWidth}
+        showDots={lineShowDots}
+        connectNulls={lineConnectNulls}
+        gradient={areaGradient}
+        showAreaLine={composedShowAreaLine}
+        {barRadius}
+        maxBarWidth={barMaxBarWidth}
+        {barGap}
+        minBarLength={barMinBarLength}
+        segmentGap={barSegmentGap}
+        valueLabels={barValueLabels}
+        {referenceLines}
+        {referenceBands}
+        {annotations}
+        grid={tier2Grid}
+        {xAxis}
+        {yAxis}
+        {y2Axis}
+        legend={tier2Legend}
+        tooltip={tooltipCustomRenderer ? customTier2Tooltip : tier2Tooltip}
+        {tooltipMode}
         showTotal={tier2ShowTotal}
         {palette}
         {monotone}

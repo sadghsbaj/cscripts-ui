@@ -8,11 +8,17 @@
     import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "cs/svelte/card";
     import {
         AreaChart,
+        BarChart,
         CHART_AREA_MODES,
+        CHART_BAR_LABEL_LAYOUTS,
+        CHART_BAR_MODES,
+        CHART_BAR_VALUE_LABELS,
         CHART_CURVES,
         CHART_LOADING_SHAPES,
         CHART_SIZES,
+        CHART_TOOLTIP_MODES,
         CHART_VARIANTS,
+        CHART_ZERO_LINE_STYLES,
         Chart,
         ChartActions,
         ChartAxis,
@@ -28,16 +34,25 @@
         ChartState,
         ChartTitle,
         ChartTooltip,
+        ComposedChart,
         LineChart,
+        type ChartAnnotationConfig,
         type ChartAreaMode,
+        type ChartBarLabelLayout,
+        type ChartBarMode,
+        type ChartBarValueLabelsMode,
         type ChartCurve,
         type ChartLoadingShape,
         type ChartMonotoneHue,
+        type ChartReferenceBandConfig,
+        type ChartReferenceLineConfig,
         type ChartSeries,
         type ChartSize,
         type ChartTone,
+        type ChartTooltipMode,
         type ChartVariant,
         type ChartXValue,
+        type ChartZeroLineStyle,
     } from "cs/svelte/charts";
     import { SegmentedControl, SegmentedControlItem, SegmentedControlLabel } from "cs/svelte/segmented-control";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
@@ -130,6 +145,147 @@
         { id: "enterprise", label: "Enterprise" },
         { id: "growth", label: "Growth" },
         { id: "starter", label: "Starter" },
+    ];
+
+    interface QuarterlyBookingsDatum {
+        quarter: string;
+        enterprise: number;
+        midMarket: number;
+        selfServe: number;
+    }
+
+    interface PlanVsActualDatum {
+        quarter: string;
+        planCloud: number;
+        planServices: number;
+        actualCloud: number;
+        actualServices: number;
+    }
+
+    interface BudgetVarianceDatum {
+        month: string;
+        gains: number;
+        overruns: number;
+    }
+
+    interface DepartmentSpendDatum {
+        department: string;
+        spend: number;
+    }
+
+    const QUARTERLY_BOOKINGS_DATA: readonly QuarterlyBookingsDatum[] = [
+        { quarter: "Q1", enterprise: 340_000, midMarket: 215_000, selfServe: 118_000 },
+        { quarter: "Q2", enterprise: 392_000, midMarket: 248_000, selfServe: 136_000 },
+        { quarter: "Q3", enterprise: 428_000, midMarket: 272_000, selfServe: 154_000 },
+        { quarter: "Q4", enterprise: 486_000, midMarket: 304_000, selfServe: 178_000 },
+    ];
+
+    const QUARTERLY_BOOKINGS_SERIES: readonly ChartSeries<QuarterlyBookingsDatum>[] = [
+        { id: "enterprise", label: "Enterprise" },
+        { id: "midMarket", label: "Mid-Market" },
+        { id: "selfServe", label: "Self-Serve" },
+    ];
+
+    const PLAN_VS_ACTUAL_DATA: readonly PlanVsActualDatum[] = [
+        { quarter: "Q1", planCloud: 280_000, planServices: 140_000, actualCloud: 310_000, actualServices: 155_000 },
+        { quarter: "Q2", planCloud: 320_000, planServices: 160_000, actualCloud: 345_000, actualServices: 148_000 },
+        { quarter: "Q3", planCloud: 365_000, planServices: 175_000, actualCloud: 392_000, actualServices: 184_000 },
+        { quarter: "Q4", planCloud: 410_000, planServices: 195_000, actualCloud: 448_000, actualServices: 212_000 },
+    ];
+
+    const PLAN_VS_ACTUAL_SERIES: readonly ChartSeries<PlanVsActualDatum>[] = [
+        { id: "planCloud", label: "Plan Cloud", stack: "plan" },
+        { id: "planServices", label: "Plan Services", stack: "plan" },
+        { id: "actualCloud", label: "Actual Cloud", stack: "actual" },
+        { id: "actualServices", label: "Actual Services", stack: "actual" },
+    ];
+
+    const BUDGET_VARIANCE_DATA: readonly BudgetVarianceDatum[] = [
+        { month: "Jan", gains: 42_000, overruns: -18_000 },
+        { month: "Feb", gains: 28_000, overruns: -34_000 },
+        { month: "Mar", gains: 64_000, overruns: -12_000 },
+        { month: "Apr", gains: 19_000, overruns: -48_000 },
+        { month: "May", gains: 51_000, overruns: -22_000 },
+        { month: "Jun", gains: 74_000, overruns: -15_000 },
+        { month: "Jul", gains: 36_000, overruns: -29_000 },
+        { month: "Aug", gains: 58_000, overruns: -11_000 },
+    ];
+
+    const BUDGET_VARIANCE_SERIES: readonly ChartSeries<BudgetVarianceDatum>[] = [
+        { id: "gains", label: "Savings", tone: "positive" },
+        { id: "overruns", label: "Overruns", tone: "negative" },
+    ];
+
+    const DEPARTMENT_SPEND_DATA: readonly DepartmentSpendDatum[] = [
+        { department: "Enterprise Cloud Infrastructure", spend: 840_000 },
+        { department: "Global Supply Chain Operations", spend: 690_000 },
+        { department: "Platform Security & Compliance", spend: 560_000 },
+        { department: "Customer Success & Enablement", spend: 430_000 },
+        { department: "Data Engineering & Analytics", spend: 385_000 },
+        { department: "Developer Experience & Tooling", spend: 295_000 },
+    ];
+
+    const DEPARTMENT_SPEND_SERIES: readonly ChartSeries<DepartmentSpendDatum>[] = [
+        { id: "spend", label: "Annual Spend" },
+    ];
+
+    interface RevenueMarginDatum {
+        month: string;
+        revenue: number;
+        costs: number;
+        marginPct: number;
+    }
+
+    const REVENUE_MARGIN_DATA: readonly RevenueMarginDatum[] = [
+        { month: "Jan", revenue: 265_000, costs: 84_800, marginPct: 68 },
+        { month: "Feb", revenue: 282_000, costs: 87_400, marginPct: 69 },
+        { month: "Mar", revenue: 308_000, costs: 92_400, marginPct: 70 },
+        { month: "Apr", revenue: 296_000, costs: 91_800, marginPct: 69 },
+        { month: "May", revenue: 338_000, costs: 98_000, marginPct: 71 },
+        { month: "Jun", revenue: 395_000, costs: 106_700, marginPct: 73 },
+        { month: "Jul", revenue: 364_000, costs: 101_900, marginPct: 72 },
+        { month: "Aug", revenue: 382_000, costs: 103_100, marginPct: 73 },
+    ];
+
+    const REVENUE_MARGIN_SERIES: readonly ChartSeries<RevenueMarginDatum>[] = [
+        { id: "revenue", label: "Revenue", type: "bar" },
+        { id: "costs", label: "Direct Costs", type: "area" },
+        { id: "marginPct", label: "Gross Margin", type: "line", yAxis: "right" },
+    ];
+
+    const REVENUE_MARGIN_BANDS: readonly ChartReferenceBandConfig[] = [
+        {
+            id: "target-sla",
+            axis: "y2",
+            from: 68,
+            to: 74,
+            tone: "positive",
+            label: "Target SLA",
+        },
+    ];
+
+    const REVENUE_MARGIN_LINES: readonly ChartReferenceLineConfig[] = [
+        {
+            id: "revenue-budget",
+            axis: "y",
+            value: 320_000,
+            tone: "caution",
+            label: "Budget $320k",
+            labelPosition: "start",
+        },
+    ];
+
+    const REVENUE_MARGIN_ANNOTATIONS: readonly ChartAnnotationConfig[] = [
+        {
+            id: "enterprise-launch",
+            x: "Jun",
+            y: 395_000,
+            yAxis: "left",
+            dx: 0,
+            dy: -34,
+            tone: "accent",
+            label: "Enterprise Launch",
+        },
     ];
 
     interface MonthlyDatum {
@@ -294,6 +450,13 @@
         return usdCompact.format(value);
     }
 
+    function formatUsdSignedCompact(value: ChartXValue): string {
+        if (typeof value !== "number") return String(value);
+        if (value === 0) return "$0";
+        const prefix = value > 0 ? "+" : "-";
+        return `${prefix}${usdCompact.format(Math.abs(value))}`;
+    }
+
     function formatPercent(value: ChartXValue): string {
         if (typeof value !== "number") return String(value);
         return `${value}%`;
@@ -347,16 +510,31 @@
     }
 
     let lineCurve = $state<ChartCurve>("monotone");
+    let lineTooltipMode = $state<ChartTooltipMode>("axis");
     let connectNulls = $state(false);
     let areaMode = $state<ChartAreaMode>("stacked");
+    let barMode = $state<ChartBarMode>("grouped");
+    let barValueLabels = $state<ChartBarValueLabelsMode>("none");
+    let barTooltipMode = $state<ChartTooltipMode>("axis");
+    let groupedStackedValueLabels = $state<ChartBarValueLabelsMode>("both");
+    let groupedStackedTooltipMode = $state<ChartTooltipMode>("axis");
+    let divergingZeroLine = $state<ChartZeroLineStyle>("solid");
+    let horizontalLabelLayout = $state<ChartBarLabelLayout>("gutter");
+    let composedTooltipMode = $state<ChartTooltipMode>("axis");
 
     const closeScript = ["</", "script>"].join("");
 
     /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
     const lineChartCode = `<script lang="ts">
-    import { LineChart, type ChartCurve, type ChartSeries } from "cs/svelte/charts";
+    import {
+        LineChart,
+        type ChartCurve,
+        type ChartSeries,
+        type ChartTooltipMode,
+    } from "cs/svelte/charts";
 
     let curve = $state<ChartCurve>("monotone");
+    let tooltipMode = $state<ChartTooltipMode>("axis");
     let connectNulls = $state(false);
 
     const series: ChartSeries<ArrTimeDatum>[] = [
@@ -374,6 +552,7 @@ ${closeScript}
     x="date"
     {series}
     {curve}
+    {tooltipMode}
     {connectNulls}
     height={280}
 />`;
@@ -394,6 +573,162 @@ ${closeScript}
     {series}
     {mode}
     height={290}
+/>`;
+
+    const barChartCode = `<script lang="ts">
+    import {
+        BarChart,
+        type ChartBarMode,
+        type ChartBarValueLabelsMode,
+        type ChartTooltipMode,
+    } from "cs/svelte/charts";
+
+    let mode = $state<ChartBarMode>("grouped");
+    let valueLabels = $state<ChartBarValueLabelsMode>("none");
+    let tooltipMode = $state<ChartTooltipMode>("axis");
+${closeScript}
+
+<BarChart
+    variant="elevated"
+    size="md"
+    title="Quarterly Bookings"
+    description="Revenue by sales channel"
+    {data}
+    x="quarter"
+    {series}
+    {mode}
+    {valueLabels}
+    {tooltipMode}
+    yAxis={{ format: formatUsdCompact }}
+    height={290}
+/>`;
+
+    const groupedStackedBarCode = `<script lang="ts">
+    import {
+        BarChart,
+        type ChartBarValueLabelsMode,
+        type ChartSeries,
+        type ChartTooltipMode,
+    } from "cs/svelte/charts";
+
+    let valueLabels = $state<ChartBarValueLabelsMode>("both");
+    let tooltipMode = $state<ChartTooltipMode>("axis");
+
+    const series: ChartSeries<PlanVsActualDatum>[] = [
+        { id: "planCloud", label: "Plan Cloud", stack: "plan" },
+        { id: "planServices", label: "Plan Services", stack: "plan" },
+        { id: "actualCloud", label: "Actual Cloud", stack: "actual" },
+        { id: "actualServices", label: "Actual Services", stack: "actual" },
+    ];
+${closeScript}
+
+<BarChart
+    variant="elevated"
+    size="md"
+    title="Plan vs. Actual"
+    description="Quarterly cloud and services revenue against budget"
+    {data}
+    x="quarter"
+    {series}
+    {valueLabels}
+    {tooltipMode}
+    yAxis={{ format: formatUsdCompact }}
+    height={300}
+/>`;
+
+    const divergingBarCode = `<script lang="ts">
+    import { BarChart, type ChartSeries, type ChartZeroLineStyle } from "cs/svelte/charts";
+
+    let zeroLine = $state<ChartZeroLineStyle>("solid");
+
+    const series: ChartSeries<BudgetVarianceDatum>[] = [
+        { id: "gains", label: "Savings", tone: "positive" },
+        { id: "overruns", label: "Overruns", tone: "negative" },
+    ];
+${closeScript}
+
+<BarChart
+    variant="elevated"
+    size="md"
+    title="Budget Variance"
+    description="Monthly operating savings vs. cost overruns"
+    {data}
+    x="month"
+    {series}
+    mode="stacked"
+    grid={{ zeroLine }}
+    yAxis={{ format: formatUsdSignedCompact }}
+    height={280}
+/>`;
+
+    const horizontalBarCode = `<script lang="ts">
+    import { BarChart, type ChartBarLabelLayout } from "cs/svelte/charts";
+
+    let labelLayout = $state<ChartBarLabelLayout>("gutter");
+${closeScript}
+
+<BarChart
+    variant="elevated"
+    size="md"
+    title="Department Spend"
+    description="Annualized operating allocation by organization"
+    {data}
+    x="department"
+    {series}
+    orientation="horizontal"
+    {labelLayout}
+    valueLabels="outside"
+    legend="none"
+    yAxis={{ format: formatUsdCompact }}
+    height={320}
+/>`;
+
+    const composedChartCode = `<script lang="ts">
+    import {
+        ComposedChart,
+        type ChartAnnotationConfig,
+        type ChartReferenceBandConfig,
+        type ChartReferenceLineConfig,
+        type ChartSeries,
+        type ChartTooltipMode,
+    } from "cs/svelte/charts";
+
+    let tooltipMode = $state<ChartTooltipMode>("axis");
+
+    const series: ChartSeries<RevenueMarginDatum>[] = [
+        { id: "revenue", label: "Revenue", type: "bar" },
+        { id: "costs", label: "Direct Costs", type: "area" },
+        { id: "marginPct", label: "Gross Margin", type: "line", yAxis: "right" },
+    ];
+
+    const referenceBands: ChartReferenceBandConfig[] = [
+        { axis: "y2", from: 68, to: 74, tone: "positive", label: "Target SLA" },
+    ];
+
+    const referenceLines: ChartReferenceLineConfig[] = [
+        { axis: "y", value: 320_000, tone: "caution", label: "Budget $320k", labelPosition: "start" },
+    ];
+
+    const annotations: ChartAnnotationConfig[] = [
+        { x: "Jun", y: 395_000, yAxis: "left", dx: 0, dy: -34, tone: "accent", label: "Enterprise Launch" },
+    ];
+${closeScript}
+
+<ComposedChart
+    variant="elevated"
+    size="md"
+    title="Revenue & Margin"
+    description="Monthly revenue and direct costs against gross margin target"
+    {data}
+    x="month"
+    {series}
+    {referenceBands}
+    {referenceLines}
+    {annotations}
+    {tooltipMode}
+    yAxis={{ format: formatUsdCompact, label: "Revenue ($)", domain: [0, 480_000] }}
+    y2Axis={{ format: formatPercent, label: "Gross Margin", domain: [50, 80] }}
+    height={320}
 />`;
 
     const interactiveCode = `<script lang="ts">
@@ -509,7 +844,7 @@ ${closeScript}
 <div class="flex flex-col gap-10">
     <PreviewHeader
         title="Charts"
-        description="Borderless OKLCH chart shell, line and area presets, responsive SVG canvas, interactive crosshair, top-layer tooltip, and legend."
+        description="Borderless OKLCH chart shell, line, area, bar, and composed presets, reference overlays, responsive SVG canvas, interactive crosshair, top-layer tooltip, and legend."
     />
 
     <PreviewSection
@@ -527,6 +862,7 @@ ${closeScript}
                 x="date"
                 series={ARR_TIME_SERIES}
                 curve={lineCurve}
+                tooltipMode={lineTooltipMode}
                 {connectNulls}
                 height={280}
             >
@@ -535,6 +871,13 @@ ${closeScript}
                         {#each CHART_CURVES as curve (curve)}
                             <SegmentedControlItem value={curve}>
                                 <SegmentedControlLabel class="capitalize">{curve}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                    <SegmentedControl size="xs" bind:value={lineTooltipMode} aria-label="Tooltip mode">
+                        {#each CHART_TOOLTIP_MODES as mode (mode)}
+                            <SegmentedControlItem value={mode}>
+                                <SegmentedControlLabel class="capitalize">{mode}</SegmentedControlLabel>
                             </SegmentedControlItem>
                         {/each}
                     </SegmentedControl>
@@ -607,6 +950,209 @@ ${closeScript}
                     </SegmentedControl>
                 {/snippet}
             </AreaChart>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Bar Chart"
+        description="Grouped and stacked vertical columns with hover band, morphing tooltip totals, and optional value labels."
+        code={barChartCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
+            <BarChart
+                variant="elevated"
+                size="md"
+                title="Quarterly Bookings"
+                description="Revenue by sales channel"
+                data={QUARTERLY_BOOKINGS_DATA}
+                x="quarter"
+                series={QUARTERLY_BOOKINGS_SERIES}
+                mode={barMode}
+                valueLabels={barValueLabels}
+                tooltipMode={barTooltipMode}
+                yAxis={{ format: formatUsdCompact }}
+                height={290}
+            >
+                {#snippet actions()}
+                    <SegmentedControl size="xs" bind:value={barMode} aria-label="Bar mode">
+                        {#each CHART_BAR_MODES as mode (mode)}
+                            <SegmentedControlItem value={mode}>
+                                <SegmentedControlLabel class="capitalize">{mode}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                    <SegmentedControl size="xs" bind:value={barValueLabels} aria-label="Value labels">
+                        {#each CHART_BAR_VALUE_LABELS as labelMode (labelMode)}
+                            <SegmentedControlItem value={labelMode}>
+                                <SegmentedControlLabel class="capitalize">{labelMode}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                    <SegmentedControl size="xs" bind:value={barTooltipMode} aria-label="Tooltip mode">
+                        {#each CHART_TOOLTIP_MODES as mode (mode)}
+                            <SegmentedControlItem value={mode}>
+                                <SegmentedControlLabel class="capitalize">{mode}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                {/snippet}
+            </BarChart>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Grouped & Stacked"
+        description="Named series stacks sitting side-by-side per category with per-stack totals and inside segment labels."
+        code={groupedStackedBarCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
+            <BarChart
+                variant="elevated"
+                size="md"
+                title="Plan vs. Actual"
+                description="Quarterly cloud and services revenue against budget"
+                data={PLAN_VS_ACTUAL_DATA}
+                x="quarter"
+                series={PLAN_VS_ACTUAL_SERIES}
+                valueLabels={groupedStackedValueLabels}
+                tooltipMode={groupedStackedTooltipMode}
+                yAxis={{ format: formatUsdCompact }}
+                height={300}
+            >
+                {#snippet actions()}
+                    <SegmentedControl
+                        size="xs"
+                        bind:value={groupedStackedValueLabels}
+                        aria-label="Grouped stacked value labels"
+                    >
+                        {#each CHART_BAR_VALUE_LABELS as labelMode (labelMode)}
+                            <SegmentedControlItem value={labelMode}>
+                                <SegmentedControlLabel class="capitalize">{labelMode}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                    <SegmentedControl
+                        size="xs"
+                        bind:value={groupedStackedTooltipMode}
+                        aria-label="Grouped stacked tooltip mode"
+                    >
+                        {#each CHART_TOOLTIP_MODES as mode (mode)}
+                            <SegmentedControlItem value={mode}>
+                                <SegmentedControlLabel class="capitalize">{mode}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                {/snippet}
+            </BarChart>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Diverging Variance"
+        description="Positive and negative stacked columns diverging around a crisp zero baseline with semantic tones."
+        code={divergingBarCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
+            <BarChart
+                variant="elevated"
+                size="md"
+                title="Budget Variance"
+                description="Monthly operating savings vs. cost overruns"
+                data={BUDGET_VARIANCE_DATA}
+                x="month"
+                series={BUDGET_VARIANCE_SERIES}
+                mode="stacked"
+                grid={{ zeroLine: divergingZeroLine }}
+                yAxis={{ format: formatUsdSignedCompact }}
+                height={280}
+            >
+                {#snippet actions()}
+                    <SegmentedControl size="xs" bind:value={divergingZeroLine} aria-label="Zero line style">
+                        {#each CHART_ZERO_LINE_STYLES as style (style)}
+                            <SegmentedControlItem value={style}>
+                                <SegmentedControlLabel class="capitalize">{style}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                {/snippet}
+            </BarChart>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Horizontal Bars"
+        description="Long category labels switching between truncated left gutter ticks and full-width inline above-bar headers."
+        code={horizontalBarCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
+            <BarChart
+                variant="elevated"
+                size="md"
+                title="Department Spend"
+                description="Annualized operating allocation by organization"
+                data={DEPARTMENT_SPEND_DATA}
+                x="department"
+                series={DEPARTMENT_SPEND_SERIES}
+                orientation="horizontal"
+                labelLayout={horizontalLabelLayout}
+                valueLabels="outside"
+                legend="none"
+                yAxis={{ format: formatUsdCompact }}
+                height={320}
+            >
+                {#snippet actions()}
+                    <SegmentedControl
+                        size="xs"
+                        bind:value={horizontalLabelLayout}
+                        aria-label="Category label layout"
+                    >
+                        {#each CHART_BAR_LABEL_LAYOUTS as layout (layout)}
+                            <SegmentedControlItem value={layout}>
+                                <SegmentedControlLabel class="capitalize">{layout}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                {/snippet}
+            </BarChart>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Composed & Overlays"
+        description="Mixed bar, area, and dual-axis line series with target SLA bands, budget reference lines, and point callout annotations."
+        code={composedChartCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
+            <ComposedChart
+                variant="elevated"
+                size="md"
+                title="Revenue & Margin"
+                description="Monthly revenue and direct costs against gross margin target"
+                data={REVENUE_MARGIN_DATA}
+                x="month"
+                series={REVENUE_MARGIN_SERIES}
+                referenceBands={REVENUE_MARGIN_BANDS}
+                referenceLines={REVENUE_MARGIN_LINES}
+                annotations={REVENUE_MARGIN_ANNOTATIONS}
+                tooltipMode={composedTooltipMode}
+                yAxis={{ format: formatUsdCompact, label: "Revenue ($)", domain: [0, 480_000] }}
+                y2Axis={{ format: formatPercent, label: "Gross Margin", domain: [50, 80] }}
+                height={320}
+            >
+                {#snippet actions()}
+                    <SegmentedControl
+                        size="xs"
+                        bind:value={composedTooltipMode}
+                        aria-label="Composed chart tooltip mode"
+                    >
+                        {#each CHART_TOOLTIP_MODES as mode (mode)}
+                            <SegmentedControlItem value={mode}>
+                                <SegmentedControlLabel class="capitalize">{mode}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                {/snippet}
+            </ComposedChart>
         </div>
     </PreviewSection>
 

@@ -7,10 +7,12 @@ import {
     buildRoundedBarPath,
     clampBarRadius,
     computeGroupedBarRects,
+    computeGroupedStackedBarRects,
     computePieArcs,
     computeStackedBarRects,
     computeStackedSeries,
     findNearestCoordinateIndex,
+    partitionSeriesIntoStackSlots,
     snapHalf,
     snapInt,
 } from "./chart-geometry.internal.ts";
@@ -689,6 +691,226 @@ describe("Charts M0 — Geometry (chart-geometry.internal.ts)", () => {
         });
     });
 
+    describe("partitionSeriesIntoStackSlots & computeGroupedStackedBarRects", () => {
+        test("partitionSeriesIntoStackSlots preserves first-seen order, groups by stack key, and handles unstacked series for stackUnstacked false vs true", () => {
+            const mixed = [
+                { id: "planBase", stack: "plan" },
+                { id: "soloA" },
+                { id: "actualBase", stack: "actual" },
+                { id: "planBonus", stack: "plan" },
+                { id: "soloB", stack: "" },
+                { id: "actualBonus", stack: "actual" },
+            ];
+
+            // stackUnstacked: false -> each unstacked series (including empty string "") gets its own slot
+            const groupedSlots = partitionSeriesIntoStackSlots(mixed, false);
+            expect(groupedSlots.map((slot) => slot.key)).toEqual([
+                "stack:plan",
+                "series:soloA",
+                "stack:actual",
+                "series:soloB",
+            ]);
+            expect(groupedSlots.map((slot) => slot.stackKey)).toEqual([
+                "plan",
+                undefined,
+                "actual",
+                undefined,
+            ]);
+            expect(groupedSlots[0]?.series.map((s) => s.id)).toEqual(["planBase", "planBonus"]);
+            expect(groupedSlots[1]?.series.map((s) => s.id)).toEqual(["soloA"]);
+            expect(groupedSlots[2]?.series.map((s) => s.id)).toEqual(["actualBase", "actualBonus"]);
+            expect(groupedSlots[3]?.series.map((s) => s.id)).toEqual(["soloB"]);
+
+            // stackUnstacked: true -> all unstacked series share one "default" slot at first-seen unstacked position
+            const stackedSlots = partitionSeriesIntoStackSlots(mixed, true);
+            expect(stackedSlots.map((slot) => slot.key)).toEqual([
+                "stack:plan",
+                "default",
+                "stack:actual",
+            ]);
+            expect(stackedSlots.map((slot) => slot.stackKey)).toEqual(["plan", undefined, "actual"]);
+            expect(stackedSlots[1]?.series.map((s) => s.id)).toEqual(["soloA", "soloB"]);
+
+            // Explicit stack: "default" never collides with the unstacked "default" slot under stackUnstacked: true
+            const collisionSlots = partitionSeriesIntoStackSlots(
+                [
+                    { id: "namedDefaultA", stack: "default" },
+                    { id: "unstackedA" },
+                    { id: "namedDefaultB", stack: "default" },
+                    { id: "unstackedB" },
+                ],
+                true,
+            );
+            expect(collisionSlots.map((slot) => slot.key)).toEqual(["stack:default", "default"]);
+            expect(collisionSlots.map((slot) => slot.stackKey)).toEqual(["default", undefined]);
+            expect(collisionSlots[0]?.series.map((s) => s.id)).toEqual([
+                "namedDefaultA",
+                "namedDefaultB",
+            ]);
+            expect(collisionSlots[1]?.series.map((s) => s.id)).toEqual([
+                "unstackedA",
+                "unstackedB",
+            ]);
+
+            expect(partitionSeriesIntoStackSlots([])).toEqual([]);
+        });
+
+        test("computeGroupedStackedBarRects places named stacks side-by-side in vertical & horizontal orientations with diverging segments, outer-cap-only radii, integer snapping, and zero baseline overshoot", () => {
+            const vScale = createNumericScale({
+                values: [-60, 140],
+                range: [200, 0],
+                nice: false,
+            });
+
+            const vRects = computeGroupedStackedBarRects({
+                series: [
+                    { id: "planCore", stack: "plan", values: [40, -20] },
+                    { id: "planAddon", stack: "plan", values: [60, -30] },
+                    { id: "actualCore", stack: "actual", values: [50, 70] },
+                    { id: "actualAddon", stack: "actual", values: [80, -40] },
+                ],
+                categoryStarts: [10, 150],
+                bandwidth: 100,
+                valueScale: vScale,
+                orientation: "vertical",
+                radius: 6,
+                maxBarWidth: 36,
+                barGap: 8,
+                segmentGap: 1.5,
+                minBarLength: 2,
+            });
+
+            expect(vRects).toHaveLength(8);
+            for (const rect of vRects) {
+                expect(Number.isSafeInteger(rect.x)).toBe(true);
+                expect(Number.isSafeInteger(rect.y)).toBe(true);
+                expect(Number.isSafeInteger(rect.width)).toBe(true);
+                expect(Number.isSafeInteger(rect.height)).toBe(true);
+                expect(rect.width).toBeLessThanOrEqual(36);
+            }
+
+            // Category 0: plan (+40 inner, +60 outer) left of actual (+50 inner, +80 outer) separated by barGap=8
+            const pCore0 = requireBarRect(vRects, "planCore", 0);
+            const pAddon0 = requireBarRect(vRects, "planAddon", 0);
+            const aCore0 = requireBarRect(vRects, "actualCore", 0);
+            const aAddon0 = requireBarRect(vRects, "actualAddon", 0);
+
+            expect(pCore0.stackKey).toBe("plan");
+            expect(pAddon0.stackKey).toBe("plan");
+            expect(aCore0.stackKey).toBe("actual");
+            expect(aAddon0.stackKey).toBe("actual");
+
+            // Segments within the same stack share exact X & width
+            expect(pCore0.x).toBe(pAddon0.x);
+            expect(pCore0.width).toBe(pAddon0.width);
+            expect(aCore0.x).toBe(aAddon0.x);
+            expect(aCore0.width).toBe(aAddon0.width);
+
+            // "plan" sits strictly left of "actual" with barGap=8
+            expect(aCore0.x - (pCore0.x + pCore0.width)).toBe(8);
+
+            // Outer-cap-only rounding & segmentGap separation within each positive stack
+            expect(pCore0.capSide).toBe("none");
+            expect(pCore0.radius).toBe(0);
+            expect(pAddon0.capSide).toBe("top");
+            expect(pAddon0.radius).toBe(6);
+            expect(aCore0.capSide).toBe("none");
+            expect(aCore0.radius).toBe(0);
+            expect(aAddon0.capSide).toBe("top");
+            expect(aAddon0.radius).toBe(6);
+
+            // Positive stack: inner segment stays flush with baseline (zero overshoot) and outer sits strictly above it
+            expect(pCore0.y + pCore0.height).toBe(pCore0.baseline);
+            expect(aCore0.y + aCore0.height).toBe(aCore0.baseline);
+            expect(pAddon0.y + pAddon0.height).toBeLessThan(pCore0.y);
+            expect(aAddon0.y + aAddon0.height).toBeLessThan(aCore0.y);
+
+            // Category 1: plan diverges negatively (-20 inner, -30 outer); actual splits (+70 top, -40 bottom)
+            const pCore1 = requireBarRect(vRects, "planCore", 1);
+            const pAddon1 = requireBarRect(vRects, "planAddon", 1);
+            const aCore1 = requireBarRect(vRects, "actualCore", 1);
+            const aAddon1 = requireBarRect(vRects, "actualAddon", 1);
+
+            expect(pCore1.isNegative).toBe(true);
+            expect(pCore1.capSide).toBe("none");
+            expect(pCore1.radius).toBe(0);
+            expect(pCore1.y).toBe(pCore1.baseline); // flush with baseline, no upward overshoot
+
+            expect(pAddon1.isNegative).toBe(true);
+            expect(pAddon1.capSide).toBe("bottom");
+            expect(pAddon1.radius).toBe(6);
+            expect(pAddon1.y).toBeGreaterThan(pCore1.y + pCore1.height);
+
+            expect(aCore1.isNegative).toBe(false);
+            expect(aCore1.capSide).toBe("top");
+            expect(aCore1.y + aCore1.height).toBe(aCore1.baseline);
+
+            expect(aAddon1.isNegative).toBe(true);
+            expect(aAddon1.capSide).toBe("bottom");
+            expect(aAddon1.y).toBe(aAddon1.baseline);
+
+            // Horizontal orientation: "plan" sits above "actual" separated by barGap, positive right / negative left
+            const hScale = createNumericScale({
+                values: [-60, 140],
+                range: [0, 200],
+                nice: false,
+            });
+            const hRects = computeGroupedStackedBarRects({
+                series: [
+                    { id: "planCore", stack: "plan", values: [40] },
+                    { id: "planAddon", stack: "plan", values: [60] },
+                    { id: "actualCore", stack: "actual", values: [-20] },
+                    { id: "actualAddon", stack: "actual", values: [-30] },
+                ],
+                categoryStarts: [0],
+                bandwidth: 60,
+                valueScale: hScale,
+                orientation: "horizontal",
+                radius: 5,
+                maxBarWidth: 24,
+                barGap: 6,
+                segmentGap: 1.5,
+            });
+
+            const hpCore = requireBarRect(hRects, "planCore", 0);
+            const hpAddon = requireBarRect(hRects, "planAddon", 0);
+            const haCore = requireBarRect(hRects, "actualCore", 0);
+            const haAddon = requireBarRect(hRects, "actualAddon", 0);
+
+            expect(hpCore.y).toBe(hpAddon.y);
+            expect(haCore.y).toBe(haAddon.y);
+            expect(haCore.y - (hpCore.y + hpCore.height)).toBe(6);
+
+            expect(hpCore.capSide).toBe("none");
+            expect(hpCore.x).toBe(hpCore.baseline);
+            expect(hpAddon.capSide).toBe("right");
+            expect(hpAddon.x).toBeGreaterThan(hpCore.x + hpCore.width);
+
+            expect(haCore.capSide).toBe("none");
+            expect(haCore.x + haCore.width).toBe(haCore.baseline);
+            expect(haAddon.capSide).toBe("left");
+            expect(haAddon.x + haAddon.width).toBeLessThan(haCore.x);
+
+            // Empty / zero-bandwidth guards
+            expect(
+                computeGroupedStackedBarRects({
+                    series: [],
+                    categoryStarts: [0],
+                    bandwidth: 60,
+                    valueScale: vScale,
+                }),
+            ).toEqual([]);
+            expect(
+                computeGroupedStackedBarRects({
+                    series: [{ id: "a", stack: "s", values: [10] }],
+                    categoryStarts: [0],
+                    bandwidth: 0,
+                    valueScale: vScale,
+                }),
+            ).toEqual([]);
+        });
+    });
+
     describe("computePieArcs", () => {
         test("supports full pie (innerRadiusRatio=0) and donut (innerRadiusRatio=0.68)", () => {
             const slices = [
@@ -1264,5 +1486,69 @@ describe("Charts M0 — ChartState & Public Exports (chart-state.svelte.ts & ind
             "\u{2014}",
         ]);
         expect(tooltip?.total).toBe(25);
+    });
+
+    test("tracks hasNamedStacks, sizes yScale.domain to the tallest individual stack (not combined side-by-side stacks), and updates domain when hiding a stack", () => {
+        interface BudgetRow {
+            quarter: string;
+            planCore: number;
+            planBonus: number;
+            actualCore: number;
+            actualBonus: number;
+        }
+
+        const budgetData: readonly BudgetRow[] = [
+            { quarter: "Q1", planCore: 60, planBonus: 40, actualCore: 80, actualBonus: 70 },
+            { quarter: "Q2", planCore: 50, planBonus: 50, actualCore: 90, actualBonus: 90 },
+        ];
+
+        const budgetSeries: readonly ChartSeries<BudgetRow>[] = [
+            { id: "planCore", label: "Plan Core", stack: "plan" },
+            { id: "planBonus", label: "Plan Bonus", stack: "plan" },
+            { id: "actualCore", label: "Actual Core", stack: "actual" },
+            { id: "actualBonus", label: "Actual Bonus", stack: "actual" },
+        ];
+
+        const state = new ChartState<BudgetRow>({
+            data: budgetData,
+            x: "quarter",
+            series: budgetSeries,
+            width: 560,
+            height: 280,
+            tooltipMode: "item",
+        });
+
+        expect(state.hasNamedStacks).toBe(true);
+
+        // Tallest individual stack is Q2 "actual" = 90 + 90 = 180.
+        // Combined side-by-side sum would be 280 — domain must fit 180 and NOT expand to 280.
+        expect(state.yScale.domain[0]).toBe(0);
+        expect(state.yScale.domain[1]).toBeGreaterThanOrEqual(180);
+        expect(state.yScale.domain[1]).toBeLessThan(280);
+
+        // Item-mode activeAnchor for actualBonus at Q1 (actualCore=80, actualBonus=70 -> midpoint 115)
+        // must be computed strictly within the "actual" stack, ignoring "plan".
+        state.setActiveIndex(0);
+        state.setActiveSeries("actualBonus");
+        expect(state.activeAnchor).not.toBeNull();
+        expect(state.activeAnchor?.plotY).toBeCloseTo(state.yScale.scale(115), 3);
+
+        // Hiding both series in "actual" removes "actual" from the domain calculation -> max drops to "plan" = 100
+        state.toggleSeries("actualCore");
+        state.toggleSeries("actualBonus");
+        expect(state.hasNamedStacks).toBe(true);
+        expect(state.yScale.domain[1]).toBeGreaterThanOrEqual(100);
+        expect(state.yScale.domain[1]).toBeLessThan(180);
+
+        // Hiding all named-stack series sets hasNamedStacks to false
+        state.toggleSeries("planCore");
+        state.toggleSeries("planBonus");
+        expect(state.hasNamedStacks).toBe(false);
+
+        // showAllSeries restores named stacks and full domain
+        state.showAllSeries();
+        expect(state.hasNamedStacks).toBe(true);
+        expect(state.yScale.domain[1]).toBeGreaterThanOrEqual(180);
+        expect(state.yScale.domain[1]).toBeLessThan(280);
     });
 });

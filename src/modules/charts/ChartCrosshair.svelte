@@ -76,12 +76,17 @@
     });
 
     const stackedLeftLookup = $derived.by((): Readonly<Record<string, number>> | null => {
-        if (!showDots || !chart.stacked || chart.activeIndex === null || chart.leftSeries.length === 0) {
+        if (!showDots || chart.activeIndex === null || chart.leftSeries.length === 0) {
             return null;
         }
+        const stackableLeft = chart.leftSeries.filter(
+            (item) => item.type !== "bar" && chart.isMarkTypeStacked(item.type),
+        );
+        if (stackableLeft.length === 0) return null;
+
         const index = chart.activeIndex;
         const { layers } = computeStackedSeries(
-            chart.leftSeries.map((item) => ({
+            stackableLeft.map((item) => ({
                 id: item.id,
                 values: chart.data.map((datum, datumIndex) =>
                     chart.extractSeriesValue(item, datum, datumIndex),
@@ -107,8 +112,13 @@
 
         const xCenter = chart.xScale.center(activeXValue);
         const dots: ActivePointDot[] = [];
+        const targetSeries =
+            chart.tooltipMode === "item" && chart.activeSeriesId !== null
+                ? chart.visibleSeries.filter((item) => item.id === chart.activeSeriesId)
+                : chart.visibleSeries;
 
-        for (const seriesItem of chart.visibleSeries) {
+        for (const seriesItem of targetSeries) {
+            if (seriesItem.type === "bar") continue;
             const rawValue = chart.extractSeriesValue(seriesItem, datum, index);
             if (rawValue === null) continue;
 

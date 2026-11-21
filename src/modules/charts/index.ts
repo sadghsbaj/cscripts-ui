@@ -3,9 +3,14 @@ import type { HTMLAttributes, SVGAttributes } from "svelte/elements";
 
 import type { NumberMorphFormat } from "../number-morph/index.ts";
 import type {
+    ChartAnnotationConfig,
     ChartAreaMode,
     ChartAxisConfig,
     ChartAxisPosition,
+    ChartBarInsideLabelOrientation,
+    ChartBarLabelLayout,
+    ChartBarMode,
+    ChartBarValueLabels,
     ChartCurve,
     ChartDatum,
     ChartLegendMarker,
@@ -15,15 +20,20 @@ import type {
     ChartMonotoneHue,
     ChartOrientation,
     ChartPalette,
+    ChartReferenceBandConfig,
+    ChartReferenceLineConfig,
     ChartSeries,
     ChartSize,
     ChartState,
     ChartTickAngle,
     ChartTitleElement,
+    ChartTone,
     ChartTooltipContext,
+    ChartTooltipMode,
     ChartVariant,
     ChartXScaleType,
     ChartXValue,
+    ChartZeroLineStyle,
 } from "./chart-state.svelte.ts";
 
 export { default as Chart } from "./Chart.svelte";
@@ -37,6 +47,10 @@ export { default as ChartGrid } from "./ChartGrid.svelte";
 export { default as ChartAxis } from "./ChartAxis.svelte";
 export { default as ChartLine } from "./ChartLine.svelte";
 export { default as ChartArea } from "./ChartArea.svelte";
+export { default as ChartBar } from "./ChartBar.svelte";
+export { default as ChartReferenceLine } from "./ChartReferenceLine.svelte";
+export { default as ChartReferenceBand } from "./ChartReferenceBand.svelte";
+export { default as ChartAnnotation } from "./ChartAnnotation.svelte";
 export { default as ChartCrosshair } from "./ChartCrosshair.svelte";
 export { default as ChartTooltip } from "./ChartTooltip.svelte";
 export { default as ChartOverlay } from "./ChartOverlay.svelte";
@@ -44,6 +58,8 @@ export { default as ChartEmpty } from "./ChartEmpty.svelte";
 export { default as ChartLoading } from "./ChartLoading.svelte";
 export { default as LineChart } from "./LineChart.svelte";
 export { default as AreaChart } from "./AreaChart.svelte";
+export { default as BarChart } from "./BarChart.svelte";
+export { default as ComposedChart } from "./ComposedChart.svelte";
 
 export {
     getChartContext,
@@ -64,11 +80,16 @@ export {
     CHART_CURVES,
     CHART_ORIENTATIONS,
     CHART_BAR_MODES,
+    CHART_BAR_VALUE_LABELS,
+    CHART_BAR_INSIDE_LABEL_ORIENTATIONS,
+    CHART_BAR_LABEL_LAYOUTS,
     CHART_AREA_MODES,
     CHART_AXIS_POSITIONS,
     CHART_LEGEND_POSITIONS,
     CHART_LEGEND_PLACEMENTS,
     CHART_LEGEND_MARKERS,
+    CHART_TOOLTIP_MODES,
+    CHART_ZERO_LINE_STYLES,
     CHART_X_SCALE_TYPES,
     CHART_TICK_ANGLES,
     CHART_TITLE_ELEMENTS,
@@ -80,17 +101,24 @@ export {
     type ChartCurve,
     type ChartOrientation,
     type ChartBarMode,
+    type ChartBarValueLabelsMode,
+    type ChartBarValueLabels,
+    type ChartBarInsideLabelOrientation,
+    type ChartBarLabelLayout,
     type ChartAreaMode,
     type ChartAxisPosition,
     type ChartLegendPosition,
     type ChartLegendPlacement,
     type ChartLegendMarker,
+    type ChartTooltipMode,
+    type ChartZeroLineStyle,
     type ChartXScaleType,
     type ChartResolvedXScaleType,
     type ChartTickAngle,
     type ChartTitleElement,
     type ChartDatum,
     type ChartXValue,
+    type ChartSeriesType,
     type ChartAxisDomainBound,
     type ChartAxisDomain,
     type ChartMargins,
@@ -102,6 +130,7 @@ export {
     type ChartAxisConfig,
     type ChartReferenceLineConfig,
     type ChartReferenceBandConfig,
+    type ChartAnnotationConfig,
     type ChartTooltipItem,
     type ChartTooltipContext,
     type ChartSlice,
@@ -129,6 +158,7 @@ export type ChartProps<TDatum = ChartDatum> = Omit<HTMLAttributes<HTMLElement>, 
     hiddenSeriesIds?: readonly string[];
     activeIndex?: number | null;
     hoveredSeriesId?: string | null;
+    tooltipMode?: ChartTooltipMode;
     loading?: boolean;
     empty?: boolean;
     label?: string;
@@ -212,7 +242,7 @@ export type ChartGridProps = Omit<SVGAttributes<SVGGElement>, "children"> & {
     ref?: SVGGElement | null;
     horizontal?: boolean;
     vertical?: boolean;
-    zeroLine?: boolean;
+    zeroLine?: boolean | ChartZeroLineStyle;
     tickCount?: number;
 };
 
@@ -249,17 +279,18 @@ export type ChartLoadingProps = Omit<HTMLAttributes<HTMLDivElement>, "children">
 
 export type ChartLineDotsMode = boolean | "active";
 
-export type ChartGridOption =
-    | boolean
-    | {
-          horizontal?: boolean;
-          vertical?: boolean;
-          zeroLine?: boolean;
-      };
+export interface ChartGridConfig {
+    horizontal?: boolean;
+    vertical?: boolean;
+    zeroLine?: boolean | ChartZeroLineStyle;
+}
+
+export type ChartGridOption = boolean | ChartGridConfig;
 
 export type ChartLineProps<TDatum = ChartDatum> = Omit<SVGAttributes<SVGGElement>, "children"> & {
     ref?: SVGGElement | null;
     seriesId?: string;
+    seriesIds?: readonly string[];
     curve?: ChartCurve;
     strokeWidth?: number;
     dashed?: boolean;
@@ -269,10 +300,15 @@ export type ChartLineProps<TDatum = ChartDatum> = Omit<SVGAttributes<SVGGElement
     formatLabel?: (value: number, datum: TDatum, series: ChartSeries<TDatum>) => string;
 };
 
+export const CHART_AREA_PARTS = ["all", "fill", "line"] as const;
+export type ChartAreaPart = (typeof CHART_AREA_PARTS)[number];
+
 export type ChartAreaProps = Omit<SVGAttributes<SVGGElement>, "children"> & {
     ref?: SVGGElement | null;
     seriesId?: string;
+    seriesIds?: readonly string[];
     mode?: ChartAreaMode;
+    part?: ChartAreaPart;
     curve?: ChartCurve;
     gradient?: boolean;
     showLine?: boolean;
@@ -280,6 +316,65 @@ export type ChartAreaProps = Omit<SVGAttributes<SVGGElement>, "children"> & {
     dashed?: boolean;
     connectNulls?: boolean;
     showDots?: ChartLineDotsMode;
+};
+
+export type ChartBarProps<TDatum = ChartDatum> = Omit<SVGAttributes<SVGGElement>, "children"> & {
+    ref?: SVGGElement | null;
+    seriesId?: string;
+    seriesIds?: readonly string[];
+    mode?: ChartBarMode;
+    radius?: number;
+    maxBarWidth?: number;
+    barGap?: number;
+    minBarLength?: number;
+    segmentGap?: number;
+    valueLabels?: ChartBarValueLabels;
+    insideLabelOrientation?: ChartBarInsideLabelOrientation;
+    formatLabel?: (value: number, datum: TDatum, series: ChartSeries<TDatum>) => string;
+    labelLayout?: ChartBarLabelLayout;
+};
+
+export type ChartReferenceLineProps = Omit<SVGAttributes<SVGGElement>, "children" | "color"> & {
+    ref?: SVGGElement | null;
+    axis?: "x" | "y" | "y2";
+    value: ChartXValue;
+    label?: string;
+    labelPosition?: "start" | "center" | "end";
+    tone?: ChartTone;
+    color?: string;
+    dashed?: boolean;
+};
+
+export const CHART_REFERENCE_BAND_PARTS = ["all", "fill", "label"] as const;
+export type ChartReferenceBandPart = (typeof CHART_REFERENCE_BAND_PARTS)[number];
+
+export type ChartReferenceBandProps = Omit<
+    SVGAttributes<SVGGElement>,
+    "children" | "from" | "to" | "color"
+> & {
+    ref?: SVGGElement | null;
+    axis?: "x" | "y" | "y2";
+    part?: ChartReferenceBandPart;
+    from: ChartXValue;
+    to: ChartXValue;
+    label?: string;
+    tone?: ChartTone;
+    color?: string;
+};
+
+export type ChartAnnotationProps = Omit<
+    SVGAttributes<SVGGElement>,
+    "children" | "x" | "y" | "dx" | "dy" | "color"
+> & {
+    ref?: SVGGElement | null;
+    x: ChartXValue;
+    y: number;
+    yAxis?: "left" | "right";
+    dx?: number;
+    dy?: number;
+    label: string;
+    tone?: ChartTone;
+    color?: string;
 };
 
 export type LineChartProps<TDatum = ChartDatum> = Omit<
@@ -300,12 +395,16 @@ export type LineChartProps<TDatum = ChartDatum> = Omit<
     connectNulls?: boolean;
     showLabels?: boolean;
     formatLabel?: (value: number, datum: TDatum, series: ChartSeries<TDatum>) => string;
+    referenceLines?: readonly ChartReferenceLineConfig[];
+    referenceBands?: readonly ChartReferenceBandConfig[];
+    annotations?: readonly ChartAnnotationConfig[];
     grid?: ChartGridOption;
     xAxis?: ChartAxisConfig;
     yAxis?: ChartAxisConfig;
     y2Axis?: ChartAxisConfig;
     legend?: ChartLegendPosition;
     tooltip?: boolean | Snippet<[ChartTooltipContext<TDatum>]>;
+    tooltipMode?: ChartTooltipMode;
     showTotal?: boolean;
     palette?: ChartPalette;
     monotone?: ChartMonotoneHue;
@@ -349,12 +448,133 @@ export type AreaChartProps<TDatum = ChartDatum> = Omit<
     strokeWidth?: number;
     showDots?: ChartLineDotsMode;
     connectNulls?: boolean;
+    referenceLines?: readonly ChartReferenceLineConfig[];
+    referenceBands?: readonly ChartReferenceBandConfig[];
+    annotations?: readonly ChartAnnotationConfig[];
     grid?: ChartGridOption;
     xAxis?: ChartAxisConfig;
     yAxis?: ChartAxisConfig;
     y2Axis?: ChartAxisConfig;
     legend?: ChartLegendPosition;
     tooltip?: boolean | Snippet<[ChartTooltipContext<TDatum>]>;
+    tooltipMode?: ChartTooltipMode;
+    showTotal?: boolean;
+    palette?: ChartPalette;
+    monotone?: ChartMonotoneHue;
+    title?: string;
+    description?: string;
+    actions?: Snippet;
+    height?: number | string;
+    aspectRatio?: string;
+    margin?: Partial<ChartMargins>;
+    loading?: boolean;
+    empty?: boolean;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    interactive?: boolean;
+    onPointClick?: (datum: TDatum, index: number) => void;
+    hiddenSeriesIds?: readonly string[];
+    activeIndex?: number | null;
+    hoveredSeriesId?: string | null;
+    label?: string;
+    labelledBy?: string;
+    children?: Snippet;
+    overlay?: Snippet;
+};
+
+export type BarChartProps<TDatum = ChartDatum> = Omit<
+    HTMLAttributes<HTMLElement>,
+    "children" | "title"
+> & {
+    ref?: HTMLElement | null;
+    svgRef?: SVGSVGElement | null;
+    variant: ChartVariant;
+    size: ChartSize;
+    data: readonly TDatum[];
+    x: keyof TDatum | ((datum: TDatum, index: number) => ChartXValue);
+    xScaleType?: ChartXScaleType;
+    series: readonly ChartSeries<TDatum>[];
+    orientation?: ChartOrientation;
+    mode?: ChartBarMode;
+    radius?: number;
+    maxBarWidth?: number;
+    barGap?: number;
+    minBarLength?: number;
+    segmentGap?: number;
+    valueLabels?: ChartBarValueLabels;
+    insideLabelOrientation?: ChartBarInsideLabelOrientation;
+    formatLabel?: (value: number, datum: TDatum, series: ChartSeries<TDatum>) => string;
+    labelLayout?: ChartBarLabelLayout;
+    referenceLines?: readonly ChartReferenceLineConfig[];
+    referenceBands?: readonly ChartReferenceBandConfig[];
+    annotations?: readonly ChartAnnotationConfig[];
+    grid?: ChartGridOption;
+    xAxis?: ChartAxisConfig;
+    yAxis?: ChartAxisConfig;
+    y2Axis?: ChartAxisConfig;
+    legend?: ChartLegendPosition;
+    tooltip?: boolean | Snippet<[ChartTooltipContext<TDatum>]>;
+    tooltipMode?: ChartTooltipMode;
+    showTotal?: boolean;
+    palette?: ChartPalette;
+    monotone?: ChartMonotoneHue;
+    title?: string;
+    description?: string;
+    actions?: Snippet;
+    height?: number | string;
+    aspectRatio?: string;
+    margin?: Partial<ChartMargins>;
+    loading?: boolean;
+    empty?: boolean;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    interactive?: boolean;
+    onPointClick?: (datum: TDatum, index: number) => void;
+    hiddenSeriesIds?: readonly string[];
+    activeIndex?: number | null;
+    hoveredSeriesId?: string | null;
+    label?: string;
+    labelledBy?: string;
+    children?: Snippet;
+    overlay?: Snippet;
+};
+
+export type ComposedChartProps<TDatum = ChartDatum> = Omit<
+    HTMLAttributes<HTMLElement>,
+    "children" | "title"
+> & {
+    ref?: HTMLElement | null;
+    svgRef?: SVGSVGElement | null;
+    variant: ChartVariant;
+    size: ChartSize;
+    data: readonly TDatum[];
+    x: keyof TDatum | ((datum: TDatum, index: number) => ChartXValue);
+    xScaleType?: ChartXScaleType;
+    series: readonly ChartSeries<TDatum>[];
+    curve?: ChartCurve;
+    barMode?: ChartBarMode;
+    areaMode?: ChartAreaMode;
+    strokeWidth?: number;
+    showDots?: ChartLineDotsMode;
+    connectNulls?: boolean;
+    gradient?: boolean;
+    showAreaLine?: boolean;
+    barRadius?: number;
+    maxBarWidth?: number;
+    barGap?: number;
+    minBarLength?: number;
+    segmentGap?: number;
+    valueLabels?: ChartBarValueLabels;
+    referenceLines?: readonly ChartReferenceLineConfig[];
+    referenceBands?: readonly ChartReferenceBandConfig[];
+    annotations?: readonly ChartAnnotationConfig[];
+    grid?: ChartGridOption;
+    xAxis?: ChartAxisConfig;
+    yAxis?: ChartAxisConfig;
+    y2Axis?: ChartAxisConfig;
+    legend?: ChartLegendPosition;
+    tooltip?: boolean | Snippet<[ChartTooltipContext<TDatum>]>;
+    tooltipMode?: ChartTooltipMode;
     showTotal?: boolean;
     palette?: ChartPalette;
     monotone?: ChartMonotoneHue;

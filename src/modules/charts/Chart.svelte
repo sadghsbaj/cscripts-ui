@@ -29,6 +29,7 @@
         hiddenSeriesIds = $bindable(),
         activeIndex = $bindable(),
         hoveredSeriesId = $bindable(),
+        tooltipMode,
         loading = false,
         empty,
         label,
@@ -60,6 +61,7 @@
         if (orientation !== undefined) chartState.orientation = orientation;
         if (stacked !== undefined) chartState.stacked = stacked;
         if (margin !== undefined) chartState.marginOverrides = margin;
+        if (tooltipMode !== undefined) chartState.tooltipMode = tooltipMode;
     });
 
     $effect.pre(() => {
