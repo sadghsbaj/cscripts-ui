@@ -1,0 +1,254 @@
+@layer attachments {
+    :root {
+        --cs-dnd-handle-cursor: grab;
+        --cs-dnd-active-cursor: grabbing;
+        --cs-dnd-thumbnail-shadow: var(--cs-shadow-floating);
+        --cs-dnd-thumbnail-scale: 1.02;
+        --cs-dnd-thumbnail-rotate: 0deg;
+        --cs-dnd-thumbnail-opacity: 1;
+        --cs-dnd-thumbnail-radius: inherit;
+        --cs-dnd-placeholder-opacity: 0.35;
+        --cs-dnd-drop-valid-bg: var(--cs-color-accent-soft);
+        --cs-dnd-drop-valid-ring: var(--cs-color-accent-solid);
+        --cs-dnd-drop-invalid-bg: var(--cs-color-negative-soft);
+        --cs-dnd-drop-invalid-ring: var(--cs-color-negative-solid);
+        --cs-dnd-indicator-bg: var(--cs-color-accent-solid);
+        --cs-dnd-indicator-thickness: 2px;
+        --cs-dnd-indicator-radius: var(--cs-radius-full);
+        --cs-dnd-indicator-inside-bg: var(--cs-color-accent-soft);
+        --cs-dnd-tree-base-inset: 12px;
+        --cs-dnd-tree-indent: 20px;
+        --cs-dnd-indicator-dot-size: 6px;
+        --cs-dnd-indicator-inset-start: 0px;
+        --cs-dnd-pickup-dur: var(--cs-dur-160);
+        --cs-dnd-pickup-ease: var(--cs-ease-quart-out);
+        --cs-dnd-flip-dur: var(--cs-dur-240);
+        --cs-dnd-flip-ease: var(--cs-ease-quart-out);
+        --cs-dnd-settle-dur: var(--cs-dur-200);
+        --cs-dnd-settle-ease: var(--cs-ease-quart-out);
+        --cs-dnd-cancel-dur: var(--cs-dur-240);
+        --cs-dnd-cancel-ease: var(--cs-ease-quart-out);
+    }
+
+    /* Global cursor & selection lock while a pointer drag is active */
+    html[data-dnd-active],
+    html[data-dnd-active] * {
+        cursor: var(--cs-dnd-active-cursor, grabbing) !important;
+        user-select: none !important;
+    }
+
+    /* Explicit drag handles */
+    [data-dnd-handle] {
+        cursor: var(--cs-dnd-handle-cursor, grab);
+        touch-action: none;
+        user-select: none;
+    }
+
+    [data-dnd-handle][data-disabled] {
+        cursor: default;
+    }
+
+    /* Pre-drag readiness compression (emitted only when activation.delay > 0) */
+    [data-dnd-item][data-pending] {
+        scale: 0.985;
+        transition: scale var(--cs-dur-press) var(--cs-ease-press);
+    }
+
+    /* Origin item placeholder stays in flow holding exact geometry */
+    [data-dnd-item][data-dragging] {
+        opacity: var(--cs-dnd-placeholder-opacity, 0.35);
+    }
+
+    /* Top-Layer popover="manual" host with strict UA reset & fixed fallback */
+    .cs-dnd-thumbnail-host {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        overflow: visible;
+        pointer-events: none;
+    }
+
+    .cs-dnd-thumbnail-host::backdrop {
+        display: none;
+    }
+
+    /* Elevated floating drag thumbnail (independent scale/rotate so pickup WAAPI never blocks transform translation) */
+    .cs-dnd-thumbnail {
+        position: fixed;
+        top: 0;
+        left: 0;
+        margin: 0;
+        box-sizing: border-box;
+        pointer-events: none;
+        will-change: transform, scale;
+        transform-origin: center center;
+        scale: var(--cs-dnd-thumbnail-scale, 1.02);
+        rotate: var(--cs-dnd-thumbnail-rotate, 0deg);
+        box-shadow: var(--cs-dnd-thumbnail-shadow, var(--cs-shadow-floating));
+        opacity: var(--cs-dnd-thumbnail-opacity, 1);
+        border-radius: var(--cs-dnd-thumbnail-radius, inherit);
+    }
+
+    /* Table-row clone wrapper preserves fixed column widths and cell layout */
+    .cs-dnd-thumbnail-table {
+        table-layout: fixed;
+        border-spacing: 0;
+    }
+
+    /* Free dropzone feedback (borderless inset ring via ::after) */
+    [data-dnd-droppable][data-layout="free"] {
+        position: relative;
+        transition: background-color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+    }
+
+    [data-dnd-droppable][data-layout="free"]::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        corner-shape: inherit;
+        pointer-events: none;
+        transition: box-shadow var(--cs-dur-effect-fast) var(--cs-ease-effect);
+    }
+
+    [data-dnd-droppable][data-layout="free"][data-over][data-drop-valid] {
+        background-color: var(--cs-dnd-drop-valid-bg, var(--cs-color-accent-soft));
+    }
+
+    [data-dnd-droppable][data-layout="free"][data-over][data-drop-valid]::after {
+        box-shadow: inset 0 0 0 2px var(--cs-dnd-drop-valid-ring, var(--cs-color-accent-solid));
+    }
+
+    [data-dnd-droppable][data-layout="free"][data-over][data-drop-invalid] {
+        background-color: var(--cs-dnd-drop-invalid-bg, var(--cs-color-negative-soft));
+    }
+
+    [data-dnd-droppable][data-layout="free"][data-over][data-drop-invalid]::after {
+        box-shadow: inset 0 0 0 2px var(--cs-dnd-drop-invalid-ring, var(--cs-color-negative-solid));
+    }
+
+    /* Tree & opt-in list/grid drop indicators */
+    [data-dnd-item][data-drop-position="before"],
+    [data-dnd-item][data-drop-position="after"] {
+        position: relative;
+    }
+
+    [data-dnd-item][data-drop-position="before"]::after,
+    [data-dnd-item][data-drop-position="after"]::after {
+        content: "";
+        position: absolute;
+        inset-inline: 0;
+        height: var(--cs-dnd-indicator-thickness, 2px);
+        background-color: var(--cs-dnd-indicator-bg, var(--cs-color-accent-solid));
+        border-radius: var(--cs-dnd-indicator-radius, var(--cs-radius-full));
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    [data-dnd-item][data-drop-position="before"]::after {
+        top: calc(var(--cs-dnd-indicator-thickness, 2px) / -2);
+    }
+
+    [data-dnd-item][data-drop-position="after"]::after {
+        bottom: calc(var(--cs-dnd-indicator-thickness, 2px) / -2);
+    }
+
+    /* Horizontal list orientation rotates before/after indicators vertically */
+    [data-dnd-droppable][data-orientation="horizontal"] [data-dnd-item][data-drop-position="before"]::after,
+    [data-dnd-droppable][data-orientation="horizontal"] [data-dnd-item][data-drop-position="after"]::after {
+        inset-block: 0;
+        inset-inline: auto;
+        top: 0;
+        bottom: 0;
+        width: var(--cs-dnd-indicator-thickness, 2px);
+        height: auto;
+    }
+
+    [data-dnd-droppable][data-orientation="horizontal"] [data-dnd-item][data-drop-position="before"]::after {
+        inset-inline-start: calc(var(--cs-dnd-indicator-thickness, 2px) / -2);
+    }
+
+    [data-dnd-droppable][data-orientation="horizontal"] [data-dnd-item][data-drop-position="after"]::after {
+        inset-inline-end: calc(var(--cs-dnd-indicator-thickness, 2px) / -2);
+    }
+
+    /* Table rows use inset box-shadow instead of ::after for reliable table-layout rendering */
+    tr[data-dnd-item][data-drop-position="before"]::after,
+    tr[data-dnd-item][data-drop-position="after"]::after {
+        content: none;
+    }
+
+    tr[data-dnd-item][data-drop-position="before"] {
+        box-shadow: inset 0 var(--cs-dnd-indicator-thickness, 2px) 0 0 var(--cs-dnd-indicator-bg, var(--cs-color-accent-solid));
+    }
+
+    tr[data-dnd-item][data-drop-position="after"] {
+        box-shadow: inset 0 calc(var(--cs-dnd-indicator-thickness, 2px) * -1) 0 0
+            var(--cs-dnd-indicator-bg, var(--cs-color-accent-solid));
+    }
+
+    /* Depth-aware nested tree drop indicators (hollow anchor ring + flush accent bar) */
+    [data-dnd-droppable][data-layout="tree"] [data-dnd-item][data-drop-position="before"],
+    [data-dnd-droppable][data-layout="tree"] [data-dnd-item][data-drop-position="after"] {
+        --cs-dnd-indicator-inset-start: calc(
+            var(--cs-dnd-tree-base-inset, 12px) + var(--cs-dnd-target-depth, 0) * var(--cs-dnd-tree-indent, 20px)
+        );
+    }
+
+    [data-dnd-droppable][data-layout="tree"] [data-dnd-item][data-drop-position="before"]::before,
+    [data-dnd-droppable][data-layout="tree"] [data-dnd-item][data-drop-position="after"]::before {
+        content: "";
+        position: absolute;
+        inset-inline-start: calc(var(--cs-dnd-indicator-inset-start) - var(--cs-dnd-indicator-dot-size, 6px) / 2);
+        width: var(--cs-dnd-indicator-dot-size, 6px);
+        height: var(--cs-dnd-indicator-dot-size, 6px);
+        border-radius: var(--cs-radius-full);
+        background-color: var(--cs-color-elevated);
+        box-shadow: inset 0 0 0 2px var(--cs-dnd-indicator-bg, var(--cs-color-accent-solid));
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    [data-dnd-droppable][data-layout="tree"] [data-dnd-item][data-drop-position="before"]::before {
+        top: calc(var(--cs-dnd-indicator-dot-size, 6px) / -2);
+    }
+
+    [data-dnd-droppable][data-layout="tree"] [data-dnd-item][data-drop-position="after"]::before {
+        bottom: calc(var(--cs-dnd-indicator-dot-size, 6px) / -2);
+    }
+
+    [data-dnd-droppable][data-layout="tree"] [data-dnd-item][data-drop-position="before"]::after,
+    [data-dnd-droppable][data-layout="tree"] [data-dnd-item][data-drop-position="after"]::after {
+        inset-inline-start: calc(var(--cs-dnd-indicator-inset-start) + var(--cs-dnd-indicator-dot-size, 6px) / 2);
+        inset-inline-end: 4px;
+    }
+
+    /* Tree nesting indicator */
+    [data-dnd-item][data-drop-position="inside"] {
+        background-color: var(--cs-dnd-indicator-inside-bg, var(--cs-color-accent-soft));
+        box-shadow: inset 0 0 0 1.5px var(--cs-dnd-indicator-bg, var(--cs-color-accent-solid));
+        transition:
+            background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+            box-shadow var(--cs-dur-effect-fast) var(--cs-ease-effect);
+    }
+
+    /* Visually hidden screen-reader announcer & instructions */
+    .cs-dnd-announcer {
+        position: fixed;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        border: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        pointer-events: none;
+    }
+}
