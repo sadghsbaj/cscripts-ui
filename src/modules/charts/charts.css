@@ -147,6 +147,9 @@
             --cs-chart-bar-group-gap: 3px;
             --cs-chart-tooltip-radius: 12px;
             --cs-chart-tooltip-padding: 8px 10px;
+            --cs-chart-center-value-size: 22px;
+            --cs-chart-center-value-lh: 26px;
+            --cs-chart-center-label-size: 11px;
         }
 
         &[data-size="md"] {
@@ -169,6 +172,9 @@
             --cs-chart-bar-group-gap: 4px;
             --cs-chart-tooltip-radius: 12px;
             --cs-chart-tooltip-padding: 8px 10px;
+            --cs-chart-center-value-size: 26px;
+            --cs-chart-center-value-lh: 30px;
+            --cs-chart-center-label-size: 12px;
         }
 
         &[data-size="lg"] {
@@ -191,6 +197,9 @@
             --cs-chart-bar-group-gap: 5px;
             --cs-chart-tooltip-radius: 14px;
             --cs-chart-tooltip-padding: 10px 12px;
+            --cs-chart-center-value-size: 32px;
+            --cs-chart-center-value-lh: 36px;
+            --cs-chart-center-label-size: 12px;
         }
 
         /* =========================================================
@@ -1391,6 +1400,179 @@
     }
 
     /* =========================================================
+     * POLAR / DONUT & PIE MARKS
+     * ========================================================= */
+    .cs-chart-polar-body {
+        align-items: center;
+
+        & > .cs-chart-polar-stage,
+        & > .cs-chart-empty,
+        & > .cs-chart-loading {
+            flex: 1 1 200px;
+        }
+
+        & > .cs-chart-donut-legend[data-position="end"] {
+            flex: 0 1 180px;
+            align-self: center;
+            min-inline-size: 132px;
+        }
+    }
+
+    .cs-chart-polar-stage {
+        position: relative;
+        flex: 1 1 auto;
+        inline-size: 100%;
+        min-inline-size: 0;
+        block-size: var(--cs-chart-plot-height, 260px);
+
+        &:focus-visible {
+            outline-offset: -2px;
+            border-radius: max(6px, calc(var(--cs-chart-radius, 0px) - var(--cs-chart-padding, 0px)));
+        }
+    }
+
+    .cs-chart-arc-group {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: cs-chart-arc-enter var(--cs-chart-dur-arc, var(--cs-chart-dur-draw, 540ms))
+            var(--cs-chart-ease-draw, var(--cs-ease-expo-out)) both;
+    }
+
+    .cs-chart-arc-slice {
+        stroke: none;
+        transition:
+            opacity var(--cs-dur-effect) var(--cs-ease-effect),
+            d var(--cs-dur-180) var(--cs-ease-cubic-out);
+
+        .cs-chart-arc[data-pie]:not([data-single]) & {
+            stroke: var(--cs-chart-point-ring-bg);
+            stroke-width: 1.5px;
+            stroke-linejoin: round;
+        }
+
+        &[data-dimmed] {
+            opacity: var(--cs-chart-dim-opacity);
+        }
+    }
+
+    .cs-chart-arc-label {
+        fill: var(--cs-chart-inside-label-fg);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-value-label-size, 11px);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums lining-nums;
+        pointer-events: none;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-dimmed] {
+            opacity: var(--cs-chart-dim-opacity);
+        }
+    }
+
+    .cs-chart-center {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        text-align: center;
+        translate: -50% -50%;
+        pointer-events: none;
+        user-select: none;
+        animation: cs-chart-center-enter var(--cs-dur-enter-sm) var(--cs-ease-enter) 100ms both;
+    }
+
+    .cs-chart-center-label {
+        max-inline-size: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--cs-color-text-weak);
+        font-size: var(--cs-chart-center-label-size, 12px);
+        font-weight: 400;
+        line-height: 16px;
+    }
+
+    .cs-chart-center-value {
+        max-inline-size: 100%;
+        color: var(--cs-color-text-strong);
+        font-size: var(--cs-chart-center-value-size, 26px);
+        font-weight: 600;
+        line-height: var(--cs-chart-center-value-lh, 30px);
+        letter-spacing: -0.025em;
+        font-variant-numeric: tabular-nums lining-nums;
+        white-space: nowrap;
+    }
+
+    .cs-chart-center-share {
+        min-block-size: 14px;
+        color: var(--cs-color-text-weak);
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 14px;
+        font-variant-numeric: tabular-nums lining-nums;
+
+        &[data-empty] {
+            visibility: hidden;
+        }
+    }
+
+    .cs-chart-donut-legend[data-position="end"] {
+        align-items: stretch;
+
+        & .cs-chart-donut-legend-item {
+            inline-size: 100%;
+            justify-content: flex-start;
+        }
+    }
+
+    .cs-chart-donut-legend-item {
+        & .cs-chart-legend-label {
+            min-inline-size: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    .cs-chart-donut-legend-share {
+        margin-inline-start: auto;
+        padding-inline-start: 6px;
+        color: var(--cs-color-text-weak);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums lining-nums;
+
+        .cs-chart-donut-legend-item[data-active] &,
+        .cs-chart-donut-legend-item:not([data-static]):hover & {
+            color: var(--cs-color-text-strong);
+        }
+
+        .cs-chart-donut-legend-item[data-hidden] & {
+            color: var(--cs-color-disabled-fg);
+        }
+    }
+
+    .cs-chart-donut-tooltip-share {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-block-start: 6px;
+        padding-block-start: 6px;
+        color: var(--cs-color-text-weak);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: round(up, 16px, 1px);
+        box-shadow: inset 0 1px 0 0 var(--cs-chart-grid);
+    }
+
+    .cs-chart-donut-tooltip-share-value {
+        color: var(--cs-color-text-strong);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    /* =========================================================
      * PLOT OVERLAY & LIVE REGION
      * ========================================================= */
     .cs-chart-overlay {
@@ -1451,6 +1633,28 @@
         }
         to {
             transform: scaleX(1);
+        }
+    }
+
+    @keyframes cs-chart-arc-enter {
+        from {
+            opacity: 0;
+            transform: scale(0.92) rotate(-18deg);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+    }
+
+    @keyframes cs-chart-center-enter {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 }

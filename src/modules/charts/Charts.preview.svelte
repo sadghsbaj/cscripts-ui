@@ -35,6 +35,7 @@
         ChartTitle,
         ChartTooltip,
         ComposedChart,
+        DonutChart,
         LineChart,
         type ChartAnnotationConfig,
         type ChartAreaMode,
@@ -288,6 +289,50 @@
         },
     ];
 
+    interface RevenueSegmentDatum {
+        segment: string;
+        revenue: number;
+    }
+
+    interface BudgetAllocationDatum {
+        category: string;
+        amount: number;
+    }
+
+    interface InvoiceStatusDatum {
+        status: string;
+        count: number;
+        tone: ChartTone;
+    }
+
+    const REVENUE_SEGMENT_DATA: readonly RevenueSegmentDatum[] = [
+        { segment: "Enterprise", revenue: 1_420_000 },
+        { segment: "Mid-Market", revenue: 890_000 },
+        { segment: "Self-Serve", revenue: 540_000 },
+        { segment: "Services", revenue: 310_000 },
+        { segment: "Partners", revenue: 215_000 },
+    ];
+
+    const BUDGET_ALLOCATION_DATA: readonly BudgetAllocationDatum[] = [
+        { category: "Engineering", amount: 460_000 },
+        { category: "Infrastructure", amount: 280_000 },
+        { category: "Go-to-Market", amount: 195_000 },
+        { category: "Operations", amount: 125_000 },
+    ];
+
+    const INVOICE_STATUS_DATA: readonly InvoiceStatusDatum[] = [
+        { status: "Paid on Time", count: 318, tone: "positive" },
+        { status: "Pending Review", count: 64, tone: "caution" },
+        { status: "Past Due", count: 28, tone: "negative" },
+    ];
+
+    const DONUT_CURRENCY_FORMAT = {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+    } as const;
+
     interface MonthlyDatum {
         month: string;
         revenue: number;
@@ -521,6 +566,9 @@
     let divergingZeroLine = $state<ChartZeroLineStyle>("solid");
     let horizontalLabelLayout = $state<ChartBarLabelLayout>("gutter");
     let composedTooltipMode = $state<ChartTooltipMode>("axis");
+    let donutShape = $state<"donut" | "pie">("donut");
+    let donutGap = $state(false);
+    let donutValueLabels = $state(false);
 
     const closeScript = ["</", "script>"].join("");
 
@@ -731,6 +779,40 @@ ${closeScript}
     height={320}
 />`;
 
+    const donutChartCode = `<script lang="ts">
+    import { DonutChart } from "cs/svelte/charts";
+
+    let shape = $state<"donut" | "pie">("donut");
+    let hasGap = $state(false);
+    let valueLabels = $state(false);
+
+    const currencyFormat = {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+    } as const;
+${closeScript}
+
+<DonutChart
+    variant="elevated"
+    size="md"
+    title="Revenue by Segment"
+    description="Annual recurring revenue distribution across customer tiers"
+    {data}
+    name="segment"
+    value="revenue"
+    innerRadiusRatio={shape === "donut" ? 0.68 : 0}
+    gap={hasGap ? 4 : 0}
+    centerMode="auto"
+    {valueLabels}
+    centerLabel="Total ARR"
+    numberFormat={currencyFormat}
+    locales="en-US"
+    legend="end"
+    height={280}
+/>`;
+
     const interactiveCode = `<script lang="ts">
     import { Badge, BadgeLabel } from "cs/svelte/badge";
     import {
@@ -844,7 +926,7 @@ ${closeScript}
 <div class="flex flex-col gap-10">
     <PreviewHeader
         title="Charts"
-        description="Borderless OKLCH chart shell, line, area, bar, and composed presets, reference overlays, responsive SVG canvas, interactive crosshair, top-layer tooltip, and legend."
+        description="Borderless OKLCH chart shell, line, area, bar, composed, and donut presets, reference overlays, responsive SVG canvas, interactive crosshair, top-layer tooltip, and legend."
     />
 
     <PreviewSection
@@ -1153,6 +1235,87 @@ ${closeScript}
                     </SegmentedControl>
                 {/snippet}
             </ComposedChart>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Donut & Pie"
+        description="Interactive donut and pie rings with morphing center KPI, percentage legend filtering, monotone ramps, and semantic slice tones."
+        code={donutChartCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8 flex flex-col gap-6">
+            <DonutChart
+                variant="elevated"
+                size="md"
+                title="Revenue by Segment"
+                description="Annual recurring revenue distribution across customer tiers"
+                data={REVENUE_SEGMENT_DATA}
+                name="segment"
+                value="revenue"
+                innerRadiusRatio={donutShape === "donut" ? 0.68 : 0}
+                gap={donutGap ? 4 : 0}
+                valueLabels={donutValueLabels}
+                centerLabel="Total ARR"
+                numberFormat={DONUT_CURRENCY_FORMAT}
+                locales="en-US"
+                legend="end"
+                height={280}
+            >
+                {#snippet actions()}
+                    <SegmentedControl size="xs" bind:value={donutShape} aria-label="Chart shape">
+                        <SegmentedControlItem value="donut">
+                            <SegmentedControlLabel>Donut</SegmentedControlLabel>
+                        </SegmentedControlItem>
+                        <SegmentedControlItem value="pie">
+                            <SegmentedControlLabel>Pie</SegmentedControlLabel>
+                        </SegmentedControlItem>
+                    </SegmentedControl>
+                    <ToggleButton variant="soft" color="accent" size="xs" bind:pressed={donutGap}>
+                        <ToggleButtonLabel>Gap</ToggleButtonLabel>
+                    </ToggleButton>
+                    <ToggleButton variant="soft" color="accent" size="xs" bind:pressed={donutValueLabels}>
+                        <ToggleButtonLabel>Value labels</ToggleButtonLabel>
+                    </ToggleButton>
+                {/snippet}
+            </DonutChart>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card variant="elevated" size="md">
+                    <CardHeader>
+                        <CardTitle>Budget Allocation</CardTitle>
+                        <CardDescription>Quarterly operating spend by department</CardDescription>
+                    </CardHeader>
+                    <CardBody>
+                        <DonutChart
+                            variant="sunken"
+                            size="sm"
+                            monotone="teal"
+                            data={BUDGET_ALLOCATION_DATA}
+                            name="category"
+                            value="amount"
+                            centerLabel="Budget"
+                            numberFormat={DONUT_CURRENCY_FORMAT}
+                            locales="en-US"
+                            legend="end"
+                            height={208}
+                        />
+                    </CardBody>
+                </Card>
+
+                <DonutChart
+                    variant="elevated"
+                    size="sm"
+                    title="Invoice Status"
+                    description="Current billing cycle health across accounts"
+                    data={INVOICE_STATUS_DATA}
+                    name="status"
+                    value="count"
+                    tone="tone"
+                    centerLabel="Invoices"
+                    legend="bottom"
+                    height={208}
+                />
+            </div>
         </div>
     </PreviewSection>
 

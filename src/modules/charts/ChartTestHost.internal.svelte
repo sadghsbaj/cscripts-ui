@@ -7,6 +7,7 @@
         Chart,
         ChartActions,
         ChartAnnotation,
+        ChartArc,
         ChartArea,
         ChartAxis,
         ChartBar,
@@ -25,8 +26,10 @@
         ChartTitle,
         ChartTooltip,
         ComposedChart,
+        DonutChart,
         LineChart,
         type ChartAnnotationConfig,
+        type ChartArcItem,
         type ChartAreaMode,
         type ChartAxisConfig,
         type ChartBarInsideLabelOrientation,
@@ -35,6 +38,9 @@
         type ChartBarValueLabels,
         type ChartCurve,
         type ChartDatum,
+        type ChartDonutCenterContext,
+        type ChartDonutCenterMode,
+        type ChartDonutTooltipContext,
         type ChartGridOption,
         type ChartLegendMarker,
         type ChartLegendPlacement,
@@ -44,6 +50,7 @@
         type ChartMonotoneHue,
         type ChartOrientation,
         type ChartPalette,
+        type ChartPolarSlice,
         type ChartReferenceBandConfig,
         type ChartReferenceLineConfig,
         type ChartSeries,
@@ -71,7 +78,9 @@
             | "line-chart"
             | "area-chart"
             | "bar-chart"
-            | "composed-chart";
+            | "composed-chart"
+            | "standalone-arc"
+            | "donut-chart";
 
         cardVariant?: CardVariant;
         cardSize?: CardSize;
@@ -316,6 +325,38 @@
         annotations?: readonly ChartAnnotationConfig[];
 
         composedShowAreaLine?: boolean;
+
+        arcRef?: SVGGElement | null;
+        arcSlices?: readonly ChartPolarSlice<ChartDatum>[];
+        arcWidth?: number;
+        arcHeight?: number;
+        arcInnerRadiusRatio?: number;
+        arcGap?: number;
+        arcPadAngle?: number;
+        arcCornerRadius?: number;
+        arcHoverExpand?: number;
+        arcSort?: boolean;
+        arcValueLabels?: boolean;
+        arcFormatValue?: (value: number, datum?: ChartDatum) => string;
+        arcInteractive?: boolean;
+        arcAttrs?: Record<string, unknown>;
+        onSliceHover?: (index: number | null, arc: ChartArcItem<ChartDatum> | null) => void;
+        onSliceClick?: (datum: ChartDatum, index: number, slice: ChartArcItem<ChartDatum>) => void;
+
+        donutValue?: string | ((datum: ChartDatum, index: number) => number | null | undefined);
+        donutName?: string | ((datum: ChartDatum, index: number) => string);
+        donutColor?: string | ((datum: ChartDatum, index: number) => string | undefined);
+        donutTone?: string | ((datum: ChartDatum, index: number) => ChartTone | undefined);
+        donutGap?: number;
+        donutCenterMode?: ChartDonutCenterMode;
+        donutCenterLabel?: string;
+        donutCenterValue?: number | string;
+        donutCenterRenderer?: (ctx: ChartDonutCenterContext<ChartDatum>) => string;
+        donutTooltipRenderer?: (ctx: ChartDonutTooltipContext<ChartDatum>) => string;
+        donutLegend?: ChartLegendPosition;
+        hiddenSliceIds?: readonly string[];
+        donutActiveIndex?: number | null;
+        hoveredSliceId?: string | null;
     }
 
     let {
@@ -556,6 +597,38 @@
         annotations,
 
         composedShowAreaLine = true,
+
+        arcRef = $bindable(null),
+        arcSlices,
+        arcWidth = 240,
+        arcHeight = 240,
+        arcInnerRadiusRatio,
+        arcGap,
+        arcPadAngle,
+        arcCornerRadius,
+        arcHoverExpand,
+        arcSort,
+        arcValueLabels,
+        arcFormatValue,
+        arcInteractive = true,
+        arcAttrs = {},
+        onSliceHover,
+        onSliceClick,
+
+        donutValue = "value",
+        donutName = "name",
+        donutColor,
+        donutTone,
+        donutGap,
+        donutCenterMode,
+        donutCenterLabel,
+        donutCenterValue,
+        donutCenterRenderer,
+        donutTooltipRenderer,
+        donutLegend,
+        hiddenSliceIds = $bindable<readonly string[]>([]),
+        donutActiveIndex = $bindable<number | null>(null),
+        hoveredSliceId = $bindable<string | null>(null),
     }: Props = $props();
 </script>
 
@@ -906,6 +979,14 @@
     {/if}
 {/snippet}
 
+{#snippet customDonutCenter(ctx: ChartDonutCenterContext<ChartDatum>)}
+    <div data-testid="custom-donut-center">{donutCenterRenderer?.(ctx)}</div>
+{/snippet}
+
+{#snippet customDonutTooltip(ctx: ChartDonutTooltipContext<ChartDatum>)}
+    <div data-testid="custom-donut-tooltip">{donutTooltipRenderer?.(ctx)}</div>
+{/snippet}
+
 {#if mode === "nested-in-card"}
     <Card variant={cardVariant} size={cardSize}>
         {@render chartContent()}
@@ -1180,6 +1261,84 @@
         {labelledBy}
         children={tier2CustomLayerText ? customTier2Layer : undefined}
         overlay={showOverlay ? customTier2Overlay : undefined}
+        class={chartClass}
+        {...chartAttrs}
+    />
+{:else if mode === "standalone-arc"}
+    <svg bind:this={svgRef} width={arcWidth} height={arcHeight}>
+        <ChartArc
+            bind:ref={arcRef}
+            slices={arcSlices}
+            {data}
+            value={donutValue}
+            name={donutName}
+            color={donutColor}
+            tone={donutTone}
+            width={arcWidth}
+            height={arcHeight}
+            innerRadiusRatio={arcInnerRadiusRatio}
+            gap={arcGap}
+            padAngle={arcPadAngle}
+            cornerRadius={arcCornerRadius}
+            hoverExpand={arcHoverExpand}
+            sort={arcSort}
+            valueLabels={arcValueLabels}
+            formatValue={arcFormatValue}
+            interactive={arcInteractive}
+            {activeIndex}
+            {hoveredSliceId}
+            {onSliceHover}
+            {onSliceClick}
+            {...arcAttrs}
+        />
+    </svg>
+{:else if mode === "donut-chart"}
+    <DonutChart
+        bind:ref={chartRef}
+        bind:svgRef
+        bind:hiddenSliceIds
+        bind:activeIndex={donutActiveIndex}
+        bind:hoveredSliceId
+        {variant}
+        {size}
+        data={data ?? []}
+        value={donutValue}
+        name={donutName}
+        color={donutColor}
+        tone={donutTone}
+        innerRadiusRatio={arcInnerRadiusRatio}
+        gap={donutGap ?? arcGap}
+        padAngle={arcPadAngle}
+        cornerRadius={arcCornerRadius}
+        hoverExpand={arcHoverExpand}
+        sort={arcSort}
+        centerMode={donutCenterMode}
+        centerLabel={donutCenterLabel}
+        centerValue={donutCenterValue}
+        center={donutCenterRenderer ? customDonutCenter : undefined}
+        numberFormat={tooltipNumberFormat}
+        locales={tooltipLocales}
+        formatValue={arcFormatValue}
+        valueLabels={arcValueLabels}
+        legend={donutLegend}
+        tooltip={donutTooltipRenderer ? customDonutTooltip : tier2Tooltip}
+        {tooltipMode}
+        {palette}
+        {monotone}
+        title={tier2Title}
+        description={tier2Description}
+        actions={showActions ? customTier2Actions : undefined}
+        height={tier2Height}
+        aspectRatio={tier2AspectRatio}
+        {loading}
+        {empty}
+        {emptyTitle}
+        {emptyDescription}
+        interactive={tier2Interactive}
+        {onSliceClick}
+        {label}
+        {labelledBy}
+        children={tier2CustomLayerText ? customTier2Layer : undefined}
         class={chartClass}
         {...chartAttrs}
     />

@@ -123,6 +123,7 @@ export interface ComputePieArcsOptions {
     slices: readonly PieSliceInput[];
     outerRadius: number;
     innerRadiusRatio?: number;
+    gap?: number;
     padAngle?: number;
     cornerRadius?: number;
     hoverExpandPx?: number;
@@ -777,6 +778,7 @@ export function computePieArcs(options: ComputePieArcsOptions): ChartArcGeometry
         slices,
         outerRadius,
         innerRadiusRatio = 0.64,
+        gap = 0,
         padAngle,
         cornerRadius,
         hoverExpandPx = 3,
@@ -803,26 +805,44 @@ export function computePieArcs(options: ComputePieArcsOptions): ChartArcGeometry
 
     if (total <= 0) return [];
 
-    const effectivePadAngle =
-        padAngle ?? (positiveSliceCount > 1 && innerRadius > 0 ? 2 / outerRadius : 0);
-    const effectiveCornerRadius = cornerRadius ?? (innerRadius > 0 ? 3 : 0);
+    const safeGap = Math.max(0, gap);
+    const safePadAngle = padAngle !== undefined ? Math.max(0, padAngle) : 0;
+    const hasMultipleSlices = positiveSliceCount > 1;
+    const useParallelGap = hasMultipleSlices && safeGap > 0;
+    const useExplicitPadAngle = hasMultipleSlices && !useParallelGap && safePadAngle > 0;
+
+    // Single 100% ring must close seamlessly with zero corner notch or gap.
+    const defaultCornerRadius =
+        hasMultipleSlices && (safeGap > 0 || safePadAngle > 0) && innerRadius > 0
+            ? Math.max(0, Math.min(4, Math.floor((outerRadius - innerRadius) / 4)))
+            : 0;
+    const effectiveCornerRadius = hasMultipleSlices
+        ? cornerRadius !== undefined
+            ? Math.max(0, cornerRadius)
+            : defaultCornerRadius
+        : 0;
 
     const pieGenerator = d3Pie<(typeof sanitized)[number]>()
         .value((item) => item.safeValue)
-        .padAngle(positiveSliceCount > 1 ? effectivePadAngle : 0);
+        .padAngle(useExplicitPadAngle ? safePadAngle : 0);
 
     if (!sort) {
         pieGenerator.sort(null);
     }
 
-    const baseArc = d3Arc<{ startAngle: number; endAngle: number }>()
+    type ArcDatum = { startAngle: number; endAngle: number; padAngle: number };
+
+    // Keep padRadius anchored to outerRadius on both base & hover arcs so gaps never widen on hover.
+    const baseArc = d3Arc<ArcDatum>()
         .innerRadius(innerRadius)
         .outerRadius(outerRadius)
+        .padRadius(outerRadius)
         .cornerRadius(effectiveCornerRadius);
 
-    const hoverArc = d3Arc<{ startAngle: number; endAngle: number }>()
+    const hoverArc = d3Arc<ArcDatum>()
         .innerRadius(innerRadius)
         .outerRadius(outerRadius + hoverExpandPx)
+        .padRadius(outerRadius)
         .cornerRadius(effectiveCornerRadius);
 
     const pieArcs = pieGenerator(sanitized);
@@ -830,7 +850,21 @@ export function computePieArcs(options: ComputePieArcsOptions): ChartArcGeometry
     return pieArcs
         .filter((entry) => entry.data.safeValue > 0)
         .map((entry) => {
-            const angles = { startAngle: entry.startAngle, endAngle: entry.endAngle };
+            let slicePadAngle = 0;
+            if (useParallelGap) {
+                const refRadius = innerRadius > 0 ? innerRadius : outerRadius;
+                const sliceSpan = entry.endAngle - entry.startAngle;
+                const sliceGap = Math.min(safeGap, sliceSpan * refRadius * 0.4);
+                slicePadAngle = outerRadius > 0 ? sliceGap / outerRadius : 0;
+            } else if (useExplicitPadAngle) {
+                slicePadAngle = entry.padAngle;
+            }
+
+            const angles: ArcDatum = {
+                startAngle: entry.startAngle,
+                endAngle: entry.endAngle,
+                padAngle: slicePadAngle,
+            };
             const [cx, cy] = baseArc.centroid(angles);
             return {
                 id: entry.data.id,

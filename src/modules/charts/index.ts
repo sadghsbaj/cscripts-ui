@@ -48,6 +48,7 @@ export { default as ChartAxis } from "./ChartAxis.svelte";
 export { default as ChartLine } from "./ChartLine.svelte";
 export { default as ChartArea } from "./ChartArea.svelte";
 export { default as ChartBar } from "./ChartBar.svelte";
+export { default as ChartArc } from "./ChartArc.svelte";
 export { default as ChartReferenceLine } from "./ChartReferenceLine.svelte";
 export { default as ChartReferenceBand } from "./ChartReferenceBand.svelte";
 export { default as ChartAnnotation } from "./ChartAnnotation.svelte";
@@ -60,6 +61,7 @@ export { default as LineChart } from "./LineChart.svelte";
 export { default as AreaChart } from "./AreaChart.svelte";
 export { default as BarChart } from "./BarChart.svelte";
 export { default as ComposedChart } from "./ComposedChart.svelte";
+export { default as DonutChart } from "./DonutChart.svelte";
 
 export {
     getChartContext,
@@ -597,4 +599,128 @@ export type ComposedChartProps<TDatum = ChartDatum> = Omit<
     labelledBy?: string;
     children?: Snippet;
     overlay?: Snippet;
+};
+
+
+export const CHART_DONUT_CENTER_MODES = ["auto", "total", "active"] as const;
+export type ChartDonutCenterMode = (typeof CHART_DONUT_CENTER_MODES)[number];
+
+export interface ChartPolarSlice<TDatum = ChartDatum> {
+    id: string;
+    label: string;
+    value: number;
+    color?: string;
+    tone?: ChartTone;
+    datum?: TDatum;
+}
+
+export interface ChartArcItem<TDatum = ChartDatum> {
+    id: string;
+    label: string;
+    index: number;
+    value: number;
+    share: number;
+    color: string;
+    startAngle: number;
+    endAngle: number;
+    midAngle: number;
+    centroid: readonly [number, number];
+    innerRadius: number;
+    outerRadius: number;
+    path: string;
+    hoverPath: string;
+    datum: TDatum;
+}
+
+export interface ChartDonutCenterContext<TDatum = ChartDatum> {
+    total: number;
+    activeSlice: ChartArcItem<TDatum> | null;
+    slices: readonly ChartArcItem<TDatum>[];
+    formatValue: (value: number, datum?: TDatum) => string;
+}
+
+export interface ChartDonutTooltipContext<TDatum = ChartDatum> {
+    slice: ChartArcItem<TDatum>;
+    total: number;
+    formattedValue: string;
+    formattedShare: string;
+}
+
+export type ChartArcProps<TDatum = ChartDatum> = Omit<
+    SVGAttributes<SVGGElement>,
+    "children" | "color" | "name" | "value"
+> & {
+    ref?: SVGGElement | null;
+    slices?: readonly ChartPolarSlice<TDatum>[];
+    data?: readonly TDatum[];
+    value?: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    name?: keyof TDatum | ((datum: TDatum, index: number) => string);
+    color?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined);
+    tone?: keyof TDatum | ((datum: TDatum, index: number) => ChartTone | undefined);
+    width?: number;
+    height?: number;
+    innerRadiusRatio?: number;
+    gap?: number;
+    padAngle?: number;
+    cornerRadius?: number;
+    hoverExpand?: number;
+    sort?: boolean;
+    valueLabels?: boolean;
+    formatValue?: (value: number, datum: TDatum) => string;
+    interactive?: boolean;
+    activeIndex?: number | null;
+    hoveredSliceId?: string | null;
+    onSliceHover?: (index: number | null, arc: ChartArcItem<TDatum> | null) => void;
+    onSliceClick?: (datum: TDatum, index: number, slice: ChartArcItem<TDatum>) => void;
+};
+
+export type DonutChartProps<TDatum = ChartDatum> = Omit<
+    HTMLAttributes<HTMLElement>,
+    "children" | "title" | "color"
+> & {
+    ref?: HTMLElement | null;
+    svgRef?: SVGSVGElement | null;
+    variant: ChartVariant;
+    size: ChartSize;
+    data: readonly TDatum[];
+    value: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    name: keyof TDatum | ((datum: TDatum, index: number) => string);
+    color?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined);
+    tone?: keyof TDatum | ((datum: TDatum, index: number) => ChartTone | undefined);
+    innerRadiusRatio?: number;
+    gap?: number;
+    padAngle?: number;
+    cornerRadius?: number;
+    hoverExpand?: number;
+    sort?: boolean;
+    centerMode?: ChartDonutCenterMode;
+    centerLabel?: string;
+    centerValue?: number | string;
+    center?: Snippet<[ChartDonutCenterContext<TDatum>]>;
+    numberFormat?: NumberMorphFormat;
+    locales?: Intl.LocalesArgument;
+    formatValue?: (value: number, datum?: TDatum) => string;
+    valueLabels?: boolean;
+    legend?: ChartLegendPosition;
+    tooltip?: boolean | Snippet<[ChartDonutTooltipContext<TDatum>]>;
+    tooltipMode?: ChartTooltipMode;
+    palette?: ChartPalette;
+    monotone?: ChartMonotoneHue;
+    title?: string;
+    description?: string;
+    actions?: Snippet;
+    height?: number | string;
+    aspectRatio?: string;
+    loading?: boolean;
+    empty?: boolean;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    interactive?: boolean;
+    onSliceClick?: (datum: TDatum, index: number, slice: ChartArcItem<TDatum>) => void;
+    hiddenSliceIds?: readonly string[];
+    activeIndex?: number | null;
+    hoveredSliceId?: string | null;
+    label?: string;
+    labelledBy?: string;
+    children?: Snippet;
 };

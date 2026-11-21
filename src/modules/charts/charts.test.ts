@@ -980,6 +980,103 @@ describe("Charts M0 — Geometry (chart-geometry.internal.ts)", () => {
                 (singlePositive[0]?.endAngle ?? 0) - (singlePositive[0]?.startAngle ?? 0),
             ).toBeCloseTo(Math.PI * 2, 5);
         });
+
+        test("produces separated parallel-gap paths for gap > 0, enforces 40% tiny-slice guard, and forces zero gap & corner radius on a single 100% slice", () => {
+            const slices = [
+                { id: "a", label: "Direct", value: 60 },
+                { id: "b", label: "Organic", value: 40 },
+            ];
+
+            // 1. gap > 0 produces genuinely separated paths distinct from gap: 0 (donut & full pie)
+            const noGapDonut = computePieArcs({
+                slices,
+                outerRadius: 100,
+                innerRadiusRatio: 0.68,
+                gap: 0,
+            });
+            const gappedDonut = computePieArcs({
+                slices,
+                outerRadius: 100,
+                innerRadiusRatio: 0.68,
+                gap: 4,
+            });
+            expect(gappedDonut).toHaveLength(2);
+            for (let i = 0; i < 2; i++) {
+                expect(gappedDonut[i]?.path).not.toBe("");
+                expect(gappedDonut[i]?.path).not.toContain("NaN");
+                expect(gappedDonut[i]?.hoverPath).not.toContain("NaN");
+                expect(gappedDonut[i]?.path).not.toBe(noGapDonut[i]?.path);
+                expect(gappedDonut[i]?.hoverPath).not.toBe(noGapDonut[i]?.hoverPath);
+                expect(gappedDonut[i]?.hoverPath).not.toBe(gappedDonut[i]?.path);
+            }
+
+            const noGapPie = computePieArcs({
+                slices,
+                outerRadius: 100,
+                innerRadiusRatio: 0,
+                gap: 0,
+            });
+            const gappedPie = computePieArcs({
+                slices,
+                outerRadius: 100,
+                innerRadiusRatio: 0,
+                gap: 4,
+            });
+            expect(gappedPie[0]?.path).not.toBe(noGapPie[0]?.path);
+            expect(gappedPie[0]?.path).not.toContain("NaN");
+
+            // 2. 40% tiny-slice guard: 1% slice alongside 99% slice with large gap (8px) still produces a valid non-empty path
+            const extremeSlices = [
+                { id: "tiny", label: "Tiny", value: 1 },
+                { id: "huge", label: "Huge", value: 99 },
+            ];
+            const extremeNoGap = computePieArcs({
+                slices: extremeSlices,
+                outerRadius: 100,
+                innerRadiusRatio: 0.68,
+                gap: 0,
+            });
+            const extremeGapped = computePieArcs({
+                slices: extremeSlices,
+                outerRadius: 100,
+                innerRadiusRatio: 0.68,
+                gap: 8,
+            });
+            expect(extremeGapped).toHaveLength(2);
+            expect(extremeGapped[0]?.share).toBeCloseTo(0.01, 6);
+            expect(extremeGapped[1]?.share).toBeCloseTo(0.99, 6);
+            expect(extremeGapped[0]?.path.length).toBeGreaterThan(0);
+            expect(extremeGapped[0]?.hoverPath.length).toBeGreaterThan(0);
+            expect(extremeGapped[0]?.path).not.toContain("NaN");
+            expect(extremeGapped[0]?.hoverPath).not.toContain("NaN");
+            expect(extremeGapped[0]?.path).not.toBe(extremeNoGap[0]?.path);
+            expect(extremeGapped[1]?.path.length).toBeGreaterThan(0);
+            expect(extremeGapped[1]?.path).not.toContain("NaN");
+
+            // 3. Single 100% slice forces 0 gap and 0 corner radius even when gap, padAngle, and cornerRadius are passed
+            const singleBaseline = computePieArcs({
+                slices: [{ id: "only", label: "Only", value: 100 }],
+                outerRadius: 100,
+                innerRadiusRatio: 0.68,
+                gap: 0,
+                padAngle: 0,
+                cornerRadius: 0,
+            });
+            const singleWithGapAndCorners = computePieArcs({
+                slices: [
+                    { id: "only", label: "Only", value: 100 },
+                    { id: "zero", label: "Zero", value: 0 },
+                ],
+                outerRadius: 100,
+                innerRadiusRatio: 0.68,
+                gap: 6,
+                padAngle: 0.08,
+                cornerRadius: 8,
+            });
+            expect(singleWithGapAndCorners).toHaveLength(1);
+            expect(singleWithGapAndCorners[0]?.path).toBe(singleBaseline[0]?.path);
+            expect(singleWithGapAndCorners[0]?.hoverPath).toBe(singleBaseline[0]?.hoverPath);
+        });
     });
 
     describe("bisectSortedValues & findNearestCoordinateIndex", () => {

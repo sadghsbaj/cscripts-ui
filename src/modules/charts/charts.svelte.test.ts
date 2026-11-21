@@ -1,6 +1,7 @@
 import { flushSync, mount, unmount } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { t } from "../../shared/lang.internal.ts";
 import ChartTestHost from "./ChartTestHost.internal.svelte";
 import { clearMeasureCache } from "./chart-measure.internal.ts";
 import {
@@ -12,6 +13,7 @@ import {
     ChartLoading,
     ChartState,
     type ChartAnnotationConfig,
+    type ChartArcItem,
     type ChartAreaMode,
     type ChartBarInsideLabelOrientation,
     type ChartBarLabelLayout,
@@ -19,6 +21,9 @@ import {
     type ChartBarValueLabels,
     type ChartCurve,
     type ChartDatum,
+    type ChartDonutCenterContext,
+    type ChartDonutCenterMode,
+    type ChartDonutTooltipContext,
     type ChartGridOption,
     type ChartLegendMarker,
     type ChartLegendPlacement,
@@ -26,6 +31,7 @@ import {
     type ChartLineDotsMode,
     type ChartLoadingShape,
     type ChartOrientation,
+    type ChartPolarSlice,
     type ChartReferenceBandConfig,
     type ChartReferenceLineConfig,
     type ChartSeries,
@@ -8024,6 +8030,1599 @@ describe("Charts M5 — Reference Lines, Reference Bands, Annotations, tooltipMo
                 layoutAfterToggle.plotHeight * (1 - 80 / maxTickAfterToggle),
                 1,
             );
+        });
+    });
+});
+
+function installM6PopoverHarness(el: HTMLDivElement): {
+    showPopover: ReturnType<typeof vi.fn>;
+    hidePopover: ReturnType<typeof vi.fn>;
+    isOpen: () => boolean;
+} {
+    let open = false;
+    const origMatches = el.matches.bind(el);
+    const showPopover = vi.fn(() => {
+        open = true;
+    });
+    const hidePopover = vi.fn(() => {
+        open = false;
+    });
+    Object.defineProperties(el, {
+        showPopover: { value: showPopover, configurable: true },
+        hidePopover: { value: hidePopover, configurable: true },
+        matches: {
+            value: (selector: string) =>
+                selector === ":popover-open" ? open : origMatches(selector),
+            configurable: true,
+        },
+    });
+    return {
+        showPopover,
+        hidePopover,
+        isOpen: () => open,
+    };
+}
+
+describe("Charts M6 — ChartArc & DonutChart", () => {
+    interface SliceRow extends ChartDatum {
+        channel: string;
+        amount: number;
+        hex?: string;
+        status?: ChartTone;
+    }
+
+    const DONUT_DATA: SliceRow[] = [
+        { channel: "Direct", amount: 500 },
+        { channel: "Organic", amount: 300 },
+        { channel: "Referral", amount: 200 },
+    ];
+
+    let container: HTMLDivElement;
+    const mounted: ReturnType<typeof mount>[] = [];
+
+    function renderHost(props: Record<string, unknown> = {}): ReturnType<typeof mount> {
+        const instance = mount(ChartTestHost, { target: container, props });
+        flushSync();
+        mounted.push(instance);
+        return instance;
+    }
+
+    beforeEach(() => {
+        clearMeasureCache();
+        activeResizeHarness = null;
+        container = document.createElement("div");
+        document.body.append(container);
+    });
+
+    afterEach(() => {
+        while (mounted.length > 0) {
+            const instance = mounted.pop();
+            if (instance) unmount(instance);
+        }
+        container.remove();
+        activeResizeHarness = null;
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    describe("ChartArc (Tier-1)", () => {
+        it("renders valid donut and full-pie SVG arcs, sets data-pie/data-single cleanly, binds ref, forwards {...rest}, and emits zero foreignObject/filter", () => {
+            const refs: { arc: SVGGElement | null; svg: SVGSVGElement | null } = {
+                arc: null,
+                svg: null,
+            };
+
+            const props = $state({
+                mode: "standalone-arc" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                arcWidth: 260,
+                arcHeight: 260,
+                arcInnerRadiusRatio: 0.68,
+                arcAttrs: { "data-testid": "tier1-arc", class: "custom-arc-cls" },
+                get arcRef() {
+                    return refs.arc;
+                },
+                set arcRef(v: SVGGElement | null) {
+                    refs.arc = v;
+                },
+                get svgRef() {
+                    return refs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    refs.svg = v;
+                },
+            });
+
+            renderHost(props);
+
+            const arcGroup = container.querySelector<SVGGElement>('[data-testid="tier1-arc"]');
+            expect(arcGroup).not.toBeNull();
+            expect(refs.arc).toBe(arcGroup);
+            expect(arcGroup?.classList.contains("cs-chart-arc")).toBe(true);
+            expect(arcGroup?.classList.contains("custom-arc-cls")).toBe(true);
+            expect(arcGroup?.getAttribute("transform")).toBe("translate(130, 130)");
+            expect(arcGroup?.dataset.pie).toBeUndefined();
+            expect(arcGroup?.dataset.single).toBeUndefined();
+            expect(arcGroup?.dataset.interactive).toBe("");
+
+            const donutPaths = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            expect(donutPaths).toHaveLength(3);
+            for (const [idx, pathEl] of donutPaths.entries()) {
+                const d = pathEl.getAttribute("d") ?? "";
+                expect(d.length).toBeGreaterThan(10);
+                expect(d).not.toContain("NaN");
+                expect(pathEl.getAttribute("fill")).toBeTruthy();
+                expect(pathEl.dataset.sliceIndex).toBe(String(idx));
+            }
+            expect(donutPaths.map((el) => el.dataset.sliceId)).toEqual([
+                "Direct",
+                "Organic",
+                "Referral",
+            ]);
+
+            expect(refs.svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+
+            // Switch to full pie (innerRadiusRatio = 0) with multiple slices -> data-pie set, data-single absent
+            props.arcInnerRadiusRatio = 0;
+            flushSync();
+
+            expect(arcGroup?.dataset.pie).toBe("");
+            expect(arcGroup?.dataset.single).toBeUndefined();
+            const piePaths = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            expect(piePaths).toHaveLength(3);
+            for (const pathEl of piePaths) {
+                const d = pathEl.getAttribute("d") ?? "";
+                expect(d.length).toBeGreaterThan(10);
+                expect(d).not.toContain("NaN");
+            }
+
+            // Single 100% full pie slice -> data-pie AND data-single both set (omits pie seam stroke)
+            props.data = [{ channel: "Only", amount: 100 }];
+            flushSync();
+
+            expect(arcGroup?.dataset.pie).toBe("");
+            expect(arcGroup?.dataset.single).toBe("");
+            const singlePiePaths = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            expect(singlePiePaths).toHaveLength(1);
+            expect(singlePiePaths[0]?.getAttribute("d")).not.toContain("NaN");
+            expect(singlePiePaths[0]?.getAttribute("d")?.length).toBeGreaterThan(10);
+
+            // Single 100% donut slice -> renders complete ring cleanly without NaN and sets data-single
+            props.arcInnerRadiusRatio = 0.68;
+            flushSync();
+
+            expect(arcGroup?.dataset.pie).toBeUndefined();
+            expect(arcGroup?.dataset.single).toBe("");
+            const singleDonutPaths = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            expect(singleDonutPaths).toHaveLength(1);
+            expect(singleDonutPaths[0]?.getAttribute("d")).not.toContain("NaN");
+            expect(singleDonutPaths[0]?.getAttribute("d")?.length).toBeGreaterThan(10);
+        });
+
+        it("safely filters zero, negative, and NaN slice values without NaN paths, guards zero dimensions, and deduplicates slice IDs", () => {
+            const mixedSlices: ChartPolarSlice<ChartDatum>[] = [
+                { id: "zero", label: "Zero", value: 0 },
+                { id: "neg", label: "Negative", value: -45 },
+                { id: "nan", label: "NaN", value: NaN },
+                { id: "inf", label: "Infinity", value: Infinity },
+                { id: "valid-a", label: "Valid A", value: 75, color: "#2563eb" },
+                { id: "valid-b", label: "Valid B", value: 25, tone: "positive" },
+            ];
+
+            const props = $state({
+                mode: "standalone-arc" as const,
+                arcSlices: mixedSlices as readonly ChartPolarSlice<ChartDatum>[] | undefined,
+                data: undefined as readonly SliceRow[] | undefined,
+                donutValue: "amount",
+                donutName: "channel",
+                arcWidth: 240,
+                arcHeight: 240,
+                arcInnerRadiusRatio: 0.64,
+            });
+
+            renderHost(props);
+
+            const paths = [...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice")];
+            expect(paths).toHaveLength(2);
+            expect(paths.map((p) => p.dataset.sliceId)).toEqual(["valid-a", "valid-b"]);
+            expect(paths[0]?.getAttribute("fill")).toBe("#2563eb");
+            expect(paths[1]?.getAttribute("fill")).toContain("var(--cs-chart-positive)");
+            for (const pathEl of paths) {
+                const d = pathEl.getAttribute("d") ?? "";
+                expect(d).not.toContain("NaN");
+                expect(d.length).toBeGreaterThan(10);
+            }
+
+            // All non-positive -> omits g.cs-chart-arc cleanly
+            props.arcSlices = [
+                { id: "z", label: "Zero", value: 0 },
+                { id: "n", label: "Neg", value: -10 },
+                { id: "bad", label: "Bad", value: NaN },
+            ];
+            flushSync();
+            expect(container.querySelector("g.cs-chart-arc")).toBeNull();
+
+            // Zero dimensions -> omits g.cs-chart-arc cleanly
+            props.arcSlices = mixedSlices;
+            props.arcWidth = 0;
+            props.arcHeight = 0;
+            flushSync();
+            expect(container.querySelector("g.cs-chart-arc")).toBeNull();
+
+            // Data mode with duplicate names generates unique IDs without crashing
+            props.arcSlices = undefined;
+            props.arcWidth = 240;
+            props.arcHeight = 240;
+            props.data = [
+                { channel: "Other", amount: 40 },
+                { channel: "Other", amount: 60 },
+            ];
+            flushSync();
+            const dupPaths = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            expect(dupPaths).toHaveLength(2);
+            expect(new Set(dupPaths.map((p) => p.dataset.sliceId)).size).toBe(2);
+        });
+
+        it("switches active slice path to hoverPath, dims siblings, fires onSliceHover/onSliceClick, and ignores events when interactive={false}", () => {
+            const onSliceHover = vi.fn();
+            const onSliceClick = vi.fn();
+
+            const props = $state({
+                mode: "standalone-arc" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                arcWidth: 260,
+                arcHeight: 260,
+                arcInnerRadiusRatio: 0.64,
+                arcHoverExpand: 4,
+                arcInteractive: true,
+                activeIndex: null as number | null,
+                hoveredSliceId: null as string | null,
+                onSliceHover: (idx: number | null, arc: ChartArcItem<ChartDatum> | null) => {
+                    onSliceHover(idx, arc);
+                    props.activeIndex = idx;
+                },
+                onSliceClick,
+            });
+
+            renderHost(props);
+
+            const getPaths = (): SVGPathElement[] => [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+
+            const initialDs = getPaths().map((p) => p.getAttribute("d") ?? "");
+            expect(initialDs).toHaveLength(3);
+            for (const pathEl of getPaths()) {
+                expect(pathEl.dataset.active).toBeUndefined();
+                expect(pathEl.dataset.dimmed).toBeUndefined();
+            }
+
+            // Hover slice 1 -> onSliceHover fires, d switches to hoverPath, siblings dim
+            getPaths()[1]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+
+            expect(onSliceHover).toHaveBeenCalledTimes(1);
+            expect(onSliceHover.mock.calls[0]?.[0]).toBe(1);
+            expect((onSliceHover.mock.calls[0]?.[1] as ChartArcItem<SliceRow>).id).toBe("Organic");
+
+            const hoveredPaths = getPaths();
+            expect(hoveredPaths[1]?.dataset.active).toBe("");
+            expect(hoveredPaths[1]?.dataset.dimmed).toBeUndefined();
+            expect(hoveredPaths[1]?.getAttribute("d")).not.toBe(initialDs[1]);
+            expect(hoveredPaths[1]?.getAttribute("d")).not.toContain("NaN");
+
+            expect(hoveredPaths[0]?.dataset.dimmed).toBe("");
+            expect(hoveredPaths[0]?.getAttribute("d")).toBe(initialDs[0]);
+            expect(hoveredPaths[2]?.dataset.dimmed).toBe("");
+            expect(hoveredPaths[2]?.getAttribute("d")).toBe(initialDs[2]);
+
+            // Click slice 1 -> onSliceClick receives (datum, index, arc)
+            hoveredPaths[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            expect(onSliceClick).toHaveBeenCalledTimes(1);
+            expect(onSliceClick.mock.calls[0]?.[0]).toEqual(DONUT_DATA[1]);
+            expect(onSliceClick.mock.calls[0]?.[1]).toBe(1);
+            expect((onSliceClick.mock.calls[0]?.[2] as ChartArcItem<SliceRow>).label).toBe(
+                "Organic",
+            );
+
+            // Pointer leave -> resets path & removes dimming
+            hoveredPaths[1]?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+
+            expect(onSliceHover).toHaveBeenCalledTimes(2);
+            expect(onSliceHover).toHaveBeenLastCalledWith(null, null);
+            expect(getPaths()[1]?.getAttribute("d")).toBe(initialDs[1]);
+            expect(getPaths().every((p) => p.dataset.dimmed === undefined)).toBe(true);
+
+            // hoveredSliceId activates slice & dims siblings even when activeIndex is null
+            props.hoveredSliceId = "Referral";
+            flushSync();
+            expect(getPaths()[2]?.dataset.active).toBe("");
+            expect(getPaths()[2]?.getAttribute("d")).not.toBe(initialDs[2]);
+            expect(getPaths()[0]?.dataset.dimmed).toBe("");
+            expect(getPaths()[1]?.dataset.dimmed).toBe("");
+
+            props.hoveredSliceId = null;
+            flushSync();
+
+            // interactive={false} ignores pointerenter, pointerleave, and click
+            props.arcInteractive = false;
+            flushSync();
+            expect(container.querySelector<SVGGElement>("g.cs-chart-arc")?.dataset.interactive).toBeUndefined();
+
+            getPaths()[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            getPaths()[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            getPaths()[0]?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+
+            expect(onSliceHover).toHaveBeenCalledTimes(2);
+            expect(onSliceClick).toHaveBeenCalledTimes(1);
+            expect(getPaths()[0]?.getAttribute("d")).toBe(initialDs[0]);
+        });
+
+        it("renders optional valueLabels on slices large enough to fit, suppresses tiny/thin slices, supports formatValue, and dims sibling labels", () => {
+            const slicesWithTiny: SliceRow[] = [
+                { channel: "Major", amount: 550 },
+                { channel: "Medium", amount: 430 },
+                { channel: "Tiny", amount: 20 }, // 2% -> angle ~0.126 rad < 0.32 rad
+            ];
+
+            const props = $state({
+                mode: "standalone-arc" as const,
+                data: slicesWithTiny as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                arcWidth: 260,
+                arcHeight: 260,
+                arcInnerRadiusRatio: 0.6,
+                arcValueLabels: true,
+                arcFormatValue: undefined as ((v: number, d?: ChartDatum) => string) | undefined,
+                activeIndex: null as number | null,
+            });
+
+            renderHost(props);
+
+            const labels = [
+                ...container.querySelectorAll<SVGTextElement>("text.cs-chart-arc-label"),
+            ];
+            // Major (55%) and Medium (43%) fit; Tiny (2%) is suppressed
+            expect(labels).toHaveLength(2);
+            expect(labels.map((el) => el.textContent?.trim())).toEqual(["55%", "43%"]);
+
+            // Activating slice 0 dims sibling label (index 1)
+            props.activeIndex = 0;
+            flushSync();
+            const activeLabels = [
+                ...container.querySelectorAll<SVGTextElement>("text.cs-chart-arc-label"),
+            ];
+            expect(activeLabels[0]?.dataset.dimmed).toBeUndefined();
+            expect(activeLabels[1]?.dataset.dimmed).toBe("");
+
+            // Custom formatValue overrides percentage formatting
+            props.arcFormatValue = (v) => `$${v}`;
+            flushSync();
+            expect(
+                [...container.querySelectorAll<SVGTextElement>("text.cs-chart-arc-label")].map(
+                    (el) => el.textContent?.trim(),
+                ),
+            ).toEqual(["$550", "$430"]);
+
+            // Ring thinner than MIN_DONUT_RING_THICKNESS (20px) suppresses all labels
+            props.arcInnerRadiusRatio = 0.9;
+            flushSync();
+            expect(container.querySelectorAll("text.cs-chart-arc-label")).toHaveLength(0);
+        });
+    });
+
+    describe("DonutChart (Tier-2)", () => {
+        it("renders shell with required variant/size, binds ref & svgRef, forwards {...rest}, renders children SVG slot, and has zero foreignObject/filter", () => {
+            stubM5CanvasRect(280, 260);
+
+            const refs: { root: HTMLElement | null; svg: SVGSVGElement | null } = {
+                root: null,
+                svg: null,
+            };
+
+            renderHost({
+                mode: "donut-chart",
+                variant: "soft",
+                size: "lg",
+                data: DONUT_DATA,
+                donutValue: "amount",
+                donutName: "channel",
+                tier2Title: "Traffic Channels",
+                tier2Description: "Last 30 days",
+                showActions: true,
+                tier2CustomLayerText: "Custom ring note",
+                arcValueLabels: true,
+                chartAttrs: { "data-testid": "donut-root", id: "my-donut" },
+                get chartRef() {
+                    return refs.root;
+                },
+                set chartRef(v: HTMLElement | null) {
+                    refs.root = v;
+                },
+                get svgRef() {
+                    return refs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    refs.svg = v;
+                },
+            });
+
+            const figure = container.querySelector<HTMLElement>('[data-testid="donut-root"]');
+            expect(figure).not.toBeNull();
+            expect(refs.root).toBe(figure);
+            expect(figure?.id).toBe("my-donut");
+            expect(figure?.dataset.variant).toBe("soft");
+            expect(figure?.dataset.size).toBe("lg");
+
+            expect(refs.svg).not.toBeNull();
+            expect(refs.svg?.classList.contains("cs-chart-svg")).toBe(true);
+            expect(refs.svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+            expect(refs.svg?.querySelectorAll("path.cs-chart-arc-slice")).toHaveLength(3);
+            expect(refs.svg?.querySelector('[data-testid="custom-svg-layer"]')?.textContent).toContain(
+                "Custom ring note",
+            );
+            expect(refs.svg?.querySelectorAll("text.cs-chart-arc-label").length).toBeGreaterThan(0);
+
+            expect(container.querySelector(".cs-chart-title")?.textContent?.trim()).toBe(
+                "Traffic Channels",
+            );
+            expect(container.querySelector(".cs-chart-description")?.textContent?.trim()).toBe(
+                "Last 30 days",
+            );
+            expect(container.querySelector('[data-testid="tier2-action-btn"]')).not.toBeNull();
+        });
+
+        it("renders centered .cs-chart-center KPI with NumberMorph & reserved .cs-chart-center-share[data-empty], follows centerMode='auto' (legend hover + no-tooltip slice hover), omits for Pie (0) / <0.42, and supports custom center snippet", () => {
+            stubM5CanvasRect(280, 260);
+
+            const props = $state({
+                mode: "donut-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                arcInnerRadiusRatio: 0.68,
+                donutCenterLabel: "Revenue",
+                donutCenterValue: undefined as number | string | undefined,
+                tier2Tooltip: true,
+                tooltipMode: "item" as ChartTooltipMode,
+                donutCenterRenderer: undefined as
+                    | ((ctx: ChartDonutCenterContext<ChartDatum>) => string)
+                    | undefined,
+            });
+
+            renderHost(props);
+
+            const centerEl = container.querySelector<HTMLDivElement>(".cs-chart-center");
+            expect(centerEl).not.toBeNull();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(
+                centerEl?.querySelector(":scope .cs-chart-center-value .cs-number-morph"),
+            ).not.toBeNull();
+
+            // Reserved .cs-chart-center-share slot is always rendered with data-empty & aria-hidden when idle
+            const shareEl = centerEl?.querySelector<HTMLSpanElement>(".cs-chart-center-share");
+            expect(shareEl).not.toBeNull();
+            expect(shareEl?.dataset.empty).toBe("");
+            expect(shareEl?.getAttribute("aria-hidden")).toBe("true");
+            expect(shareEl?.textContent?.trim()).toBe("");
+
+            // Default centerMode="auto" with tooltip enabled: direct slice hover keeps Total in center
+            const slices = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            slices[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(shareEl?.dataset.empty).toBe("");
+            expect(shareEl?.getAttribute("aria-hidden")).toBe("true");
+
+            slices[0]?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+
+            // Default centerMode="auto": legend hover morphs center to hovered slice + populates share
+            const legendButtons = [
+                ...container.querySelectorAll<HTMLButtonElement>(
+                    "button.cs-chart-donut-legend-item",
+                ),
+            ];
+            legendButtons[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Direct",
+            );
+            expect(shareEl?.textContent?.trim()).toBe("50%");
+            expect(shareEl?.dataset.empty).toBeUndefined();
+            expect(shareEl?.getAttribute("aria-hidden")).toBeNull();
+
+            // Escape clears legend hover immediately and restores idle center
+            container
+                .querySelector<HTMLDivElement>(".cs-chart-polar-stage")
+                ?.dispatchEvent(
+                    new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+                );
+            flushSync();
+
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(shareEl?.dataset.empty).toBe("");
+            expect(shareEl?.getAttribute("aria-hidden")).toBe("true");
+
+            // centerMode="auto" with tooltipMode="none" morphs center on direct slice hover
+            props.tooltipMode = "none";
+            flushSync();
+
+            slices[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Direct",
+            );
+            expect(shareEl?.textContent?.trim()).toBe("50%");
+            expect(shareEl?.dataset.empty).toBeUndefined();
+
+            slices[0]?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(shareEl?.dataset.empty).toBe("");
+
+            // centerMode="auto" with tooltip={false} also morphs center on direct slice hover
+            props.tooltipMode = "item";
+            props.tier2Tooltip = false;
+            flushSync();
+
+            slices[1]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Organic",
+            );
+            expect(shareEl?.textContent?.trim()).toBe("30%");
+
+            slices[1]?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            props.tier2Tooltip = true;
+            flushSync();
+
+            // String centerValue overrides NumberMorph when idle
+            props.donutCenterValue = "$1.0k";
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-value")?.textContent?.trim()).toBe(
+                "$1.0k",
+            );
+            expect(centerEl?.querySelector(".cs-number-morph")).toBeNull();
+
+            // Custom center snippet receives live context respecting centerMode="auto"
+            props.donutCenterValue = undefined;
+            props.donutCenterRenderer = (ctx) =>
+                ctx.activeSlice
+                    ? `ACTIVE:${ctx.activeSlice.label}:${ctx.activeSlice.value}/${ctx.total}`
+                    : `TOTAL:${ctx.total}:${ctx.slices.length}`;
+            flushSync();
+
+            expect(container.querySelector('[data-testid="custom-donut-center"]')?.textContent).toBe(
+                "TOTAL:1000:3",
+            );
+
+            // Direct slice hover with tooltip enabled keeps activeSlice=null
+            container
+                .querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice")[1]
+                ?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(container.querySelector('[data-testid="custom-donut-center"]')?.textContent).toBe(
+                "TOTAL:1000:3",
+            );
+
+            // Disabling tooltip while slice is hovered passes activeSlice to custom center snippet
+            props.tier2Tooltip = false;
+            flushSync();
+            expect(container.querySelector('[data-testid="custom-donut-center"]')?.textContent).toBe(
+                "ACTIVE:Organic:300/1000",
+            );
+
+            container
+                .querySelector<HTMLDivElement>(".cs-chart-polar-stage")
+                ?.dispatchEvent(new PointerEvent("pointerleave"));
+            flushSync();
+            expect(container.querySelector('[data-testid="custom-donut-center"]')?.textContent).toBe(
+                "TOTAL:1000:3",
+            );
+
+            // Threshold check: innerRadiusRatio = 0.42 still renders center; 0.3 and 0 (full Pie) omit it
+            props.arcInnerRadiusRatio = 0.42;
+            flushSync();
+            expect(container.querySelector(".cs-chart-center")).not.toBeNull();
+
+            props.arcInnerRadiusRatio = 0.3;
+            flushSync();
+            expect(container.querySelector(".cs-chart-center")).toBeNull();
+
+            props.arcInnerRadiusRatio = 0;
+            flushSync();
+            expect(container.querySelector(".cs-chart-center")).toBeNull();
+            expect(container.querySelector<SVGGElement>("g.cs-chart-arc")?.dataset.pie).toBe("");
+        });
+
+        it("supports end/top/bottom/none legend positions, toggles slices with stable color slots & recalculated shares, handles all-hidden reset, and cross-highlights on hover/focus", () => {
+            stubM5CanvasRect(280, 260);
+
+            const bindings = $state({
+                hidden: [] as readonly string[],
+                active: null as number | null,
+                hovered: null as string | null,
+            });
+
+            const props = $state({
+                mode: "donut-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                donutLegend: undefined as ChartLegendPosition | undefined,
+                donutCenterRenderer: (ctx: ChartDonutCenterContext<ChartDatum>) =>
+                    ctx.activeSlice
+                        ? `HOVER:${ctx.activeSlice.label}:${ctx.activeSlice.value}`
+                        : `TOTAL:${ctx.total}`,
+                get hiddenSliceIds() {
+                    return bindings.hidden;
+                },
+                set hiddenSliceIds(v: readonly string[]) {
+                    bindings.hidden = v;
+                },
+                get donutActiveIndex() {
+                    return bindings.active;
+                },
+                set donutActiveIndex(v: number | null) {
+                    bindings.active = v;
+                },
+                get hoveredSliceId() {
+                    return bindings.hovered;
+                },
+                set hoveredSliceId(v: string | null) {
+                    bindings.hovered = v;
+                },
+            });
+
+            renderHost(props);
+
+            // Default legend="end" inside .cs-chart-polar-body
+            const legendEnd = container.querySelector<HTMLDivElement>(".cs-chart-donut-legend");
+            expect(legendEnd).not.toBeNull();
+            expect(legendEnd?.dataset.position).toBe("end");
+            expect(legendEnd?.dataset.align).toBe("start");
+            expect(container.querySelector(".cs-chart-polar-body")).not.toBeNull();
+
+            // Record initial slice colors by id to verify color slot stability after toggling
+            const readColorsById = (): Record<string, string | null> => {
+                const map: Record<string, string | null> = {};
+                for (const p of container.querySelectorAll<SVGPathElement>(
+                    "path.cs-chart-arc-slice",
+                )) {
+                    const id = p.dataset.sliceId;
+                    if (id) map[id] = p.getAttribute("fill");
+                }
+                return map;
+            };
+            const initialColors = readColorsById();
+
+            const getLegendButtons = (): HTMLButtonElement[] => [
+                ...container.querySelectorAll<HTMLButtonElement>("button.cs-chart-donut-legend-item"),
+            ];
+            const getLegendShares = (): string[] =>
+                getLegendButtons().map(
+                    (btn) =>
+                        btn.querySelector(".cs-chart-donut-legend-share")?.textContent?.trim() ?? "",
+                );
+
+            expect(getLegendButtons()).toHaveLength(3);
+            expect(getLegendShares()).toEqual(["50%", "30%", "20%"]);
+            expect(getLegendButtons().every((b) => b.getAttribute("aria-pressed") === "true")).toBe(
+                true,
+            );
+
+            // Hover legend item 1 ("Organic") -> highlights matching SVG slice, dims siblings, swaps center KPI
+            const initialOrganicD = container
+                .querySelector<SVGPathElement>('path.cs-chart-arc-slice[data-slice-id="Organic"]')
+                ?.getAttribute("d");
+
+            getLegendButtons()[1]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.hovered).toBe("Organic");
+            expect(getLegendButtons()[1]?.dataset.active).toBe("");
+            const organicSlice = container.querySelector<SVGPathElement>(
+                'path.cs-chart-arc-slice[data-slice-id="Organic"]',
+            );
+            const directSlice = container.querySelector<SVGPathElement>(
+                'path.cs-chart-arc-slice[data-slice-id="Direct"]',
+            );
+            expect(organicSlice?.dataset.active).toBe("");
+            expect(organicSlice?.getAttribute("d")).not.toBe(initialOrganicD);
+            expect(directSlice?.dataset.dimmed).toBe("");
+            expect(container.querySelector('[data-testid="custom-donut-center"]')?.textContent).toBe(
+                "HOVER:Organic:300",
+            );
+
+            // Pointer leave legend item 1 holds highlight during 60ms grace window; gliding to item 0 cancels timer without flashing Total
+            vi.useFakeTimers();
+            try {
+                getLegendButtons()[1]?.dispatchEvent(
+                    new PointerEvent("pointerleave", { bubbles: true }),
+                );
+                flushSync();
+                expect(bindings.hovered).toBe("Organic");
+                expect(directSlice?.dataset.dimmed).toBe("");
+                expect(
+                    container.querySelector('[data-testid="custom-donut-center"]')?.textContent,
+                ).toBe("HOVER:Organic:300");
+
+                // Glide from legend item 1 -> item 0 within 60ms cancels grace timer without flashing Total
+                vi.advanceTimersByTime(30);
+                getLegendButtons()[0]?.dispatchEvent(
+                    new PointerEvent("pointerenter", { bubbles: true }),
+                );
+                flushSync();
+                expect(bindings.hovered).toBe("Direct");
+                expect(
+                    container.querySelector('[data-testid="custom-donut-center"]')?.textContent,
+                ).toBe("HOVER:Direct:500");
+
+                // Advancing past original 60ms timer must NOT clear item 0 or flash Total
+                vi.advanceTimersByTime(65);
+                flushSync();
+                expect(bindings.hovered).toBe("Direct");
+                expect(
+                    container.querySelector('[data-testid="custom-donut-center"]')?.textContent,
+                ).toBe("HOVER:Direct:500");
+
+                // Leaving item 0 and waiting >60ms clears highlight and restores Total
+                getLegendButtons()[0]?.dispatchEvent(
+                    new PointerEvent("pointerleave", { bubbles: true }),
+                );
+                flushSync();
+                vi.advanceTimersByTime(65);
+                flushSync();
+                expect(bindings.hovered).toBeNull();
+                expect(directSlice?.dataset.dimmed).toBeUndefined();
+                expect(
+                    container.querySelector('[data-testid="custom-donut-center"]')?.textContent,
+                ).toBe("TOTAL:1000");
+
+                // Focus / blur on legend item 2 ("Referral") also cross-highlights & clears after 60ms grace timer
+                getLegendButtons()[2]?.dispatchEvent(new FocusEvent("focus"));
+                flushSync();
+                expect(bindings.hovered).toBe("Referral");
+                expect(
+                    container.querySelector<SVGPathElement>(
+                        'path.cs-chart-arc-slice[data-slice-id="Referral"]',
+                    )?.dataset.active,
+                ).toBe("");
+                expect(
+                    container.querySelector<SVGPathElement>(
+                        'path.cs-chart-arc-slice[data-slice-id="Direct"]',
+                    )?.dataset.dimmed,
+                ).toBe("");
+
+                getLegendButtons()[2]?.dispatchEvent(new FocusEvent("blur"));
+                flushSync();
+                vi.advanceTimersByTime(65);
+                flushSync();
+                expect(bindings.hovered).toBeNull();
+            } finally {
+                vi.useRealTimers();
+            }
+
+            // Cross-sequence: activate slice 0 via pointerenter, then click legend 0 to hide it
+            container
+                .querySelector<SVGPathElement>('path.cs-chart-arc-slice[data-slice-id="Direct"]')
+                ?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBe(0);
+
+            getLegendButtons()[0]?.click();
+            flushSync();
+
+            expect(bindings.hidden).toEqual(["Direct"]);
+            expect(bindings.active).toBeNull();
+            expect(bindings.hovered).toBeNull();
+            expect(getLegendButtons()[0]?.getAttribute("aria-pressed")).toBe("false");
+            expect(getLegendButtons()[0]?.dataset.hidden).toBe("");
+
+            // Remaining visible slices recalculate shares (300/500 = 60%, 200/500 = 40%), total = 500, colors unchanged
+            expect(getLegendShares()).toEqual(["—", "60%", "40%"]);
+            expect(container.querySelector('[data-testid="custom-donut-center"]')?.textContent).toBe(
+                "TOTAL:500",
+            );
+            const colorsAfterHide = readColorsById();
+            expect(Object.keys(colorsAfterHide)).toEqual(["Organic", "Referral"]);
+            expect(colorsAfterHide.Organic).toBe(initialColors.Organic);
+            expect(colorsAfterHide.Referral).toBe(initialColors.Referral);
+
+            // Hovering a hidden legend item is a no-op
+            getLegendButtons()[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(bindings.hovered).toBeNull();
+
+            // Hide remaining two slices -> ChartEmpty with working "Show all" reset button
+            getLegendButtons()[1]?.click();
+            getLegendButtons()[2]?.click();
+            flushSync();
+
+            expect(bindings.hidden).toEqual(["Direct", "Organic", "Referral"]);
+            expect(container.querySelector(".cs-chart-empty")).not.toBeNull();
+            expect(container.querySelector(".cs-chart-polar-stage")).toBeNull();
+
+            const resetBtn = container.querySelector<HTMLButtonElement>(
+                ":scope .cs-chart-empty button",
+            );
+            expect(resetBtn).not.toBeNull();
+            resetBtn?.click();
+            flushSync();
+
+            expect(bindings.hidden).toEqual([]);
+            expect(container.querySelector(".cs-chart-empty")).toBeNull();
+            expect(container.querySelectorAll("path.cs-chart-arc-slice")).toHaveLength(3);
+            expect(getLegendShares()).toEqual(["50%", "30%", "20%"]);
+            expect(container.querySelector('[data-testid="custom-donut-center"]')?.textContent).toBe(
+                "TOTAL:1000",
+            );
+
+            // Switch legend positions: top -> bottom -> none
+            props.donutLegend = "top";
+            flushSync();
+            const legendTop = container.querySelector<HTMLDivElement>(".cs-chart-donut-legend");
+            expect(legendTop?.dataset.position).toBe("top");
+            expect(legendTop?.dataset.align).toBe("center");
+            expect(container.querySelector(".cs-chart-polar-body")).toBeNull();
+            assertSvgPrecedes(legendTop, container.querySelector(".cs-chart-polar-stage"));
+
+            props.donutLegend = "bottom";
+            flushSync();
+            const legendBottom = container.querySelector<HTMLDivElement>(".cs-chart-donut-legend");
+            expect(legendBottom?.dataset.position).toBe("bottom");
+            expect(legendBottom?.dataset.align).toBe("center");
+            assertSvgPrecedes(container.querySelector(".cs-chart-polar-stage"), legendBottom);
+
+            props.donutLegend = "none";
+            flushSync();
+            expect(container.querySelector(".cs-chart-donut-legend")).toBeNull();
+        });
+
+        it("opens floating popover='manual' tooltip on hover & keyboard scrub with NumberMorph + share, respects tooltipMode='none' & tooltip={false}, and supports custom tooltip snippet", () => {
+            stubM5CanvasRect(280, 260);
+
+            const props = $state({
+                mode: "donut-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                tier2Tooltip: true,
+                tooltipMode: "item" as ChartTooltipMode,
+                donutTooltipRenderer: undefined as
+                    | ((ctx: ChartDonutTooltipContext<ChartDatum>) => string)
+                    | undefined,
+            });
+
+            const instance = renderHost(props);
+
+            const tooltipEl = container.querySelector<HTMLDivElement>(".cs-chart-donut-tooltip");
+            expect(tooltipEl).not.toBeNull();
+            if (!tooltipEl) return;
+
+            expect(tooltipEl.getAttribute("popover")).toBe("manual");
+            expect(tooltipEl.dataset.open).toBeUndefined();
+            expect(tooltipEl.getAttribute("aria-hidden")).toBe("true");
+
+            const popover = installM6PopoverHarness(tooltipEl);
+
+            // Hover slice 1 ("Organic", 300, 30%) -> opens popover with NumberMorph + share
+            container
+                .querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice")[1]
+                ?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+
+            expect(tooltipEl.dataset.open).toBe("");
+            expect(tooltipEl.getAttribute("aria-hidden")).toBeNull();
+            expect(popover.showPopover).toHaveBeenCalledTimes(1);
+            expect(popover.isOpen()).toBe(true);
+            expect(tooltipEl.style.transform).toMatch(/^translate3d\(\d+px,\s*\d+px,\s*0(?:px)?\)$/);
+            expect(tooltipEl.querySelector(".cs-chart-tooltip-label")?.textContent?.trim()).toBe(
+                "Organic",
+            );
+            expect(
+                tooltipEl.querySelector(":scope .cs-chart-tooltip-value .cs-number-morph"),
+            ).not.toBeNull();
+            expect(
+                tooltipEl.querySelector(".cs-chart-donut-tooltip-share-value")?.textContent?.trim(),
+            ).toBe("30%");
+
+            // Leave closes popover
+            container
+                .querySelector<HTMLDivElement>(".cs-chart-polar-stage")
+                ?.dispatchEvent(new PointerEvent("pointerleave"));
+            flushSync();
+            expect(tooltipEl.dataset.open).toBeUndefined();
+            expect(popover.hidePopover).toHaveBeenCalledTimes(1);
+            expect(popover.isOpen()).toBe(false);
+
+            // Keyboard ArrowRight opens tooltip too
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-polar-stage");
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(tooltipEl.dataset.open).toBe("");
+            expect(popover.isOpen()).toBe(true);
+            expect(tooltipEl.querySelector(".cs-chart-tooltip-label")?.textContent?.trim()).toBe(
+                "Direct",
+            );
+            expect(
+                tooltipEl.querySelector(".cs-chart-donut-tooltip-share-value")?.textContent?.trim(),
+            ).toBe("50%");
+
+            // Custom tooltip snippet receives { slice, total, formattedValue, formattedShare }
+            props.donutTooltipRenderer = (ctx) =>
+                `TIP:${ctx.slice.label}:${ctx.formattedValue}:${ctx.formattedShare}/${ctx.total}`;
+            flushSync();
+            expect(
+                container.querySelector('[data-testid="custom-donut-tooltip"]')?.textContent,
+            ).toBe("TIP:Direct:500:50%/1000");
+
+            // tooltipMode="none" removes tooltip element
+            props.tooltipMode = "none";
+            flushSync();
+            expect(container.querySelector(".cs-chart-donut-tooltip")).toBeNull();
+
+            // Restore tooltipMode="item", then disable via tooltip={false}
+            props.tooltipMode = "item";
+            props.donutTooltipRenderer = undefined;
+            props.tier2Tooltip = false;
+            flushSync();
+            expect(container.querySelector(".cs-chart-donut-tooltip")).toBeNull();
+
+            // Clear active slice, re-enable tooltip, open via keyboard, and verify unmount cleanup hides popover
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+            );
+            props.tier2Tooltip = true;
+            flushSync();
+            const restoredTooltip = container.querySelector<HTMLDivElement>(
+                ".cs-chart-donut-tooltip",
+            );
+            expect(restoredTooltip).not.toBeNull();
+            if (restoredTooltip) {
+                const restoredPopover = installM6PopoverHarness(restoredTooltip);
+                stage?.dispatchEvent(
+                    new KeyboardEvent("keydown", {
+                        key: "ArrowRight",
+                        bubbles: true,
+                        cancelable: true,
+                    }),
+                );
+                flushSync();
+                expect(restoredPopover.isOpen()).toBe(true);
+
+                unmount(instance);
+                mounted.pop();
+                expect(restoredPopover.isOpen()).toBe(false);
+            }
+        });
+
+        it("enables data-gliding after rapid slice scrub before first rAF, enforces 16px flip hysteresis, and resets data-side to 'end' on close", () => {
+            const rafCallbacks: FrameRequestCallback[] = [];
+            const cancelRafSpy = vi.fn();
+            vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+                rafCallbacks.push(cb);
+                return rafCallbacks.length;
+            });
+            vi.stubGlobal("cancelAnimationFrame", cancelRafSpy);
+
+            const mockRect = {
+                x: 0,
+                y: 0,
+                left: 0,
+                top: 60,
+                right: 280,
+                bottom: 320,
+                width: 280,
+                height: 260,
+                toJSON: () => ({}),
+            };
+            const getRect = (): DOMRect => ({ ...mockRect }) as DOMRect;
+            vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(getRect);
+            vi.spyOn(SVGElement.prototype, "getBoundingClientRect").mockImplementation(getRect);
+
+            renderHost({
+                mode: "donut-chart",
+                variant: "elevated",
+                size: "md",
+                data: DONUT_DATA,
+                donutValue: "amount",
+                donutName: "channel",
+            });
+
+            const tooltipEl = container.querySelector<HTMLDivElement>(".cs-chart-donut-tooltip");
+            expect(tooltipEl).not.toBeNull();
+            if (!tooltipEl) return;
+            installM6PopoverHarness(tooltipEl);
+
+            const slices = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            expect(slices).toHaveLength(3);
+
+            // 1. Initial open on slice 0 -> snaps immediately without gliding and schedules glide rAF
+            slices[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(tooltipEl.dataset.open).toBe("");
+            expect(tooltipEl.dataset.side).toBe("end");
+            expect(tooltipEl.dataset.gliding).toBeUndefined();
+            expect(rafCallbacks).toHaveLength(1);
+
+            const initialTransformMatch = /^translate3d\((\d+)px,/.exec(tooltipEl.style.transform);
+            expect(initialTransformMatch).not.toBeNull();
+            // Unclamped end-side X = round(anchorX + TOOLTIP_OFFSET(12)), where anchorX = rect.left(0) + offsetFromLeft
+            const slice0OffsetFromLeft = Number(initialTransformMatch?.[1] ?? 0) - 12;
+
+            // Rapid scrub slice 0 -> slice 1 before first rAF fires must NOT cancel tooltipGlideRafId
+            slices[1]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(cancelRafSpy).not.toHaveBeenCalled();
+            expect(tooltipEl.dataset.gliding).toBeUndefined();
+
+            // Firing the first rAF enables data-gliding
+            rafCallbacks[0]?.(16);
+            flushSync();
+            expect(tooltipEl.dataset.gliding).toBe("");
+
+            // 2. Hysteresis flip-back & close reset (offset=12, fallback width=168, clearance=8 => rightEdge = anchorX + 188; hysteresis=16)
+            const viewportWidth = window.innerWidth > 0 ? window.innerWidth : 1024;
+            const moveSlice0AnchorTo = (targetClientX: number): void => {
+                mockRect.left = targetClientX - slice0OffsetFromLeft;
+                mockRect.x = mockRect.left;
+                mockRect.right = mockRect.left + mockRect.width;
+                slices[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+                flushSync();
+            };
+
+            // Near right edge (rightEdge > viewportWidth) -> flips end -> start
+            moveSlice0AnchorTo(viewportWidth - 180);
+            expect(tooltipEl.dataset.side).toBe("start");
+
+            // Inside 16px FLIP_HYSTERESIS deadzone (rightEdge <= viewportWidth, rightEdge + 16 > viewportWidth) -> stays "start"
+            moveSlice0AnchorTo(viewportWidth - 196);
+            expect(tooltipEl.dataset.side).toBe("start");
+
+            // Past 16px hysteresis threshold (rightEdge + 16 <= viewportWidth) -> flips back start -> end
+            moveSlice0AnchorTo(viewportWidth - 210);
+            expect(tooltipEl.dataset.side).toBe("end");
+
+            // Flip to "start" again, then close -> data-side resets to "end"
+            moveSlice0AnchorTo(viewportWidth - 180);
+            expect(tooltipEl.dataset.side).toBe("start");
+
+            container
+                .querySelector<HTMLDivElement>(".cs-chart-polar-stage")
+                ?.dispatchEvent(new PointerEvent("pointerleave"));
+            flushSync();
+            expect(tooltipEl.dataset.open).toBeUndefined();
+            expect(tooltipEl.dataset.gliding).toBeUndefined();
+            expect(tooltipEl.dataset.side).toBe("end");
+        });
+
+        it("navigates slices via keyboard (Arrows/Home/End/Escape/Enter/Space), invokes onSliceClick, and announces via .cs-chart-sr-live", () => {
+            stubM5CanvasRect(280, 260);
+
+            const onSliceClick = vi.fn();
+            const bindings = $state({
+                active: null as number | null,
+                hovered: null as string | null,
+            });
+
+            renderHost({
+                mode: "donut-chart",
+                variant: "elevated",
+                size: "md",
+                data: DONUT_DATA,
+                donutValue: "amount",
+                donutName: "channel",
+                onSliceClick,
+                get donutActiveIndex() {
+                    return bindings.active;
+                },
+                set donutActiveIndex(v: number | null) {
+                    bindings.active = v;
+                },
+                get hoveredSliceId() {
+                    return bindings.hovered;
+                },
+                set hoveredSliceId(v: string | null) {
+                    bindings.hovered = v;
+                },
+            });
+
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-polar-stage");
+            const srLive = container.querySelector<HTMLDivElement>(".cs-chart-sr-live");
+            expect(stage?.getAttribute("role")).toBe("application");
+            expect(stage?.getAttribute("tabindex")).toBe("0");
+            expect(srLive?.getAttribute("aria-live")).toBe("polite");
+            expect(srLive?.getAttribute("aria-atomic")).toBe("true");
+            expect(srLive?.textContent?.trim()).toBe("");
+
+            const sendKey = (key: string): KeyboardEvent => {
+                const ev = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+                stage?.dispatchEvent(ev);
+                flushSync();
+                return ev;
+            };
+
+            // Idle Escape / Enter / Space are no-ops and do not preventDefault
+            expect(sendKey("Escape").defaultPrevented).toBe(false);
+            expect(sendKey("Enter").defaultPrevented).toBe(false);
+            expect(sendKey(" ").defaultPrevented).toBe(false);
+            expect(onSliceClick).not.toHaveBeenCalled();
+
+            // ArrowRight from null -> index 0 ("Direct: 500 (50%)")
+            expect(sendKey("ArrowRight").defaultPrevented).toBe(true);
+            expect(bindings.active).toBe(0);
+            expect(bindings.hovered).toBe("Direct");
+            expect(srLive?.textContent?.trim()).toBe("Direct: 500 (50%)");
+
+            // ArrowDown -> index 1 ("Organic: 300 (30%)")
+            expect(sendKey("ArrowDown").defaultPrevented).toBe(true);
+            expect(bindings.active).toBe(1);
+            expect(srLive?.textContent?.trim()).toBe("Organic: 300 (30%)");
+
+            // End -> last index 2 ("Referral: 200 (20%)")
+            expect(sendKey("End").defaultPrevented).toBe(true);
+            expect(bindings.active).toBe(2);
+            expect(srLive?.textContent?.trim()).toBe("Referral: 200 (20%)");
+
+            // ArrowRight at upper bound clamps at 2
+            sendKey("ArrowRight");
+            expect(bindings.active).toBe(2);
+
+            // ArrowUp -> index 1
+            expect(sendKey("ArrowUp").defaultPrevented).toBe(true);
+            expect(bindings.active).toBe(1);
+
+            // ArrowLeft -> index 0
+            expect(sendKey("ArrowLeft").defaultPrevented).toBe(true);
+            expect(bindings.active).toBe(0);
+
+            // ArrowLeft at lower bound clamps at 0
+            sendKey("ArrowLeft");
+            expect(bindings.active).toBe(0);
+
+            // Enter & Space invoke onSliceClick with active datum/index/arc
+            expect(sendKey("Enter").defaultPrevented).toBe(true);
+            expect(onSliceClick).toHaveBeenCalledTimes(1);
+            expect(onSliceClick.mock.calls[0]?.[0]).toEqual(DONUT_DATA[0]);
+            expect(onSliceClick.mock.calls[0]?.[1]).toBe(0);
+
+            expect(sendKey("End").defaultPrevented).toBe(true);
+            expect(sendKey(" ").defaultPrevented).toBe(true);
+            expect(onSliceClick).toHaveBeenCalledTimes(2);
+            expect(onSliceClick.mock.calls[1]?.[0]).toEqual(DONUT_DATA[2]);
+            expect(onSliceClick.mock.calls[1]?.[1]).toBe(2);
+
+            // Home -> index 0
+            expect(sendKey("Home").defaultPrevented).toBe(true);
+            expect(bindings.active).toBe(0);
+
+            // Escape clears activeIndex & live region and calls preventDefault
+            expect(sendKey("Escape").defaultPrevented).toBe(true);
+            expect(bindings.active).toBeNull();
+            expect(bindings.hovered).toBeNull();
+            expect(srLive?.textContent?.trim()).toBe("");
+
+            // ArrowLeft from null jumps to last slice (index 2)
+            expect(sendKey("ArrowLeft").defaultPrevented).toBe(true);
+            expect(bindings.active).toBe(2);
+            expect(srLive?.textContent?.trim()).toBe("Referral: 200 (20%)");
+
+            // Blur clears activeIndex & live region
+            stage?.dispatchEvent(new FocusEvent("blur"));
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(bindings.hovered).toBeNull();
+            expect(srLive?.textContent?.trim()).toBe("");
+        });
+
+        it("preserves stable legend/index keyboard stepping without skips when sort={true} reorders arc angles", () => {
+            stubM5CanvasRect(280, 260);
+
+            const unsortedData: SliceRow[] = [
+                { channel: "Small", amount: 100 },
+                { channel: "Large", amount: 600 },
+                { channel: "Medium", amount: 300 },
+            ];
+
+            const bindings = $state({
+                active: null as number | null,
+                hovered: null as string | null,
+            });
+
+            renderHost({
+                mode: "donut-chart",
+                variant: "elevated",
+                size: "md",
+                data: unsortedData,
+                donutValue: "amount",
+                donutName: "channel",
+                arcSort: true,
+                get donutActiveIndex() {
+                    return bindings.active;
+                },
+                set donutActiveIndex(v: number | null) {
+                    bindings.active = v;
+                },
+                get hoveredSliceId() {
+                    return bindings.hovered;
+                },
+                set hoveredSliceId(v: string | null) {
+                    bindings.hovered = v;
+                },
+            });
+
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-polar-stage");
+            const visited: (string | null)[] = [];
+            for (let i = 0; i < 3; i++) {
+                stage?.dispatchEvent(
+                    new KeyboardEvent("keydown", {
+                        key: "ArrowRight",
+                        bubbles: true,
+                        cancelable: true,
+                    }),
+                );
+                flushSync();
+                visited.push(bindings.hovered);
+            }
+
+            // d3.pie() preserves input/legend order for slice indices while sorting arc angles descending
+            expect(visited).toEqual(["Small", "Large", "Medium"]);
+        });
+
+        it("renders ChartLoading shape='donut' when loading={true}, ChartEmpty for empty/all-non-positive data, and static legend when interactive={false}", () => {
+            stubM5CanvasRect(280, 260);
+
+            const props = $state({
+                mode: "donut-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                loading: true,
+                tier2Interactive: true,
+                emptyTitle: "No breakdown",
+                emptyDescription: "Nothing recorded yet",
+            });
+
+            renderHost(props);
+
+            const figure = container.querySelector<HTMLElement>("figure.cs-chart");
+            expect(figure?.dataset.loading).toBe("");
+            const loadingEl = container.querySelector<HTMLDivElement>(".cs-chart-loading");
+            expect(loadingEl).not.toBeNull();
+            expect(loadingEl?.dataset.shape).toBe("donut");
+            expect(container.querySelector(".cs-chart-polar-stage")).toBeNull();
+            expect(container.querySelector(".cs-chart-donut-legend")).toBeNull();
+            expect(container.querySelector(".cs-chart-donut-tooltip")).toBeNull();
+
+            // Empty data -> ChartEmpty
+            props.loading = false;
+            props.data = [];
+            flushSync();
+
+            expect(figure?.dataset.loading).toBeUndefined();
+            expect(figure?.dataset.empty).toBe("");
+            expect(container.querySelector(".cs-chart-empty")).not.toBeNull();
+            expect(container.querySelector(".cs-chart-empty")?.textContent).toContain("No breakdown");
+            expect(container.querySelector(".cs-chart-empty")?.textContent).toContain(
+                "Nothing recorded yet",
+            );
+            expect(container.querySelector(".cs-chart-polar-stage")).toBeNull();
+
+            // All non-positive data (0, negative, NaN) -> ChartEmpty
+            props.data = [
+                { channel: "Zero", amount: 0 },
+                { channel: "Neg", amount: -15 },
+                { channel: "NaN", amount: NaN },
+            ];
+            flushSync();
+            expect(figure?.dataset.empty).toBe("");
+            expect(container.querySelector(".cs-chart-empty")).not.toBeNull();
+            expect(container.querySelector(".cs-chart-polar-stage")).toBeNull();
+
+            // Valid data + interactive={false} -> static legend spans, non-focusable stage, no tooltip/sr-live
+            props.data = DONUT_DATA;
+            props.tier2Interactive = false;
+            flushSync();
+
+            expect(figure?.dataset.empty).toBeUndefined();
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-polar-stage");
+            expect(stage).not.toBeNull();
+            expect(stage?.getAttribute("role")).toBeNull();
+            expect(stage?.getAttribute("tabindex")).toBeNull();
+            expect(container.querySelector(".cs-chart-sr-live")).toBeNull();
+            expect(container.querySelector(".cs-chart-donut-tooltip")).toBeNull();
+            expect(container.querySelectorAll("button.cs-chart-donut-legend-item")).toHaveLength(0);
+            expect(
+                container.querySelectorAll("span.cs-chart-donut-legend-item[data-static]"),
+            ).toHaveLength(3);
+        });
+
+        it("supports centerMode='total' (never morphs) and centerMode='active' (always morphs on slice, legend, and keyboard scrub) including dynamic mode switching", () => {
+            stubM5CanvasRect(280, 260);
+
+            const props = $state({
+                mode: "donut-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                donutCenterLabel: "Revenue",
+                donutCenterMode: "total" as ChartDonutCenterMode,
+                tier2Tooltip: true,
+                tooltipMode: "item" as ChartTooltipMode,
+            });
+
+            renderHost(props);
+
+            const centerEl = container.querySelector<HTMLDivElement>(".cs-chart-center");
+            const shareEl = centerEl?.querySelector<HTMLSpanElement>(".cs-chart-center-share");
+            const slices = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            const legendButtons = [
+                ...container.querySelectorAll<HTMLButtonElement>(
+                    "button.cs-chart-donut-legend-item",
+                ),
+            ];
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-polar-stage");
+
+            // centerMode="total": never morphs on slice hover, legend hover, keyboard scrub, or tooltip={false}
+            slices[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(shareEl?.dataset.empty).toBe("");
+
+            props.tier2Tooltip = false;
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(shareEl?.dataset.empty).toBe("");
+
+            legendButtons[1]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(shareEl?.dataset.empty).toBe("");
+
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(shareEl?.dataset.empty).toBe("");
+
+            // Dynamically switching to centerMode="active" while slice 1 ("Organic", stepped from 0 via ArrowRight) is active immediately morphs center (even with tooltip enabled)
+            props.tier2Tooltip = true;
+            props.donutCenterMode = "active";
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Organic",
+            );
+            expect(shareEl?.textContent?.trim()).toBe("30%");
+            expect(shareEl?.dataset.empty).toBeUndefined();
+
+            // Direct slice hover on slice 0 ("Direct") morphs center even while tooltip is enabled
+            slices[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Direct",
+            );
+            expect(shareEl?.textContent?.trim()).toBe("50%");
+
+            // Leave slice 0, then legend hover on item 2 morphs center
+            slices[0]?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            legendButtons[2]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Referral",
+            );
+            expect(shareEl?.textContent?.trim()).toBe("20%");
+
+            // Escape clears active & legend hover and restores idle Total
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(centerEl?.querySelector(".cs-chart-center-label")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(shareEl?.dataset.empty).toBe("");
+        });
+
+        it("renders distinct separated paths for gap={4} vs gap={0} and keeps single-slice donuts seamless", () => {
+            stubM5CanvasRect(280, 260);
+
+            const props = $state({
+                mode: "donut-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                donutGap: 0,
+            });
+
+            renderHost(props);
+
+            const zeroGapPaths = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ].map((el) => el.getAttribute("d") ?? "");
+            expect(zeroGapPaths).toHaveLength(3);
+
+            props.donutGap = 4;
+            flushSync();
+            const gappedPaths = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ].map((el) => el.getAttribute("d") ?? "");
+            expect(gappedPaths).toHaveLength(3);
+
+            for (let i = 0; i < 3; i++) {
+                expect(gappedPaths[i]?.length).toBeGreaterThan(0);
+                expect(gappedPaths[i]).not.toContain("NaN");
+                expect(gappedPaths[i]).not.toBe(zeroGapPaths[i]);
+            }
+
+            // Single 100% slice closes seamlessly regardless of gap={4} vs gap={0}
+            props.data = [{ channel: "Only", amount: 100 }];
+            props.donutGap = 0;
+            flushSync();
+            const singleZeroGap = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ].map((el) => el.getAttribute("d") ?? "");
+
+            props.donutGap = 4;
+            flushSync();
+            const singleWithGap = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ].map((el) => el.getAttribute("d") ?? "");
+            expect(singleWithGap).toEqual(singleZeroGap);
+        });
+
+        it("sets localized pie vs donut aria-roledescription & default aria-label and toggles figure[data-scrubbing] + stage[data-scrubbing]", () => {
+            stubM5CanvasRect(280, 260);
+
+            const props = $state({
+                mode: "donut-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: DONUT_DATA as readonly SliceRow[],
+                donutValue: "amount",
+                donutName: "channel",
+                arcInnerRadiusRatio: 0.68,
+            });
+
+            renderHost(props);
+
+            const figure = container.querySelector<HTMLElement>("figure.cs-chart");
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-polar-stage");
+            expect(figure).not.toBeNull();
+            expect(stage).not.toBeNull();
+
+            // Donut (innerRadiusRatio > 0) semantics
+            expect(stage?.getAttribute("aria-roledescription")).toBe(
+                t({ de: "Ringdiagramm", en: "donut chart" }),
+            );
+            expect(stage?.getAttribute("aria-label")).toBe(
+                t({ de: "Interaktives Ringdiagramm", en: "Interactive donut chart" }),
+            );
+
+            // Full Pie (innerRadiusRatio = 0) semantics
+            props.arcInnerRadiusRatio = 0;
+            flushSync();
+            expect(stage?.getAttribute("aria-roledescription")).toBe(
+                t({ de: "Kreisdiagramm", en: "pie chart" }),
+            );
+            expect(stage?.getAttribute("aria-label")).toBe(
+                t({ de: "Interaktives Kreisdiagramm", en: "Interactive pie chart" }),
+            );
+
+            // Switch back to donut and verify figure[data-scrubbing] & stage[data-scrubbing]
+            props.arcInnerRadiusRatio = 0.68;
+            flushSync();
+
+            expect(figure?.dataset.scrubbing).toBeUndefined();
+            expect(stage?.dataset.scrubbing).toBeUndefined();
+
+            // Direct slice hover sets both figure[data-scrubbing] and stage[data-scrubbing]
+            const slices = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+            slices[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(figure?.dataset.scrubbing).toBe("");
+            expect(stage?.dataset.scrubbing).toBe("");
+
+            // Leave clears both
+            slices[0]?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(figure?.dataset.scrubbing).toBeUndefined();
+            expect(stage?.dataset.scrubbing).toBeUndefined();
+
+            // Keyboard scrub sets both; Escape clears both
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(figure?.dataset.scrubbing).toBe("");
+            expect(stage?.dataset.scrubbing).toBe("");
+
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(figure?.dataset.scrubbing).toBeUndefined();
+            expect(stage?.dataset.scrubbing).toBeUndefined();
+
+            // Legend hover sets stage[data-scrubbing] and clears after 60ms grace timer
+            vi.useFakeTimers();
+            try {
+                const legendBtn = container.querySelector<HTMLButtonElement>(
+                    "button.cs-chart-donut-legend-item",
+                );
+                legendBtn?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+                flushSync();
+                expect(stage?.dataset.scrubbing).toBe("");
+
+                legendBtn?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+                flushSync();
+                vi.advanceTimersByTime(65);
+                flushSync();
+                expect(stage?.dataset.scrubbing).toBeUndefined();
+            } finally {
+                vi.useRealTimers();
+            }
         });
     });
 });
