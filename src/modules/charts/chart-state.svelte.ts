@@ -28,7 +28,9 @@ export const CHART_ORIENTATIONS = ["vertical", "horizontal"] as const;
 export const CHART_BAR_MODES = ["grouped", "stacked"] as const;
 export const CHART_AREA_MODES = ["overlay", "stacked"] as const;
 export const CHART_AXIS_POSITIONS = ["bottom", "left", "right"] as const;
-export const CHART_LEGEND_POSITIONS = ["top", "bottom", "none"] as const;
+export const CHART_LEGEND_POSITIONS = ["top", "bottom", "end", "none"] as const;
+export const CHART_LEGEND_PLACEMENTS = ["top", "bottom", "end"] as const;
+export const CHART_LEGEND_MARKERS = ["auto", "line", "bar", "dot", "dashed"] as const;
 export const CHART_X_SCALE_TYPES = ["auto", "band", "point", "time", "linear"] as const;
 export const CHART_TICK_ANGLES = ["auto", 0, -35, -45] as const;
 export const CHART_TITLE_ELEMENTS = ["h2", "h3", "h4", "h5", "h6", "div"] as const;
@@ -44,6 +46,8 @@ export type ChartBarMode = (typeof CHART_BAR_MODES)[number];
 export type ChartAreaMode = (typeof CHART_AREA_MODES)[number];
 export type ChartAxisPosition = (typeof CHART_AXIS_POSITIONS)[number];
 export type ChartLegendPosition = (typeof CHART_LEGEND_POSITIONS)[number];
+export type ChartLegendPlacement = (typeof CHART_LEGEND_PLACEMENTS)[number];
+export type ChartLegendMarker = (typeof CHART_LEGEND_MARKERS)[number];
 export type ChartXScaleType = (typeof CHART_X_SCALE_TYPES)[number];
 export type ChartResolvedXScaleType = Exclude<ChartXScaleType, "auto">;
 export type ChartTickAngle = (typeof CHART_TICK_ANGLES)[number];
@@ -59,6 +63,20 @@ export interface ChartMargins {
     right: number;
     bottom: number;
     left: number;
+}
+
+export interface ChartSvgRect {
+    readonly left: number;
+    readonly top: number;
+    readonly width: number;
+    readonly height: number;
+}
+
+export interface ChartActiveAnchor {
+    readonly plotX: number;
+    readonly plotY: number;
+    readonly clientX: number;
+    readonly clientY: number;
 }
 
 export interface ChartXScale {
@@ -265,6 +283,8 @@ export class ChartState<TDatum = ChartDatum> {
     hiddenSeriesIds = $state.raw<readonly string[]>([]);
     hoveredSeriesId = $state<string | null>(null);
     plotClipId = $state<string>("");
+    svgRect = $state.raw<ChartSvgRect | null>(null);
+    pointerPosition = $state.raw<{ readonly x: number; readonly y: number } | null>(null);
     private axisOverrides = $state.raw<Partial<Record<ChartAxisPosition, ChartAxisConfig>>>({});
     private rawActiveIndex = $state<number | null>(null);
 
@@ -284,6 +304,7 @@ export class ChartState<TDatum = ChartDatum> {
     readonly hasY2Axis = $derived(this.rightSeries.length > 0 && this.y2Axis.show !== false);
     readonly isEmpty = $derived(this.data.length === 0);
     readonly allSeriesHidden = $derived(this.series.length > 0 && this.visibleSeries.length === 0);
+    readonly scrubbing = $derived(this.activeIndex !== null);
 
     readonly xValues = $derived.by((): readonly ChartXValue[] =>
         this.data.map((datum, index) => this.extractX(datum, index)),
@@ -525,6 +546,44 @@ export class ChartState<TDatum = ChartDatum> {
         });
     });
 
+    readonly activeAnchor = $derived.by((): ChartActiveAnchor | null => {
+        const index = this.activeIndex;
+        if (index === null || this.data.length === 0 || !this.hasSize) return null;
+
+        const datum = this.data[index];
+        if (datum === undefined) return null;
+
+        const xValue = this.extractX(datum, index);
+        let plotX: number;
+        let plotY: number;
+
+        if (this.orientation === "horizontal") {
+            plotY = this.xScale.center(xValue);
+            const coords = this.collectActiveValueCoords(index, datum, true);
+            plotX = coords.length > 0 ? Math.max(...coords) : this.plotWidth * 0.5;
+        } else {
+            plotX = this.xScale.center(xValue);
+            const coords = this.collectActiveValueCoords(index, datum, false);
+            if (coords.length > 0) {
+                let sum = 0;
+                for (const coord of coords) sum += coord;
+                plotY = Math.max(0, Math.min(this.plotHeight, sum / coords.length));
+            } else {
+                plotY = this.plotHeight * 0.35;
+            }
+        }
+
+        const rectLeft = this.svgRect?.left ?? 0;
+        const rectTop = this.svgRect?.top ?? 0;
+
+        return {
+            plotX,
+            plotY,
+            clientX: rectLeft + this.margins.left + plotX,
+            clientY: rectTop + this.margins.top + plotY,
+        };
+    });
+
     constructor(options: ChartStateOptions<TDatum> = {}) {
         if (options.variant !== undefined) this.variant = options.variant;
         if (options.size !== undefined) this.size = options.size;
@@ -603,6 +662,78 @@ export class ChartState<TDatum = ChartDatum> {
         const safeHeight = Number.isFinite(height) && height > 0 ? Math.round(height) : 0;
         if (this.containerWidth !== safeWidth) this.containerWidth = safeWidth;
         if (this.containerHeight !== safeHeight) this.containerHeight = safeHeight;
+    }
+
+    setSvgRect(rect: ChartSvgRect | null): void {
+        const current = untrack(() => this.svgRect);
+        if (rect === null) {
+            if (current !== null) this.svgRect = null;
+            return;
+        }
+        if (
+            current !== null &&
+            current.left === rect.left &&
+            current.top === rect.top &&
+            current.width === rect.width &&
+            current.height === rect.height
+        ) {
+            return;
+        }
+        this.svgRect = rect;
+    }
+
+    setPointerPosition(position: { readonly x: number; readonly y: number } | null): void {
+        const current = untrack(() => this.pointerPosition);
+        if (position === null) {
+            if (current !== null) this.pointerPosition = null;
+            return;
+        }
+        if (current !== null && current.x === position.x && current.y === position.y) {
+            return;
+        }
+        this.pointerPosition = position;
+    }
+
+    private collectActiveValueCoords(index: number, datum: TDatum, isHorizontal: boolean): number[] {
+        const coords: number[] = [];
+
+        if (this.stacked && this.leftSeries.length > 0) {
+            let positiveSum = 0;
+            let negativeSum = 0;
+            let hasPositive = false;
+            let hasNegative = false;
+            for (const item of this.leftSeries) {
+                const value = this.extractSeriesValue(item, datum, index);
+                if (value === null) continue;
+                if (value >= 0) {
+                    positiveSum += value;
+                    hasPositive = true;
+                } else {
+                    negativeSum += value;
+                    hasNegative = true;
+                }
+            }
+            if (hasPositive) coords.push(this.yScale.scale(positiveSum));
+            if (hasNegative) coords.push(this.yScale.scale(negativeSum));
+        } else {
+            for (const item of this.leftSeries) {
+                const value = this.extractSeriesValue(item, datum, index);
+                if (value !== null) {
+                    coords.push(this.yScale.scale(value));
+                }
+            }
+        }
+
+        if (!isHorizontal && this.y2Scale !== null) {
+            for (const item of this.rightSeries) {
+                const value = this.extractSeriesValue(item, datum, index);
+                if (value !== null) {
+                    coords.push(this.y2Scale.scale(value));
+                }
+            }
+        }
+
+        return coords;
     }
 
     setAxisOverride(position: ChartAxisPosition, override: ChartAxisConfig | null): void {
@@ -730,7 +861,13 @@ export class ChartState<TDatum = ChartDatum> {
         if (datum === undefined) return null;
 
         const xValue = this.extractX(datum, clamped);
-        const formatX = this.xAxis.format ?? formatDefaultTick;
+        const xAxisPosition: ChartAxisPosition =
+            this.orientation === "horizontal" ? "left" : "bottom";
+        const yAxisPosition: ChartAxisPosition =
+            this.orientation === "horizontal" ? "bottom" : "left";
+        const formatX = this.getEffectiveAxisConfig(xAxisPosition).format ?? formatDefaultTick;
+        const yAxisFormat = this.getEffectiveAxisConfig(yAxisPosition).format;
+        const y2AxisFormat = this.getEffectiveAxisConfig("right").format;
         const xLabel = formatX(xValue);
 
         let total = 0;
@@ -738,8 +875,7 @@ export class ChartState<TDatum = ChartDatum> {
 
         const items = this.visibleSeries.map((seriesItem) => {
             const value = this.extractSeriesValue(seriesItem, datum, clamped);
-            const axisFormat =
-                seriesItem.yAxis === "right" ? this.y2Axis.format : this.yAxis.format;
+            const axisFormat = seriesItem.yAxis === "right" ? y2AxisFormat : yAxisFormat;
             const formatted =
                 value === null
                     ? "\u{2014}"

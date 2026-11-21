@@ -7,6 +7,9 @@
     import { Badge, BadgeLabel } from "cs/svelte/badge";
     import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "cs/svelte/card";
     import {
+        AreaChart,
+        CHART_AREA_MODES,
+        CHART_CURVES,
         CHART_LOADING_SHAPES,
         CHART_SIZES,
         CHART_VARIANTS,
@@ -14,13 +17,20 @@
         ChartActions,
         ChartAxis,
         ChartCanvas,
+        ChartCrosshair,
         ChartDescription,
         ChartEmpty,
         ChartGrid,
         ChartHeader,
+        ChartLegend,
         ChartLoading,
+        ChartOverlay,
         ChartState,
         ChartTitle,
+        ChartTooltip,
+        LineChart,
+        type ChartAreaMode,
+        type ChartCurve,
         type ChartLoadingShape,
         type ChartMonotoneHue,
         type ChartSeries,
@@ -30,8 +40,97 @@
         type ChartXValue,
     } from "cs/svelte/charts";
     import { SegmentedControl, SegmentedControlItem, SegmentedControlLabel } from "cs/svelte/segmented-control";
+    import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
 
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
+
+    interface ArrTimeDatum {
+        date: Date;
+        actual: number | null;
+        forecast: number;
+    }
+
+    interface RetentionDatum {
+        month: string;
+        retention: number;
+    }
+
+    interface ActiveTeamsDatum {
+        date: Date;
+        enterprise: number;
+        midMarket: number;
+    }
+
+    interface CloudTrafficDatum {
+        date: Date;
+        enterprise: number;
+        growth: number;
+        starter: number;
+    }
+
+    const ARR_TIME_DATA: readonly ArrTimeDatum[] = [
+        { date: new Date(2026, 0, 1), actual: 410, forecast: 405 },
+        { date: new Date(2026, 1, 1), actual: 438, forecast: 432 },
+        { date: new Date(2026, 2, 1), actual: 472, forecast: 460 },
+        { date: new Date(2026, 3, 1), actual: 495, forecast: 488 },
+        { date: new Date(2026, 4, 1), actual: null, forecast: 518 },
+        { date: new Date(2026, 5, 1), actual: 544, forecast: 548 },
+        { date: new Date(2026, 6, 1), actual: 582, forecast: 576 },
+        { date: new Date(2026, 7, 1), actual: 614, forecast: 604 },
+        { date: new Date(2026, 8, 1), actual: 642, forecast: 634 },
+        { date: new Date(2026, 9, 1), actual: 678, forecast: 666 },
+        { date: new Date(2026, 10, 1), actual: 712, forecast: 698 },
+        { date: new Date(2026, 11, 1), actual: 748, forecast: 732 },
+    ];
+
+    const ARR_TIME_SERIES: readonly ChartSeries<ArrTimeDatum>[] = [
+        { id: "actual", label: "Actual ARR" },
+        { id: "forecast", label: "Forecast", dashed: true },
+    ];
+
+    const RETENTION_DATA: readonly RetentionDatum[] = [
+        { month: "Jul", retention: 112 },
+        { month: "Aug", retention: 114 },
+        { month: "Sep", retention: 113 },
+        { month: "Oct", retention: 117 },
+        { month: "Nov", retention: 119 },
+        { month: "Dec", retention: 122 },
+    ];
+
+    const RETENTION_SERIES: readonly ChartSeries<RetentionDatum>[] = [
+        { id: "retention", label: "Net Retention" },
+    ];
+
+    const ACTIVE_TEAMS_DATA: readonly ActiveTeamsDatum[] = [
+        { date: new Date(2026, 6, 1), enterprise: 1420, midMarket: 980 },
+        { date: new Date(2026, 7, 1), enterprise: 1510, midMarket: 1040 },
+        { date: new Date(2026, 8, 1), enterprise: 1590, midMarket: 1120 },
+        { date: new Date(2026, 9, 1), enterprise: 1680, midMarket: 1190 },
+        { date: new Date(2026, 10, 1), enterprise: 1760, midMarket: 1270 },
+        { date: new Date(2026, 11, 1), enterprise: 1890, midMarket: 1350 },
+    ];
+
+    const ACTIVE_TEAMS_SERIES: readonly ChartSeries<ActiveTeamsDatum>[] = [
+        { id: "enterprise", label: "Enterprise" },
+        { id: "midMarket", label: "Mid-Market" },
+    ];
+
+    const CLOUD_TRAFFIC_DATA: readonly CloudTrafficDatum[] = [
+        { date: new Date(2026, 0, 1), enterprise: 320, growth: 180, starter: 95 },
+        { date: new Date(2026, 1, 1), enterprise: 348, growth: 196, starter: 102 },
+        { date: new Date(2026, 2, 1), enterprise: 382, growth: 215, starter: 114 },
+        { date: new Date(2026, 3, 1), enterprise: 374, growth: 228, starter: 118 },
+        { date: new Date(2026, 4, 1), enterprise: 416, growth: 246, starter: 126 },
+        { date: new Date(2026, 5, 1), enterprise: 452, growth: 268, starter: 134 },
+        { date: new Date(2026, 6, 1), enterprise: 488, growth: 292, starter: 142 },
+        { date: new Date(2026, 7, 1), enterprise: 526, growth: 318, starter: 154 },
+    ];
+
+    const CLOUD_TRAFFIC_SERIES: readonly ChartSeries<CloudTrafficDatum>[] = [
+        { id: "enterprise", label: "Enterprise" },
+        { id: "growth", label: "Growth" },
+        { id: "starter", label: "Starter" },
+    ];
 
     interface MonthlyDatum {
         month: string;
@@ -49,6 +148,34 @@
         category: string;
         budget: number;
     }
+
+    interface RevenueMixDatum {
+        month: string;
+        subscriptions: number;
+        usage: number;
+        services: number;
+    }
+
+    const REVENUE_MIX_DATA: readonly RevenueMixDatum[] = [
+        { month: "Jan", subscriptions: 48_200, usage: 18_400, services: 9600 },
+        { month: "Feb", subscriptions: 52_600, usage: 21_100, services: 10_400 },
+        { month: "Mar", subscriptions: 57_900, usage: 24_800, services: 11_200 },
+        { month: "Apr", subscriptions: 55_400, usage: 22_900, services: 10_800 },
+        { month: "May", subscriptions: 64_800, usage: 27_600, services: 12_500 },
+        { month: "Jun", subscriptions: 71_500, usage: 31_200, services: 14_100 },
+    ];
+
+    const REVENUE_MIX_SERIES: readonly ChartSeries<RevenueMixDatum>[] = [
+        { id: "subscriptions", label: "Subscriptions", type: "line" },
+        { id: "usage", label: "Usage", type: "bar" },
+        { id: "services", label: "Services", dashed: true },
+    ];
+
+    const TOOLTIP_CURRENCY_FORMAT = {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+    } as const;
 
     const MONTHLY_DATA: readonly MonthlyDatum[] = [
         { month: "Jan", revenue: 42_000, expenses: 28_000 },
@@ -172,6 +299,24 @@
         return `${value}%`;
     }
 
+    const interactiveChart = new ChartState<RevenueMixDatum>({
+        variant: "elevated",
+        size: "md",
+        data: REVENUE_MIX_DATA,
+        x: "month",
+        preferBandX: true,
+        series: REVENUE_MIX_SERIES,
+    });
+
+    const nestedInteractiveChart = new ChartState<RevenueMixDatum>({
+        variant: "sunken",
+        size: "sm",
+        data: REVENUE_MIX_DATA,
+        x: "month",
+        preferBandX: true,
+        series: REVENUE_MIX_SERIES,
+    });
+
     type PreviewStateMode = "ready" | "empty" | "all-hidden" | "loading";
 
     const stateChart = new ChartState<MonthlyDatum>({
@@ -201,9 +346,107 @@
         stateChart.hiddenSeriesIds = mode === "all-hidden" ? MONTHLY_SERIES.map((item) => item.id) : [];
     }
 
+    let lineCurve = $state<ChartCurve>("monotone");
+    let connectNulls = $state(false);
+    let areaMode = $state<ChartAreaMode>("stacked");
+
     const closeScript = ["</", "script>"].join("");
 
     /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
+    const lineChartCode = `<script lang="ts">
+    import { LineChart, type ChartCurve, type ChartSeries } from "cs/svelte/charts";
+
+    let curve = $state<ChartCurve>("monotone");
+    let connectNulls = $state(false);
+
+    const series: ChartSeries<ArrTimeDatum>[] = [
+        { id: "actual", label: "Actual ARR" },
+        { id: "forecast", label: "Forecast", dashed: true },
+    ];
+${closeScript}
+
+<LineChart
+    variant="elevated"
+    size="md"
+    title="Annual Recurring Revenue"
+    description="Monthly actuals vs. baseline forecast ($k)"
+    {data}
+    x="date"
+    {series}
+    {curve}
+    {connectNulls}
+    height={280}
+/>`;
+
+    const areaChartCode = `<script lang="ts">
+    import { AreaChart, type ChartAreaMode } from "cs/svelte/charts";
+
+    let mode = $state<ChartAreaMode>("stacked");
+${closeScript}
+
+<AreaChart
+    variant="elevated"
+    size="md"
+    title="Cloud Usage"
+    description="Monthly compute units by tier"
+    {data}
+    x="date"
+    {series}
+    {mode}
+    height={290}
+/>`;
+
+    const interactiveCode = `<script lang="ts">
+    import { Badge, BadgeLabel } from "cs/svelte/badge";
+    import {
+        Chart,
+        ChartAxis,
+        ChartCanvas,
+        ChartCrosshair,
+        ChartDescription,
+        ChartEmpty,
+        ChartGrid,
+        ChartHeader,
+        ChartLegend,
+        ChartOverlay,
+        ChartState,
+        ChartTitle,
+        ChartTooltip,
+    } from "cs/svelte/charts";
+
+    const chart = new ChartState({ data, x: "month", preferBandX: true, series });
+${closeScript}
+
+<Chart variant="elevated" size="md" state={chart}>
+    <ChartHeader>
+        <ChartTitle>Revenue Mix</ChartTitle>
+        <ChartDescription>First half recurring and usage bookings</ChartDescription>
+    </ChartHeader>
+    <ChartLegend position="top" />
+    {#if chart.allSeriesHidden}
+        <ChartEmpty />
+    {:else}
+        <ChartCanvas height={260}>
+            <ChartGrid />
+            <ChartAxis position="left" />
+            <ChartAxis position="bottom" />
+            <ChartCrosshair />
+            {#snippet overlay()}
+                <ChartOverlay>
+                    <Badge variant="soft" color="positive" size="sm" class="absolute top-2 right-2">
+                        <BadgeLabel>+24% H1</BadgeLabel>
+                    </Badge>
+                </ChartOverlay>
+            {/snippet}
+        </ChartCanvas>
+    {/if}
+    <ChartTooltip
+        showTotal
+        numberFormat={{ style: "currency", currency: "USD", maximumFractionDigits: 0 }}
+        locales="en-US"
+    />
+</Chart>`;
+
     const variantsCode = `<script lang="ts">
     import {
         Chart,
@@ -266,8 +509,165 @@ ${closeScript}
 <div class="flex flex-col gap-10">
     <PreviewHeader
         title="Charts"
-        description="Borderless OKLCH chart shell, responsive SVG canvas, snapped Cartesian grid, smart axes, and empty or loading states."
+        description="Borderless OKLCH chart shell, line and area presets, responsive SVG canvas, interactive crosshair, top-layer tooltip, and legend."
     />
+
+    <PreviewSection
+        title="Line Chart"
+        description="Multi-series time scale with dashed forecast, null-gap bridging, curve presets, and monotone single-hue styling."
+        code={lineChartCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8 flex flex-col gap-6">
+            <LineChart
+                variant="elevated"
+                size="md"
+                title="Annual Recurring Revenue"
+                description="Monthly actuals vs. baseline forecast ($k)"
+                data={ARR_TIME_DATA}
+                x="date"
+                series={ARR_TIME_SERIES}
+                curve={lineCurve}
+                {connectNulls}
+                height={280}
+            >
+                {#snippet actions()}
+                    <SegmentedControl size="xs" bind:value={lineCurve} aria-label="Line curve">
+                        {#each CHART_CURVES as curve (curve)}
+                            <SegmentedControlItem value={curve}>
+                                <SegmentedControlLabel class="capitalize">{curve}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                    <ToggleButton variant="soft" color="accent" size="xs" bind:pressed={connectNulls}>
+                        <ToggleButtonLabel>Connect nulls</ToggleButtonLabel>
+                    </ToggleButton>
+                {/snippet}
+            </LineChart>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card variant="elevated" size="md">
+                    <CardHeader>
+                        <CardTitle>Net Retention</CardTitle>
+                        <CardDescription>Trailing six-month cohort rate (%)</CardDescription>
+                    </CardHeader>
+                    <CardBody>
+                        <LineChart
+                            variant="sunken"
+                            size="sm"
+                            monotone="teal"
+                            data={RETENTION_DATA}
+                            x="month"
+                            series={RETENTION_SERIES}
+                            legend="none"
+                            height={196}
+                        />
+                    </CardBody>
+                </Card>
+
+                <LineChart
+                    variant="elevated"
+                    size="sm"
+                    monotone="accent"
+                    title="Weekly Active Teams"
+                    description="Enterprise and mid-market workspaces"
+                    data={ACTIVE_TEAMS_DATA}
+                    x="date"
+                    series={ACTIVE_TEAMS_SERIES}
+                    legend="bottom"
+                    height={208}
+                />
+            </div>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Area Chart"
+        description="Vertical OKLCH gradients with overlay and stacked modes, live stacked totals, and interactive legend filtering."
+        code={areaChartCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
+            <AreaChart
+                variant="elevated"
+                size="md"
+                title="Cloud Usage"
+                description="Monthly compute units by tier"
+                data={CLOUD_TRAFFIC_DATA}
+                x="date"
+                series={CLOUD_TRAFFIC_SERIES}
+                mode={areaMode}
+                height={290}
+            >
+                {#snippet actions()}
+                    <SegmentedControl size="xs" bind:value={areaMode} aria-label="Area mode">
+                        {#each CHART_AREA_MODES as mode (mode)}
+                            <SegmentedControlItem value={mode}>
+                                <SegmentedControlLabel class="capitalize">{mode}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                {/snippet}
+            </AreaChart>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Interactive"
+        description="Pointer and keyboard crosshair scrubbing, top-layer morphing tooltip, interactive legend filtering, and plot-aligned overlays."
+        code={interactiveCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8 flex flex-col gap-6">
+            <Chart variant="elevated" size="md" state={interactiveChart}>
+                <ChartHeader>
+                    <ChartTitle>Revenue Mix</ChartTitle>
+                    <ChartDescription>First half recurring and usage bookings</ChartDescription>
+                </ChartHeader>
+                <ChartLegend position="top" />
+                {#if interactiveChart.allSeriesHidden}
+                    <ChartEmpty description="Toggle a series above or reset to restore the chart." />
+                {:else}
+                    <ChartCanvas height={260}>
+                        <ChartGrid />
+                        <ChartAxis position="left" />
+                        <ChartAxis position="bottom" />
+                        <ChartCrosshair />
+                        {#snippet overlay()}
+                            <ChartOverlay>
+                                <Badge variant="soft" color="positive" size="sm" class="absolute top-2 right-2">
+                                    <BadgeLabel>+24% H1</BadgeLabel>
+                                </Badge>
+                            </ChartOverlay>
+                        {/snippet}
+                    </ChartCanvas>
+                {/if}
+                <ChartTooltip showTotal numberFormat={TOOLTIP_CURRENCY_FORMAT} locales="en-US" />
+            </Chart>
+
+            <div class="max-w-lg">
+                <Card variant="elevated" size="md">
+                    <CardHeader>
+                        <CardTitle>Q2 Billing</CardTitle>
+                        <CardDescription>Monthly revenue breakdown</CardDescription>
+                    </CardHeader>
+                    <CardBody>
+                        <Chart variant="sunken" size="sm" state={nestedInteractiveChart}>
+                            {#if nestedInteractiveChart.allSeriesHidden}
+                                <ChartEmpty description="Restore all series to continue." />
+                            {:else}
+                                <ChartCanvas height={190}>
+                                    <ChartGrid />
+                                    <ChartAxis position="left" />
+                                    <ChartAxis position="bottom" />
+                                    <ChartCrosshair />
+                                </ChartCanvas>
+                            {/if}
+                            <ChartLegend position="bottom" />
+                            <ChartTooltip showTotal numberFormat={TOOLTIP_CURRENCY_FORMAT} locales="en-US" />
+                        </Chart>
+                    </CardBody>
+                </Card>
+            </div>
+        </div>
+    </PreviewSection>
 
     <PreviewSection
         title="Shell Variants"
