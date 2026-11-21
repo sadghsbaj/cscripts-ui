@@ -26,7 +26,7 @@
 
 ## Modules
 
-- Aufklappbarer Bereich
+- [ ] Collapsible
 - [x] Data Table
 - [ ] Charts
 - [x] DND
