@@ -28,7 +28,7 @@
 
 - [ ] Collapsible
 - [x] Data Table
-- [ ] Charts
+- [x] Charts
 - [x] DND
 - [ ] TreeList
 - [ ] Tablist
