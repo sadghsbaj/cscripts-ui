@@ -1,0 +1,373 @@
+@layer components.primitive {
+    .cs-avatar {
+        --cs-avatar-size: 32px;
+        --cs-avatar-radius: 42%;
+        --cs-avatar-squircle: var(--cs-squircle-smooth);
+        --cs-avatar-font-size: 12px;
+        --cs-avatar-status-size: 8px;
+        --cs-avatar-ring-color: var(--cs-color-canvas);
+        --cs-avatar-ring-width: 2px;
+        --cs-avatar-pattern-color: currentColor;
+        --cs-avatar-pattern-opacity: 0.16;
+        --cs-avatar-shadow: none;
+        --cs-avatar-shadow-active: none;
+
+        position: relative;
+        display: inline-grid;
+        flex-shrink: 0;
+        place-items: center;
+        inline-size: var(--cs-avatar-size);
+        block-size: var(--cs-avatar-size);
+        padding: 0;
+        vertical-align: middle;
+        font-family: var(--cs-font-sans);
+        color: var(--cs-avatar-fg);
+        text-decoration: none;
+        cursor: default;
+        user-select: none;
+        background: transparent;
+        border: none;
+        border-radius: var(--cs-avatar-radius);
+        corner-shape: var(--cs-avatar-squircle);
+        transition: translate var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &:is(a) {
+            cursor: pointer;
+        }
+
+        &[hidden],
+        &[data-overflow-hidden] {
+            display: none;
+        }
+
+        /* =========================================================
+         * T-SHIRT SCALE (xs..xl)
+         * ========================================================= */
+        &[data-size="xs"] {
+            --cs-avatar-size: 20px;
+            --cs-avatar-font-size: 9px;
+            --cs-avatar-status-size: 6px;
+            --cs-avatar-squircle: var(--cs-squircle-soft);
+        }
+
+        &[data-size="sm"] {
+            --cs-avatar-size: 24px;
+            --cs-avatar-font-size: 10px;
+            --cs-avatar-status-size: 7px;
+            --cs-avatar-squircle: var(--cs-squircle-soft);
+        }
+
+        &[data-size="md"] {
+            --cs-avatar-size: 32px;
+            --cs-avatar-font-size: 12px;
+            --cs-avatar-status-size: 8px;
+            --cs-avatar-squircle: var(--cs-squircle-smooth);
+        }
+
+        &[data-size="lg"] {
+            --cs-avatar-size: 40px;
+            --cs-avatar-font-size: 14px;
+            --cs-avatar-status-size: 10px;
+            --cs-avatar-squircle: var(--cs-squircle-smooth);
+        }
+
+        &[data-size="xl"] {
+            --cs-avatar-size: 56px;
+            --cs-avatar-font-size: 18px;
+            --cs-avatar-status-size: 12px;
+            --cs-avatar-squircle: var(--cs-squircle-smooth);
+        }
+
+        /* =========================================================
+         * SURFACE & COLOR SYSTEM (soft / solid)
+         * ========================================================= */
+        &[data-variant="soft"] {
+            &[data-color="auto"] {
+                --cs-avatar-bg: light-dark(
+                    oklch(0.93 0.045 var(--cs-avatar-hue, 220)),
+                    oklch(0.28 0.065 var(--cs-avatar-hue, 220))
+                );
+                --cs-avatar-bg-hover: light-dark(
+                    oklch(0.89 0.06 var(--cs-avatar-hue, 220)),
+                    oklch(0.34 0.08 var(--cs-avatar-hue, 220))
+                );
+                --cs-avatar-fg: light-dark(
+                    oklch(0.38 0.13 var(--cs-avatar-hue, 220)),
+                    oklch(0.86 0.1 var(--cs-avatar-hue, 220))
+                );
+            }
+
+            &[data-color="base"] {
+                --cs-avatar-bg: var(--cs-color-base-soft);
+                --cs-avatar-bg-hover: var(--cs-color-base-soft-hover);
+                --cs-avatar-fg: var(--cs-color-base-soft-fg);
+            }
+
+            &[data-color="accent"] {
+                --cs-avatar-bg: var(--cs-color-accent-soft);
+                --cs-avatar-bg-hover: var(--cs-color-accent-soft-hover);
+                --cs-avatar-fg: var(--cs-color-accent-soft-fg);
+            }
+
+            &[data-color="positive"] {
+                --cs-avatar-bg: var(--cs-color-positive-soft);
+                --cs-avatar-bg-hover: var(--cs-color-positive-soft-hover);
+                --cs-avatar-fg: var(--cs-color-positive-soft-fg);
+            }
+
+            &[data-color="caution"] {
+                --cs-avatar-bg: var(--cs-color-caution-soft);
+                --cs-avatar-bg-hover: var(--cs-color-caution-soft-hover);
+                --cs-avatar-fg: var(--cs-color-caution-soft-fg);
+            }
+
+            &[data-color="negative"] {
+                --cs-avatar-bg: var(--cs-color-negative-soft);
+                --cs-avatar-bg-hover: var(--cs-color-negative-soft-hover);
+                --cs-avatar-fg: var(--cs-color-negative-soft-fg);
+            }
+        }
+
+        &[data-variant="solid"] {
+            --cs-avatar-pattern-opacity: 0.1;
+
+            &[data-interactive] {
+                --cs-avatar-shadow: var(--cs-shadow-solid);
+                --cs-avatar-shadow-active: var(--cs-shadow-solid-active);
+            }
+
+            &[data-color="auto"] {
+                --cs-avatar-bg: light-dark(
+                    oklch(0.48 0.15 var(--cs-avatar-hue, 220)),
+                    oklch(0.54 0.14 var(--cs-avatar-hue, 220))
+                );
+                --cs-avatar-bg-hover: color-mix(in oklch, var(--cs-avatar-bg) 90%, white);
+                --cs-avatar-fg: white;
+            }
+
+            &[data-color="base"] {
+                --cs-avatar-bg: var(--cs-color-base-solid);
+                --cs-avatar-bg-hover: var(--cs-color-base-solid-hover);
+                --cs-avatar-fg: var(--cs-color-base-solid-fg);
+            }
+
+            &[data-color="accent"] {
+                --cs-avatar-bg: var(--cs-color-accent-solid);
+                --cs-avatar-bg-hover: var(--cs-color-accent-solid-hover);
+                --cs-avatar-fg: var(--cs-color-accent-solid-fg);
+            }
+
+            &[data-color="positive"] {
+                --cs-avatar-bg: var(--cs-color-positive-solid);
+                --cs-avatar-bg-hover: var(--cs-color-positive-solid-hover);
+                --cs-avatar-fg: var(--cs-color-positive-solid-fg);
+            }
+
+            &[data-color="caution"] {
+                --cs-avatar-bg: var(--cs-color-caution-solid);
+                --cs-avatar-bg-hover: var(--cs-color-caution-solid-hover);
+                --cs-avatar-fg: var(--cs-color-caution-solid-fg);
+            }
+
+            &[data-color="negative"] {
+                --cs-avatar-bg: var(--cs-color-negative-solid);
+                --cs-avatar-bg-hover: var(--cs-color-negative-solid-hover);
+                --cs-avatar-fg: var(--cs-color-negative-solid-fg);
+            }
+        }
+
+        /* =========================================================
+         * STATUS INDICATOR TOKENS
+         * ========================================================= */
+        &[data-status="online"] {
+            --cs-avatar-status-bg: var(--cs-color-positive-solid);
+        }
+
+        &[data-status="busy"] {
+            --cs-avatar-status-bg: var(--cs-color-negative-solid);
+        }
+
+        &[data-status="away"] {
+            --cs-avatar-status-bg: var(--cs-color-caution-solid);
+        }
+
+        &[data-status="offline"] {
+            --cs-avatar-status-bg: var(--cs-color-text-weaker);
+        }
+
+        /* =========================================================
+         * INTERACTIVE & DISABLED STATES
+         * ========================================================= */
+        &[data-interactive]:not([data-disabled]):hover .cs-avatar-surface {
+            background: linear-gradient(var(--cs-avatar-bg-hover), var(--cs-avatar-bg-hover)),
+                var(--cs-avatar-ring-color);
+        }
+
+        &[data-interactive]:not([data-disabled]):active .cs-avatar-surface {
+            box-shadow: var(--cs-avatar-shadow-active);
+            scale: 0.96;
+        }
+
+        &[data-disabled],
+        &:disabled,
+        &[aria-disabled="true"] {
+            --cs-disabled-opacity: 1;
+            --cs-avatar-bg: var(--cs-color-disabled-bg);
+            --cs-avatar-bg-hover: var(--cs-color-disabled-bg);
+            --cs-avatar-fg: var(--cs-color-disabled-fg);
+            --cs-avatar-shadow: none;
+            --cs-avatar-shadow-active: none;
+        }
+    }
+
+    /* Separated clip surface keeps status dot and HitArea outside overflow clipping */
+    .cs-avatar-surface {
+        position: relative;
+        display: grid;
+        place-items: center;
+        inline-size: 100%;
+        block-size: 100%;
+        overflow: clip;
+        background: linear-gradient(var(--cs-avatar-bg), var(--cs-avatar-bg)), var(--cs-avatar-ring-color);
+        border-radius: var(--cs-avatar-radius);
+        corner-shape: var(--cs-avatar-squircle);
+        box-shadow: var(--cs-avatar-shadow);
+        transition:
+            background var(--cs-dur-effect) var(--cs-ease-effect),
+            box-shadow var(--cs-dur-effect) var(--cs-ease-effect),
+            scale var(--cs-dur-press) var(--cs-ease-press);
+    }
+
+    /* =========================================================
+     * MICRO-PATTERN LAYER (radial vignette keeps initials crisp)
+     * ========================================================= */
+    .cs-avatar-pattern {
+        position: absolute;
+        inset: 0;
+        color: var(--cs-avatar-pattern-color);
+        pointer-events: none;
+        opacity: var(--cs-avatar-pattern-opacity);
+        mask-image: radial-gradient(circle, transparent 28%, black 85%);
+    }
+
+    .cs-avatar[data-variant="solid"] .cs-avatar-pattern {
+        mask-image: radial-gradient(circle, transparent 32%, black 88%);
+    }
+
+    .cs-avatar[data-size="xs"] .cs-avatar-pattern,
+    .cs-avatar[data-pattern="none"] .cs-avatar-pattern {
+        display: none;
+    }
+
+    .cs-avatar[data-pattern="diagonal"] .cs-avatar-pattern {
+        background-image: repeating-linear-gradient(
+            45deg,
+            currentColor 0,
+            currentColor 1px,
+            transparent 1px,
+            transparent 6px
+        );
+    }
+
+    /* =========================================================
+     * CONTENT & FALLBACK GLYPH
+     * ========================================================= */
+    .cs-avatar-content {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        font-size: var(--cs-avatar-font-size);
+        font-weight: 600;
+        line-height: var(--cs-leading-none);
+        letter-spacing: 0.02em;
+    }
+
+    .cs-avatar-fallback {
+        inline-size: 56%;
+        block-size: 56%;
+    }
+
+    /* =========================================================
+     * STATUS INDICATOR
+     * ========================================================= */
+    .cs-avatar-status {
+        position: absolute;
+        inset-block-end: -1px;
+        inset-inline-end: -1px;
+        z-index: 2;
+        inline-size: var(--cs-avatar-status-size);
+        block-size: var(--cs-avatar-status-size);
+        pointer-events: none;
+        background: var(--cs-avatar-status-bg);
+        border-radius: var(--cs-radius-full);
+        box-shadow: 0 0 0 var(--cs-avatar-ring-width) var(--cs-avatar-ring-color);
+    }
+
+    /* =========================================================
+     * AVATAR GROUP
+     * ========================================================= */
+    .cs-avatar-group {
+        --cs-avatar-group-overlap: -8px;
+        --cs-avatar-group-gap: 6px;
+        --cs-avatar-ring-color: var(--cs-color-canvas);
+
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+
+        &[data-size="xs"] {
+            --cs-avatar-group-overlap: -6px;
+            --cs-avatar-group-gap: 4px;
+        }
+
+        &[data-size="sm"] {
+            --cs-avatar-group-overlap: -7px;
+            --cs-avatar-group-gap: 5px;
+        }
+
+        &[data-size="md"] {
+            --cs-avatar-group-overlap: -8px;
+            --cs-avatar-group-gap: 6px;
+        }
+
+        &[data-size="lg"] {
+            --cs-avatar-group-overlap: -10px;
+            --cs-avatar-group-gap: 8px;
+        }
+
+        &[data-size="xl"] {
+            --cs-avatar-group-overlap: -14px;
+            --cs-avatar-group-gap: 10px;
+        }
+
+        &:not([data-overlap]) {
+            gap: var(--cs-avatar-group-gap);
+        }
+
+        &[data-overlap] > .cs-avatar:not(:first-child) {
+            margin-inline-start: var(--cs-avatar-group-overlap);
+        }
+
+        &[data-overlap] > .cs-avatar .cs-avatar-surface {
+            box-shadow:
+                var(--cs-avatar-shadow, none),
+                0 0 0 var(--cs-avatar-ring-width) var(--cs-avatar-ring-color);
+        }
+
+        &[data-overlap] > .cs-avatar:hover,
+        &[data-overlap] > .cs-avatar:focus-visible {
+            z-index: 2;
+            translate: 0 -2px;
+            transition: translate var(--cs-dur-enter-sm) var(--cs-spring-snappy);
+        }
+
+        &[data-disabled] {
+            --cs-disabled-opacity: 1;
+        }
+    }
+
+    .cs-avatar-overflow {
+        font-variant-numeric: tabular-nums;
+    }
+}
