@@ -1,0 +1,556 @@
+@layer components.composite {
+    .cs-chart {
+        --cs-chart-fg: var(--cs-color-text-main);
+        --cs-chart-title-fg: var(--cs-color-text-strong);
+        --cs-chart-subtitle-fg: var(--cs-color-text-weak);
+        --cs-chart-tick-fg: var(--cs-color-text-weak);
+        --cs-chart-label-fg: var(--cs-color-text-main);
+        --cs-chart-legend-hover-bg: var(--cs-color-base-soft);
+
+        /* Structural & chrome hairlines */
+        --cs-chart-grid: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 6%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 7%, transparent)
+        );
+        --cs-chart-axis: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 14%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 15%, transparent)
+        );
+        --cs-chart-crosshair: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 18%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 22%, transparent)
+        );
+        --cs-chart-hover-band: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 3.5%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 5.5%, transparent)
+        );
+        --cs-chart-loading-bg: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 9%, transparent),
+            color-mix(in oklab, var(--cs-color-base-100) 10%, transparent)
+        );
+        --cs-chart-loading-shimmer: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 15%, transparent),
+            color-mix(in oklab, var(--cs-color-base-100) 18%, transparent)
+        );
+
+        /* Area & isolation defaults */
+        --cs-chart-area-top-opacity: light-dark(0.22, 0.28);
+        --cs-chart-area-bottom-opacity: 0;
+        --cs-chart-dim-opacity: 0.24;
+
+        /* Tooltip surface tokens */
+        --cs-chart-tooltip-bg: var(--cs-color-elevated);
+        --cs-chart-tooltip-shadow: var(--cs-shadow-floating);
+
+        /* Scoped data-draw & scrub choreography tokens */
+        --cs-chart-dur-draw: 520ms;
+        --cs-chart-dur-bar: 420ms;
+        --cs-chart-dur-arc: 540ms;
+        --cs-chart-dur-update: var(--cs-dur-380);
+        --cs-chart-dur-scrub: var(--cs-dur-80);
+        --cs-chart-ease-data: var(--cs-ease-quart-out);
+        --cs-chart-ease-draw: var(--cs-ease-expo-out);
+
+        /* Semantic status tokens (intent-driven, strictly no info) */
+        --cs-chart-positive: light-dark(var(--cs-color-positive-solid), var(--cs-color-positive-400));
+        --cs-chart-positive-soft: var(--cs-color-positive-soft);
+        --cs-chart-positive-fg: var(--cs-color-positive-soft-fg);
+        --cs-chart-caution: light-dark(var(--cs-color-caution-solid), var(--cs-color-caution-400));
+        --cs-chart-caution-soft: var(--cs-color-caution-soft);
+        --cs-chart-caution-fg: var(--cs-color-caution-soft-fg);
+        --cs-chart-negative: light-dark(var(--cs-color-negative-solid), var(--cs-color-negative-400));
+        --cs-chart-negative-soft: var(--cs-color-negative-soft);
+        --cs-chart-negative-fg: var(--cs-color-negative-soft-fg);
+
+        /* Default 10-slot categorical OKLCH palette */
+        --cs-chart-series-1: light-dark(
+            var(--cs-color-accent-solid),
+            color-mix(in oklch, var(--cs-color-accent-400) 65%, var(--cs-color-accent-500))
+        );
+        --cs-chart-series-2: light-dark(
+            color-mix(in oklch, var(--cs-color-teal-500) 45%, var(--cs-color-teal-600)),
+            var(--cs-color-teal-400)
+        );
+        --cs-chart-series-3: light-dark(
+            color-mix(in oklch, var(--cs-color-amber-500) 55%, var(--cs-color-amber-600)),
+            var(--cs-color-amber-400)
+        );
+        --cs-chart-series-4: light-dark(var(--cs-color-violet-500), var(--cs-color-violet-400));
+        --cs-chart-series-5: light-dark(
+            color-mix(in oklch, var(--cs-color-rose-500) 60%, var(--cs-color-rose-600)),
+            var(--cs-color-rose-400)
+        );
+        --cs-chart-series-6: light-dark(
+            color-mix(in oklch, var(--cs-color-sky-500) 55%, var(--cs-color-sky-600)),
+            var(--cs-color-sky-400)
+        );
+        --cs-chart-series-7: light-dark(
+            color-mix(in oklch, var(--cs-color-emerald-500) 50%, var(--cs-color-emerald-600)),
+            var(--cs-color-emerald-400)
+        );
+        --cs-chart-series-8: light-dark(
+            color-mix(in oklch, var(--cs-color-orange-500) 60%, var(--cs-color-orange-600)),
+            var(--cs-color-orange-400)
+        );
+        --cs-chart-series-9: light-dark(var(--cs-color-fuchsia-500), var(--cs-color-fuchsia-400));
+        --cs-chart-series-10: light-dark(var(--cs-color-slate-500), var(--cs-color-slate-400));
+
+        isolation: isolate;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: var(--cs-chart-gap);
+        inline-size: 100%;
+        min-inline-size: 0;
+        margin: 0;
+        padding: var(--cs-chart-padding);
+        color: var(--cs-chart-fg);
+        font-family: var(--cs-font-sans);
+        background-color: var(--cs-chart-bg);
+        border-radius: var(--cs-chart-radius);
+        corner-shape: var(--cs-chart-squircle, var(--cs-squircle));
+        box-shadow: var(--cs-chart-shadow, none);
+        cursor: default;
+
+        /* =========================================================
+         * SIZES (1:1 shell parity with Card & KpiCard)
+         * ========================================================= */
+        &[data-size="sm"] {
+            --cs-chart-padding: 12px;
+            --cs-chart-gap: 8px;
+            --cs-chart-radius: var(--cs-radius-2xl);
+            --cs-chart-squircle: var(--cs-squircle);
+            --cs-chart-plot-height: 180px;
+            --cs-chart-title-size: 13px;
+            --cs-chart-title-lh: 18px;
+            --cs-chart-subtitle-size: 11px;
+            --cs-chart-subtitle-lh: 15px;
+            --cs-chart-tick-size: 11px;
+            --cs-chart-value-label-size: 10px;
+            --cs-chart-legend-font-size: 11px;
+            --cs-chart-stroke-width: 1.75px;
+            --cs-chart-point-radius: 3.5px;
+            --cs-chart-bar-radius: 3px;
+            --cs-chart-bar-max-width: 40px;
+            --cs-chart-bar-group-gap: 3px;
+            --cs-chart-tooltip-radius: 12px;
+            --cs-chart-tooltip-padding: 8px 10px;
+        }
+
+        &[data-size="md"] {
+            --cs-chart-padding: 16px;
+            --cs-chart-gap: 12px;
+            --cs-chart-radius: var(--cs-radius-3xl);
+            --cs-chart-squircle: var(--cs-squircle);
+            --cs-chart-plot-height: 260px;
+            --cs-chart-title-size: 14px;
+            --cs-chart-title-lh: 20px;
+            --cs-chart-subtitle-size: 12px;
+            --cs-chart-subtitle-lh: 16px;
+            --cs-chart-tick-size: 11px;
+            --cs-chart-value-label-size: 11px;
+            --cs-chart-legend-font-size: 12px;
+            --cs-chart-stroke-width: 2px;
+            --cs-chart-point-radius: 4px;
+            --cs-chart-bar-radius: 4px;
+            --cs-chart-bar-max-width: 52px;
+            --cs-chart-bar-group-gap: 4px;
+            --cs-chart-tooltip-radius: 12px;
+            --cs-chart-tooltip-padding: 8px 10px;
+        }
+
+        &[data-size="lg"] {
+            --cs-chart-padding: 24px;
+            --cs-chart-gap: 16px;
+            --cs-chart-radius: 28px;
+            --cs-chart-squircle: var(--cs-squircle);
+            --cs-chart-plot-height: 340px;
+            --cs-chart-title-size: 16px;
+            --cs-chart-title-lh: 22px;
+            --cs-chart-subtitle-size: 13px;
+            --cs-chart-subtitle-lh: 18px;
+            --cs-chart-tick-size: 12px;
+            --cs-chart-value-label-size: 11px;
+            --cs-chart-legend-font-size: 12px;
+            --cs-chart-stroke-width: 2.25px;
+            --cs-chart-point-radius: 4.5px;
+            --cs-chart-bar-radius: 5px;
+            --cs-chart-bar-max-width: 64px;
+            --cs-chart-bar-group-gap: 5px;
+            --cs-chart-tooltip-radius: 14px;
+            --cs-chart-tooltip-padding: 10px 12px;
+        }
+
+        /* =========================================================
+         * SHELL VARIANTS (1:1 parity with Card & KpiCard)
+         * ========================================================= */
+        &[data-variant="elevated"] {
+            --cs-chart-bg: var(--cs-color-elevated);
+            --cs-chart-shadow: var(--cs-shadow-elevated);
+            --cs-chart-point-ring-bg: var(--cs-color-elevated);
+        }
+
+        &[data-variant="soft"] {
+            --cs-chart-bg: var(--cs-color-base-soft);
+            --cs-chart-shadow: none;
+            --cs-chart-legend-hover-bg: var(--cs-color-base-soft-hover);
+            /* Resolve an opaque composite matching the translucent soft surface for SVG cutout rings. */
+            --cs-chart-point-ring-bg: light-dark(
+                color-mix(in oklab, var(--cs-color-base-900) 5%, var(--cs-chart-backdrop-bg, var(--cs-color-canvas))),
+                color-mix(in oklab, var(--cs-color-base-100) 11%, var(--cs-chart-backdrop-bg, var(--cs-color-canvas)))
+            );
+        }
+
+        &[data-variant="sunken"] {
+            --cs-chart-bg: var(--cs-color-sunken);
+            --cs-chart-shadow: var(--cs-shadow-sunken);
+            --cs-chart-point-ring-bg: var(--cs-color-sunken);
+        }
+
+        &[data-variant="transparent"] {
+            --cs-chart-bg: transparent;
+            --cs-chart-shadow: none;
+            --cs-chart-padding: 0px;
+            --cs-chart-radius: 0px;
+            --cs-chart-point-ring-bg: var(--cs-chart-backdrop-bg, var(--cs-color-canvas));
+        }
+
+        /* =========================================================
+         * CONCENTRIC NESTING
+         * ========================================================= */
+        &[data-nested] {
+            --cs-chart-backdrop-bg: var(--cs-color-elevated);
+
+            &:not([data-variant="transparent"]) {
+                --cs-chart-radius: var(--cs-chart-nested-radius);
+                --cs-chart-squircle: var(--cs-squircle-smooth);
+            }
+        }
+
+        /* =========================================================
+         * MONOTONE SINGLE-HUE RAMPS (Interleaved Lightness Steps)
+         * ========================================================= */
+        &[data-monotone="accent"] {
+            --cs-chart-series-1: light-dark(
+                color-mix(in oklch, var(--cs-color-accent-500) 50%, var(--cs-color-accent-600)),
+                var(--cs-color-accent-400)
+            );
+            --cs-chart-series-2: light-dark(var(--cs-color-accent-300), var(--cs-color-accent-600));
+            --cs-chart-series-3: light-dark(var(--cs-color-accent-700), var(--cs-color-accent-300));
+            --cs-chart-series-4: light-dark(var(--cs-color-accent-400), var(--cs-color-accent-500));
+            --cs-chart-series-5: light-dark(var(--cs-color-accent-200), var(--cs-color-accent-700));
+            --cs-chart-series-6: light-dark(var(--cs-color-accent-800), var(--cs-color-accent-200));
+        }
+
+        &[data-monotone="blue"] {
+            --cs-chart-series-1: light-dark(
+                color-mix(in oklch, var(--cs-color-blue-500) 50%, var(--cs-color-blue-600)),
+                var(--cs-color-blue-400)
+            );
+            --cs-chart-series-2: light-dark(var(--cs-color-blue-300), var(--cs-color-blue-600));
+            --cs-chart-series-3: light-dark(var(--cs-color-blue-700), var(--cs-color-blue-300));
+            --cs-chart-series-4: light-dark(var(--cs-color-blue-400), var(--cs-color-blue-500));
+            --cs-chart-series-5: light-dark(var(--cs-color-blue-200), var(--cs-color-blue-700));
+            --cs-chart-series-6: light-dark(var(--cs-color-blue-800), var(--cs-color-blue-200));
+        }
+
+        &[data-monotone="teal"] {
+            --cs-chart-series-1: light-dark(
+                color-mix(in oklch, var(--cs-color-teal-500) 50%, var(--cs-color-teal-600)),
+                var(--cs-color-teal-400)
+            );
+            --cs-chart-series-2: light-dark(var(--cs-color-teal-300), var(--cs-color-teal-600));
+            --cs-chart-series-3: light-dark(var(--cs-color-teal-700), var(--cs-color-teal-300));
+            --cs-chart-series-4: light-dark(var(--cs-color-teal-400), var(--cs-color-teal-500));
+            --cs-chart-series-5: light-dark(var(--cs-color-teal-200), var(--cs-color-teal-700));
+            --cs-chart-series-6: light-dark(var(--cs-color-teal-800), var(--cs-color-teal-200));
+        }
+
+        &[data-monotone="emerald"] {
+            --cs-chart-series-1: light-dark(
+                color-mix(in oklch, var(--cs-color-emerald-500) 50%, var(--cs-color-emerald-600)),
+                var(--cs-color-emerald-400)
+            );
+            --cs-chart-series-2: light-dark(var(--cs-color-emerald-300), var(--cs-color-emerald-600));
+            --cs-chart-series-3: light-dark(var(--cs-color-emerald-700), var(--cs-color-emerald-300));
+            --cs-chart-series-4: light-dark(var(--cs-color-emerald-400), var(--cs-color-emerald-500));
+            --cs-chart-series-5: light-dark(var(--cs-color-emerald-200), var(--cs-color-emerald-700));
+            --cs-chart-series-6: light-dark(var(--cs-color-emerald-800), var(--cs-color-emerald-200));
+        }
+
+        &[data-monotone="amber"] {
+            --cs-chart-series-1: light-dark(
+                color-mix(in oklch, var(--cs-color-amber-500) 50%, var(--cs-color-amber-600)),
+                var(--cs-color-amber-400)
+            );
+            --cs-chart-series-2: light-dark(var(--cs-color-amber-300), var(--cs-color-amber-600));
+            --cs-chart-series-3: light-dark(var(--cs-color-amber-700), var(--cs-color-amber-300));
+            --cs-chart-series-4: light-dark(var(--cs-color-amber-400), var(--cs-color-amber-500));
+            --cs-chart-series-5: light-dark(var(--cs-color-amber-200), var(--cs-color-amber-700));
+            --cs-chart-series-6: light-dark(var(--cs-color-amber-800), var(--cs-color-amber-200));
+        }
+
+        &[data-monotone="violet"] {
+            --cs-chart-series-1: light-dark(
+                color-mix(in oklch, var(--cs-color-violet-500) 50%, var(--cs-color-violet-600)),
+                var(--cs-color-violet-400)
+            );
+            --cs-chart-series-2: light-dark(var(--cs-color-violet-300), var(--cs-color-violet-600));
+            --cs-chart-series-3: light-dark(var(--cs-color-violet-700), var(--cs-color-violet-300));
+            --cs-chart-series-4: light-dark(var(--cs-color-violet-400), var(--cs-color-violet-500));
+            --cs-chart-series-5: light-dark(var(--cs-color-violet-200), var(--cs-color-violet-700));
+            --cs-chart-series-6: light-dark(var(--cs-color-violet-800), var(--cs-color-violet-200));
+        }
+
+        &[data-monotone="rose"] {
+            --cs-chart-series-1: light-dark(
+                color-mix(in oklch, var(--cs-color-rose-500) 50%, var(--cs-color-rose-600)),
+                var(--cs-color-rose-400)
+            );
+            --cs-chart-series-2: light-dark(var(--cs-color-rose-300), var(--cs-color-rose-600));
+            --cs-chart-series-3: light-dark(var(--cs-color-rose-700), var(--cs-color-rose-300));
+            --cs-chart-series-4: light-dark(var(--cs-color-rose-400), var(--cs-color-rose-500));
+            --cs-chart-series-5: light-dark(var(--cs-color-rose-200), var(--cs-color-rose-700));
+            --cs-chart-series-6: light-dark(var(--cs-color-rose-800), var(--cs-color-rose-200));
+        }
+
+        &[data-monotone="slate"] {
+            --cs-chart-series-1: light-dark(var(--cs-color-slate-700), var(--cs-color-slate-200));
+            --cs-chart-series-2: light-dark(var(--cs-color-slate-400), var(--cs-color-slate-500));
+            --cs-chart-series-3: light-dark(var(--cs-color-slate-900), var(--cs-color-slate-100));
+            --cs-chart-series-4: light-dark(var(--cs-color-slate-500), var(--cs-color-slate-400));
+            --cs-chart-series-5: light-dark(var(--cs-color-slate-300), var(--cs-color-slate-600));
+            --cs-chart-series-6: light-dark(var(--cs-color-slate-600), var(--cs-color-slate-300));
+        }
+    }
+
+    /* =========================================================
+     * HEADER CHROME
+     * ========================================================= */
+    .cs-chart-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 2px;
+        align-items: start;
+        min-inline-size: 0;
+
+        &:has(> .cs-chart-actions) {
+            grid-template-columns: minmax(0, 1fr) auto;
+            column-gap: 12px;
+        }
+
+        & > .cs-chart-actions {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            align-self: start;
+        }
+    }
+
+    .cs-chart-header-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-inline-size: 0;
+    }
+
+    .cs-chart-title {
+        margin: 0;
+        min-inline-size: 0;
+        color: var(--cs-chart-title-fg, var(--cs-color-text-strong));
+        font-size: var(--cs-chart-title-size, 14px);
+        font-weight: 600;
+        line-height: var(--cs-chart-title-lh, 20px);
+        letter-spacing: -0.015em;
+    }
+
+    .cs-chart-description {
+        margin: 0;
+        min-inline-size: 0;
+        color: var(--cs-chart-subtitle-fg, var(--cs-color-text-weak));
+        font-size: var(--cs-chart-subtitle-size, 12px);
+        font-weight: 400;
+        line-height: var(--cs-chart-subtitle-lh, 16px);
+    }
+
+    .cs-chart-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        min-inline-size: 0;
+    }
+
+    /* =========================================================
+     * CANVAS & SVG STAGE
+     * ========================================================= */
+    .cs-chart-canvas {
+        position: relative;
+        flex: 1 1 auto;
+        inline-size: 100%;
+        min-inline-size: 0;
+        min-block-size: var(--cs-chart-plot-height, 260px);
+
+        &:focus-visible {
+            outline-offset: -2px;
+            border-radius: max(6px, calc(var(--cs-chart-radius, 0px) - var(--cs-chart-padding, 0px)));
+        }
+    }
+
+    .cs-chart-svg {
+        display: block;
+        inline-size: 100%;
+        block-size: 100%;
+        overflow: visible;
+        user-select: none;
+    }
+
+    /* =========================================================
+     * GRID & AXES (SVG)
+     * ========================================================= */
+    .cs-chart-grid-line {
+        fill: none;
+        stroke: var(--cs-chart-grid);
+        stroke-width: 1px;
+    }
+
+    .cs-chart-grid-zero {
+        fill: none;
+        stroke: var(--cs-chart-axis);
+        stroke-width: 1px;
+    }
+
+    .cs-chart-axis-line {
+        fill: none;
+        stroke: var(--cs-chart-axis);
+        stroke-width: 1px;
+    }
+
+    .cs-chart-axis-tick-text {
+        fill: var(--cs-chart-tick-fg);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-tick-size, 11px);
+        font-weight: 400;
+        font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .cs-chart-axis-label {
+        fill: var(--cs-chart-subtitle-fg);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-tick-size, 11px);
+        font-weight: 500;
+    }
+
+    /* =========================================================
+     * EMPTY & LOADING STATES
+     * ========================================================= */
+    .cs-chart-empty {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        inline-size: 100%;
+        min-block-size: var(--cs-chart-plot-height, 260px);
+        padding: 16px;
+        text-align: center;
+    }
+
+    .cs-chart-empty-backdrop {
+        position: absolute;
+        inset: 16px 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        pointer-events: none;
+        opacity: 0.5;
+    }
+
+    .cs-chart-empty-gridline {
+        inline-size: 100%;
+        block-size: 1px;
+        background-color: var(--cs-chart-grid);
+    }
+
+    .cs-chart-empty-inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        max-inline-size: 280px;
+    }
+
+    .cs-chart-empty-title {
+        margin: 0;
+        color: var(--cs-color-text-weak);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 18px;
+    }
+
+    .cs-chart-empty-description {
+        margin: 0;
+        color: var(--cs-color-text-weaker);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+
+    .cs-chart-empty-actions {
+        margin-block-start: 4px;
+    }
+
+    .cs-chart-loading {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        inline-size: 100%;
+        block-size: var(--cs-chart-plot-height, 260px);
+        padding: 20px 12px 16px;
+        overflow: hidden;
+        border-radius: max(6px, calc(var(--cs-chart-radius, 0px) - var(--cs-chart-padding, 0px)));
+
+        &[data-shape="donut"] {
+            padding: 12px;
+        }
+    }
+
+    .cs-chart-loading-svg {
+        display: block;
+        inline-size: 100%;
+        block-size: 100%;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .cs-chart-loading-stop-base {
+        stop-color: var(--cs-chart-loading-bg);
+    }
+
+    .cs-chart-loading-stop-shimmer {
+        stop-color: var(--cs-chart-loading-shimmer);
+    }
+
+    .cs-chart-loading-shimmer {
+        transform-box: view-box;
+        transform: translateX(-100%);
+        animation: cs-chart-shimmer 1.8s var(--cs-ease-quad-in-out) infinite;
+    }
+
+    .cs-chart-canvas > .cs-chart-empty,
+    .cs-chart-canvas > .cs-chart-loading {
+        position: absolute;
+        inset: 0;
+        block-size: auto;
+        min-block-size: 0;
+    }
+
+    @keyframes cs-chart-shimmer {
+        to {
+            transform: translateX(100%);
+        }
+    }
+}
