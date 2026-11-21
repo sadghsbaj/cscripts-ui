@@ -26,7 +26,7 @@
 
 ## Modules
 
-- [ ] Collapsible
+- [ ] Collapsible x
 - [x] Data Table
 - [x] Charts
 - [x] DND
