@@ -29,10 +29,11 @@
 - Aufklappbarer Bereich
 - [x] Data Table
 - [ ] Charts
+- [ ] DND
 - [ ] Tablist
 - [ ] Sidebar
 - [ ] Color Picker
-- [ ] ContextMenu
+- [x] ContextMenu
 - [ ] NLP Parser
 - [ ] Command Palette
 - [x] KPI Cards
