@@ -38,18 +38,20 @@
     import { Switch } from "cs/svelte/switch";
 
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
+    import { Sparkline, type ChartTone } from "../charts/index.ts";
 
     interface PlaygroundSnapshot {
         value: number;
         delta: number;
         trend: KpiCardDeltaTrend;
         color: KpiCardColor;
+        sparklineTone: ChartTone;
+        sparklineData: readonly number[];
+        sparklineTarget: number;
         targetValue: number;
         targetMax: number;
         targetColor: KpiCardColor;
         targetLabel: string;
-        linePath: string;
-        areaPath: string;
     }
 
     const INITIAL_SNAPSHOT: PlaygroundSnapshot = {
@@ -57,13 +59,13 @@
         delta: 0.142,
         trend: "up",
         color: "positive",
+        sparklineTone: "accent",
+        sparklineData: [112, 118, 124, 121, 131, 129, 138, 136, 143, 146, 149],
+        sparklineTarget: 130,
         targetValue: 148_920,
         targetMax: 175_000,
         targetColor: "accent",
         targetLabel: "$148.9k / $175k",
-        linePath: "M0 44 C 24 41, 44 35, 68 37 C 92 39, 112 24, 136 26 C 160 28, 184 15, 208 17 C 232 19, 256 8, 280 6",
-        areaPath:
-            "M0 44 C 24 41, 44 35, 68 37 C 92 39, 112 24, 136 26 C 160 28, 184 15, 208 17 C 232 19, 256 8, 280 6 L 280 56 L 0 56 Z",
     };
 
     const PLAYGROUND_SNAPSHOTS: readonly PlaygroundSnapshot[] = [
@@ -73,43 +75,56 @@
             delta: -0.048,
             trend: "down",
             color: "negative",
+            sparklineTone: "negative",
+            sparklineData: [134, 131, 128, 130, 122, 119, 115, 111, 106, 102, 98],
+            sparklineTarget: 120,
             targetValue: 98_420,
             targetMax: 175_000,
             targetColor: "caution",
             targetLabel: "$98.4k / $175k",
-            linePath:
-                "M0 16 C 24 18, 44 22, 68 20 C 92 18, 112 28, 136 29 C 160 30, 184 34, 208 38 C 232 42, 256 44, 280 46",
-            areaPath:
-                "M0 16 C 24 18, 44 22, 68 20 C 92 18, 112 28, 136 29 C 160 30, 184 34, 208 38 C 232 42, 256 44, 280 46 L 280 56 L 0 56 Z",
         },
         {
             value: 1_124_680.12,
             delta: 0.286,
             trend: "up",
             color: "positive",
+            sparklineTone: "positive",
+            sparklineData: [780, 815, 860, 905, 892, 954, 1010, 995, 1060, 1095, 1125],
+            sparklineTarget: 950,
             targetValue: 1_124_680,
             targetMax: 1_250_000,
             targetColor: "positive",
             targetLabel: "$1.12M / $1.25M",
-            linePath:
-                "M0 48 C 24 44, 44 40, 68 34 C 92 28, 112 30, 136 22 C 160 15, 184 18, 208 11 C 232 6, 256 5, 280 4",
-            areaPath:
-                "M0 48 C 24 44, 44 40, 68 34 C 92 28, 112 30, 136 22 C 160 15, 184 18, 208 11 C 232 6, 256 5, 280 4 L 280 56 L 0 56 Z",
         },
         {
             value: 136_500,
             delta: 0.002,
             trend: "flat",
             color: "base",
+            sparklineTone: "accent",
+            sparklineData: [135, 136, 134, 136, 137, 135, 138, 136, 136, 135, 136.5],
+            sparklineTarget: 136,
             targetValue: 136_500,
             targetMax: 175_000,
             targetColor: "accent",
             targetLabel: "$136.5k / $175k",
-            linePath:
-                "M0 28 C 24 27, 44 30, 68 28 C 92 26, 112 29, 136 27 C 160 25, 184 28, 208 27 C 232 26, 256 28, 280 27",
-            areaPath:
-                "M0 28 C 24 27, 44 30, 68 28 C 92 26, 112 29, 136 27 C 160 25, 184 28, 208 27 C 232 26, 256 28, 280 27 L 280 56 L 0 56 Z",
         },
+    ];
+
+    const HERO_ARR_SPARKLINE: readonly number[] = [
+        1180, 1240, 1310, 1295, 1390, 1445, 1510, 1575, 1640, 1705, 1742, 1787,
+    ];
+
+    const ACTIVE_USERS_SPARKLINE: readonly number[] = [
+        34_200, 35_100, 36_400, 35_900, 37_800, 39_100, 40_200, 41_500, 42_810,
+    ];
+
+    const DEPLOYMENTS_SPARKLINE: readonly number[] = [180, 240, 215, 290, 265, 325, 365];
+
+    const NET_RETENTION_SPARKLINE: readonly number[] = [111, 112, 113, 114.5, 116, 117.2, 118.4];
+
+    const DAU_BLEED_SPARKLINE: readonly number[] = [
+        31_400, 32_600, 32_100, 34_200, 35_800, 35_100, 36_700, 37_200, 38_410,
     ];
 
     let variant = $state<KpiCardVariant>("elevated");
@@ -139,10 +154,11 @@
             ? `\n    <KpiCardTarget value={${activeSnapshot.targetValue}} max={${activeSnapshot.targetMax}} color="${activeSnapshot.targetColor}" label="Quarterly goal" target="${activeSnapshot.targetLabel}" />`
             : "";
         const visualBlock = showSparkline
-            ? `\n    <KpiCardVisual${bleed ? " bleed" : ""}>\n        <!-- sparkline SVG -->\n    </KpiCardVisual>`
+            ? `\n    <KpiCardVisual${bleed ? " bleed" : ""}>\n        <Sparkline data={revenueHistory} type="area" tone="${activeSnapshot.sparklineTone}" height={${layout === "inline" ? 28 : 56}} />\n    </KpiCardVisual>`
             : "";
 
         return `<script lang="ts">
+    import { Sparkline } from "cs/svelte/charts";
     import {
         KpiCard,
         ${showClose ? "KpiCardClose,\n        " : ""}KpiCardDelta,
@@ -184,7 +200,9 @@ ${closeScript}
         <KpiCardValue prefix="$">1,787,040</KpiCardValue>
         <KpiCardDelta trend="up">+21.8%</KpiCardDelta>
     </KpiCardMetric>
-    <KpiCardVisual placement="bottom" bleed><!-- area sparkline SVG --></KpiCardVisual>
+    <KpiCardVisual placement="bottom" bleed>
+        <Sparkline data={arrHistory} type="area" tone="accent" target={1400} height={72} />
+    </KpiCardVisual>
 </KpiCard>
 
 <KpiCard variant="elevated" size="md" layout="stack">
@@ -195,7 +213,9 @@ ${closeScript}
         <KpiCardValue>42,810</KpiCardValue>
         <KpiCardDelta trend="up">+8.4%</KpiCardDelta>
     </KpiCardMetric>
-    <KpiCardVisual><!-- sparkline SVG --></KpiCardVisual>
+    <KpiCardVisual>
+        <Sparkline data={activeUsersHistory} type="area" tone="positive" height={52} />
+    </KpiCardVisual>
 </KpiCard>
 
 <KpiCard variant="elevated" size="md" layout="split">
@@ -206,7 +226,9 @@ ${closeScript}
         <KpiCardValue>1,842</KpiCardValue>
         <KpiCardDelta trend="up">+16.2%</KpiCardDelta>
     </KpiCardMetric>
-    <KpiCardVisual variant="sunken"><!-- bar chart SVG --></KpiCardVisual>
+    <KpiCardVisual variant="sunken">
+        <Sparkline data={deploymentsHistory} type="bar" tone="accent" height={72} />
+    </KpiCardVisual>
 </KpiCard>
 
 <KpiCard variant="elevated" size="md" layout="inline">
@@ -330,7 +352,9 @@ ${closeScript}
         <KpiCardValue>38,410</KpiCardValue>
         <KpiCardDelta trend="up">+6.8%</KpiCardDelta>
     </KpiCardMetric>
-    <KpiCardVisual placement="bottom" bleed><!-- sparkline SVG --></KpiCardVisual>
+    <KpiCardVisual placement="bottom" bleed>
+        <Sparkline data={dauHistory} type="area" tone="accent" height={54} />
+    </KpiCardVisual>
 </KpiCard>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 </script>
@@ -464,54 +488,14 @@ ${closeScript}
 
                         {#if showSparkline}
                             <KpiCardVisual {bleed} variant="transparent">
-                                <svg
-                                    viewBox="0 0 280 56"
-                                    preserveAspectRatio="none"
-                                    aria-hidden="true"
-                                    class={layout === "inline" ? "w-full h-full" : "w-full h-14"}
-                                >
-                                    <defs>
-                                        <linearGradient id="kpi-playground-area" x1="0" y1="0" x2="0" y2="1">
-                                            <stop
-                                                offset="0%"
-                                                stop-color={activeSnapshot.color === "negative"
-                                                    ? "var(--cs-color-negative-solid)"
-                                                    : "var(--cs-color-accent-solid)"}
-                                                stop-opacity="0.2"
-                                            />
-                                            <stop
-                                                offset="100%"
-                                                stop-color={activeSnapshot.color === "negative"
-                                                    ? "var(--cs-color-negative-solid)"
-                                                    : "var(--cs-color-accent-solid)"}
-                                                stop-opacity="0"
-                                            />
-                                        </linearGradient>
-                                    </defs>
-                                    {#if layout !== "inline"}
-                                        <line
-                                            x1="0"
-                                            y1="30"
-                                            x2="280"
-                                            y2="30"
-                                            stroke="var(--cs-color-text-weaker)"
-                                            stroke-opacity="0.4"
-                                            stroke-width="1"
-                                            stroke-dasharray="3 3"
-                                        />
-                                    {/if}
-                                    <path d={activeSnapshot.areaPath} fill="url(#kpi-playground-area)" />
-                                    <path
-                                        d={activeSnapshot.linePath}
-                                        fill="none"
-                                        stroke={activeSnapshot.color === "negative"
-                                            ? "var(--cs-color-negative-solid)"
-                                            : "var(--cs-color-accent-solid)"}
-                                        stroke-width={layout === "inline" ? "1.75" : "2"}
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
+                                <Sparkline
+                                    data={activeSnapshot.sparklineData}
+                                    type="area"
+                                    tone={activeSnapshot.sparklineTone}
+                                    target={layout === "inline" ? undefined : activeSnapshot.sparklineTarget}
+                                    strokeWidth={layout === "inline" ? 1.75 : 2}
+                                    height={layout === "inline" ? "100%" : 56}
+                                />
                             </KpiCardVisual>
                         {/if}
                     </KpiCard>
@@ -540,36 +524,14 @@ ${closeScript}
                 </KpiCardMetric>
 
                 <KpiCardVisual placement="bottom" bleed>
-                    <svg viewBox="0 0 560 72" preserveAspectRatio="none" aria-hidden="true" class="w-full h-18">
-                        <defs>
-                            <linearGradient id="kpi-hero-grad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="var(--cs-color-accent-solid)" stop-opacity="0.22" />
-                                <stop offset="100%" stop-color="var(--cs-color-accent-solid)" stop-opacity="0" />
-                            </linearGradient>
-                        </defs>
-                        <line
-                            x1="0"
-                            y1="42"
-                            x2="560"
-                            y2="42"
-                            stroke="var(--cs-color-text-weaker)"
-                            stroke-opacity="0.35"
-                            stroke-width="1"
-                            stroke-dasharray="4 4"
-                        />
-                        <path
-                            d="M0 60 C 56 56, 98 46, 148 48 C 198 50, 232 34, 286 31 C 340 28, 386 22, 434 16 C 476 11, 518 12, 560 6 L 560 72 L 0 72 Z"
-                            fill="url(#kpi-hero-grad)"
-                        />
-                        <path
-                            d="M0 60 C 56 56, 98 46, 148 48 C 198 50, 232 34, 286 31 C 340 28, 386 22, 434 16 C 476 11, 518 12, 560 6"
-                            fill="none"
-                            stroke="var(--cs-color-accent-solid)"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
+                    <Sparkline
+                        data={HERO_ARR_SPARKLINE}
+                        type="area"
+                        tone="accent"
+                        target={1400}
+                        strokeWidth={2}
+                        height={72}
+                    />
                 </KpiCardVisual>
             </KpiCard>
 
@@ -585,26 +547,13 @@ ${closeScript}
                     </KpiCardMetric>
 
                     <KpiCardVisual variant="transparent">
-                        <svg viewBox="0 0 240 52" preserveAspectRatio="none" aria-hidden="true" class="w-full h-13">
-                            <defs>
-                                <linearGradient id="kpi-stack-grad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="var(--cs-color-positive-solid)" stop-opacity="0.2" />
-                                    <stop offset="100%" stop-color="var(--cs-color-positive-solid)" stop-opacity="0" />
-                                </linearGradient>
-                            </defs>
-                            <path
-                                d="M0 40 C 30 38, 60 34, 90 36 C 120 38, 150 22, 180 18 C 204 15, 222 10, 240 8 L 240 52 L 0 52 Z"
-                                fill="url(#kpi-stack-grad)"
-                            />
-                            <path
-                                d="M0 40 C 30 38, 60 34, 90 36 C 120 38, 150 22, 180 18 C 204 15, 222 10, 240 8"
-                                fill="none"
-                                stroke="var(--cs-color-positive-solid)"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
+                        <Sparkline
+                            data={ACTIVE_USERS_SPARKLINE}
+                            type="area"
+                            tone="positive"
+                            strokeWidth={2}
+                            height={52}
+                        />
                     </KpiCardVisual>
                 </KpiCard>
 
@@ -639,47 +588,12 @@ ${closeScript}
                 </KpiCardMetric>
 
                 <KpiCardVisual variant="sunken">
-                    <svg viewBox="0 0 120 72" aria-hidden="true" class="w-full h-18">
-                        <rect x="6" y="38" width="11" height="28" rx="3" fill="var(--cs-color-sky-400)" opacity="0.55" />
-                        <rect x="22" y="28" width="11" height="38" rx="3" fill="var(--cs-color-sky-400)" opacity="0.7" />
-                        <rect
-                            x="38"
-                            y="32"
-                            width="11"
-                            height="34"
-                            rx="3"
-                            fill="var(--cs-color-sky-400)"
-                            opacity="0.65"
-                        />
-                        <rect
-                            x="54"
-                            y="20"
-                            width="11"
-                            height="46"
-                            rx="3"
-                            fill="var(--cs-color-sky-500)"
-                            opacity="0.82"
-                        />
-                        <rect
-                            x="70"
-                            y="24"
-                            width="11"
-                            height="42"
-                            rx="3"
-                            fill="var(--cs-color-sky-500)"
-                            opacity="0.78"
-                        />
-                        <rect
-                            x="86"
-                            y="14"
-                            width="11"
-                            height="52"
-                            rx="3"
-                            fill="var(--cs-color-accent-solid)"
-                            opacity="0.9"
-                        />
-                        <rect x="102" y="8" width="11" height="58" rx="3" fill="var(--cs-color-accent-solid)" />
-                    </svg>
+                    <Sparkline
+                        data={DEPLOYMENTS_SPARKLINE}
+                        type="bar"
+                        tone="accent"
+                        height={72}
+                    />
                 </KpiCardVisual>
             </KpiCard>
 
@@ -703,26 +617,13 @@ ${closeScript}
                         <KpiCardDelta trend="up">+2.1%</KpiCardDelta>
                     </KpiCardMetric>
                     <KpiCardVisual variant="transparent">
-                        <svg viewBox="0 0 72 28" preserveAspectRatio="none" aria-hidden="true" class="w-full h-full">
-                            <defs>
-                                <linearGradient id="kpi-inline-grad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="var(--cs-color-positive-solid)" stop-opacity="0.2" />
-                                    <stop offset="100%" stop-color="var(--cs-color-positive-solid)" stop-opacity="0" />
-                                </linearGradient>
-                            </defs>
-                            <path
-                                d="M0 22 C 12 20, 22 18, 34 15 C 46 12, 58 8, 72 4 L 72 28 L 0 28 Z"
-                                fill="url(#kpi-inline-grad)"
-                            />
-                            <path
-                                d="M0 22 C 12 20, 22 18, 34 15 C 46 12, 58 8, 72 4"
-                                fill="none"
-                                stroke="var(--cs-color-positive-solid)"
-                                stroke-width="1.75"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
+                        <Sparkline
+                            data={NET_RETENTION_SPARKLINE}
+                            type="area"
+                            tone="positive"
+                            strokeWidth={1.75}
+                            height="100%"
+                        />
                     </KpiCardVisual>
                 </KpiCard>
             </KpiCardGroup>
@@ -1006,39 +907,13 @@ ${closeScript}
                         </KpiCardMetric>
 
                         <KpiCardVisual placement="bottom" bleed>
-                            <svg
-                                viewBox="0 0 280 54"
-                                preserveAspectRatio="none"
-                                aria-hidden="true"
-                                class="w-full h-13.5"
-                            >
-                                <defs>
-                                    <linearGradient id="kpi-bleed-grad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop
-                                            offset="0%"
-                                            stop-color="var(--cs-color-accent-solid)"
-                                            stop-opacity="0.22"
-                                        />
-                                        <stop
-                                            offset="100%"
-                                            stop-color="var(--cs-color-accent-solid)"
-                                            stop-opacity="0"
-                                        />
-                                    </linearGradient>
-                                </defs>
-                                <path
-                                    d="M0 38 C 28 34, 52 38, 84 28 C 116 18, 140 26, 172 19 C 204 12, 236 15, 280 6 L 280 54 L 0 54 Z"
-                                    fill="url(#kpi-bleed-grad)"
-                                />
-                                <path
-                                    d="M0 38 C 28 34, 52 38, 84 28 C 116 18, 140 26, 172 19 C 204 12, 236 15, 280 6"
-                                    fill="none"
-                                    stroke="var(--cs-color-accent-solid)"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
+                            <Sparkline
+                                data={DAU_BLEED_SPARKLINE}
+                                type="area"
+                                tone="accent"
+                                strokeWidth={2}
+                                height={54}
+                            />
                         </KpiCardVisual>
                     </KpiCard>
 
