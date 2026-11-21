@@ -31,6 +31,8 @@
 - [x] Data Table
 - [x] Charts
 - [x] DND
+- [x] Avatar
+- [ ] Resizable Container
 - [ ] TreeList
 - [ ] Tablist
 - [ ] Sidebar
