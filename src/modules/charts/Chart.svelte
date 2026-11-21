@@ -25,9 +25,13 @@
         y2Axis,
         orientation,
         stacked,
+        percent,
+        directLabels,
         margin,
         hiddenSeriesIds = $bindable(),
         activeIndex = $bindable(),
+        selectedIndex = $bindable(),
+        selectable,
         hoveredSeriesId = $bindable(),
         tooltipMode,
         loading = false,
@@ -60,6 +64,9 @@
         if (y2Axis !== undefined) chartState.y2Axis = y2Axis;
         if (orientation !== undefined) chartState.orientation = orientation;
         if (stacked !== undefined) chartState.stacked = stacked;
+        if (percent !== undefined) chartState.percent = percent;
+        if (directLabels !== undefined) chartState.directLabels = directLabels;
+        if (selectable !== undefined) chartState.selectable = selectable;
         if (margin !== undefined) chartState.marginOverrides = margin;
         if (tooltipMode !== undefined) chartState.tooltipMode = tooltipMode;
     });
@@ -103,6 +110,25 @@
     });
 
     $effect.pre(() => {
+        const next = selectedIndex;
+        if (next !== undefined && next !== untrack(() => chartState.selectedIndex)) {
+            chartState.setSelectedIndex(next);
+        }
+    });
+
+    let lastSelectedIndexState: number | null | undefined;
+    $effect(() => {
+        const current = chartState.selectedIndex;
+        const prev = lastSelectedIndexState;
+        lastSelectedIndexState = current;
+        if (prev === undefined || prev === current) return;
+        const propValue = untrack(() => selectedIndex);
+        if (propValue !== undefined && propValue !== current) {
+            selectedIndex = current;
+        }
+    });
+
+    $effect.pre(() => {
         const next = hoveredSeriesId;
         if (next !== undefined && next !== untrack(() => chartState.hoveredSeriesId)) {
             chartState.setHoveredSeries(next);
@@ -136,6 +162,7 @@
     data-loading={loading ? "" : undefined}
     data-empty={isEmptyState ? "" : undefined}
     data-scrubbing={chartState.activeIndex !== null ? "" : undefined}
+    data-has-selection={chartState.hasSelection ? "" : undefined}
     style:--cs-chart-nested-radius={surfaceRadius.nestedRadius}
     aria-label={label ?? rest["aria-label"]}
     aria-labelledby={labelledBy ?? rest["aria-labelledby"]}

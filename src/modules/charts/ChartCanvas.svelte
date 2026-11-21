@@ -61,6 +61,9 @@
 
     const liveAnnouncement = $derived.by((): string => {
         if (!interactive) return "";
+        if (chart.activeIndex !== null && chart.liveAnnouncementFormatter) {
+            return chart.liveAnnouncementFormatter(chart.activeIndex);
+        }
         const ctx = chart.getTooltipContext();
         if (!ctx) return "";
         if (ctx.items.length === 0) return ctx.xLabel;
@@ -343,7 +346,7 @@
         event: MouseEvent & { currentTarget: EventTarget & HTMLDivElement },
     ): void {
         onclick?.(event);
-        if (!interactive || !onPointClick || chart.data.length === 0) return;
+        if (!interactive || (!onPointClick && !chart.selectable) || chart.data.length === 0) return;
 
         let index = chart.activeIndex;
         if (index === null) {
@@ -352,9 +355,13 @@
         }
         if (index === null) return;
 
+        if (chart.selectable) {
+            chart.toggleSelectedIndex(index);
+        }
+
         const datum = chart.data[index];
         if (datum !== undefined) {
-            onPointClick(datum, index);
+            onPointClick?.(datum, index);
         }
     }
 
@@ -477,6 +484,9 @@
             case " ": {
                 if (chart.activeIndex !== null) {
                     event.preventDefault();
+                    if (chart.selectable) {
+                        chart.toggleSelectedIndex(chart.activeIndex);
+                    }
                     const datum = chart.data[chart.activeIndex];
                     if (datum !== undefined) {
                         onPointClick?.(datum, chart.activeIndex);
@@ -580,6 +590,7 @@
     tabindex={interactive ? 0 : rest.tabindex}
     data-interactive={interactive ? "" : undefined}
     data-scrubbing={chart.scrubbing ? "" : undefined}
+    data-has-selection={chart.hasSelection ? "" : undefined}
     style:block-size={resolvedHeight}
     style:min-block-size={resolvedHeight ? "0px" : undefined}
     style:aspect-ratio={aspectRatio}

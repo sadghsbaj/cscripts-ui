@@ -31,6 +31,7 @@ export interface CreateNumericScaleOptions {
     domain?: ChartAxisDomain;
     nice?: boolean;
     tickCount?: number;
+    percent?: boolean;
 }
 
 const HALF_DAY_MS = 12 * 60 * 60 * 1000;
@@ -311,6 +312,7 @@ export function createNumericScale(options: CreateNumericScaleOptions): ChartNum
         domain: domainOverride,
         nice = true,
         tickCount = 5,
+        percent = false,
     } = options;
 
     const [rangeStart, rangeEnd] = range;
@@ -330,7 +332,7 @@ export function createNumericScale(options: CreateNumericScaleOptions): ChartNum
     let minBound: number;
     let maxBound: number;
 
-    if (!hasData || (dataMin === 0 && dataMax === 0)) {
+    if (percent || !hasData || (dataMin === 0 && dataMax === 0)) {
         minBound = 0;
         maxBound = 1;
     } else if (dataMin === dataMax) {
@@ -378,14 +380,16 @@ export function createNumericScale(options: CreateNumericScaleOptions): ChartNum
 
     const linear = scaleLinear().domain([minBound, maxBound]).range([rangeStart, rangeEnd]);
 
-    if (nice && minSpec === "auto" && maxSpec === "auto") {
-        linear.nice(tickCount);
-    } else if (nice && (minSpec === "auto" || maxSpec === "auto")) {
-        // Apply nice rounding only to the auto bound without shifting an explicit bound.
-        const probe = scaleLinear().domain([minBound, maxBound]).nice(tickCount).domain();
-        const niceMin = minSpec === "auto" ? (probe[0] ?? minBound) : minBound;
-        const niceMax = maxSpec === "auto" ? (probe[1] ?? maxBound) : maxBound;
-        linear.domain([niceMin, niceMax]);
+    if (!percent) {
+        if (nice && minSpec === "auto" && maxSpec === "auto") {
+            linear.nice(tickCount);
+        } else if (nice && (minSpec === "auto" || maxSpec === "auto")) {
+            // Apply nice rounding only to the auto bound without shifting an explicit bound.
+            const probe = scaleLinear().domain([minBound, maxBound]).nice(tickCount).domain();
+            const niceMin = minSpec === "auto" ? (probe[0] ?? minBound) : minBound;
+            const niceMax = maxSpec === "auto" ? (probe[1] ?? maxBound) : maxBound;
+            linear.domain([niceMin, niceMax]);
+        }
     }
 
     const resolvedDomain = linear.domain();
@@ -403,6 +407,7 @@ export function createNumericScale(options: CreateNumericScaleOptions): ChartNum
     }
 
     const baseline = linear(baselineValue);
+    const isUnitPercent = percent && finalMin === 0 && finalMax === 1;
 
     return {
         type: "linear",
@@ -412,8 +417,22 @@ export function createNumericScale(options: CreateNumericScaleOptions): ChartNum
         baseline,
         scale: (value) => linear(value),
         invert: (pixel) => linear.invert(pixel),
-        ticks: (count) => linear.ticks(count ?? tickCount),
+        ticks: (count) => {
+            const targetCount = count ?? tickCount;
+            if (isUnitPercent) {
+                if (targetCount <= 3) return [0, 0.5, 1];
+                if (targetCount <= 5) return [0, 0.25, 0.5, 0.75, 1];
+            }
+            return linear.ticks(targetCount);
+        },
     };
+}
+
+export function formatPercentTick(value: ChartXValue): string {
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return `${Math.round(value * 100)}%`;
+    }
+    return formatDefaultTick(value);
 }
 
 export function formatDefaultTick(value: ChartXValue): string {

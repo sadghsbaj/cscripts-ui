@@ -64,9 +64,11 @@
         emptyTitle,
         emptyDescription,
         interactive = true,
+        selectable = false,
         onPointClick,
         hiddenSeriesIds = $bindable(),
         activeIndex = $bindable(),
+        selectedIndex = $bindable(),
         hoveredSeriesId = $bindable(),
         label,
         labelledBy,
@@ -99,8 +101,9 @@
     const gridVertical = $derived(
         typeof grid === "object" ? (grid.vertical ?? isHorizontal) : isHorizontal,
     );
+    const isStacked = $derived(mode === "stacked" || mode === "percent");
     const gridZeroLine = $derived(typeof grid === "object" ? (grid.zeroLine ?? true) : true);
-    const resolvedShowTotal = $derived(showTotal ?? mode === "stacked");
+    const resolvedShowTotal = $derived(showTotal ?? isStacked);
     const customTooltip = $derived(typeof tooltip === "function" ? tooltip : undefined);
     const showTooltip = $derived(
         interactive && tooltip !== false && tooltipMode !== "none" && !loading && !isEmptyState,
@@ -124,11 +127,11 @@
             (item) => item.type === undefined || item.type === "bar",
         );
         const effectiveSeries = visibleBarSeries.length > 0 ? visibleBarSeries : series;
-        const stackSlots = partitionSeriesIntoStackSlots(effectiveSeries, mode === "stacked");
+        const stackSlots = partitionSeriesIntoStackSlots(effectiveSeries, isStacked);
         const isSingleColumnSlot = stackSlots.length <= 1;
         const isSingleStackedSlot =
             isSingleColumnSlot &&
-            (mode === "stacked" || (stackSlots[0]?.series.length ?? 0) > 1);
+            (isStacked || (stackSlots[0]?.series.length ?? 0) > 1);
         const usesAboveHeaderValue =
             isAboveLayout &&
             ((normalizedLabels === "outside" && isSingleColumnSlot) ||
@@ -277,10 +280,13 @@
     {yAxis}
     {y2Axis}
     {orientation}
-    stacked={mode === "stacked"}
+    stacked={isStacked}
+    percent={mode === "percent"}
+    {selectable}
     margin={resolvedMargin}
     bind:hiddenSeriesIds
     bind:activeIndex
+    bind:selectedIndex
     bind:hoveredSeriesId
     {tooltipMode}
     {loading}

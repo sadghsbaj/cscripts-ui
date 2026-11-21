@@ -32,7 +32,9 @@
         valueLabels = false,
         formatValue,
         interactive = true,
+        selectable = false,
         activeIndex,
+        selectedIndex,
         hoveredSliceId,
         onSliceHover,
         onSliceClick,
@@ -94,9 +96,15 @@
     const cy = $derived(snapInt(resolvedHeight / 2));
     const safeHoverExpand = $derived(Math.max(0, hoverExpand));
     const minDimension = $derived(Math.min(resolvedWidth, resolvedHeight));
-    const outerRadius = $derived(
-        Math.max(0, Math.floor(minDimension / 2) - safeHoverExpand - 2),
+    const effectiveSelectedIndex = $derived(
+        selectedIndex !== undefined ? selectedIndex : (chart?.selectedIndex ?? null),
     );
+    const outerMargin = $derived(
+        selectable || effectiveSelectedIndex !== null
+            ? Math.max(safeHoverExpand + 2, 8)
+            : safeHoverExpand + 2,
+    );
+    const outerRadius = $derived(Math.max(0, Math.floor(minDimension / 2) - outerMargin));
     const clampedRatio = $derived(Math.max(0, Math.min(0.95, innerRadiusRatio)));
     const isFullPie = $derived(clampedRatio <= 0);
     const palette = $derived(chart?.palette ?? "categorical");
@@ -191,12 +199,17 @@
         hoveredSliceId !== undefined ? hoveredSliceId : (chart?.hoveredSeriesId ?? null),
     );
     const hasFocus = $derived(effectiveActiveIndex !== null || effectiveHoveredId !== null);
+    const hasSelection = $derived(effectiveSelectedIndex !== null);
     const isSingleSlice = $derived(arcs.length === 1);
 
     function isSliceActive(arc: ChartArcItem<TDatum>): boolean {
         if (effectiveActiveIndex !== null && arc.index === effectiveActiveIndex) return true;
         if (effectiveHoveredId !== null && arc.id === effectiveHoveredId) return true;
         return false;
+    }
+
+    function isSliceSelected(arc: ChartArcItem<TDatum>): boolean {
+        return effectiveSelectedIndex !== null && arc.index === effectiveSelectedIndex;
     }
 
     function canFitValueLabel(arc: ChartArcItem<TDatum>): boolean {
@@ -233,6 +246,9 @@
 
     function handleSliceClick(arc: ChartArcItem<TDatum>): void {
         if (!interactive) return;
+        if ((selectable || chart?.selectable) && selectedIndex === undefined) {
+            chart?.toggleSelectedIndex(arc.index);
+        }
         onSliceClick?.(arc.datum, arc.index, arc);
     }
 </script>
@@ -246,38 +262,50 @@
         data-pie={isFullPie ? "" : undefined}
         data-single={isSingleSlice ? "" : undefined}
         data-interactive={interactive ? "" : undefined}
+        data-has-selection={hasSelection ? "" : undefined}
     >
         <g class="cs-chart-arc-group">
             {#each arcs as arc (arc.id)}
                 {const active = $derived(isSliceActive(arc))}
-                {const dimmed = $derived(hasFocus && !active)}
+                {const selected = $derived(isSliceSelected(arc))}
+                {const dimmed = $derived(hasFocus && !active && !selected)}
                 <!-- Keyboard navigation lives on the parent polar stage (role="application"). -->
                 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
                 <path
                     class="cs-chart-arc-slice"
-                    d={active ? arc.hoverPath : arc.path}
+                    d={selected ? arc.selectedPath : active ? arc.hoverPath : arc.path}
                     fill={arc.color}
                     data-slice-id={arc.id}
                     data-slice-index={arc.index}
                     data-active={active ? "" : undefined}
+                    data-selected={selected ? "" : undefined}
                     data-dimmed={dimmed ? "" : undefined}
                     onpointerenter={() => handleSliceEnter(arc)}
                     onpointerleave={() => handleSliceLeave(arc)}
                     onclick={() => handleSliceClick(arc)}
                 />
+                {#if selected && arc.selectionRingPath}
+                    <path
+                        class="cs-chart-arc-selection-ring"
+                        d={arc.selectionRingPath}
+                        aria-hidden="true"
+                    />
+                {/if}
             {/each}
 
             {#if valueLabels}
                 {#each arcs as arc (arc.id)}
                     {#if canFitValueLabel(arc)}
                         {const active = $derived(isSliceActive(arc))}
-                        {const dimmed = $derived(hasFocus && !active)}
+                        {const selected = $derived(isSliceSelected(arc))}
+                        {const dimmed = $derived(hasFocus && !active && !selected)}
                         <text
                             class="cs-chart-arc-label"
                             x={snapInt(arc.centroid[0])}
                             y={snapInt(arc.centroid[1])}
                             text-anchor="middle"
                             dominant-baseline="central"
+                            data-selected={selected ? "" : undefined}
                             data-dimmed={dimmed ? "" : undefined}
                         >
                             {formatSliceLabel(arc)}

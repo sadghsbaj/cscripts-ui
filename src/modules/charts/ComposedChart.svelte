@@ -68,9 +68,11 @@
         emptyTitle,
         emptyDescription,
         interactive = true,
+        selectable = false,
         onPointClick,
         hiddenSeriesIds = $bindable(),
         activeIndex = $bindable(),
+        selectedIndex = $bindable(),
         hoveredSeriesId = $bindable(),
         label,
         labelledBy,
@@ -107,11 +109,15 @@
     );
 
     $effect.pre(() => {
-        chartState.stackedBar = barMode === "stacked";
-        chartState.stackedArea = areaMode === "stacked";
+        chartState.stackedBar = barMode === "stacked" || barMode === "percent";
+        chartState.stackedArea = areaMode === "stacked" || areaMode === "percent";
+        chartState.percentBar = barMode === "percent";
+        chartState.percentArea = areaMode === "percent";
         return () => {
             chartState.stackedBar = null;
             chartState.stackedArea = null;
+            chartState.percentBar = null;
+            chartState.percentArea = null;
         };
     });
 
@@ -310,9 +316,11 @@
     {yAxis}
     {y2Axis}
     stacked={false}
+    {selectable}
     {margin}
     bind:hiddenSeriesIds
     bind:activeIndex
+    bind:selectedIndex
     bind:hoveredSeriesId
     {tooltipMode}
     {loading}

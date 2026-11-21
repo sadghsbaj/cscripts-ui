@@ -33,6 +33,7 @@
         showDots = "active",
         connectNulls = false,
         showLabels = false,
+        directLabels = false,
         formatLabel,
         referenceLines,
         referenceBands,
@@ -58,9 +59,11 @@
         emptyTitle,
         emptyDescription,
         interactive = true,
+        selectable = false,
         onPointClick,
         hiddenSeriesIds = $bindable(),
         activeIndex = $bindable(),
+        selectedIndex = $bindable(),
         hoveredSeriesId = $bindable(),
         label,
         labelledBy,
@@ -144,6 +147,7 @@
                 {showDots}
                 {connectNulls}
                 {showLabels}
+                {directLabels}
                 {formatLabel}
             />
 
@@ -220,9 +224,12 @@
     {xAxis}
     {yAxis}
     {y2Axis}
+    {directLabels}
+    {selectable}
     {margin}
     bind:hiddenSeriesIds
     bind:activeIndex
+    bind:selectedIndex
     bind:hoveredSeriesId
     {tooltipMode}
     {loading}

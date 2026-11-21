@@ -460,3 +460,260 @@ figure.cs-chart (data-variant, data-size, data-palette, data-monotone, data-nest
   - Modern Chromium-first (`popover="manual"`, `light-dark()`, `oklch`/`color-mix`, `corner-shape` squircles, CSS Nesting, `@layer`). Graceful degradation in Firefox/Safari (native `popover="manual"` is Baseline; squircles degrade to standard `border-radius`).
 - **Explicit Non-Goals (V1):**
   - No separate `PieChart` component (`DonutChart` with `innerRadiusRatio={0}` covers full Pie), no built-in zoom/pan/brush, no WebGL/Canvas scatter mode, no server-side image rendering, no export utility (reserved for V2 on top of the clean `<svg>` contract), no `foreignObject` inside plot SVG, and no D3 DOM/transition modules.
+
+---
+
+## 6. V2 Executive & Controlling Expansion (M8–M12)
+
+> **Architectural Invariants (Inherited from V1):** 100% native SVG inside `<svg>` (zero `<foreignObject>`, zero SVG `<filter>`), pure-math D3 micro-packages only (`d3-scale`, `d3-shape`, `d3-array`, `d3-time`), required `variant` and `size` (no defaults) on all shelled Tier-2 charts, `ref = $bindable(null)` + `{...rest}` on every DOM/SVG component, and direct `NumberMorph` integration (`willChange={false}`, `respectMotionPreference={true}`) in floating `popover="manual"` tooltips.
+
+### 6.1 Overview & Scope
+
+V2 extends `src/modules/charts/` (`cs/svelte/charts`) for executive management reporting, financial controlling (IBCS), and operational analytics without fragmenting the module or duplicating kernel logic:
+
+| Milestone | Addition | Kind | Primary Use Case |
+| :--- | :--- | :--- | :--- |
+| **M8** | Controlling upgrades on existing charts | Kernel + Tier-1/2 enhancement | Conditional per-datum coloring, IBCS scenario fills (`solid` / `hatch` / `outline`), 100% normalized stacks (`mode="percent"`), persistent `selectedIndex` cross-filtering, and direct end-of-line series labels. |
+| **M9** | `<Sparkline>` | Frameless micro-chart primitive | Zero-chrome inline trends (`line` / `area` / `bar`) for `KpiCardVisual` (`52px`) and `DataTable` cells (`24–32px`). |
+| **M10** | `<WaterfallChart>` & `<ChartWaterfall>` | Tier-1 primitive + Tier-2 chart | Financial P&L / variance bridges with running cumulative geometry (`start` / `delta` / `subtotal` / `total`) and step connectors. |
+| **M11** | `<BulletChart>` & `<ChartBullet>` | Tier-1 primitive + Tier-2 chart | Compact IBCS Plan/Actual/Target scorecards with qualitative range bands and optional prior-period comparative markers. |
+| **M12** | `<HeatmapChart>` & `<ChartHeatmap>` | Tier-1 primitive + Tier-2 chart | Operations, SLA, and cohort retention matrices with dual band scales, OKLCH sequential/diverging ramps, and 2D keyboard navigation. |
+
+#### V2 File Layout Additions (`src/modules/charts/`)
+
+| File | Visibility | Responsibility |
+| :--- | :--- | :--- |
+| `Sparkline.svelte` | Public | Featherweight zero-chrome inline micro-chart (`line | area | bar`). |
+| `ChartWaterfall.svelte` | Public | Tier-1 SVG waterfall bars, dashed step connectors, and signed delta labels. |
+| `WaterfallChart.svelte` | Public | Tier-2 batteries-included Waterfall / Bridge chart. |
+| `ChartBullet.svelte` | Public | Tier-1 SVG qualitative bands, actual bar, target tick, comparative marker, and inline SVG labels/readouts. |
+| `BulletChart.svelte` | Public | Tier-2 batteries-included single- or multi-row IBCS Bullet scorecard. |
+| `ChartHeatmap.svelte` | Public | Tier-1 SVG 2D band-scale matrix cells, contrast-safe centered values, and hover/selection outlines. |
+| `HeatmapChart.svelte` | Public | Tier-2 batteries-included Heatmap matrix with continuous/stepped ramp legend and 2D keyboard navigation. |
+
+---
+
+### 6.2 Public API Additions
+
+#### 6.2.1 M8 — Controlling Upgrades on Existing Charts
+
+**New & Extended Constants / Types:**
+- `CHART_BAR_PATTERNS = ["solid", "hatch", "outline"] as const` → `ChartBarPattern`
+- `CHART_BAR_MODES = ["grouped", "stacked", "percent"] as const` → `ChartBarMode`
+- `CHART_AREA_MODES = ["overlay", "stacked", "percent"] as const` → `ChartAreaMode`
+
+**Extended `ChartSeries<TDatum>` Contract:**
+```ts
+export interface ChartSeries<TDatum = ChartDatum> {
+    // ...existing V1 fields...
+    /** Static or per-datum semantic tone override. */
+    tone?: ChartTone | ((datum: TDatum, index: number) => ChartTone | undefined);
+    /** Static or per-datum explicit CSS color override. */
+    color?: string | ((datum: TDatum, index: number) => string | undefined);
+    /** IBCS scenario fill pattern (`solid` = Actual, `hatch` = Forecast, `outline` = Plan). @default "solid" */
+    pattern?: ChartBarPattern | ((datum: TDatum, index: number) => ChartBarPattern | undefined);
+}
+```
+- **Color resolution order (per datum):** `color(datum, index)` → static `series.color` → `tone(datum, index)` → static `series.tone` → palette slot `--cs-chart-series-N`. Series-level color (legend swatch, continuous line stroke) resolves from static `series.color` → static `series.tone` → palette slot.
+- **IBCS Scenario Patterns:** Export-safe SVG `<defs><pattern>` generated with `$props.id()` (deduplicated per unique `(resolvedColor, pattern)` pair within the `<svg>`):
+  - `"solid"`: standard filled mark.
+  - `"hatch"`: `45°` diagonal stripe pattern (`patternUnits="userSpaceOnUse"`, `6×6` tile, `1.5px` stroke in resolved color) framed by a `1px` crisp perimeter stroke.
+  - `"outline"`: `--cs-chart-point-ring-bg` fill framed by an inset `1.5px` stroke in resolved color.
+  - `ChartLegend` mirrors static `hatch` / `outline` patterns on its swatch indicator.
+- **100% Normalized Stacking (`mode="percent"`):**
+  - Available on `ChartBar`, `BarChart`, `ChartArea`, and `AreaChart` (`ChartState` accepts `percent?: boolean`, implying `stacked`).
+  - Uses `d3-shape`'s `stackOffsetExpand` (`[0, 1]` domain; rows where all visible values sum to `0` clamp safely to `[0, 0]` without `NaN`).
+  - Automatically formats value axis ticks as percentages (`0%`–`100%`) unless overridden by `yAxis.format`.
+  - Extends `ChartTooltipItem<TDatum>` with `share?: number` and `formattedShare?: string`; in `percent` mode `ChartTooltip` renders **both** the raw value (`NumberMorph`) and its `% share` in aligned `tabular-nums`.
+- **Persistent Selection (`selectedIndex`):**
+  - Added to `ChartState`, `Chart`, `LineChart`, `AreaChart`, `BarChart`, `ComposedChart`, `DonutChart`, `WaterfallChart`, and `BulletChart`:
+    - `selectedIndex = $bindable<number | null>(null)` — Persistent selected datum index (distinct from hover `activeIndex`) for dashboard cross-filtering.
+    - `selectable?: boolean` — `@default false`. When `true`, clicking a mark or pressing `Enter`/`Space` toggles `selectedIndex` (clicking the active selection clears it to `null`). Even when `selectable={false}`, binding `selectedIndex` externally highlights matching marks with `data-selected=""`.
+- **Direct End-of-Line Series Labels (`directLabels`):**
+  - Added to `ChartLine`, `LineChart`, and `AreaChart`: `directLabels?: boolean` (`@default false`).
+  - Places each visible series' `label` as pure SVG `<text>` (`text-anchor="start"`) right of its last valid datum (`+8px` offset), colored with the series color.
+  - `resolveDirectLabelPositions()` in `chart-measure.internal.ts` applies greedy vertical collision nudging (`minGap = 14px` at `sm`/`md`, `16px` at `lg`, clamped to `[0, plotHeight]`).
+  - `ChartState` automatically reserves `margin.right` based on measured label widths (capped at `120px` with ellipsis truncation) so labels never clip.
+
+#### 6.2.2 M9 — `<Sparkline>` Micro-Chart
+
+**Constants & Types:**
+- `SPARKLINE_TYPES = ["line", "area", "bar"] as const` → `SparklineType`
+
+**Props (`SparklineProps<TDatum>`):**
+- `ref = $bindable<HTMLDivElement | null>(null)`
+- `svgRef = $bindable<SVGSVGElement | null>(null)`
+- `type?: SparklineType` — `@default "line"` (`"line" | "area" | "bar"`).
+- `data: readonly TDatum[]` — Supports `readonly (number | null | undefined)[]` directly or object arrays with `value`.
+- `value?: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined)` — Required for object data; optional for primitive numeric arrays.
+- `tone?: ChartTone` — `@default "accent"`.
+- `color?: string` — Explicit CSS color override.
+- `curve?: ChartCurve` — `@default "monotone"` (`line` / `area`).
+- `strokeWidth?: number` — `@default 1.75`.
+- `target?: number` — Optional horizontal dashed `1px` reference hairline (`snapHalf(y)`).
+- `showEndDot?: boolean` — `@default false` (crisp final-datum dot with `--cs-chart-point-ring-bg` halo).
+- `interactive?: boolean` — `@default false` (enables lightweight pointer scrub and active highlight).
+- `activeIndex = $bindable<number | null>(null)` — Controllable scrubbed index when `interactive={true}`.
+- `domain?: ChartAxisDomain` — Optional explicit Y bounds (defaults to tight data bounds for `line`/`area`, zero-inclusive for `bar`).
+- `height?: number | string` — `@default 32` (`24–32px` for `DataTable` cells, `52px` for `KpiCardVisual`).
+- `width?: number | string` — `@default "100%"` (responsive via `ResizeObserver` or fixed `px`).
+- `label?: string` — Accessible `aria-label` (omitting sets `aria-hidden="true"` when purely decorative).
+- `{...rest}` forwarded to `<div class="cs-sparkline">`.
+
+> **Design Note:** `Sparkline` intentionally omits `variant` and `size` because it is a frameless micro-visualization primitive (zero shell, zero padding, zero axes) whose dimensions are dictated directly by `height` / `width` and its host container (`KpiCardVisual`, `DataTable` cell).
+
+#### 6.2.3 M10 — `<WaterfallChart>` & `<ChartWaterfall>`
+
+**Constants & Types:**
+- `CHART_WATERFALL_ROW_TYPES = ["start", "delta", "subtotal", "total"] as const` → `ChartWaterfallRowType`
+- `ChartWaterfallBar<TDatum>`: `{ index, xValue, xLabel, rowType, value, y0, y1, runningTotal, isPositive, color, pattern, datum }`
+- `ChartWaterfallTooltipContext<TDatum>`: `{ index, bar: ChartWaterfallBar<TDatum>, formattedValue: string, formattedRunningTotal: string }`
+
+**`ChartWaterfallProps<TDatum>` (Tier-1 SVG Layer):**
+- `ref = $bindable<SVGGElement | null>(null)`
+- `value: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined)`
+- `rowType?: keyof TDatum | ((datum: TDatum, index: number) => ChartWaterfallRowType)` — Defaults to `"delta"`.
+- `color?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined)`
+- `tone?: keyof TDatum | ((datum: TDatum, index: number) => ChartTone | undefined)`
+- `pattern?: ChartBarPattern | ((datum: TDatum, index: number) => ChartBarPattern | undefined)`
+- `connectors?: boolean` — `@default true` (`1px` dashed horizontal step hairlines snapped to `snapHalf(y)`).
+- `valueLabels?: boolean` — `@default true` (signed `+$1.4M` / `-$320k` on `"delta"` bars; unsigned on `"start"`/`"subtotal"`/`"total"`).
+- `formatValue?: (value: number, datum: TDatum, isDelta: boolean) => string`
+- `radius?: number`, `maxBarWidth?: number`
+
+**`WaterfallChartProps<TDatum>` (Tier-2 Batteries-Included Chart):**
+- **Required:** `variant: ChartVariant`, `size: ChartSize`, `data: readonly TDatum[]`, `x`, `value`.
+- **Optional:** All `ChartWaterfallProps` options (`rowType`, `connectors`, `valueLabels`, `formatValue`, `color`, `tone`, `pattern`, `radius`, `maxBarWidth`), plus standard Tier-2 shell & interaction props (`ref`, `svgRef`, `xAxis`, `yAxis`, `grid`, `referenceLines`, `referenceBands`, `annotations`, `legend`, `tooltip`, `numberFormat`, `locales`, `palette`, `monotone`, `title`, `description`, `actions`, `height`, `aspectRatio`, `margin`, `loading`, `empty`, `interactive`, `activeIndex = $bindable(null)`, `selectedIndex = $bindable(null)`, `selectable`, `onPointClick`, `children`, `overlay`, `{...rest}`).
+
+#### 6.2.4 M11 — `<BulletChart>` & `<ChartBullet>`
+
+**Data & Context Types:**
+```ts
+export interface ChartBulletRange {
+    to: number;
+    tone?: ChartTone;
+    color?: string;
+}
+
+export interface ChartBulletRow<TDatum = ChartDatum> {
+    index: number;
+    label: string;
+    subtitle?: string;
+    actual: number;
+    target: number;
+    comparative?: number;
+    ranges: readonly ChartBulletRange[];
+    max: number;
+    color: string;
+    pattern: ChartBarPattern;
+    datum: TDatum;
+}
+
+export interface ChartBulletTooltipContext<TDatum = ChartDatum> {
+    index: number;
+    row: ChartBulletRow<TDatum>;
+    variance: number;
+    variancePercent: number | null;
+    formattedActual: string;
+    formattedTarget: string;
+    formattedComparative?: string;
+}
+```
+
+**`ChartBulletProps<TDatum>` (Tier-1 SVG Layer):**
+- `ref = $bindable<SVGGElement | null>(null)`
+- `label: keyof TDatum | ((datum: TDatum, index: number) => string)`
+- `subtitle?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined)`
+- `actual: keyof TDatum | ((datum: TDatum, index: number) => number)`
+- `target: keyof TDatum | ((datum: TDatum, index: number) => number)`
+- `comparative?: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined)`
+- `ranges?: keyof TDatum | ((datum: TDatum, index: number) => readonly (number | ChartBulletRange)[])`
+- `max?: keyof TDatum | ((datum: TDatum, index: number) => number | undefined)`
+- `tone?: ChartTone | ((datum: TDatum, index: number) => ChartTone | undefined)`
+- `color?: string | ((datum: TDatum, index: number) => string | undefined)`
+- `pattern?: ChartBarPattern | ((datum: TDatum, index: number) => ChartBarPattern | undefined)`
+- `sharedScale?: boolean` — `@default false` (per-row normalized scale so heterogeneous KPIs fit in one scorecard; `true` aligns all rows on a shared numeric X-axis).
+- `showReadout?: boolean` — `@default true` (inline right-aligned `tabular-nums` actual / target SVG readout).
+- `showVariance?: boolean` — `@default false` (appends signed variance delta to readout).
+- `formatValue?: (value: number, datum: TDatum) => string`
+
+**`BulletChartProps<TDatum>` (Tier-2 Batteries-Included Chart):**
+- **Required:** `variant: ChartVariant`, `size: ChartSize`, `data: readonly TDatum[]`, `label`, `actual`, `target`.
+- **Optional:** All `ChartBulletProps` options, plus standard Tier-2 props (`ref`, `svgRef`, `palette`, `monotone`, `title`, `description`, `actions`, `height`, `loading`, `empty`, `interactive`, `tooltip`, `numberFormat`, `locales`, `activeIndex = $bindable(null)`, `selectedIndex = $bindable(null)`, `selectable`, `onRowClick?: (datum: TDatum, index: number) => void`, `children`, `{...rest}`).
+
+#### 6.2.5 M12 — `<HeatmapChart>` & `<ChartHeatmap>`
+
+**Constants & Types:**
+- `CHART_HEATMAP_COLOR_SCALES = ["sequential", "diverging"] as const` → `ChartHeatmapColorScale`
+- `CHART_HEATMAP_RAMPS = ["accent", "teal", "emerald", "slate", "amber", "rose"] as const` → `ChartHeatmapRamp`
+- `CHART_HEATMAP_LEGEND_STYLES = ["continuous", "stepped"] as const` → `ChartHeatmapLegendStyle`
+- `ChartHeatmapCoord`: `{ xIndex: number; yIndex: number }`
+- `ChartHeatmapCell<TDatum>`: `{ xIndex, yIndex, xValue, yValue, value: number | null, normalized: number | null, fill: string, fg: string, x, y, width, height, datum: TDatum | null }`
+- `ChartHeatmapTooltipContext<TDatum>`: `{ cell: ChartHeatmapCell<TDatum>; formattedValue: string }`
+
+**`ChartHeatmapProps<TDatum>` (Tier-1 SVG Layer):**
+- `ref = $bindable<SVGGElement | null>(null)`
+- `x: keyof TDatum | ((datum: TDatum, index: number) => string)`
+- `y: keyof TDatum | ((datum: TDatum, index: number) => string)`
+- `value: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined)`
+- `xDomain?: readonly string[]`, `yDomain?: readonly string[]`
+- `colorScale?: ChartHeatmapColorScale` — `@default "sequential"`.
+- `ramp?: ChartHeatmapRamp` — `@default "accent"` (used when `colorScale="sequential"`).
+- `midpoint?: number` — `@default 0` (neutral pivot when `colorScale="diverging"`).
+- `domain?: readonly [number, number]` — Optional explicit `[min, max]` value clamp.
+- `cellGap?: number` — `@default 2` (integer px).
+- `cellRadius?: number` — Defaults to `--cs-chart-bar-radius` (`3 / 4 / 5px`).
+- `square?: boolean` — `@default false` (constrains cells to square aspect ratio).
+- `showValues?: boolean` — `@default true` (centered `tabular-nums` SVG text; auto-suppressed when cell `< 28×18px`).
+- `formatValue?: (value: number, datum: TDatum) => string`
+
+**`HeatmapChartProps<TDatum>` (Tier-2 Batteries-Included Chart):**
+- **Required:** `variant: ChartVariant`, `size: ChartSize`, `data: readonly TDatum[]`, `x`, `y`, `value`.
+- **Optional:** All `ChartHeatmapProps` options, plus `xAxis?`, `yAxis?`, `legend?: "top" | "bottom" | "none"` (`@default "top"`), `legendStyle?: ChartHeatmapLegendStyle` (`@default "continuous"`), `tooltip?`, `numberFormat?`, `locales?`, `title?`, `description?`, `actions?`, `height?`, `loading?`, `empty?`, `interactive?`, `activeCell = $bindable<ChartHeatmapCoord | null>(null)`, `selectedCell = $bindable<ChartHeatmapCoord | null>(null)`, `selectable?`, `onCellClick?: (datum: TDatum | null, cell: ChartHeatmapCell<TDatum>) => void`, `ref = $bindable(null)`, `svgRef = $bindable(null)`, `children?`, `{...rest}`.
+
+#### 6.2.6 V2 `--cs-chart-*` CSS Custom Properties
+
+| Token | Role & Default |
+| :--- | :--- |
+| `--cs-chart-unselected-opacity` | Opacity of non-selected marks when `selectedIndex` / `selectedCell` is active (`0.38`). |
+| `--cs-chart-waterfall-connector` | Dashed `1px` step connector stroke (`light-dark(24% base-900, 26% base-100)`). |
+| `--cs-chart-waterfall-subtotal` | Grounded subtotal column fill (`light-dark(base-600, base-400)`). |
+| `--cs-chart-waterfall-total` | Grounded total column fill (`--cs-chart-series-1`). |
+| `--cs-chart-bullet-range-1..3` | Calm stepped neutral qualitative band fills (`base-200`, `base-150`, `base-100` light; `base-750`, `base-800`, `base-850` dark). |
+| `--cs-chart-bullet-target` | Vertical target marker tick fill (`--cs-color-text-strong`). |
+| `--cs-chart-bullet-row-height` | Track block-size per `size` (`sm: 20px`, `md: 24px`, `lg: 28px`). |
+| `--cs-chart-heatmap-empty` | Missing/`null` cell fill (`--cs-color-base-soft`). |
+| `--cs-chart-heatmap-mid` | Diverging midpoint neutral fill (`light-dark(base-100, base-800)`). |
+| `--cs-chart-heatmap-cell-fg-light` / `-dark` | Contrast-safe cell text colors selected automatically per cell luminance. |
+
+---
+
+### 6.3 DOM, Semantics & Accessibility (V2)
+
+- **Selection State (`data-selected`):** Selected bars, points, slices, waterfall columns, bullet rows, and heatmap cells expose `data-selected=""`; container exposes `data-has-selection=""` when `selectedIndex !== null` (or `selectedCell !== null`) so non-selected siblings cleanly step down to `--cs-chart-unselected-opacity` in CSS without per-element JS opacity overrides.
+- **`Sparkline`:** Renders `<div class="cs-sparkline" data-type={type} data-interactive={interactive ? "" : undefined}>` wrapping `<svg class="cs-sparkline-svg">` (`role="img"` + `aria-label` when `label` provided, otherwise `aria-hidden="true"`).
+- **`WaterfallChart`:** Uses standard `Chart` + `ChartCanvas` keyboard scrubbing (`ArrowLeft`/`ArrowRight`/`Home`/`End`/`Escape`/`Enter`/`Space`); `.cs-chart-sr-live` announces `"<category>, <rowType>: <signedValue>, total <runningTotal>"`.
+- **`BulletChart`:** Vertical row navigation (`ArrowUp`/`ArrowDown`/`Home`/`End`/`Escape`/`Enter`/`Space`); `.cs-chart-sr-live` announces `"<label>: actual <actual>, target <target>"`.
+- **`HeatmapChart`:** Full 2D grid navigation on focusable `.cs-chart-canvas`: `ArrowLeft`/`ArrowRight` (column), `ArrowUp`/`ArrowDown` (row), `Home`/`End` (row start/end), `Escape` (clear `activeCell`), `Enter`/`Space` (click/select cell). `.cs-chart-sr-live` announces `"<yLabel>, <xLabel>: <formattedValue>"`.
+
+---
+
+### 6.4 Visual & Motion Contract (V2)
+
+- **Zero Visual Drift:** `WaterfallChart`, `BulletChart`, and `HeatmapChart` inherit the exact `Card`/`KpiCard` borderless 4-variant surface contract (`elevated`, `soft`, `sunken`, `transparent`), concentric `[data-nested]` squircle radii, and `sm | md | lg` density scale from V1.
+- **Export-Safe SVG Patterns & Ramps:** IBCS `hatch` patterns use pure `<pattern>` + `<path>`/`<line>` (zero CSS background hacks inside `<svg>`). Heatmap fills resolve via deterministic OKLCH color stops (`color-mix(in oklch, ...)` / pre-calibrated primitive steps) with automatic light/dark contrast switching for centered cell labels.
+- **Motion:**
+  - `Sparkline`: static by default (high-density tables and KPI grids must never jitter on scroll/mount); optional active indicator glides over `--cs-chart-dur-scrub` (`--cs-dur-80`).
+  - `WaterfallChart` / `BulletChart`: baseline-anchored growth (`--cs-chart-dur-bar` `--cs-chart-ease-data`, zero overshoot); selection transitions over `--cs-dur-effect` (`160ms`).
+  - `HeatmapChart`: calm cell hover/selection highlight ring transition (`--cs-dur-hover` `--cs-ease-hover`); floating `popover="manual"` tooltip uses the exact V1 instant-first / glide-after GPU `translate3d` choreography with `NumberMorph`.
+
+---
+
+### 6.5 Edge Cases & Constraints (V2)
+
+- **Percent Stack Zero-Sum Rows:** When all visible series at an X-index are `0` or `null`, `stackOffsetExpand` would yield `NaN`; geometry kernel guards `sum === 0` to `[0, 0]` cleanly.
+- **Direct Label Collisions & Narrow Viewports:** If `plotWidth` is too narrow to reserve direct label margin safely, direct labels cap at `maxWidth` with `…` truncation and fall back cleanly without collapsing the plot below `120px`.
+- **Sparkline Degenerate Data:** Handles `[]` (empty SVG), single datum (renders centered dot), all-equal values (renders centered flat line without divide-by-zero), and `null` gaps (`defined()`).
+- **Waterfall Zero-Crossing & Negative Deltas:** Cumulative `y0 → y1` spans crossing `0` snap cleanly, cap radii apply to the leading direction of each delta (top for `+`, bottom for `-`), and connector lines always exit from `runningAfter[i]` (`y1` for deltas/start, top/bottom of column for subtotal/total).
+- **Heatmap Sparse / Duplicate Data:** Missing `(x, y)` pairs render as calm `--cs-chart-heatmap-empty` cells (announced as `"No data"` on keyboard focus); `cellGap` and cell dimensions snap to integer pixels to prevent moiré seams.
+- **Explicit Non-Goals (V2):** Still zero `<foreignObject>`, zero SVG `<filter>`, zero WebGL/Canvas rasterizers, and no zoom/pan/brush (deferred to V3).

@@ -425,3 +425,250 @@ Standard UI transitions use semantic tokens from `src/css/foundation/motion.css`
   - Rely on global `focus.css` (`2px solid var(--cs-color-accent-solid)`).
   - Legend buttons use standard outset `outline-offset: 2px`.
   - Keyboard-focusable SVG plot container (`.cs-chart-canvas:focus-visible`, enabling Left/Right arrow scrubbing across data points) applies `outline-offset: -2px` and `border-radius: calc(var(--cs-chart-radius) - var(--cs-chart-padding))` so focus stays crisp and unclipped inside squircle shells.
+
+---
+
+## 9. V2 Executive & Controlling Visual & Motion Specification
+
+All V2 additions extend the V1 "Calm Clarity" grammar under `@layer components.composite`: **100% pure SVG inside `<svg>`** (zero `<foreignObject>`, zero `<filter>`), calibrated for Light & Dark mode across all 4 shell variants (`elevated | soft | sunken | transparent`), and anchored to `var(--cs-chart-point-ring-bg)` for opaque cutouts and surface-matched tonal mixing.
+
+### 9.1 IBCS Scenario Fills (`pattern: "solid" | "hatch" | "outline"`)
+
+Maps directly to IBCS controlling semantics without adding noisy extra colors:
+- `solid` = **Actual** (default full series fill).
+- `hatch` = **Forecast / Estimate** (45° diagonal vector hatch over a quiet tinted backdrop).
+- `outline` = **Plan / Budget** (crisp inset stroke + whisper inner wash).
+
+#### Diagonal Hatch `<pattern>` Geometry (`pattern="hatch"`)
+Define one scoped `<pattern>` per hatched series/color in `<defs>` (`id="{uid}-hatch-{key}"`):
+- **Tile & Rotation:** `patternUnits="userSpaceOnUse"`, `width="8"`, `height="8"`, `patternTransform="rotate(45)"`. An integer `8px` pitch eliminates subpixel moiré/vibration on `1x` and `2x` displays and remains unmistakable in grayscale print.
+- **Backdrop Tint:** `<rect width="8" height="8" fill="{color}" fill-opacity="var(--cs-chart-hatch-bg-opacity)" />` (`light: 0.14`, `dark: 0.18`) so hatched bars hold cohesive silhouette mass.
+- **Diagonal Stripe:** `<rect x="0" y="0" width="2.25" height="8" fill="{color}" fill-opacity="var(--cs-chart-hatch-stripe-opacity)" />` (`light: 0.85`, `dark: 0.88`, `~28%` duty cycle—cleanly readable at `10px` bar widths without optical buzzing). Using `<rect>` instead of `<line>` prevents edge-seam clipping at pattern boundaries.
+- **Crisp Silhouette Rim:** Apply `stroke="{color}"`, `stroke-opacity="0.55"`, `stroke-width="1px"` on an inset path (`0.5px` inward) so the rounded outer cap stays razor-sharp where light gaps meet the bar edge.
+
+#### Outline Bar Treatment (`pattern="outline"`)
+- **Geometry Inset:** Inset the bar path by `0.75px` on all edges (`x + 0.75`, `y + 0.75`, `width - 1.5`, `height - 1.5`) with outer cap radius clamped to `max(0, capRadius - 0.75)` so outlined bars match adjacent `solid` and `hatch` bar widths pixel-for-pixel.
+- **Stroke & Inner Fill:** `stroke="{color}"`, `stroke-width="1.5px"`, `fill="{color}"`, `fill-opacity="var(--cs-chart-outline-fill-opacity)"` (`light: 0.09`, `dark: 0.12`).
+
+#### Legend & Tooltip Swatch Parity
+- `.cs-chart-legend-swatch[data-pattern="hatch"]`: `background-image: repeating-linear-gradient(-45deg, var(--cs-chart-swatch-color) 0 1.75px, color-mix(in oklch, var(--cs-chart-swatch-color) 14%, transparent) 1.75px 4.5px); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cs-chart-swatch-color) 50%, transparent);`.
+- `.cs-chart-legend-swatch[data-pattern="outline"]`: `background-color: color-mix(in oklch, var(--cs-chart-swatch-color) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--cs-chart-swatch-color);`.
+- `.cs-chart-tooltip-swatch` (`2.5px × 10px` pill) mirrors `[data-pattern="outline"]` via `inset 0 0 0 1px` and `[data-pattern="hatch"]` via `repeating-linear-gradient(-45deg, ...)`.
+
+```css
+.cs-chart {
+    --cs-chart-hatch-bg-opacity: 0.14;
+    --cs-chart-hatch-stripe-opacity: 0.85;
+    --cs-chart-outline-fill-opacity: 0.09;
+}
+
+:root[data-theme="dark"] .cs-chart {
+    --cs-chart-hatch-bg-opacity: 0.18;
+    --cs-chart-hatch-stripe-opacity: 0.88;
+    --cs-chart-outline-fill-opacity: 0.12;
+}
+```
+
+---
+
+### 9.2 Per-Datum Conditional Coloring & Persistent `data-selected` State
+
+#### Per-Datum Conditional Coloring
+- Any datum may override its series fill with an explicit color or semantic tone (`positive` → `--cs-chart-positive`, `caution` → `--cs-chart-caution`, `negative` → `--cs-chart-negative`, `neutral` → `--cs-chart-series-10`).
+- Inside value labels recompute contrast per datum (`white` on dark/saturated tones, `var(--cs-color-base-950)` on light tones such as `caution-400` in dark mode or `200`–`300` monotone tints).
+- When combined with `pattern="hatch"` or `"outline"`, the resolved datum color drives the pattern stripe/stroke directly.
+
+#### Persistent `data-selected` State (Distinct from Transient Hover)
+Hover is soft and ephemeral (`--cs-chart-dim-opacity: 0.24` + hover band); selection (`data-selected`) is crisp, anchored, and stays visually distinct even while hovering another mark:
+
+- **Peer Softening (`[data-has-selection]`):**
+  - Unselected marks soften to `--cs-chart-unselected-opacity: 0.38` (calmer than hover dimming so surrounding data stays legible).
+  - If the user hovers a *different* unselected mark while a selection is active, the hovered peer lifts to `opacity: 0.88` while the selected mark holds `opacity: 1`.
+- **Selected Mark Treatment (Pure SVG, Zero `<filter>`):**
+  - **Bars / Columns / Waterfall:** Render a dedicated sibling `<path>`/`.cs-chart-selection-ring` expanded `2.5px` outward around the selected bar (`radius = capRadius + 2.5px`, `fill: none`, `stroke: var(--cs-chart-selected-ring)`, `stroke-width: 1.75px`). Because the `2.5px` gap reveals the underlying surface (`--cs-chart-point-ring-bg`), the selection halo stays razor-sharp without eating into the bar fill.
+  - **Line / Area / Scatter Points:** Persistent solid dot (`r = calc(var(--cs-chart-point-radius) + 0.5px)`) + `2px` `--cs-chart-point-ring-bg` cutout stroke + outer `1.5px` ring (`r + 3.5px`, `fill: none`, `stroke: var(--cs-chart-selected-ring)`).
+  - **Donut / Pie Slices:** Persistent `+4px` radial offset (vs. `+3px` on hover) + `1.75px` outer arc stroke in `--cs-chart-selected-ring` offset `2.5px` beyond the slice's outer radius; center KPI locks to the selected slice when no other slice is hovered.
+- **Tokens & Motion:**
+  - `--cs-chart-selected-ring: var(--cs-color-text-strong);`
+  - `--cs-chart-unselected-opacity: 0.38;`
+  - Selection ring enters via `opacity: 0 → 1`, `scale: 0.96 → 1` (`transform-box: fill-box; transform-origin: center`) over `--cs-dur-160` `--cs-spring-snappy`. Peer opacity transitions over `--cs-dur-effect` (`160ms`) `--cs-ease-effect`.
+
+---
+
+### 9.3 100% Normalized Stacked (`mode="percent"`) & Direct End-of-Line Labels
+
+#### 100% Normalized Stacked (`mode="percent"`)
+- **Axis Scale:** Locks domain to `[0, 1]` with formatted ticks `0%`, `25%`, `50%`, `75%`, `100%` (`md`/`lg`) or `0%`, `50%`, `100%` (`sm`).
+- **Tooltip Dual Readout:** Each series row renders both raw value and normalized share on one aligned line (`$420k · 48%`):
+  - `.cs-chart-tooltip-value`: primary raw value (`12px`, `weight: 600`, `--cs-color-text-strong`, `tabular-nums`, `NumberMorph`).
+  - `.cs-chart-tooltip-sep`: `·` (`color: var(--cs-color-text-weaker)`, `padding-inline: 3px`).
+  - `.cs-chart-tooltip-share`: percentage share (`11px`, `weight: 500`, `--cs-color-text-weak`, `tabular-nums`).
+  - Optional `.cs-chart-tooltip-total` footer shows the raw category sum (`Total  $875k`).
+
+#### Direct End-of-Line Labels (`directLabels`)
+Replaces or complements the top/bottom legend on multi-series `LineChart` / `AreaChart`:
+- **Margin & Anchor:** Auto-expand right plot margin (`88px–136px`, capped at `32%` of canvas width). Anchor labels at `x = plotRight + 8px`, `text-anchor="start"`, `dominant-baseline="central"`.
+- **Typography (Pure SVG `<text>`):**
+  - Series name: `11px`, `weight: 600`, `fill: <series-color>` (using calibrated `--cs-chart-series-*` tokens).
+  - Inline latest value (`<tspan dx="5">`): `11px`, `weight: 500`, `fill: var(--cs-color-text-weak)`, `font-variant-numeric: tabular-nums lining-nums`.
+- **Vertical Collision Relaxation:**
+  - Enforce a strict `14px` minimum vertical center-to-center spacing (`minGap = 14px`) via iterative relaxation clamped inside `[plotTop + 6, plotBottom - 6]`.
+  - When a label is nudged `> 3px` from its true endpoint `y`, draw a whisper `1px` leader `<path>` (`stroke: <series-color>`, `stroke-opacity: 0.35`, `stroke-linecap: round`) from `(plotRight + 2, yTrue)` to `(plotRight + 6, yNudged)`.
+- **Choreography & Dimming:** Direct labels fade in near the tail of the line reveal (`opacity: 0 → 1`, `--cs-dur-200`, `--cs-ease-quad-out`, `280ms` delay) and participate in `[data-dimmed]` (`--cs-chart-dim-opacity: 0.24`) over `--cs-dur-effect`.
+
+---
+
+### 9.4 `<Sparkline>` Micro-Chart
+
+Ultra-compact, zero-chrome trend mark engineered for **zero layout shift** inside `KpiCardVisual` and `DataTable` cells:
+
+- **Container & Layout Stability:**
+  - Defaults to frameless `transparent` (`padding: 0`, `border-radius: 0`, `box-shadow: none`), `display: block`, `inline-size: 100%`, explicit `block-size` so height is reserved from first paint:
+    - `KpiCardVisual` context: `block-size: 52px` (`width: 100%`).
+    - `DataTable` cell context: `block-size: 24px` (compact) or `28px` (comfortable), typical `inline-size: 72px–112px`.
+  - Internal SVG inset: `4px` top/bottom padding; `4px` right padding when `showEndDot` is enabled so the `2.5px` dot + `1.5px` cutout ring never clips.
+  - `--cs-chart-point-ring-bg` resolves to `var(--cs-chart-backdrop-bg, var(--cs-color-elevated))` inside cards/elevated tables, or `var(--cs-color-canvas)` on canvas.
+- **Line & Area Geometry:**
+  - Stroke: `1.5px`, `stroke-linecap: round`, `stroke-linejoin: round`, `vector-effect: non-scaling-stroke`.
+  - Area wash: vertical `<linearGradient>` from `--cs-chart-sparkline-area-top-opacity` (`light: 0.18`, `dark: 0.22`) to `0` at the bottom baseline.
+  - End-dot (`showEndDot`): `<circle r="2.5" />` filled with series color + `stroke: var(--cs-chart-point-ring-bg)`, `stroke-width: 1.5px`.
+- **Bar Geometry (`type="bar"`):**
+  - `2px` inter-bar gap, `2px` top cap radius (clamped to `barWidth / 2`), `min-bar-height: 2px` for non-zero values, integer-snapped coordinates.
+- **Target Hairline (`target`):**
+  - Crisp `1px` horizontal dashed `<line>` (`stroke-dasharray: 3 2`, `y = floor(y) + 0.5`, `shape-rendering="crispEdges"`) in `--cs-chart-axis` (neutral) or semantic `--cs-chart-{positive|caution|negative}`.
+- **Motion (Crisp Micro-Cadence):**
+  - Line reveal: `--cs-dur-320` (`320ms`), `--cs-ease-expo-out`; area wash fade: `--cs-dur-240`, `40ms` delay; end-dot pop: `--cs-dur-180`, `--cs-spring-snappy`, `220ms` delay.
+  - Bar mount: `--cs-dur-280` (`280ms`), `--cs-ease-quart-out`, micro-stagger `min(index * 10ms, 100ms)`.
+  - Interactive scrub is opt-in (off by default in dense tables); when enabled, renders a `1px` `--cs-chart-crosshair` + `2.5px` active dot with `1.5px` cutout ring.
+
+```css
+.cs-chart-sparkline {
+    --cs-chart-sparkline-area-top-opacity: 0.18;
+    display: block;
+    inline-size: 100%;
+    block-size: var(--cs-chart-sparkline-height, 52px);
+    min-inline-size: 0;
+}
+
+:root[data-theme="dark"] .cs-chart-sparkline {
+    --cs-chart-sparkline-area-top-opacity: 0.22;
+}
+```
+
+---
+
+### 9.5 `<WaterfallChart>` (Bridge Chart)
+
+Built for P&L bridges, ARR movements, and variance walkdowns:
+
+- **Semantic Role Palette:**
+  - `start` / `subtotal` / `total` (anchor pillars): `--cs-chart-waterfall-total` = `light-dark(var(--cs-color-slate-700), var(--cs-color-slate-300))` so calm neutral totals frame chromatic deltas without competing with them. (Optional `totalTone="accent"` switches anchor pillars to `var(--cs-chart-series-1)`.)
+  - Positive delta (`> 0`): `var(--cs-chart-positive)`.
+  - Negative delta (`< 0`): `var(--cs-chart-negative)`.
+- **Bar Geometry & Zero-Baseline:**
+  - Anchor pillars extend from `yZero` and round **only their outer cap** (`--cs-chart-bar-radius`).
+  - Floating delta steps round their **direction tip** (`--cs-chart-bar-radius`, top for positive, bottom for negative) and apply a subtle `1.5px` radius on their origin edge so floating blocks feel crafted without looking like pills.
+  - When values cross zero, render `.cs-chart-grid-zero[data-style="strong"]` (`1.5px` `--cs-chart-zero-line-strong`).
+- **Step Connector Hairlines:**
+  - `1px` horizontal dashed `<line>` (`stroke-dasharray: 3 2`, `stroke: var(--cs-chart-axis)`, snapped to `floor(y) + 0.5`, `shape-rendering="crispEdges"`) spanning cleanly from the trailing edge of bar `i` (`x1 = bar[i].x + bar[i].width`) to the leading edge of bar `i + 1` (`x2 = bar[i+1].x`) at the running cumulative `y`.
+- **Signed Outside Labels:**
+  - Deltas always format with explicit sign (`+$1.4M`, `-$320k`); anchor pillars format unsigned (`$4.2M`).
+  - Placement: `6px` clearance above positive deltas/totals and `6px` below negative deltas (automatically flipping above if clearance to X-axis ticks `< 14px`).
+  - Typography: `var(--cs-chart-value-label-size)` (`10px / 11px`), `tabular-nums`, `3px` `--cs-chart-point-ring-bg` halo (`paint-order: stroke fill`); `weight: 600` + `--cs-color-text-strong` for totals, `weight: 500` + `--cs-chart-positive-fg` / `--cs-chart-negative-fg` for signed deltas.
+- **Baseline-Anchored Staggered Mount:**
+  - Anchor pillars grow from `yZero`; floating deltas grow strictly from their **previous cumulative baseline `yPrev`** (`transform-origin` locked to `yPrev`, so positive steps rise upward and negative steps drop downward).
+  - Duration `--cs-chart-dur-bar` (`420ms`), `--cs-chart-ease-data` (`quart-out`), **zero overshoot**.
+  - Sequential left-to-right stagger `min(index * 32ms, 260ms)` so the eye follows the bridge equation; connector hairlines fade in smoothly (`opacity: 0 → 1`, `--cs-dur-200`, `180ms` delay).
+
+---
+
+### 9.6 `<BulletChart>` (IBCS Plan / Actual / Target Scorecard)
+
+Compact horizontal scorecard replacing bloated gauge widgets with high-density plan-vs-actual clarity:
+
+#### Row Rhythm & Density Scale (`sm | md | lg`)
+| Metric | `sm` | `md` | `lg` |
+| :--- | :--- | :--- | :--- |
+| Row Pitch (`rowHeight`) | `34px` | `44px` | `54px` |
+| Row Gap | `8px` | `12px` | `16px` |
+| Qualitative Track Height (`trackH`) | `12px` | `16px` | `20px` |
+| Track Corner Radius (`rx`) | `4px` | `5px` | `6px` |
+| Centered Actual Bar Height (`50%` of `trackH`) | `6px` | `8px` | `10px` |
+| Actual Bar Right Cap Radius | `2px` | `2.5px` | `3px` |
+| Target Tick Height (`barH + 6px`, `+3px` past bar) | `12px` | `14px` | `16px` |
+| Label / Readout Font Size | `11px` | `12px` | `13px` |
+
+- **3-Step Calm Monochrome Qualitative Range Track:**
+  - Render the 3 contiguous range `<rect>` segments inside a single rounded `<clipPath>` (`rx = trackRadius`) so outer ends are smooth while internal tier boundaries remain razor-sharp vertical seams.
+  - Mix against `var(--cs-chart-point-ring-bg)` so all 3 tiers remain opaque and evenly stepped across `elevated`, `soft`, `sunken`, and `transparent` in both Light and Dark mode:
+```css
+.cs-chart {
+    --cs-chart-bullet-range-1: light-dark(
+        color-mix(in oklch, var(--cs-color-base-900) 15%, var(--cs-chart-point-ring-bg)),
+        color-mix(in oklch, var(--cs-color-base-100) 20%, var(--cs-chart-point-ring-bg))
+    );
+    --cs-chart-bullet-range-2: light-dark(
+        color-mix(in oklch, var(--cs-color-base-900) 9.5%, var(--cs-chart-point-ring-bg)),
+        color-mix(in oklch, var(--cs-color-base-100) 13%, var(--cs-chart-point-ring-bg))
+    );
+    --cs-chart-bullet-range-3: light-dark(
+        color-mix(in oklch, var(--cs-color-base-900) 4.5%, var(--cs-chart-point-ring-bg)),
+        color-mix(in oklch, var(--cs-color-base-100) 6.5%, var(--cs-chart-point-ring-bg))
+    );
+    --cs-chart-bullet-target: var(--cs-color-text-strong);
+}
+```
+- **Centered Actual Bar:** Vertically centered inside the track (`y = trackY + trackH * 0.25`), filled with `var(--cs-chart-series-1)` (or per-row semantic `positive | caution | negative` / monochrome `var(--cs-color-base-solid)`).
+- **Crisp Target Tick Marker:** `<rect width="2.5" height="{barH + 6}" rx="1.25" />` centered on `x = targetX`, extending `3px` above and `3px` below the actual bar, filled with `var(--cs-chart-bullet-target)` + `1px` `var(--cs-chart-point-ring-bg)` halo (`paint-order: stroke fill`) so the marker never merges when the actual bar crosses past target.
+- **Inline Header Row (Pure SVG, Zero Left-Gutter Waste):**
+  - Positioned `5px` above each track: flush-left metric label (`weight: 500`, `--cs-color-text-strong`) + optional muted unit/subtitle (`11px`, `--cs-color-text-weak`); flush-right `tabular-nums` readout (`text-anchor="end"`): actual value (`weight: 600`, `--cs-color-text-strong`) followed by ` / {target}` (`weight: 400`, `--cs-color-text-weak`).
+  - Optional shared scale ticks render beneath the final row (`10px`/`11px`, `--cs-chart-tick-fg`, `tabular-nums`).
+- **Motion:** Actual bars grow horizontally from `0` (`scaleX(0) → 1`) over `--cs-chart-dur-bar` (`420ms`), `--cs-chart-ease-data` (`quart-out`), staggered `min(rowIndex * 45ms, 220ms)`. Target ticks fade + scale in vertically (`scaleY(0.5) → 1`) over `--cs-dur-240` `--cs-spring-snappy` (`120ms` delay).
+
+---
+
+### 9.7 `<HeatmapChart>` (Matrix / Cohort Grid)
+
+Designed for retention cohorts, weekday×hour load matrices, and correlation grids:
+
+- **Cell Geometry & Gutter:**
+  - Pure SVG `<rect>` cells snapped to integer coordinates, with `rx`/`ry` = `4px` (`sm`), `5px` (`md`), `6px` (`lg`), clamped to `min(cellRadius, cellWidth / 4, cellHeight / 4)`.
+  - Inter-cell gutter: `2px` (`sm` or dense grids `> 12` columns) / `3px` (`md` & `lg`).
+  - Null / missing cells render as a quiet flat recess: `--cs-chart-heatmap-empty: light-dark(color-mix(in oklch, var(--cs-color-base-900) 4%, var(--cs-chart-point-ring-bg)), color-mix(in oklch, var(--cs-color-base-100) 6%, var(--cs-chart-point-ring-bg)))`.
+- **Calibrated 7-Step OKLCH Color Ramps (Light & Dark Mode):**
+  - **Sequential (`scale="sequential"`, default `ramp="accent"`, plus `emerald | amber | violet | rose | slate`):**
+    | Step | Normalized `t` | Light Mode Token (`<hue>`) | Dark Mode Token (`<hue>`) |
+    | :--- | :--- | :--- | :--- |
+    | `1` | `0.00–0.14` | `color-mix(in oklch, <hue-500> 8%, var(--cs-chart-point-ring-bg))` | `color-mix(in oklch, <hue-500> 14%, var(--cs-chart-point-ring-bg))` |
+    | `2` | `0.15–0.28` | `var(--cs-color-<hue>-100)` | `color-mix(in oklch, var(--cs-color-<hue>-900) 65%, var(--cs-color-<hue>-800))` |
+    | `3` | `0.29–0.42` | `var(--cs-color-<hue>-200)` | `var(--cs-color-<hue>-800)` |
+    | `4` | `0.43–0.57` | `var(--cs-color-<hue>-300)` | `var(--cs-color-<hue>-700)` |
+    | `5` | `0.58–0.71` | `var(--cs-color-<hue>-500)` | `var(--cs-color-<hue>-500)` |
+    | `6` | `0.72–0.85` | `var(--cs-color-<hue>-600)` | `var(--cs-color-<hue>-400)` |
+    | `7` | `0.86–1.00` | `var(--cs-color-<hue>-700)` | `var(--cs-color-<hue>-300)` |
+  - **Diverging (`scale="diverging"`, 7 steps centered on `0` / midpoint):**
+    | Step | Role | Light Mode Token | Dark Mode Token |
+    | :--- | :--- | :--- | :--- |
+    | `-3` | Deep negative | `var(--cs-color-negative-600)` | `var(--cs-color-negative-400)` |
+    | `-2` | Mid negative | `var(--cs-color-negative-400)` | `var(--cs-color-negative-600)` |
+    | `-1` | Soft negative | `var(--cs-color-negative-200)` | `var(--cs-color-negative-800)` |
+    | `0` | Neutral midpoint | `color-mix(in oklch, var(--cs-color-base-900) 6%, var(--cs-chart-point-ring-bg))` | `color-mix(in oklch, var(--cs-color-base-100) 10%, var(--cs-chart-point-ring-bg))` |
+    | `+1` | Soft positive | `var(--cs-color-positive-200)` | `var(--cs-color-positive-800)` |
+    | `+2` | Mid positive | `var(--cs-color-positive-400)` | `var(--cs-color-positive-600)` |
+    | `+3` | Deep positive | `var(--cs-color-positive-600)` | `var(--cs-color-positive-400)` |
+- **Automatic Foreground Contrast Threshold (`tabular-nums` Cell Values):**
+  - Typography: `10px` (`sm`) / `11px` (`md`/`lg`), `weight: 500`, `tabular-nums`, centered (`text-anchor="middle"`, `dominant-baseline="central"`). Auto-suppress when `cellWidth < 28px` or `cellHeight < 20px`.
+  - **Light mode:** `t < 0.55` (steps `1`–`4` / `-1..+1`) → `var(--cs-color-base-900)`; `t >= 0.55` (steps `5`–`7` / `±2..±3`) → `white`.
+  - **Dark mode:** `t < 0.62` (steps `1`–`4` / `-2..+2`) → `var(--cs-color-base-100)`; `t >= 0.62` (luminous steps `5`–`7` / `±3`) → `var(--cs-color-base-950)`.
+- **Crisp Active-Cell Ring (Hover & Selection):**
+  - Pure SVG overlay `<g class="cs-chart-heatmap-focus" pointer-events="none">` rendered above the cell matrix:
+    - Inner gap `<rect>`: expanded `0.75px` around the cell, `fill: none`, `stroke: var(--cs-chart-point-ring-bg)`, `stroke-width: 1.5px`, `rx = cellRadius + 0.75px`.
+    - Outer ring `<rect>`: expanded `2px` around the cell, `fill: none`, `stroke: var(--cs-color-text-strong)`, `stroke-width: 2px`, `rx = cellRadius + 2px`.
+  - Matching X and Y axis tick labels promote to `--cs-color-text-strong` (`weight: 600`) while a cell is active for instant row/column triangulation.
+- **Compact Horizontal Gradient Ramp Legend:**
+  - Lives in the `.cs-chart-legend` slot (`display: inline-flex; align-items: center; gap: 8px;`):
+    - Min label (`11px`, `--cs-color-text-weak`, `tabular-nums`) + gradient pill (`inline-size: 120px` at `sm` / `148px` at `md`/`lg`, `block-size: 8px`, `border-radius: 9999px`, `background-image: linear-gradient(to right, <step-1 .. step-7>)`) + Max label (`11px`, `--cs-color-text-weak`, `tabular-nums`).
+    - On cell hover, a `2px × 12px` indicator notch (`background: var(--cs-color-text-strong)`, `border-radius: 9999px`, `box-shadow: 0 0 0 1.5px var(--cs-chart-point-ring-bg)`) glides along the bar over `--cs-dur-80` `--cs-ease-cubic-out` to pinpoint the hovered cell's value in the distribution.
+- **Motion:**
+  - Mount: calm diagonal wave (`opacity: 0 → 1`, `scale: 0.92 → 1`, `transform-box: fill-box; transform-origin: center`) over `--cs-dur-240` `--cs-ease-quart-out`, staggered `min((row + col) * 12ms, 220ms)`.
+  - Active-cell ring: opacity fades over `--cs-dur-effect-fast` (`100ms`); position glides over `--cs-dur-60` `--cs-ease-quad-out`.

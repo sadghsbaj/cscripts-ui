@@ -2,6 +2,7 @@
     import { untrack } from "svelte";
 
     import {
+        buildRoundedBarPath,
         computeGroupedBarRects,
         computeGroupedStackedBarRects,
         computeStackedBarRects,
@@ -11,17 +12,32 @@
         type ChartBarRect,
     } from "./chart-geometry.internal.ts";
     import { measureTextWidth, truncateTextToWidth } from "./chart-measure.internal.ts";
-    import { formatDefaultTick } from "./chart-scales.internal.ts";
-    import type { ChartBarValueLabelsMode, ChartDatum, ChartSeries } from "./chart-state.svelte.ts";
+    import { formatDefaultTick, formatPercentTick } from "./chart-scales.internal.ts";
+    import type {
+        ChartBarPattern,
+        ChartBarValueLabelsMode,
+        ChartDatum,
+        ChartSeries,
+    } from "./chart-state.svelte.ts";
     import { getChartContext } from "./chart.context.ts";
     import type { ChartBarProps } from "./index.ts";
+
+    interface HatchPatternDef {
+        readonly id: string;
+        readonly color: string;
+    }
 
     interface PreparedBar {
         readonly key: string;
         readonly rect: ChartBarRect;
+        readonly renderPath: string;
+        readonly selectionRingPath: string | null;
         readonly color: string;
+        readonly pattern: ChartBarPattern;
+        readonly hatchPatternId: string | null;
         readonly dimmed: boolean;
         readonly active: boolean;
+        readonly selected: boolean;
         readonly origin: string;
         readonly delay: string;
     }
@@ -36,6 +52,7 @@
         readonly dy?: string;
         readonly text: string;
         readonly dimmed: boolean;
+        readonly selected: boolean;
     }
 
     interface BarInsideLabel {
@@ -46,7 +63,9 @@
         readonly y: number;
         readonly text: string;
         readonly rotated: boolean;
+        readonly pattern: ChartBarPattern;
         readonly dimmed: boolean;
+        readonly selected: boolean;
     }
 
     interface AboveBarRow {
@@ -78,13 +97,23 @@
     }: ChartBarProps<TDatum> = $props();
 
     const chart = getChartContext<TDatum>();
+    const uid = $props.id();
+
+    const isStacked = $derived(mode === "stacked" || mode === "percent");
+    const isNormalized = $derived(mode === "percent");
 
     $effect.pre(() => {
-        if (mode !== "stacked") return;
-        if (untrack(() => chart.stacked || chart.stackedBar !== null)) return;
-        chart.stacked = true;
+        if (!isStacked) return;
+        const shouldSetStacked = !untrack(() => chart.stacked || chart.stackedBar !== null);
+        const shouldSetPercent =
+            isNormalized && !untrack(() => chart.percent || chart.percentBar !== null);
+        if (!shouldSetStacked && !shouldSetPercent) return;
+
+        if (shouldSetStacked) chart.stacked = true;
+        if (shouldSetPercent) chart.percent = true;
         return () => {
-            chart.stacked = false;
+            if (shouldSetStacked) chart.stacked = false;
+            if (shouldSetPercent) chart.percent = false;
         };
     });
 
@@ -125,7 +154,7 @@
 
     const stackSlots = $derived.by(
         (): readonly BarStackSlot<ChartSeries<TDatum>>[] =>
-            partitionSeriesIntoStackSlots(targetSeries, mode === "stacked"),
+            partitionSeriesIntoStackSlots(targetSeries, isStacked),
     );
 
     const slotBySeriesId = $derived.by(
@@ -209,11 +238,12 @@
                 barGap: resolvedBarGap,
                 segmentGap,
                 minBarLength,
-                stackUnstacked: mode === "stacked",
+                stackUnstacked: isStacked,
+                normalized: isNormalized,
             });
         }
 
-        if (mode === "stacked") {
+        if (isStacked) {
             return computeStackedBarRects({
                 series: seriesInputs,
                 categoryStarts: categoryGeometry.starts,
@@ -224,6 +254,7 @@
                 maxBarWidth: resolvedMaxBarWidth,
                 segmentGap,
                 minBarLength,
+                normalized: isNormalized,
             });
         }
 
@@ -240,19 +271,92 @@
         });
     });
 
-    const preparedBars = $derived.by((): readonly PreparedBar[] =>
-        barRects
-            .filter((rect) => rect.path.length > 0)
-            .map((rect) => ({
+    function buildInsetBarPath(rect: ChartBarRect, inset: number): string {
+        if (rect.width <= inset * 2 || rect.height <= inset * 2) return rect.path;
+        return buildRoundedBarPath(
+            rect.x + inset,
+            rect.y + inset,
+            rect.width - inset * 2,
+            rect.height - inset * 2,
+            Math.max(0, rect.radius - inset),
+            rect.capSide,
+        );
+    }
+
+    const preparedBarData = $derived.by((): {
+        readonly bars: readonly PreparedBar[];
+        readonly hatchPatterns: readonly HatchPatternDef[];
+    } => {
+        const hatchPatterns: HatchPatternDef[] = [];
+        const hatchIdByColor: Record<string, string> = Object.create(null);
+        const bars: PreparedBar[] = [];
+
+        for (const rect of barRects) {
+            if (rect.path.length === 0) continue;
+
+            const datum = chart.data[rect.index];
+            const color =
+                datum !== undefined
+                    ? chart.resolveDatumColor(rect.seriesId, datum, rect.index)
+                    : chart.getSeriesColor(rect.seriesId);
+            const pattern =
+                datum !== undefined
+                    ? chart.resolveDatumPattern(rect.seriesId, datum, rect.index)
+                    : chart.resolveSeriesPattern(rect.seriesId);
+
+            let hatchPatternId: string | null = null;
+            if (pattern === "hatch") {
+                const existing = hatchIdByColor[color];
+                if (existing !== undefined) {
+                    hatchPatternId = existing;
+                } else {
+                    const nextId = `cs-chart-hatch-${uid}-${hatchPatterns.length}`;
+                    hatchIdByColor[color] = nextId;
+                    hatchPatterns.push({ id: nextId, color });
+                    hatchPatternId = nextId;
+                }
+            }
+
+            const renderPath =
+                pattern === "outline"
+                    ? buildInsetBarPath(rect, 0.75)
+                    : pattern === "hatch"
+                      ? buildInsetBarPath(rect, 0.5)
+                      : rect.path;
+
+            const selected = chart.selectedIndex === rect.index;
+            const selectionRingPath = selected
+                ? buildRoundedBarPath(
+                      rect.x - 2.5,
+                      rect.y - 2.5,
+                      rect.width + 5,
+                      rect.height + 5,
+                      rect.radius > 0 ? rect.radius + 2.5 : 2.5,
+                      rect.capSide,
+                  )
+                : null;
+
+            bars.push({
                 key: `${rect.seriesId}-${rect.index}`,
                 rect,
-                color: chart.getSeriesColor(rect.seriesId),
+                renderPath,
+                selectionRingPath,
+                color,
+                pattern,
+                hatchPatternId,
                 dimmed: chart.isSeriesDimmed(rect.seriesId),
                 active: chart.activeIndex === rect.index,
+                selected,
                 origin: isHorizontal ? `${rect.baseline}px 0px` : `0px ${rect.baseline}px`,
                 delay: `${Math.min(rect.index * 18, 220)}ms`,
-            })),
-    );
+            });
+        }
+
+        return { bars, hatchPatterns };
+    });
+
+    const preparedBars = $derived(preparedBarData.bars);
+    const hatchPatterns = $derived(preparedBarData.hatchPatterns);
 
     function formatValueText(
         value: number,
@@ -285,7 +389,7 @@
 
     const isSingleColumnSlot = $derived(stackSlots.length === 1);
     const isSingleStackedSlot = $derived(
-        isSingleColumnSlot && (mode === "stacked" || (stackSlots[0]?.series.length ?? 0) > 1),
+        isSingleColumnSlot && (isStacked || (stackSlots[0]?.series.length ?? 0) > 1),
     );
 
     const useAboveHeaderValue = $derived(
@@ -308,7 +412,10 @@
             const seriesItem = seriesLookup[rect.seriesId];
             if (datum === undefined || !seriesItem) continue;
 
-            const text = formatValueText(rect.value, datum, seriesItem);
+            const text =
+                isNormalized && !formatLabel && rect.share !== undefined
+                    ? formatPercentTick(rect.share)
+                    : formatValueText(rect.value, datum, seriesItem);
             const labelWidth = measureTextWidth(text, font);
             const barThickness = isHorizontal ? rect.height : rect.width;
 
@@ -341,7 +448,9 @@
                 y: snapInt(rect.y + rect.height / 2),
                 text,
                 rotated,
+                pattern: item.pattern,
                 dimmed: item.dimmed,
+                selected: item.selected,
             });
         }
 
@@ -373,7 +482,7 @@
             const slot = slotBySeriesId[rect.seriesId];
             const isMultiSeriesStackSlot = hasNamedStacks
                 ? (slot?.series.length ?? 0) > 1
-                : mode === "stacked";
+                : isStacked;
 
             if (isMultiSeriesStackSlot && rect.capSide === "none") continue;
             // In grouped / single-series `both` mode, only fall back to an outside label when the inside label did not fit.
@@ -388,7 +497,10 @@
             const labelValue = isMultiSeriesStackSlot
                 ? computeDirectionalStackTotal(rect.index, rect.isNegative, slot?.series ?? targetSeries)
                 : rect.value;
-            const text = formatValueText(labelValue, datum, seriesItem);
+            const text =
+                isNormalized && !formatLabel
+                    ? formatPercentTick(isMultiSeriesStackSlot ? 1 : (rect.share ?? 0))
+                    : formatValueText(labelValue, datum, seriesItem);
 
             if (isHorizontal) {
                 labels.push({
@@ -401,6 +513,7 @@
                     dy: "0.35em",
                     text,
                     dimmed: item.dimmed,
+                    selected: item.selected,
                 });
             } else {
                 labels.push({
@@ -413,6 +526,7 @@
                     dy: rect.isNegative ? "0.85em" : undefined,
                     text,
                     dimmed: item.dimmed,
+                    selected: item.selected,
                 });
             }
         }
@@ -505,25 +619,66 @@
         data-orientation={orientation}
         data-label-layout={labelLayout}
         data-tooltip-mode={chart.interactive ? chart.tooltipMode : undefined}
+        data-has-selection={chart.hasSelection ? "" : undefined}
     >
+        {#if hatchPatterns.length > 0}
+            <defs>
+                {#each hatchPatterns as def (def.id)}
+                    <pattern
+                        id={def.id}
+                        width="8"
+                        height="8"
+                        patternUnits="userSpaceOnUse"
+                        patternTransform="rotate(45)"
+                    >
+                        <rect
+                            width="8"
+                            height="8"
+                            class="cs-chart-hatch-bg"
+                            style:fill={def.color}
+                        />
+                        <rect
+                            x="0"
+                            y="0"
+                            width="2.25"
+                            height="8"
+                            class="cs-chart-hatch-stripe"
+                            style:fill={def.color}
+                        />
+                    </pattern>
+                {/each}
+            </defs>
+        {/if}
+
         {#each preparedBars as item (item.key)}
             <path
                 class="cs-chart-bar-rect"
                 role="presentation"
-                d={item.rect.path}
+                d={item.renderPath}
                 data-series-id={item.rect.seriesId}
                 data-stack={item.rect.stackKey}
                 data-index={item.rect.index}
                 data-orientation={orientation}
+                data-pattern={item.pattern !== "solid" ? item.pattern : undefined}
                 data-negative={item.rect.isNegative ? "" : undefined}
                 data-dimmed={item.dimmed ? "" : undefined}
                 data-active={item.active ? "" : undefined}
-                style:fill={item.color}
+                data-selected={item.selected ? "" : undefined}
+                fill={item.hatchPatternId ? `url(#${item.hatchPatternId})` : undefined}
+                style:fill={item.hatchPatternId ? undefined : item.color}
+                style:stroke={item.pattern !== "solid" ? item.color : undefined}
                 style:--cs-chart-bar-origin={item.origin}
                 style:--cs-chart-bar-delay={item.delay}
                 onpointerenter={() => handleBarPointer(item.rect)}
                 onpointermove={() => handleBarPointer(item.rect)}
             />
+            {#if item.selectionRingPath}
+                <path
+                    class="cs-chart-selection-ring"
+                    d={item.selectionRingPath}
+                    aria-hidden="true"
+                />
+            {/if}
         {/each}
 
         {#each outsideLabels as label (label.key)}
@@ -536,6 +691,7 @@
                 data-series-id={label.seriesId}
                 data-index={label.index}
                 data-dimmed={label.dimmed ? "" : undefined}
+                data-selected={label.selected ? "" : undefined}
             >
                 {label.text}
             </text>
@@ -552,7 +708,9 @@
                 data-series-id={label.seriesId}
                 data-index={label.index}
                 data-orientation={label.rotated ? "vertical" : "horizontal"}
+                data-pattern={label.pattern !== "solid" ? label.pattern : undefined}
                 data-dimmed={label.dimmed ? "" : undefined}
+                data-selected={label.selected ? "" : undefined}
             >
                 {label.text}
             </text>

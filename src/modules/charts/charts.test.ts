@@ -5,22 +5,35 @@ import {
     buildAreaPath,
     buildLinePath,
     buildRoundedBarPath,
+    buildWaterfallBarPath,
     clampBarRadius,
+    computeBulletRows,
     computeGroupedBarRects,
     computeGroupedStackedBarRects,
+    computeHeatmapGrid,
     computePieArcs,
     computeStackedBarRects,
     computeStackedSeries,
+    computeWaterfallBars,
+    computeWaterfallSteps,
+    deduplicateHeatmapCategories,
     findNearestCoordinateIndex,
+    getBulletSizeMetrics,
+    getHeatmapSizeMetrics,
     partitionSeriesIntoStackSlots,
+    resolveHeatmapCellColor,
     snapHalf,
     snapInt,
+    type BulletRowInput,
+    type HeatmapCellInput,
+    type WaterfallBarInput,
 } from "./chart-geometry.internal.ts";
 import {
     clearMeasureCache,
     computeChartMargins,
     computeRotatedTickHeight,
     measureTextWidth,
+    resolveDirectLabelPositions,
     thinAxisTicks,
     truncateTextToWidth,
     wrapTickLabel,
@@ -29,15 +42,20 @@ import {
     createNumericScale,
     createXScale,
     formatDefaultTick,
+    formatPercentTick,
     inferXScaleType,
 } from "./chart-scales.internal.ts";
 import * as chartsExports from "./index.ts";
 import {
+    CHART_HEATMAP_MODES,
+    CHART_HEATMAP_RAMPS,
     CHART_MONOTONE_HUES,
     CHART_PALETTES,
     CHART_SIZES,
     CHART_TONES,
     CHART_VARIANTS,
+    CHART_WATERFALL_ROW_TYPES,
+    CHART_WATERFALL_TOTAL_TONES,
     ChartState,
     resolveSeriesColor,
     resolveToneColor,
@@ -1647,5 +1665,1482 @@ describe("Charts M0 — ChartState & Public Exports (chart-state.svelte.ts & ind
         expect(state.hasNamedStacks).toBe(true);
         expect(state.yScale.domain[1]).toBeGreaterThanOrEqual(180);
         expect(state.yScale.domain[1]).toBeLessThan(280);
+    });
+});
+
+describe("Charts M8 — Normalized Stacking, Direct Labels & IBCS State", () => {
+    describe("computeStackedSeries & computeStackedBarRects (normalized: true)", () => {
+        test("normalizes positive stacks to [0, 1], guards all-zero categories without NaN, and clamps negative values to 0", () => {
+            const result = computeStackedSeries(
+                [
+                    { id: "a", values: [25, 0, -20, null] },
+                    { id: "b", values: [75, 0, 50, 0] },
+                    { id: "c", values: [0, 0, 50, 0] },
+                ],
+                { normalized: true },
+            );
+
+            expect(result.extent).toEqual([0, 1]);
+            expect(result.layers).toHaveLength(3);
+
+            const [layerA, layerB, layerC] = result.layers;
+
+            // Index 0: 25 / 100 = 0.25, 75 / 100 = 0.75, 0 / 100 = 0
+            expect(layerA?.points[0]?.y0).toBeCloseTo(0, 6);
+            expect(layerA?.points[0]?.y1).toBeCloseTo(0.25, 6);
+            expect(layerB?.points[0]?.y0).toBeCloseTo(0.25, 6);
+            expect(layerB?.points[0]?.y1).toBeCloseTo(1, 6);
+            expect(layerC?.points[0]?.y0).toBeCloseTo(1, 6);
+            expect(layerC?.points[0]?.y1).toBeCloseTo(1, 6);
+
+            // Index 1: all-zero category must never emit NaN
+            for (const layer of result.layers) {
+                const pt = layer.points[1];
+                expect(pt?.y0).toBe(0);
+                expect(pt?.y1).toBe(0);
+                expect(Number.isFinite(pt?.y0)).toBe(true);
+                expect(Number.isFinite(pt?.y1)).toBe(true);
+            }
+
+            // Index 2: negative value clamped to 0 so b=50 and c=50 each take 50%
+            expect(layerA?.points[2]?.y0).toBe(0);
+            expect(layerA?.points[2]?.y1).toBe(0);
+            expect(layerB?.points[2]?.y0).toBeCloseTo(0, 6);
+            expect(layerB?.points[2]?.y1).toBeCloseTo(0.5, 6);
+            expect(layerC?.points[2]?.y0).toBeCloseTo(0.5, 6);
+            expect(layerC?.points[2]?.y1).toBeCloseTo(1, 6);
+
+            // Index 3: null + zeros -> safe 0 without NaN
+            expect(layerA?.points[3]?.value).toBeNull();
+            expect(layerA?.points[3]?.y0).toBe(0);
+            expect(layerA?.points[3]?.y1).toBe(0);
+
+            // Completely zero dataset has [0, 0] extent and zero NaNs
+            const allZero = computeStackedSeries(
+                [
+                    { id: "x", values: [0, 0] },
+                    { id: "y", values: [0, null] },
+                ],
+                { normalized: true },
+            );
+            expect(allZero.extent).toEqual([0, 0]);
+            for (const layer of allZero.layers) {
+                for (const pt of layer.points) {
+                    expect(pt.y0).toBe(0);
+                    expect(pt.y1).toBe(0);
+                }
+            }
+        });
+
+        test("computeStackedBarRects with normalized: true computes accurate shares, safe all-zero geometry, and outer-cap-only rounding", () => {
+            const pctScale = createNumericScale({
+                values: [0, 1],
+                range: [200, 0],
+                percent: true,
+            });
+
+            expect(pctScale.domain).toEqual([0, 1]);
+            expect(pctScale.ticks(5)).toEqual([0, 0.25, 0.5, 0.75, 1]);
+            expect(pctScale.ticks(3)).toEqual([0, 0.5, 1]);
+            expect(formatPercentTick(0)).toBe("0%");
+            expect(formatPercentTick(0.25)).toBe("25%");
+            expect(formatPercentTick(1)).toBe("100%");
+            expect(formatPercentTick("Q1")).toBe("Q1");
+
+            const rects = computeStackedBarRects({
+                series: [
+                    { id: "a", values: [25, 0, 10] },
+                    { id: "b", values: [75, 0, 30] },
+                ],
+                categoryStarts: [0, 80, 160],
+                bandwidth: 60,
+                valueScale: pctScale,
+                orientation: "vertical",
+                radius: 6,
+                segmentGap: 0,
+                normalized: true,
+            });
+
+            expect(rects).toHaveLength(6);
+
+            // Category 0: a = 25%, b = 75%
+            const c0a = requireBarRect(rects, "a", 0);
+            const c0b = requireBarRect(rects, "b", 0);
+            expect(c0a.share).toBeCloseTo(0.25, 6);
+            expect(c0b.share).toBeCloseTo(0.75, 6);
+            expect((c0a.share ?? 0) + (c0b.share ?? 0)).toBeCloseTo(1, 6);
+            expect(c0a.isNegative).toBe(false);
+            expect(c0b.isNegative).toBe(false);
+            expect(c0a.capSide).toBe("none");
+            expect(c0b.capSide).toBe("top");
+            expect(c0a.height).toBe(50);
+            expect(c0b.height).toBe(150);
+
+            // Category 1: all-zero -> share 0, height 0, empty path, no NaN
+            const c1a = requireBarRect(rects, "a", 1);
+            const c1b = requireBarRect(rects, "b", 1);
+            expect(c1a.share).toBe(0);
+            expect(c1b.share).toBe(0);
+            expect(c1a.height).toBe(0);
+            expect(c1b.height).toBe(0);
+            expect(c1a.path).toBe("");
+            expect(c1b.path).toBe("");
+
+            // Horizontal normalized stacked bars also compute share and right cap on outermost segment
+            const hScale = createNumericScale({ values: [0, 1], range: [0, 200], percent: true });
+            const hRects = computeStackedBarRects({
+                series: [
+                    { id: "a", values: [40] },
+                    { id: "b", values: [60] },
+                ],
+                categoryStarts: [0],
+                bandwidth: 40,
+                valueScale: hScale,
+                orientation: "horizontal",
+                segmentGap: 0,
+                normalized: true,
+            });
+            const ha = requireBarRect(hRects, "a", 0);
+            const hb = requireBarRect(hRects, "b", 0);
+            expect(ha.share).toBeCloseTo(0.4, 6);
+            expect(hb.share).toBeCloseTo(0.6, 6);
+            expect(ha.capSide).toBe("none");
+            expect(hb.capSide).toBe("right");
+            expect(ha.width).toBe(80);
+            expect(hb.width).toBe(120);
+        });
+    });
+
+    describe("resolveDirectLabelPositions (chart-measure.internal.ts)", () => {
+        test("returns empty array for empty input and leaves well-separated labels un-nudged", () => {
+            expect(resolveDirectLabelPositions([], 200)).toEqual([]);
+
+            const placed = resolveDirectLabelPositions(
+                [
+                    { id: "top", y: 30 },
+                    { id: "mid", y: 100 },
+                    { id: "bot", y: 170 },
+                ],
+                200,
+                14,
+                8,
+            );
+
+            expect(placed).toEqual([
+                { id: "top", yTrue: 30, y: 30, nudged: false },
+                { id: "mid", yTrue: 100, y: 100, nudged: false },
+                { id: "bot", yTrue: 170, y: 170, nudged: false },
+            ]);
+        });
+
+        test("enforces minGap vertical separation on colliding endpoints and sets nudged when displaced > 3px", () => {
+            const placed = resolveDirectLabelPositions(
+                [
+                    { id: "s1", y: 100 },
+                    { id: "s2", y: 100 },
+                    { id: "s3", y: 102 },
+                ],
+                200,
+                14,
+                8,
+            );
+
+            expect(placed.map((p) => p.id)).toEqual(["s1", "s2", "s3"]);
+            for (let i = 1; i < placed.length; i++) {
+                const prev = placed[i - 1];
+                const curr = placed[i];
+                expect((curr?.y ?? 0) - (prev?.y ?? 0)).toBeGreaterThanOrEqual(14);
+            }
+            // s1 stays at 100 (0px displacement -> nudged: false); s2 pushed +14px, s3 pushed +26px -> nudged: true
+            expect(placed[0]?.nudged).toBe(false);
+            expect(placed[1]?.nudged).toBe(true);
+            expect(placed[2]?.nudged).toBe(true);
+
+            // Displacement <= 3px does NOT mark nudged
+            const tinyNudge = resolveDirectLabelPositions(
+                [
+                    { id: "a", y: 50 },
+                    { id: "b", y: 61 }, // pushed to 64 -> delta = 3px (not > 3)
+                ],
+                200,
+                14,
+                8,
+            );
+            expect(tinyNudge[1]?.y).toBe(64);
+            expect(tinyNudge[1]?.nudged).toBe(false);
+        });
+
+        test("clamps placements within [padding, plotHeight - padding] including bottom-edge backward pass and overcrowded plots", () => {
+            const bottomCluster = resolveDirectLabelPositions(
+                [
+                    { id: "a", y: 190 },
+                    { id: "b", y: 195 },
+                    { id: "c", y: 205 },
+                ],
+                200,
+                14,
+                8,
+            );
+
+            for (const entry of bottomCluster) {
+                expect(entry.y).toBeGreaterThanOrEqual(8);
+                expect(entry.y).toBeLessThanOrEqual(192);
+            }
+            expect(bottomCluster[2]?.y).toBe(192);
+            expect(bottomCluster[1]?.y).toBe(178);
+            expect(bottomCluster[0]?.y).toBe(164);
+            expect(bottomCluster[0]?.nudged).toBe(true);
+            expect(bottomCluster[2]?.nudged).toBe(true);
+
+            // Top-edge clamp: y < padding pushed inside [8, 192]
+            const topEdge = resolveDirectLabelPositions([{ id: "top", y: 0 }], 200, 14, 8);
+            expect(topEdge[0]?.y).toBe(8);
+            expect(topEdge[0]?.nudged).toBe(true);
+
+            // Overcrowded plot (5 labels needing 56px inside a 30px tall plot) still clamps cleanly without NaN
+            const overcrowded = resolveDirectLabelPositions(
+                [
+                    { id: "1", y: 10 },
+                    { id: "2", y: 10 },
+                    { id: "3", y: 10 },
+                    { id: "4", y: 10 },
+                    { id: "5", y: 10 },
+                ],
+                30,
+                14,
+                8,
+            );
+            for (const entry of overcrowded) {
+                expect(Number.isFinite(entry.y)).toBe(true);
+                expect(entry.y).toBeGreaterThanOrEqual(8);
+                expect(entry.y).toBeLessThanOrEqual(22);
+            }
+        });
+    });
+
+    describe("ChartState M8 extensions", () => {
+        interface ScenarioRow {
+            month: string;
+            val: number;
+            other: number;
+            phase: "actual" | "forecast" | "plan";
+        }
+
+        const scenarioData: readonly ScenarioRow[] = [
+            { month: "Jan", val: 40, other: 60, phase: "actual" },
+            { month: "Feb", val: -20, other: 80, phase: "forecast" },
+            { month: "Mar", val: 0, other: 0, phase: "plan" },
+        ];
+
+        test("resolves per-datum color, tone, and pattern callbacks with proper precedence and fallbacks", () => {
+            const state = new ChartState<ScenarioRow>({
+                data: scenarioData,
+                x: "month",
+                series: [
+                    {
+                        id: "val",
+                        label: "Variance",
+                        color: (d) => (d.phase === "plan" ? "#334155" : undefined),
+                        tone: (d) => (d.val >= 0 ? "positive" : "negative"),
+                        pattern: (d) =>
+                            d.phase === "forecast"
+                                ? "hatch"
+                                : d.phase === "plan"
+                                  ? "outline"
+                                  : "solid",
+                    },
+                    {
+                        id: "other",
+                        label: "Baseline",
+                        pattern: "hatch",
+                    },
+                ],
+            });
+
+            const [row0, row1, row2] = scenarioData;
+            if (!row0 || !row1 || !row2) {
+                throw new Error("Expected 3 scenario rows");
+            }
+
+            // Datum 0: color callback returns undefined -> falls back to tone callback ("positive")
+            expect(state.resolveDatumColor("val", row0, 0)).toBe("var(--cs-chart-positive)");
+            expect(state.resolveDatumPattern("val", row0, 0)).toBe("solid");
+
+            // Datum 1: negative -> tone callback ("negative"), pattern callback ("hatch")
+            expect(state.resolveDatumColor("val", row1, 1)).toBe("var(--cs-chart-negative)");
+            expect(state.resolveDatumPattern("val", row1, 1)).toBe("hatch");
+
+            // Datum 2: color callback takes precedence over tone callback, pattern callback ("outline")
+            expect(state.resolveDatumColor("val", row2, 2)).toBe("#334155");
+            expect(state.resolveDatumPattern("val", row2, 2)).toBe("outline");
+
+            // Static vs callback resolveSeriesPattern
+            expect(state.resolveSeriesPattern("val")).toBe("solid");
+            expect(state.resolveSeriesPattern("other")).toBe("hatch");
+            expect(state.resolveDatumPattern("other", row0, 0)).toBe("hatch");
+
+            // Unknown series id falls back safely
+            expect(state.resolveDatumPattern("missing", row0, 0)).toBe("solid");
+            expect(state.resolveDatumColor("missing", row0, 0)).toBe(
+                "var(--cs-chart-series-1)",
+            );
+
+            // Tooltip context carries per-datum resolved color & non-solid pattern
+            const ctx1 = state.getTooltipContext(1);
+            expect(ctx1?.items[0]?.color).toBe("var(--cs-chart-negative)");
+            expect(ctx1?.items[0]?.pattern).toBe("hatch");
+            expect(ctx1?.items[1]?.pattern).toBe("hatch");
+
+            const ctx0 = state.getTooltipContext(0);
+            expect(ctx0?.items[0]?.color).toBe("var(--cs-chart-positive)");
+            expect(ctx0?.items[0]?.pattern).toBeUndefined();
+        });
+
+        test("locks yScale domain to [0, 1] in isPercent mode and recalculates tooltip shares when toggling series", () => {
+            const state = new ChartState<ScenarioRow>({
+                data: [
+                    { month: "Jan", val: 25, other: 75, phase: "actual" },
+                    { month: "Feb", val: 0, other: 0, phase: "actual" },
+                ],
+                x: "month",
+                series: [
+                    { id: "val", label: "A" },
+                    { id: "other", label: "B" },
+                ],
+                percent: true,
+                width: 480,
+                height: 260,
+            });
+
+            expect(state.isPercent).toBe(true);
+            expect(state.hasStackedMarks).toBe(true);
+            expect(state.yScale.domain).toEqual([0, 1]);
+
+            const ctx0 = state.getTooltipContext(0);
+            expect(ctx0?.items[0]?.share).toBeCloseTo(0.25, 6);
+            expect(ctx0?.items[0]?.formattedShare).toBe("25%");
+            expect(ctx0?.items[1]?.share).toBeCloseTo(0.75, 6);
+            expect(ctx0?.items[1]?.formattedShare).toBe("75%");
+
+            // All-zero category yields 0% without NaN
+            const ctx1 = state.getTooltipContext(1);
+            expect(ctx1?.items[0]?.share).toBe(0);
+            expect(ctx1?.items[0]?.formattedShare).toBe("0%");
+
+            // Toggling "other" off recalculates "val" share to 100%
+            state.toggleSeries("other");
+            const ctx0AfterToggle = state.getTooltipContext(0);
+            expect(ctx0AfterToggle?.items).toHaveLength(1);
+            expect(ctx0AfterToggle?.items[0]?.share).toBeCloseTo(1, 6);
+            expect(ctx0AfterToggle?.items[0]?.formattedShare).toBe("100%");
+
+            state.showAllSeries();
+            expect(state.getTooltipContext(0)?.items[0]?.formattedShare).toBe("25%");
+        });
+
+        test("clamps selectedIndex, toggles off on repeat click, switches directly, and handles empty/shrinking data", () => {
+            const state = new ChartState<ScenarioRow>({
+                data: scenarioData,
+                x: "month",
+                series: [{ id: "val", label: "Val" }],
+                selectable: true,
+                selectedIndex: 99,
+            });
+
+            // Constructor clamps out-of-range selectedIndex to data.length - 1
+            expect(state.selectedIndex).toBe(2);
+            expect(state.hasSelection).toBe(true);
+
+            // Negative clamps to 0; float truncates
+            state.setSelectedIndex(-5);
+            expect(state.selectedIndex).toBe(0);
+            state.setSelectedIndex(1.9);
+            expect(state.selectedIndex).toBe(1);
+
+            // Toggle same index clears to null
+            state.toggleSelectedIndex(1);
+            expect(state.selectedIndex).toBeNull();
+            expect(state.hasSelection).toBe(false);
+
+            // Toggle pins new index, then switches directly to another index
+            state.toggleSelectedIndex(0);
+            expect(state.selectedIndex).toBe(0);
+            state.toggleSelectedIndex(2);
+            expect(state.selectedIndex).toBe(2);
+
+            // Shrinking data clamps getter; empty data returns null
+            state.data = scenarioData.slice(0, 1);
+            expect(state.selectedIndex).toBe(0);
+            state.data = [];
+            expect(state.selectedIndex).toBeNull();
+            expect(state.hasSelection).toBe(false);
+
+            // NaN / Infinity / null clear selection
+            state.data = scenarioData;
+            state.setSelectedIndex(1);
+            state.setSelectedIndex(NaN);
+            expect(state.selectedIndex).toBeNull();
+            state.setSelectedIndex(1);
+            state.setSelectedIndex(null);
+            expect(state.selectedIndex).toBeNull();
+        });
+
+        test("expands margins.right automatically when directLabels is enabled and respects horizontal/y2/override guards", () => {
+            const state = new ChartState<ScenarioRow>({
+                data: scenarioData,
+                x: "month",
+                series: [
+                    { id: "val", label: "Actual Revenue" },
+                    { id: "other", label: "Baseline" },
+                ],
+                width: 600,
+                height: 280,
+                directLabels: false,
+            });
+
+            const defaultRight = state.margins.right;
+            expect(defaultRight).toBe(12);
+
+            state.directLabels = true;
+            const expandedRight = state.margins.right;
+            expect(expandedRight).toBeGreaterThanOrEqual(88);
+            expect(expandedRight).toBeLessThanOrEqual(136);
+            expect(state.plotWidth).toBeLessThan(600 - state.margins.left - defaultRight);
+
+            // Narrow container caps directLabels right margin at max(64, floor(width * 0.32))
+            state.setDimensions(240, 200);
+            expect(state.margins.right).toBeLessThanOrEqual(Math.max(64, Math.floor(240 * 0.32)));
+
+            // Horizontal orientation disables direct-label right margin expansion
+            state.setDimensions(600, 280);
+            state.orientation = "horizontal";
+            expect(state.margins.right).toBe(12);
+            state.orientation = "vertical";
+            expect(state.margins.right).toBe(expandedRight);
+
+            // Explicit marginOverrides.right overrides automatic expansion
+            state.marginOverrides = { right: 50 };
+            expect(state.margins.right).toBe(50);
+            state.marginOverrides = {};
+
+            // Y2 axis takes precedence over directLabels width
+            state.series = [
+                { id: "val", label: "Actual Revenue", yAxis: "left" },
+                { id: "other", label: "Rate", yAxis: "right" },
+            ];
+            expect(state.hasY2Axis).toBe(true);
+            expect(state.margins.right).not.toBe(expandedRight);
+        });
+    });
+});
+
+describe("Charts M10 — Waterfall Geometry & Exports", () => {
+    describe("public barrel exports", () => {
+        test("exports waterfall components and constants without leaking internal geometry helpers", () => {
+            expect(CHART_WATERFALL_ROW_TYPES).toEqual(["start", "delta", "subtotal", "total"]);
+            expect(CHART_WATERFALL_TOTAL_TONES).toEqual(["base", "accent"]);
+
+            const exportedKeys = Object.keys(chartsExports);
+            expect(exportedKeys).toContain("ChartWaterfall");
+            expect(exportedKeys).toContain("WaterfallChart");
+            expect(exportedKeys).toContain("CHART_WATERFALL_ROW_TYPES");
+            expect(exportedKeys).toContain("CHART_WATERFALL_TOTAL_TONES");
+            expect(exportedKeys).not.toContain("computeWaterfallSteps");
+            expect(exportedKeys).not.toContain("computeWaterfallBars");
+            expect(exportedKeys).not.toContain("buildWaterfallBarPath");
+        });
+    });
+
+    describe("computeWaterfallSteps", () => {
+        test("computes running cumulative base math across start, positive/negative deltas, subtotal, and total", () => {
+            const inputs: readonly WaterfallBarInput[] = [
+                { index: 0, label: "Revenue", value: 1000, type: "start" },
+                { index: 1, label: "COGS", value: -350, type: "delta" },
+                { index: 2, label: "Gross Profit", value: null, type: "subtotal" },
+                { index: 3, label: "Services", value: 150, type: "delta" },
+                { index: 4, label: "OpEx", value: -280, type: "delta" },
+                { index: 5, label: "Net Income", value: undefined, type: "total" },
+            ];
+
+            const result = computeWaterfallSteps(inputs);
+            expect(result.extent).toEqual([0, 1000]);
+            expect(result.crossesZero).toBe(false);
+            expect(result.steps).toHaveLength(6);
+
+            // Start: anchors at 0 -> 1000
+            expect(result.steps[0]).toMatchObject({
+                index: 0,
+                type: "start",
+                kind: "start",
+                value: 1000,
+                y0: 0,
+                y1: 1000,
+                runningTotal: 1000,
+                isAnchor: true,
+                isPositive: true,
+                isNegative: false,
+            });
+
+            // Negative delta: 1000 -> 650
+            expect(result.steps[1]).toMatchObject({
+                index: 1,
+                type: "delta",
+                kind: "negative",
+                value: -350,
+                y0: 1000,
+                y1: 650,
+                runningTotal: 650,
+                isAnchor: false,
+                isPositive: false,
+                isNegative: true,
+            });
+
+            // Omitted subtotal: inherits running (650), anchors 0 -> 650
+            expect(result.steps[2]).toMatchObject({
+                index: 2,
+                type: "subtotal",
+                kind: "subtotal",
+                value: 650,
+                y0: 0,
+                y1: 650,
+                runningTotal: 650,
+                isAnchor: true,
+                isPositive: true,
+                isNegative: false,
+            });
+
+            // Positive delta: 650 -> 800
+            expect(result.steps[3]).toMatchObject({
+                index: 3,
+                type: "delta",
+                kind: "positive",
+                value: 150,
+                y0: 650,
+                y1: 800,
+                runningTotal: 800,
+                isAnchor: false,
+                isPositive: true,
+                isNegative: false,
+            });
+
+            // Negative delta: 800 -> 520
+            expect(result.steps[4]).toMatchObject({
+                index: 4,
+                type: "delta",
+                kind: "negative",
+                value: -280,
+                y0: 800,
+                y1: 520,
+                runningTotal: 520,
+                isAnchor: false,
+                isPositive: false,
+                isNegative: true,
+            });
+
+            // Omitted total: inherits running (520), anchors 0 -> 520
+            expect(result.steps[5]).toMatchObject({
+                index: 5,
+                type: "total",
+                kind: "total",
+                value: 520,
+                y0: 0,
+                y1: 520,
+                runningTotal: 520,
+                isAnchor: true,
+                isPositive: true,
+                isNegative: false,
+            });
+        });
+
+        test("syncs running total when subtotal or total provides an explicit finite value", () => {
+            const inputs: readonly WaterfallBarInput[] = [
+                { index: 0, label: "Start", value: 100, type: "start" },
+                { index: 1, label: "Up", value: 40, type: "delta" },
+                // Explicit subtotal overrides running 140 -> 150 (e.g. rounding adjustment)
+                { index: 2, label: "Adjusted Sub", value: 150, type: "subtotal" },
+                // Next delta builds from synced 150 -> 125
+                { index: 3, label: "Down", value: -25, type: "delta" },
+                // Explicit total overrides running 125 -> 130
+                { index: 4, label: "Final Total", value: 130, type: "total" },
+            ];
+
+            const result = computeWaterfallSteps(inputs);
+            expect(result.steps[2]).toMatchObject({
+                value: 150,
+                y0: 0,
+                y1: 150,
+                runningTotal: 150,
+            });
+            expect(result.steps[3]).toMatchObject({
+                value: -25,
+                y0: 150,
+                y1: 125,
+                runningTotal: 125,
+            });
+            expect(result.steps[4]).toMatchObject({
+                value: 130,
+                y0: 0,
+                y1: 130,
+                runningTotal: 130,
+            });
+            expect(result.extent).toEqual([0, 150]);
+        });
+
+        test("tracks zero-crossing negative deltas, running extremes in extent, and crossesZero flag", () => {
+            const inputs: readonly WaterfallBarInput[] = [
+                { index: 0, label: "Start", value: 60, type: "start" },
+                // Crosses from +60 through 0 down to -40
+                { index: 1, label: "Write-off", value: -100, type: "delta" },
+                // Deeper negative: -40 -> -75
+                { index: 2, label: "Penalty", value: -35, type: "delta" },
+                // Recovers back across 0: -75 -> +25
+                { index: 3, label: "Recovery", value: 100, type: "delta" },
+                { index: 4, label: "Ending", value: null, type: "total" },
+            ];
+
+            const result = computeWaterfallSteps(inputs);
+            expect(result.crossesZero).toBe(true);
+            expect(result.extent).toEqual([-75, 60]);
+
+            expect(result.steps[1]).toMatchObject({
+                y0: 60,
+                y1: -40,
+                runningTotal: -40,
+                kind: "negative",
+                isNegative: true,
+            });
+            expect(result.steps[2]).toMatchObject({
+                y0: -40,
+                y1: -75,
+                runningTotal: -75,
+                kind: "negative",
+            });
+            expect(result.steps[3]).toMatchObject({
+                y0: -75,
+                y1: 25,
+                runningTotal: 25,
+                kind: "positive",
+                isPositive: true,
+            });
+            expect(result.steps[4]).toMatchObject({
+                y0: 0,
+                y1: 25,
+                runningTotal: 25,
+                kind: "total",
+            });
+
+            // All-negative bridge does NOT cross zero (maxExtent === 0)
+            const allNegative = computeWaterfallSteps([
+                { index: 0, label: "Deficit", value: -50, type: "start" },
+                { index: 1, label: "Cost", value: -20, type: "delta" },
+                { index: 2, label: "Total", value: null, type: "total" },
+            ]);
+            expect(allNegative.extent).toEqual([-70, 0]);
+            expect(allNegative.crossesZero).toBe(false);
+            expect(allNegative.steps[2]).toMatchObject({
+                value: -70,
+                y0: 0,
+                y1: -70,
+                runningTotal: -70,
+                isNegative: true,
+                isPositive: false,
+            });
+        });
+
+        test("handles empty input and null/NaN values safely without NaN leakage", () => {
+            expect(computeWaterfallSteps([])).toEqual({
+                steps: [],
+                extent: [0, 0],
+                crossesZero: false,
+            });
+
+            const safe = computeWaterfallSteps([
+                { index: 0, label: "Start", value: NaN, type: "start" },
+                { index: 1, label: "Missing", value: null, type: "delta" },
+                { index: 2, label: "Gain", value: 25, type: "delta" },
+                { index: 3, label: "End", value: Infinity, type: "total" },
+            ]);
+            expect(safe.extent).toEqual([0, 25]);
+            expect(safe.steps[0]?.value).toBe(0);
+            expect(safe.steps[1]?.value).toBe(0);
+            expect(safe.steps[2]?.runningTotal).toBe(25);
+            expect(safe.steps[3]?.value).toBe(25);
+        });
+    });
+
+    describe("computeWaterfallBars & buildWaterfallBarPath", () => {
+        test("snaps bar coordinates to integers, centers maxBarWidth, and generates half-pixel dashed connectors", () => {
+            const items: readonly WaterfallBarInput[] = [
+                { index: 0, label: "Start", value: 100, type: "start" },
+                { index: 1, label: "Up", value: 40, type: "delta" },
+                { index: 2, label: "Down", value: -60, type: "delta" },
+                { index: 3, label: "Total", value: null, type: "total" },
+            ];
+            const valueScale = createNumericScale({
+                values: [0, 140],
+                range: [200, 0],
+                includeZero: true,
+                nice: false,
+            });
+
+            const result = computeWaterfallBars({
+                items,
+                categoryStarts: [10.4, 90.6, 170.2, 250.8],
+                bandwidth: 64,
+                valueScale,
+                maxBarWidth: 40,
+                radius: 4,
+            });
+
+            expect(result.bars).toHaveLength(4);
+            expect(result.connectors).toHaveLength(3);
+
+            for (const bar of result.bars) {
+                expect(Number.isSafeInteger(bar.x)).toBe(true);
+                expect(Number.isSafeInteger(bar.y)).toBe(true);
+                expect(Number.isSafeInteger(bar.width)).toBe(true);
+                expect(Number.isSafeInteger(bar.height)).toBe(true);
+                expect(Number.isSafeInteger(bar.baseline)).toBe(true);
+                expect(bar.width).toBe(40);
+                expect(bar.path.length).toBeGreaterThan(0);
+                expect(bar.path).not.toContain("NaN");
+            }
+
+            // Cap directions & anchor vs floating originRadius
+            expect(result.bars[0]?.capSide).toBe("top");
+            expect(result.bars[0]?.originRadius).toBe(0);
+            expect(result.bars[1]?.capSide).toBe("top");
+            expect(result.bars[1]?.originRadius).toBeGreaterThan(0);
+            expect(result.bars[2]?.capSide).toBe("bottom");
+            expect(result.bars[2]?.originRadius).toBeGreaterThan(0);
+            expect(result.bars[3]?.capSide).toBe("top");
+            expect(result.bars[3]?.originRadius).toBe(0);
+
+            // Connectors bridge bar i right edge to bar i+1 left edge at snapHalf(runningTotal)
+            for (let i = 0; i < result.connectors.length; i++) {
+                const conn = result.connectors[i];
+                const curr = result.bars[i];
+                const next = result.bars[i + 1];
+                expect(conn).toBeDefined();
+                expect(curr).toBeDefined();
+                expect(next).toBeDefined();
+                if (!conn || !curr || !next) continue;
+
+                expect(conn.fromIndex).toBe(curr.index);
+                expect(conn.toIndex).toBe(next.index);
+                expect(conn.x1).toBe(curr.x + curr.width);
+                expect(conn.x2).toBe(next.x);
+                expect(conn.value).toBe(curr.runningTotal);
+                expect(conn.y).toBe(snapHalf(valueScale.scale(curr.runningTotal)));
+                expect(Number.isSafeInteger(conn.y - 0.5)).toBe(true);
+            }
+        });
+
+        test("enforces minBarLength (2px) for tiny non-zero deltas, keeps exact 0 at height 0, and clamps cap radii", () => {
+            const items: readonly WaterfallBarInput[] = [
+                { index: 0, label: "Start", value: 1000, type: "start" },
+                { index: 1, label: "Tiny Up", value: 0.2, type: "delta" },
+                { index: 2, label: "Tiny Down", value: -0.2, type: "delta" },
+                { index: 3, label: "Zero Delta", value: 0, type: "delta" },
+                { index: 4, label: "Normal", value: 200, type: "delta" },
+            ];
+            const valueScale = createNumericScale({
+                values: [0, 1200],
+                range: [200, 0],
+                includeZero: true,
+                nice: false,
+            });
+
+            const result = computeWaterfallBars({
+                items,
+                categoryStarts: [0, 60, 120, 180, 240],
+                bandwidth: 40,
+                valueScale,
+                radius: 20, // deliberately larger than bar dimensions to verify clamping
+                minBarLength: 2,
+            });
+
+            const tinyUp = result.bars[1];
+            const tinyDown = result.bars[2];
+            const zeroBar = result.bars[3];
+            const normalBar = result.bars[4];
+
+            expect(tinyUp?.height).toBe(2);
+            expect(tinyUp?.capSide).toBe("top");
+            expect(tinyUp?.y).toBe((tinyUp?.baseline ?? 0) - 2);
+            expect(tinyUp?.radius).toBe(clampBarRadius(20, 40, 2));
+            expect(tinyUp?.originRadius).toBe(0); // height < 6 disables originRadius
+
+            expect(tinyDown?.height).toBe(2);
+            expect(tinyDown?.capSide).toBe("bottom");
+            expect(tinyDown?.y).toBe(tinyDown?.baseline);
+            expect(tinyDown?.radius).toBe(clampBarRadius(20, 40, 2));
+            expect(tinyDown?.originRadius).toBe(0);
+
+            expect(zeroBar?.height).toBe(0);
+            expect(zeroBar?.capSide).toBe("none");
+            expect(zeroBar?.radius).toBe(0);
+            expect(zeroBar?.originRadius).toBe(0);
+            expect(zeroBar?.path).toBe("");
+
+            expect(normalBar?.radius).toBe(
+                clampBarRadius(20, normalBar?.width ?? 0, normalBar?.height ?? 0),
+            );
+            expect(normalBar?.radius).toBeLessThanOrEqual((normalBar?.width ?? 0) / 2);
+            expect(normalBar?.radius).toBeLessThanOrEqual(normalBar?.height ?? 0);
+        });
+
+        test("handles empty inputs, zero bandwidth, touching bars, and zero-size path helper safely", () => {
+            const valueScale = createNumericScale({ values: [0, 100], range: [100, 0] });
+
+            expect(
+                computeWaterfallBars({
+                    items: [],
+                    categoryStarts: [],
+                    bandwidth: 40,
+                    valueScale,
+                }),
+            ).toEqual({ bars: [], connectors: [], extent: [0, 0], crossesZero: false });
+
+            expect(
+                computeWaterfallBars({
+                    items: [{ index: 0, label: "Start", value: 50, type: "start" }],
+                    categoryStarts: [10],
+                    bandwidth: 0,
+                    valueScale,
+                }),
+            ).toEqual({ bars: [], connectors: [], extent: [0, 50], crossesZero: false });
+
+            // Touching bars (x2 <= x1) emit zero connectors
+            const touching = computeWaterfallBars({
+                items: [
+                    { index: 0, label: "A", value: 40, type: "start" },
+                    { index: 1, label: "B", value: 20, type: "delta" },
+                ],
+                categoryStarts: [0, 40],
+                bandwidth: 40,
+                maxBarWidth: 40,
+                valueScale,
+            });
+            expect(touching.bars).toHaveLength(2);
+            expect(touching.connectors).toHaveLength(0);
+
+            // buildWaterfallBarPath guards zero/negative dimensions
+            expect(buildWaterfallBarPath(0, 0, 0, 20, 4, 1.5, "top")).toBe("");
+            expect(buildWaterfallBarPath(0, 0, 20, 0, 4, 1.5, "bottom")).toBe("");
+            const dualRadiusPath = buildWaterfallBarPath(10, 20, 30, 40, 4, 1.5, "top");
+            expect(dualRadiusPath).toContain("A4,4");
+            expect(dualRadiusPath).toContain("A1.5,1.5");
+            expect(dualRadiusPath).not.toContain("NaN");
+        });
+    });
+});
+
+describe("Charts M11 — Bullet Geometry & Public Exports", () => {
+    test("public barrel exports ChartBullet & BulletChart and does not leak internal bullet helpers", () => {
+        const exportedKeys = Object.keys(chartsExports);
+        expect(exportedKeys).toContain("ChartBullet");
+        expect(exportedKeys).toContain("BulletChart");
+        expect(exportedKeys).not.toContain("computeBulletRows");
+        expect(exportedKeys).not.toContain("getBulletSizeMetrics");
+    });
+
+    test("getBulletSizeMetrics returns monotonic size metrics for sm, md, and lg", () => {
+        const sm = getBulletSizeMetrics("sm");
+        const md = getBulletSizeMetrics("md");
+        const lg = getBulletSizeMetrics("lg");
+
+        expect(sm.rowHeight).toBeLessThan(md.rowHeight);
+        expect(md.rowHeight).toBeLessThan(lg.rowHeight);
+        expect(sm.rowGap).toBeLessThan(md.rowGap);
+        expect(md.rowGap).toBeLessThan(lg.rowGap);
+        expect(sm.trackHeight).toBeLessThan(md.trackHeight);
+        expect(md.trackHeight).toBeLessThan(lg.trackHeight);
+        expect(sm.trackRadius).toBeLessThan(md.trackRadius);
+        expect(md.trackRadius).toBeLessThan(lg.trackRadius);
+        expect(sm.barRadius).toBeLessThan(md.barRadius);
+        expect(md.barRadius).toBeLessThan(lg.barRadius);
+        expect(sm.labelFontSize).toBeLessThan(md.labelFontSize);
+        expect(md.labelFontSize).toBeLessThan(lg.labelFontSize);
+    });
+
+    describe("computeBulletRows", () => {
+        test("computes per-row domains vs sharedScale domain + sharedTicks and totalHeight", () => {
+            const items: readonly BulletRowInput[] = [
+                {
+                    index: 0,
+                    label: "Revenue",
+                    actual: 270,
+                    target: 250,
+                    ranges: [150, 225, 300],
+                },
+                {
+                    index: 1,
+                    label: "Margin",
+                    actual: 62,
+                    target: 65,
+                    ranges: [50, 60, 75],
+                },
+            ];
+
+            // Per-row scale
+            const perRow = computeBulletRows({
+                items,
+                width: 400,
+                rowHeight: 44,
+                rowGap: 12,
+                trackHeight: 16,
+                sharedScale: false,
+            });
+            expect(perRow.rows).toHaveLength(2);
+            expect(perRow.sharedMax).toBe(300);
+            expect(perRow.sharedTicks).toEqual([]);
+            expect(perRow.totalHeight).toBe(44 * 2 + 12 + 4);
+            expect(perRow.rows[0]?.domainMax).toBe(300);
+            expect(perRow.rows[1]?.domainMax).toBe(75);
+            // Margin 62/75 (~82.7%) fills most of the 400px track in per-row mode
+            expect(perRow.rows[1]?.barWidth).toBe(Math.round((62 / 75) * 400));
+
+            // Shared scale
+            const shared = computeBulletRows({
+                items,
+                width: 400,
+                rowHeight: 44,
+                rowGap: 12,
+                trackHeight: 16,
+                sharedScale: true,
+            });
+            expect(shared.sharedMax).toBe(300);
+            expect(shared.totalHeight).toBe(44 * 2 + 12 + 22);
+            expect(shared.rows[0]?.domainMax).toBe(300);
+            expect(shared.rows[1]?.domainMax).toBe(300);
+            // Margin 62/300 (~20.7%) is proportionally shorter under sharedScale
+            expect(shared.rows[1]?.barWidth).toBe(Math.round((62 / 300) * 400));
+            expect(shared.sharedTicks.length).toBeGreaterThanOrEqual(2);
+            for (const tick of shared.sharedTicks) {
+                expect(Number.isSafeInteger(tick.x)).toBe(true);
+                expect(tick.value).toBeGreaterThanOrEqual(0);
+                expect(tick.value).toBeLessThanOrEqual(300);
+                expect(tick.x).toBeGreaterThanOrEqual(0);
+                expect(tick.x).toBeLessThanOrEqual(400);
+            }
+        });
+
+        test("auto-sorts unsorted ranges ascending, synthesizes default 3-tier ranges when omitted, and extends track cleanly when actual/target exceeds last range", () => {
+            const result = computeBulletRows({
+                items: [
+                    // Unsorted ranges with invalid entries (0, -20, NaN) and explicit color
+                    {
+                        index: 0,
+                        label: "Unsorted",
+                        actual: 180,
+                        target: 200,
+                        ranges: [
+                            { to: 300, color: "#cccccc" },
+                            0,
+                            -20,
+                            NaN,
+                            120,
+                            { to: 210, color: "#dddddd" },
+                        ],
+                    },
+                    // Omitted ranges -> default 3-tier (60% / 85% / 100%)
+                    {
+                        index: 1,
+                        label: "Default Ranges",
+                        actual: 80,
+                        target: 100,
+                    },
+                    // Actual (260) exceeds last range (200) -> extends domainMax to 260 and fills remaining track
+                    {
+                        index: 2,
+                        label: "Overflow Actual",
+                        actual: 260,
+                        target: 180,
+                        ranges: [100, 150, 200],
+                    },
+                    // Target (250) exceeds last range (200) -> extends domainMax to 250 and fills remaining track
+                    {
+                        index: 3,
+                        label: "Overflow Target",
+                        actual: 190,
+                        target: 250,
+                        ranges: [100, 150, 200],
+                    },
+                ],
+                width: 300,
+            });
+
+            // 1. Unsorted ranges normalized & sorted ascending
+            const unsortedRow = result.rows[0];
+            expect(unsortedRow?.domainMax).toBe(300);
+            expect(unsortedRow?.bands).toHaveLength(3);
+            expect(unsortedRow?.bands.map((b) => [b.tier, b.from, b.to])).toEqual([
+                [1, 0, 120],
+                [2, 120, 210],
+                [3, 210, 300],
+            ]);
+            expect(unsortedRow?.bands[1]?.color).toBe("#dddddd");
+            expect(unsortedRow?.bands[2]?.color).toBe("#cccccc");
+            const lastUnsorted = unsortedRow?.bands.at(-1);
+            expect((lastUnsorted?.x ?? 0) + (lastUnsorted?.width ?? 0)).toBe(300);
+
+            // 2. Default 3-tier ranges when omitted
+            const defaultRow = result.rows[1];
+            expect(defaultRow?.domainMax).toBe(100);
+            expect(defaultRow?.bands).toHaveLength(3);
+            expect(defaultRow?.bands.map((b) => [b.tier, b.from, b.to])).toEqual([
+                [1, 0, 60],
+                [2, 60, 85],
+                [3, 85, 100],
+            ]);
+
+            // 3. Actual exceeding last range extends domainMax and covers full track width
+            const overflowActual = result.rows[2];
+            expect(overflowActual?.domainMax).toBe(260);
+            expect(overflowActual?.barWidth).toBe(300);
+            expect(overflowActual?.bands).toHaveLength(4);
+            expect(overflowActual?.bands[3]).toMatchObject({
+                tier: 3,
+                from: 200,
+                to: 260,
+            });
+            const lastOverflowActual = overflowActual?.bands.at(-1);
+            expect((lastOverflowActual?.x ?? 0) + (lastOverflowActual?.width ?? 0)).toBe(300);
+
+            // 4. Target exceeding last range extends domainMax and places target at right edge
+            const overflowTarget = result.rows[3];
+            expect(overflowTarget?.domainMax).toBe(250);
+            expect(overflowTarget?.targetX).toBe(snapHalf(300));
+            const lastOverflowTarget = overflowTarget?.bands.at(-1);
+            expect((lastOverflowTarget?.x ?? 0) + (lastOverflowTarget?.width ?? 0)).toBe(300);
+        });
+
+        test("centers barHeight = Math.round(trackHeight * 0.5), enforces minBarLength (2px) vs 0px for 0, snaps targetX & optional comparativeX to half-pixel", () => {
+            const result = computeBulletRows({
+                items: [
+                    // Tiny non-zero actual (0.1 out of 1000) -> clamped to minBarLength=2
+                    {
+                        index: 0,
+                        label: "Tiny",
+                        actual: 0.1,
+                        target: 500,
+                        comparative: 420,
+                        ranges: [600, 800, 1000],
+                    },
+                    // Exact 0 actual -> barWidth=0, barPath="", no comparative
+                    {
+                        index: 1,
+                        label: "Zero",
+                        actual: 0,
+                        target: 250,
+                        ranges: [500],
+                    },
+                    // Negative / NaN sanitized to 0
+                    {
+                        index: 2,
+                        label: "Sanitized",
+                        actual: -15,
+                        target: NaN,
+                        comparative: null,
+                        ranges: [100],
+                    },
+                ],
+                width: 400,
+                trackHeight: 16,
+                minBarLength: 2,
+            });
+
+            const tiny = result.rows[0];
+            expect(tiny).toBeDefined();
+            if (tiny) {
+                expect(tiny.barHeight).toBe(Math.round(16 * 0.5));
+                expect(tiny.barY).toBe(snapInt(tiny.trackY + (tiny.trackHeight - tiny.barHeight) / 2));
+                expect(tiny.barWidth).toBe(2);
+                expect(tiny.barPath.length).toBeGreaterThan(0);
+                expect(tiny.barPath).not.toContain("NaN");
+
+                expect(tiny.targetX).toBe(snapHalf(200));
+                expect(Number.isSafeInteger(tiny.targetX - 0.5)).toBe(true);
+                expect(tiny.targetY).toBe(tiny.barY - 3);
+                expect(tiny.targetHeight).toBe(tiny.barHeight + 6);
+
+                expect(tiny.comparativeX).toBe(snapHalf((420 / 1000) * 400));
+                expect(Number.isSafeInteger((tiny.comparativeX ?? 0) - 0.5)).toBe(true);
+                expect(tiny.comparativeY).toBe(tiny.barY - 1);
+                expect(tiny.comparativeHeight).toBe(tiny.barHeight + 2);
+            }
+
+            const zero = result.rows[1];
+            expect(zero?.barWidth).toBe(0);
+            expect(zero?.barRadius).toBe(0);
+            expect(zero?.barPath).toBe("");
+            expect(zero?.comparativeX).toBeNull();
+            expect(zero?.comparativeY).toBeNull();
+            expect(zero?.comparativeHeight).toBeNull();
+
+            const sanitized = result.rows[2];
+            expect(sanitized?.actual).toBe(0);
+            expect(sanitized?.target).toBe(0);
+            expect(sanitized?.barWidth).toBe(0);
+            expect(sanitized?.barPath).toBe("");
+            expect(sanitized?.comparativeX).toBeNull();
+        });
+
+        test("handles empty items and 0px-width / over-padded tracks safely without NaN", () => {
+            expect(computeBulletRows({ items: [], width: 400 })).toEqual({
+                rows: [],
+                sharedMax: 1,
+                totalHeight: 0,
+                sharedTicks: [],
+            });
+
+            const zeroWidth = computeBulletRows({
+                items: [
+                    {
+                        index: 0,
+                        label: "Revenue",
+                        actual: 120,
+                        target: 100,
+                        comparative: 90,
+                        ranges: [80, 120, 150],
+                    },
+                ],
+                width: 0,
+                sharedScale: true,
+            });
+            expect(zeroWidth.rows).toHaveLength(1);
+            expect(zeroWidth.rows[0]?.trackWidth).toBe(0);
+            expect(zeroWidth.rows[0]?.barWidth).toBe(0);
+            expect(zeroWidth.rows[0]?.barPath).toBe("");
+            expect(zeroWidth.rows[0]?.bands).toEqual([]);
+            expect(zeroWidth.sharedTicks).toEqual([]);
+
+            const overPadded = computeBulletRows({
+                items: [{ index: 0, label: "A", actual: 50, target: 40 }],
+                width: 4,
+                paddingLeft: 3,
+                paddingRight: 3,
+            });
+            expect(overPadded.rows[0]?.trackWidth).toBe(0);
+            expect(overPadded.rows[0]?.barWidth).toBe(0);
+            expect(overPadded.rows[0]?.barPath).toBe("");
+        });
+    });
+});
+
+describe("Charts M12 — Heatmap Geometry & Public Exports", () => {
+    test("public barrel exports ChartHeatmap, HeatmapChart, CHART_HEATMAP_MODES, and CHART_HEATMAP_RAMPS without leaking internal helpers", () => {
+        expect(CHART_HEATMAP_MODES).toEqual(["sequential", "diverging"]);
+        expect(CHART_HEATMAP_RAMPS).toEqual([
+            "accent",
+            "teal",
+            "emerald",
+            "slate",
+            "amber",
+            "rose",
+            "diverging",
+        ]);
+
+        const exportedKeys = Object.keys(chartsExports);
+        expect(exportedKeys).toContain("ChartHeatmap");
+        expect(exportedKeys).toContain("HeatmapChart");
+        expect(exportedKeys).toContain("CHART_HEATMAP_MODES");
+        expect(exportedKeys).toContain("CHART_HEATMAP_RAMPS");
+        expect(exportedKeys).not.toContain("getHeatmapSizeMetrics");
+        expect(exportedKeys).not.toContain("computeHeatmapGrid");
+        expect(exportedKeys).not.toContain("resolveHeatmapCellColor");
+        expect(exportedKeys).not.toContain("deduplicateHeatmapCategories");
+    });
+
+    test("getHeatmapSizeMetrics returns monotonic size metrics for sm, md, and lg", () => {
+        const sm = getHeatmapSizeMetrics("sm");
+        const md = getHeatmapSizeMetrics("md");
+        const lg = getHeatmapSizeMetrics("lg");
+
+        expect(sm).toEqual({ gap: 2, radius: 4, fontSize: 10, defaultCellHeight: 28 });
+        expect(md).toEqual({ gap: 2.5, radius: 5, fontSize: 11, defaultCellHeight: 34 });
+        expect(lg).toEqual({ gap: 3, radius: 6, fontSize: 11, defaultCellHeight: 40 });
+        expect(sm.gap).toBeLessThan(md.gap);
+        expect(md.gap).toBeLessThan(lg.gap);
+        expect(sm.radius).toBeLessThan(md.radius);
+        expect(md.radius).toBeLessThan(lg.radius);
+        expect(sm.defaultCellHeight).toBeLessThan(md.defaultCellHeight);
+        expect(md.defaultCellHeight).toBeLessThan(lg.defaultCellHeight);
+    });
+
+    test("resolveHeatmapCellColor maps sequential ramps to 7 stepped tokens, diverging mode to 7 diverging tokens, and null/NaN to empty token", () => {
+        expect(resolveHeatmapCellColor(null, "accent", "sequential")).toBe(
+            "var(--cs-chart-heatmap-empty)",
+        );
+        expect(resolveHeatmapCellColor(NaN, "teal", "sequential")).toBe(
+            "var(--cs-chart-heatmap-empty)",
+        );
+
+        for (const ramp of ["accent", "teal", "emerald", "slate", "amber", "rose"] as const) {
+            expect(resolveHeatmapCellColor(0, ramp, "sequential")).toBe(
+                `var(--cs-chart-heatmap-${ramp}-1)`,
+            );
+            expect(resolveHeatmapCellColor(0.5, ramp, "sequential")).toBe(
+                `var(--cs-chart-heatmap-${ramp}-4)`,
+            );
+            expect(resolveHeatmapCellColor(1, ramp, "sequential")).toBe(
+                `var(--cs-chart-heatmap-${ramp}-7)`,
+            );
+            // Clamps out-of-range values
+            expect(resolveHeatmapCellColor(-0.5, ramp, "sequential")).toBe(
+                `var(--cs-chart-heatmap-${ramp}-1)`,
+            );
+            expect(resolveHeatmapCellColor(1.5, ramp, "sequential")).toBe(
+                `var(--cs-chart-heatmap-${ramp}-7)`,
+            );
+        }
+
+        // Diverging mode (or ramp="diverging")
+        expect(resolveHeatmapCellColor(0, "diverging", "diverging")).toBe(
+            "var(--cs-chart-heatmap-div-neg-3)",
+        );
+        expect(resolveHeatmapCellColor(0.2, "diverging", "diverging")).toBe(
+            "var(--cs-chart-heatmap-div-neg-2)",
+        );
+        expect(resolveHeatmapCellColor(0.35, "diverging", "diverging")).toBe(
+            "var(--cs-chart-heatmap-div-neg-1)",
+        );
+        expect(resolveHeatmapCellColor(0.5, "diverging", "diverging")).toBe(
+            "var(--cs-chart-heatmap-mid)",
+        );
+        expect(resolveHeatmapCellColor(0.65, "diverging", "diverging")).toBe(
+            "var(--cs-chart-heatmap-div-pos-1)",
+        );
+        expect(resolveHeatmapCellColor(0.8, "diverging", "diverging")).toBe(
+            "var(--cs-chart-heatmap-div-pos-2)",
+        );
+        expect(resolveHeatmapCellColor(1, "diverging", "diverging")).toBe(
+            "var(--cs-chart-heatmap-div-pos-3)",
+        );
+        // ramp="diverging" activates diverging tokens even if mode defaults to "sequential"
+        expect(resolveHeatmapCellColor(0.5, "diverging", "sequential")).toBe(
+            "var(--cs-chart-heatmap-mid)",
+        );
+    });
+
+    describe("computeHeatmapGrid", () => {
+        test("computes integer-snapped 2D cell bounds, centers, clamped corner radius (rx), sequential normalization t ∈ [0, 1], and contrast-safe invertFg", () => {
+            const cells: readonly HeatmapCellInput<{ id: string }>[] = [
+                { x: "Mon", y: "Morning", value: 0, datum: { id: "0,0" } },
+                { x: "Tue", y: "Morning", value: 54, datum: { id: "0,1" } },
+                { x: "Wed", y: "Morning", value: 55, datum: { id: "0,2" } },
+                { x: "Mon", y: "Evening", value: 100, datum: { id: "1,0" } },
+                // (Evening, Tue) intentionally omitted -> missing cell
+                { x: "Wed", y: "Evening", value: null, datum: { id: "1,2" } },
+            ];
+
+            const grid = computeHeatmapGrid({
+                cells,
+                width: 300,
+                height: 120,
+                size: "md",
+                gap: 4,
+                radius: 5,
+                mode: "sequential",
+            });
+
+            expect(grid.xCategories).toEqual(["Mon", "Tue", "Wed"]);
+            expect(grid.yCategories).toEqual(["Morning", "Evening"]);
+            expect(grid.domain).toEqual([0, 100]);
+            expect(grid.mode).toBe("sequential");
+            expect(grid.colPositions).toHaveLength(3);
+            expect(grid.rowPositions).toHaveLength(2);
+            expect(grid.cells).toHaveLength(6);
+
+            for (const cell of grid.cells) {
+                expect(Number.isSafeInteger(cell.x)).toBe(true);
+                expect(Number.isSafeInteger(cell.y)).toBe(true);
+                expect(Number.isSafeInteger(cell.width)).toBe(true);
+                expect(Number.isSafeInteger(cell.height)).toBe(true);
+                expect(cell.width).toBeGreaterThanOrEqual(1);
+                expect(cell.height).toBeGreaterThanOrEqual(1);
+                expect(cell.centerX).toBe(cell.x + cell.width / 2);
+                expect(cell.centerY).toBe(cell.y + cell.height / 2);
+                expect(cell.rx).toBe(5);
+            }
+
+            // (0,0) value=0 -> t=0, invertFg=false
+            expect(grid.cells[0]).toMatchObject({
+                index: 0,
+                row: 0,
+                col: 0,
+                xCategory: "Mon",
+                yCategory: "Morning",
+                value: 0,
+                isEmpty: false,
+                t: 0,
+                invertFg: false,
+                datum: { id: "0,0" },
+            });
+
+            // (0,1) value=54 -> t=0.54 (< 0.55 threshold) -> invertFg=false
+            expect(grid.cells[1]?.t).toBeCloseTo(0.54, 6);
+            expect(grid.cells[1]?.invertFg).toBe(false);
+
+            // (0,2) value=55 -> t=0.55 (>= 0.55 threshold) -> invertFg=true
+            expect(grid.cells[2]?.t).toBeCloseTo(0.55, 6);
+            expect(grid.cells[2]?.invertFg).toBe(true);
+
+            // (1,0) value=100 -> t=1.0 -> invertFg=true
+            expect(grid.cells[3]?.t).toBe(1);
+            expect(grid.cells[3]?.invertFg).toBe(true);
+
+            // (1,1) omitted cell -> value=null, isEmpty=true, t=null, invertFg=false, datum=null
+            expect(grid.cells[4]).toMatchObject({
+                index: 4,
+                row: 1,
+                col: 1,
+                xCategory: "Tue",
+                yCategory: "Evening",
+                value: null,
+                isEmpty: true,
+                t: null,
+                invertFg: false,
+                datum: null,
+            });
+
+            // (1,2) explicit value=null -> isEmpty=true, t=null, invertFg=false, preserves datum
+            expect(grid.cells[5]).toMatchObject({
+                index: 5,
+                row: 1,
+                col: 2,
+                xCategory: "Wed",
+                yCategory: "Evening",
+                value: null,
+                isEmpty: true,
+                t: null,
+                invertFg: false,
+                datum: { id: "1,2" },
+            });
+        });
+
+        test("guards single-value and all-equal sequential datasets with t = 0.5 and clamps excessive corner radius (rx) & gap", () => {
+            const single = computeHeatmapGrid({
+                cells: [
+                    { x: "A", y: "R1", value: 42 },
+                    { x: "B", y: "R1", value: 42 },
+                ],
+                width: 20,
+                height: 8,
+                gap: 50, // gap larger than width is safely clamped so bands stay >= 1px
+                radius: 20, // radius larger than cell height (8px) clamps to min(width/2, height/2)
+                mode: "sequential",
+            });
+
+            expect(single.domain).toEqual([42, 42]);
+            expect(single.cells).toHaveLength(2);
+            for (const cell of single.cells) {
+                expect(cell.t).toBe(0.5);
+                expect(cell.invertFg).toBe(false);
+                expect(cell.width).toBeGreaterThanOrEqual(1);
+                expect(cell.height).toBe(8);
+                expect(cell.rx).toBeLessThanOrEqual(cell.width / 2);
+                expect(cell.rx).toBeLessThanOrEqual(cell.height / 2);
+            }
+        });
+
+        test("normalizes diverging mode around pivot = 0 (negative → [0, 0.5], 0 → 0.5, positive → [0.5, 1]) and applies diverging invertFg threshold (|t - 0.5| >= 0.28)", () => {
+            const diverging = computeHeatmapGrid({
+                cells: [
+                    { x: "C1", y: "R1", value: -100 }, // t = 0.0 -> |t - 0.5| = 0.5 >= 0.28 -> invertFg = true
+                    { x: "C2", y: "R1", value: -56 }, // t = 0.22 -> |0.22 - 0.5| = 0.28 >= 0.28 -> invertFg = true
+                    { x: "C3", y: "R1", value: -50 }, // t = 0.25 -> |0.25 - 0.5| = 0.25 < 0.28 -> invertFg = false
+                    { x: "C4", y: "R1", value: 0 }, // t = 0.5 -> invertFg = false
+                    { x: "C5", y: "R1", value: 25 }, // t = 0.75 (since max=50) -> |0.75 - 0.5| = 0.25 < 0.28 -> invertFg = false
+                    { x: "C6", y: "R1", value: 30 }, // t = 0.80 -> |0.80 - 0.5| = 0.30 >= 0.28 -> invertFg = true
+                    { x: "C7", y: "R1", value: 50 }, // t = 1.0 -> invertFg = true
+                ],
+                width: 350,
+                height: 40,
+                mode: "diverging",
+                pivot: 0,
+            });
+
+            expect(diverging.domain).toEqual([-100, 50]);
+            expect(diverging.pivot).toBe(0);
+            expect(diverging.mode).toBe("diverging");
+
+            expect(diverging.cells[0]?.t).toBeCloseTo(0, 6);
+            expect(diverging.cells[0]?.invertFg).toBe(true);
+
+            expect(diverging.cells[1]?.t).toBeCloseTo(0.22, 6);
+            expect(diverging.cells[1]?.invertFg).toBe(true);
+
+            expect(diverging.cells[2]?.t).toBeCloseTo(0.25, 6);
+            expect(diverging.cells[2]?.invertFg).toBe(false);
+
+            expect(diverging.cells[3]?.t).toBeCloseTo(0.5, 6);
+            expect(diverging.cells[3]?.invertFg).toBe(false);
+
+            expect(diverging.cells[4]?.t).toBeCloseTo(0.75, 6);
+            expect(diverging.cells[4]?.invertFg).toBe(false);
+
+            expect(diverging.cells[5]?.t).toBeCloseTo(0.8, 6);
+            expect(diverging.cells[5]?.invertFg).toBe(true);
+
+            expect(diverging.cells[6]?.t).toBeCloseTo(1, 6);
+            expect(diverging.cells[6]?.invertFg).toBe(true);
+
+            // All-equal at pivot in diverging mode returns t = 0.5 safely
+            const allZeroDiv = computeHeatmapGrid({
+                cells: [{ x: "C1", y: "R1", value: 0 }],
+                width: 80,
+                height: 40,
+                mode: "diverging",
+                pivot: 0,
+            });
+            expect(allZeroDiv.cells[0]?.t).toBe(0.5);
+            expect(allZeroDiv.cells[0]?.invertFg).toBe(false);
+        });
+
+        test("respects explicit xCategories, yCategories, custom domain, deduplicateHeatmapCategories, and empty inputs", () => {
+            expect(deduplicateHeatmapCategories(["Q1", "Q2", "Q1", "Q3", "Q2"])).toEqual([
+                "Q1",
+                "Q2",
+                "Q3",
+            ]);
+
+            const emptySeq = computeHeatmapGrid({
+                cells: [],
+                width: 300,
+                height: 150,
+                mode: "sequential",
+            });
+            expect(emptySeq.cells).toEqual([]);
+            expect(emptySeq.domain).toEqual([0, 1]);
+
+            const emptyDiv = computeHeatmapGrid({
+                cells: [],
+                width: 300,
+                height: 150,
+                mode: "diverging",
+                pivot: 10,
+            });
+            expect(emptyDiv.cells).toEqual([]);
+            expect(emptyDiv.domain).toEqual([9, 11]);
+            expect(emptyDiv.pivot).toBe(10);
+
+            // Explicit categories & reversed domain [100, 0] normalize cleanly
+            const custom = computeHeatmapGrid({
+                cells: [{ x: "B", y: "Y2", value: 75 }],
+                xCategories: ["A", "B"],
+                yCategories: ["Y1", "Y2"],
+                domain: [100, 0],
+                width: 200,
+                height: 100,
+            });
+            expect(custom.domain).toEqual([0, 100]);
+            expect(custom.cells).toHaveLength(4);
+            expect(custom.cells[0]?.isEmpty).toBe(true); // (Y1, A)
+            expect(custom.cells[3]?.xCategory).toBe("B");
+            expect(custom.cells[3]?.yCategory).toBe("Y2");
+            expect(custom.cells[3]?.t).toBeCloseTo(0.75, 6);
+        });
     });
 });

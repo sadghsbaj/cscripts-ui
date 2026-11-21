@@ -7,7 +7,7 @@
         truncateTextToWidth,
         wrapTickLabel,
     } from "./chart-measure.internal.ts";
-    import { formatDefaultTick } from "./chart-scales.internal.ts";
+    import { formatDefaultTick, formatPercentTick } from "./chart-scales.internal.ts";
     import { getChartContext } from "./chart.context.ts";
     import type { ChartAxisProps } from "./index.ts";
 
@@ -71,7 +71,14 @@
     const rawTicks = $derived.by((): readonly { label: string; position: number; key: string }[] => {
         if (!chart.hasSize || !isAxisVisible) return [];
 
-        const formatter = axisConfig.format ?? formatDefaultTick;
+        const isHorizontal = chart.orientation === "horizontal";
+        const useXScale =
+            (position === "bottom" && !isHorizontal) || (position === "left" && isHorizontal);
+        const formatter =
+            axisConfig.format ??
+            (!useXScale && position !== "right" && chart.isPercent
+                ? formatPercentTick
+                : formatDefaultTick);
         const requestedCount = axisConfig.tickCount;
 
         if (position === "right") {
@@ -83,10 +90,6 @@
                 position: scale.scale(value),
             }));
         }
-
-        const isHorizontal = chart.orientation === "horizontal";
-        const useXScale =
-            (position === "bottom" && !isHorizontal) || (position === "left" && isHorizontal);
 
         if (useXScale) {
             return chart.xScale.ticks(requestedCount).map((value, index) => ({

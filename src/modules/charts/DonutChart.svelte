@@ -88,9 +88,11 @@
         emptyTitle,
         emptyDescription,
         interactive = true,
+        selectable = false,
         onSliceClick,
         hiddenSliceIds = $bindable<readonly string[]>([]),
         activeIndex = $bindable<number | null>(null),
+        selectedIndex = $bindable<number | null>(null),
         hoveredSliceId = $bindable<string | null>(null),
         label,
         labelledBy,
@@ -247,9 +249,10 @@
     const cx = $derived(snapInt(stageWidth / 2));
     const cy = $derived(snapInt(stageHeight / 2));
     const minStageDimension = $derived(Math.min(stageWidth, stageHeight));
-    const outerRadius = $derived(
-        Math.max(0, Math.floor(minStageDimension / 2) - safeHoverExpand - 2),
+    const outerMargin = $derived(
+        selectable || selectedIndex !== null ? Math.max(safeHoverExpand + 2, 8) : safeHoverExpand + 2,
     );
+    const outerRadius = $derived(Math.max(0, Math.floor(minStageDimension / 2) - outerMargin));
     const innerRadius = $derived(outerRadius * clampedRatio);
     const showCenter = $derived(clampedRatio >= MIN_CENTER_INNER_RATIO && outerRadius > 0);
     const centerMaxWidth = $derived(Math.max(0, Math.floor(innerRadius * 2 - 12)));
@@ -298,15 +301,28 @@
         return arcs.find((item) => item.index === resolvedActiveIndex) ?? null;
     });
 
-    // Keep <Chart>'s figure[data-scrubbing] synced with active slice without binding activeIndex.
+    const resolvedSelectedIndex = $derived(
+        selectedIndex !== null && selectedIndex >= 0 && selectedIndex < arcs.length
+            ? selectedIndex
+            : null,
+    );
+
+    const selectedArc = $derived.by((): ChartArcItem<TDatum> | null => {
+        if (resolvedSelectedIndex === null) return null;
+        return arcs.find((item) => item.index === resolvedSelectedIndex) ?? null;
+    });
+
+    // Keep <Chart>'s figure[data-scrubbing] and [data-has-selection] synced with active/selected slice.
     $effect.pre(() => {
         const nextIndex = activeArc !== null ? activeArc.index : null;
+        const nextSelected = selectedArc !== null ? selectedArc.index : null;
         const currentData = data;
         untrack(() => {
             if (chartState.data !== currentData) {
                 chartState.data = currentData;
             }
             chartState.setActiveIndex(nextIndex);
+            chartState.setSelectedIndex(nextSelected);
         });
     });
 
@@ -326,9 +342,10 @@
 
     const centerArc = $derived.by((): ChartArcItem<TDatum> | null => {
         if (centerMode === "total") return null;
-        if (centerMode === "active") return focusedArc;
+        if (centerMode === "active") return focusedArc ?? selectedArc;
         if (legendHoveredArc !== null) return legendHoveredArc;
-        if (!canShowTooltip) return focusedArc;
+        if (!canShowTooltip && focusedArc !== null) return focusedArc;
+        if (focusedArc === null && selectedArc !== null) return selectedArc;
         return null;
     });
 
@@ -458,6 +475,13 @@
         hoveredSliceId = nextArc?.id ?? null;
     }
 
+    function handleSliceSelect(datum: TDatum, index: number, slice: ChartArcItem<TDatum>): void {
+        if (selectable) {
+            selectedIndex = selectedIndex === index ? null : index;
+        }
+        onSliceClick?.(datum, index, slice);
+    }
+
     function handleStageKeyDown(
         event: KeyboardEvent & { currentTarget: EventTarget & HTMLDivElement },
     ): void {
@@ -516,7 +540,7 @@
             case " ": {
                 if (activeArc !== null) {
                     event.preventDefault();
-                    onSliceClick?.(activeArc.datum, activeArc.index, activeArc);
+                    handleSliceSelect(activeArc.datum, activeArc.index, activeArc);
                 }
                 return;
             }
@@ -527,15 +551,29 @@
     }
 
     function handleLegendToggle(sliceId: string): void {
+        const prevSelectedId = selectedArc?.id ?? null;
         const isCurrentlyHidden = hiddenSliceIds.includes(sliceId);
-        if (isCurrentlyHidden) {
-            hiddenSliceIds = hiddenSliceIds.filter((id) => id !== sliceId);
-        } else {
+        const nextHidden = isCurrentlyHidden
+            ? hiddenSliceIds.filter((id) => id !== sliceId)
+            : [...hiddenSliceIds, sliceId];
+
+        hiddenSliceIds = nextHidden;
+
+        if (!isCurrentlyHidden) {
             cancelLegendLeaveTimer();
-            hiddenSliceIds = [...hiddenSliceIds, sliceId];
             if (legendHoveredSliceId === sliceId) legendHoveredSliceId = null;
             if (hoveredSliceId === sliceId) hoveredSliceId = null;
             if (activeIndex !== null) activeIndex = null;
+        }
+
+        if (prevSelectedId !== null) {
+            if (nextHidden.includes(prevSelectedId)) {
+                selectedIndex = null;
+            } else {
+                const nextVisible = positiveSlices.filter((item) => !nextHidden.includes(item.id));
+                const remapped = nextVisible.findIndex((item) => item.id === prevSelectedId);
+                selectedIndex = remapped === -1 ? null : remapped;
+            }
         }
     }
 
@@ -772,6 +810,7 @@
         {#each positiveSlices as slice (slice.id)}
             {const isHidden = $derived(hiddenSliceIds.includes(slice.id))}
             {const isHighlighted = $derived(!isHidden && highlightedSliceId === slice.id)}
+            {const isSelected = $derived(!isHidden && selectedArc?.id === slice.id)}
             {const shareText = $derived(
                 isHidden || total <= 0 ? "—" : formatShare(slice.value / total),
             )}
@@ -783,6 +822,7 @@
                         aria-pressed={!isHidden}
                         data-hidden={isHidden ? "" : undefined}
                         data-active={isHighlighted ? "" : undefined}
+                        data-selected={isSelected ? "" : undefined}
                         onclick={() => handleLegendToggle(slice.id)}
                         onpointerenter={() => handleLegendEnter(slice.id, isHidden)}
                         onpointerleave={() => handleLegendLeave(slice.id)}
@@ -860,6 +900,7 @@
             tabindex={interactive ? 0 : undefined}
             data-interactive={interactive ? "" : undefined}
             data-scrubbing={focusedArc !== null ? "" : undefined}
+            data-has-selection={selectedArc !== null ? "" : undefined}
             style:block-size={resolvedHeight}
             style:min-block-size={resolvedHeight ? "0px" : undefined}
             style:aspect-ratio={aspectRatio}
@@ -892,10 +933,12 @@
                         {valueLabels}
                         {formatValue}
                         {interactive}
+                        {selectable}
                         activeIndex={resolvedActiveIndex}
+                        selectedIndex={resolvedSelectedIndex}
                         hoveredSliceId={highlightedSliceId}
                         onSliceHover={handleSliceHover}
-                        {onSliceClick}
+                        onSliceClick={handleSliceSelect}
                     />
                     {@render children?.()}
                 {/if}

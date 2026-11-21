@@ -8,23 +8,33 @@ import {
     CHART_LEGEND_MARKERS,
     CHART_LEGEND_PLACEMENTS,
     CHART_SIZES,
+    CHART_SPARKLINE_TYPES,
     CHART_TONES,
     CHART_VARIANTS,
     ChartLoading,
     ChartState,
+    Sparkline,
+    resolveToneColor,
     type ChartAnnotationConfig,
     type ChartArcItem,
     type ChartAreaMode,
+    type ChartAxisDomain,
     type ChartBarInsideLabelOrientation,
     type ChartBarLabelLayout,
     type ChartBarMode,
+    type ChartBarPattern,
     type ChartBarValueLabels,
+    type ChartBulletRange,
+    type ChartBulletTooltipContext,
     type ChartCurve,
     type ChartDatum,
     type ChartDonutCenterContext,
     type ChartDonutCenterMode,
     type ChartDonutTooltipContext,
     type ChartGridOption,
+    type ChartHeatmapMode,
+    type ChartHeatmapRamp,
+    type ChartHeatmapTooltipContext,
     type ChartLegendMarker,
     type ChartLegendPlacement,
     type ChartLegendPosition,
@@ -35,10 +45,15 @@ import {
     type ChartReferenceBandConfig,
     type ChartReferenceLineConfig,
     type ChartSeries,
+    type ChartSparklineType,
     type ChartTone,
     type ChartTooltipContext,
     type ChartTooltipMode,
+    type ChartWaterfallItem,
+    type ChartWaterfallRowType,
+    type ChartWaterfallTooltipContext,
     type ChartZeroLineStyle,
+    type SparklineProps,
 } from "./index.ts";
 
 interface RevenueRow extends ChartDatum {
@@ -9623,6 +9638,4778 @@ describe("Charts M6 — ChartArc & DonutChart", () => {
             } finally {
                 vi.useRealTimers();
             }
+        });
+    });
+});
+
+function readM8LeftTicks(root: HTMLElement): string[] {
+    return [
+        ...root.querySelectorAll<SVGTextElement>(
+            ':scope .cs-chart-layer-axes[data-position="left"] .cs-chart-axis-tick-text',
+        ),
+    ].map((el) => el.textContent?.trim() ?? "");
+}
+
+function readM8TooltipShares(root: HTMLElement): string[] {
+    return [...root.querySelectorAll<HTMLElement>(".cs-chart-tooltip-share")].map(
+        (el) => el.textContent?.trim() ?? "",
+    );
+}
+
+describe("Charts M8 — Analytical Depth & IBCS Ergonomics", () => {
+    interface VarianceRow extends ChartDatum {
+        month: string;
+        val: number;
+        phase?: "actual" | "forecast" | "plan";
+    }
+
+    interface ShareRow extends ChartDatum {
+        quarter: string;
+        alpha: number;
+        beta: number;
+    }
+
+    interface TrendRow extends ChartDatum {
+        month: string;
+        s1: number | null;
+        s2: number | null;
+        s3?: number | null;
+    }
+
+    interface SliceRow extends ChartDatum {
+        channel: string;
+        amount: number;
+    }
+
+    const VARIANCE_DATA: VarianceRow[] = [
+        { month: "Jan", val: 40, phase: "actual" },
+        { month: "Feb", val: -25, phase: "actual" },
+        { month: "Mar", val: 30, phase: "forecast" },
+        { month: "Apr", val: -15, phase: "plan" },
+    ];
+
+    const SHARE_DATA: ShareRow[] = [
+        { quarter: "Q1", alpha: 25, beta: 75 },
+        { quarter: "Q2", alpha: 60, beta: 40 },
+        { quarter: "Q3", alpha: 0, beta: 0 },
+    ];
+
+    const DONUT_DATA: SliceRow[] = [
+        { channel: "Direct", amount: 500 },
+        { channel: "Organic", amount: 300 },
+        { channel: "Referral", amount: 200 },
+    ];
+
+    let container: HTMLDivElement;
+    const mounted: ReturnType<typeof mount>[] = [];
+
+    function renderHost(props: Record<string, unknown> = {}): ReturnType<typeof mount> {
+        const instance = mount(ChartTestHost, { target: container, props });
+        flushSync();
+        mounted.push(instance);
+        return instance;
+    }
+
+    beforeEach(() => {
+        clearMeasureCache();
+        activeResizeHarness = null;
+        container = document.createElement("div");
+        document.body.append(container);
+    });
+
+    afterEach(() => {
+        while (mounted.length > 0) {
+            const instance = mounted.pop();
+            if (instance) unmount(instance);
+        }
+        container.remove();
+        activeResizeHarness = null;
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    describe("Per-datum conditional color & tone", () => {
+        it("renders distinct per-bar fills and matching tooltip swatch colors for tone and color callbacks", () => {
+            stubM5CanvasRect(560, 280);
+
+            const bindings = $state<{ active: number | null }>({ active: null });
+            const series: ChartSeries<VarianceRow>[] = [
+                {
+                    id: "val",
+                    label: "Variance",
+                    color: (d) => (d.phase === "plan" ? "#6366f1" : undefined),
+                    tone: (d) => (d.val >= 0 ? "positive" : "negative"),
+                },
+            ];
+
+            renderHost({
+                mode: "bar-chart",
+                variant: "elevated",
+                size: "md",
+                data: VARIANCE_DATA,
+                x: "month",
+                series,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const bars = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-bar-rect"),
+            ];
+            expect(bars).toHaveLength(4);
+
+            // Jan (+40 -> positive), Feb (-25 -> negative), Mar (+30 -> positive), Apr (plan -> explicit color override)
+            expect(bars[0]?.style.fill).toBe("var(--cs-chart-positive)");
+            expect(bars[1]?.style.fill).toBe("var(--cs-chart-negative)");
+            expect(bars[2]?.style.fill).toBe("var(--cs-chart-positive)");
+            expect(bars[3]?.style.fill).toBe("#6366f1");
+
+            // Tooltip swatch updates to match each datum's resolved color
+            bindings.active = 0;
+            flushSync();
+            const swatch0 = container.querySelector<HTMLElement>(".cs-chart-tooltip-swatch");
+            expect(swatch0?.style.getPropertyValue("--cs-chart-swatch-color")).toBe(
+                "var(--cs-chart-positive)",
+            );
+
+            bindings.active = 1;
+            flushSync();
+            const swatch1 = container.querySelector<HTMLElement>(".cs-chart-tooltip-swatch");
+            expect(swatch1?.style.getPropertyValue("--cs-chart-swatch-color")).toBe(
+                "var(--cs-chart-negative)",
+            );
+
+            bindings.active = 3;
+            flushSync();
+            const swatch3 = container.querySelector<HTMLElement>(".cs-chart-tooltip-swatch");
+            expect(swatch3?.style.getPropertyValue("--cs-chart-swatch-color")).toBe("#6366f1");
+        });
+    });
+
+    describe("IBCS scenario fills (pattern: solid | hatch | outline)", () => {
+        it("renders <defs><pattern> for hatch, data-pattern='outline' with stroke for outline, matching legend/tooltip swatches, and zero foreignObject/filter", () => {
+            stubM5CanvasRect(600, 280);
+
+            interface ScenarioMultiRow extends ChartDatum {
+                month: string;
+                actual: number;
+                forecast: number;
+                plan: number;
+            }
+
+            const data: ScenarioMultiRow[] = [
+                { month: "Jan", actual: 120, forecast: 130, plan: 115 },
+                { month: "Feb", actual: 140, forecast: 150, plan: 135 },
+            ];
+
+            const series: ChartSeries<ScenarioMultiRow>[] = [
+                { id: "actual", label: "Actual", pattern: "solid" },
+                { id: "forecast", label: "Forecast", pattern: "hatch" },
+                { id: "plan", label: "Plan", pattern: "outline" },
+            ];
+
+            const bindings = $state<{ active: number | null }>({ active: 0 });
+            const refs: { svg: SVGSVGElement | null } = { svg: null };
+
+            renderHost({
+                mode: "bar-chart",
+                variant: "elevated",
+                size: "md",
+                data,
+                x: "month",
+                series,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+                get svgRef() {
+                    return refs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    refs.svg = v;
+                },
+            });
+
+            // <defs><pattern> created for hatch series (deduplicated by color)
+            const patterns = [
+                ...container.querySelectorAll<SVGPatternElement>(":scope defs > pattern"),
+            ];
+            expect(patterns).toHaveLength(1);
+            const hatchId = patterns[0]?.id ?? "";
+            expect(hatchId).toMatch(/^cs-chart-hatch-/);
+
+            const actualBar = container.querySelector<SVGPathElement>(
+                'path.cs-chart-bar-rect[data-series-id="actual"][data-index="0"]',
+            );
+            const forecastBar = container.querySelector<SVGPathElement>(
+                'path.cs-chart-bar-rect[data-series-id="forecast"][data-index="0"]',
+            );
+            const planBar = container.querySelector<SVGPathElement>(
+                'path.cs-chart-bar-rect[data-series-id="plan"][data-index="0"]',
+            );
+
+            expect(actualBar?.dataset.pattern).toBeUndefined();
+            expect(actualBar?.getAttribute("fill")).toBeNull();
+            expect(actualBar?.style.fill).toBe("var(--cs-chart-series-1)");
+
+            expect(forecastBar?.dataset.pattern).toBe("hatch");
+            expect(forecastBar?.getAttribute("fill")).toBe(`url(#${hatchId})`);
+            expect(forecastBar?.style.stroke).toBe("var(--cs-chart-series-2)");
+
+            expect(planBar?.dataset.pattern).toBe("outline");
+            expect(planBar?.getAttribute("fill")).toBeNull();
+            expect(planBar?.style.stroke).toBe("var(--cs-chart-series-3)");
+
+            // Legend swatches carry matching data-pattern
+            const legendSwatches = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-legend-swatch"),
+            ];
+            expect(legendSwatches).toHaveLength(3);
+            expect(legendSwatches[0]?.dataset.pattern).toBeUndefined();
+            expect(legendSwatches[1]?.dataset.pattern).toBe("hatch");
+            expect(legendSwatches[2]?.dataset.pattern).toBe("outline");
+
+            // Tooltip swatches carry matching data-pattern
+            const tooltipSwatches = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-swatch"),
+            ];
+            expect(tooltipSwatches).toHaveLength(3);
+            expect(tooltipSwatches[0]?.dataset.pattern).toBeUndefined();
+            expect(tooltipSwatches[1]?.dataset.pattern).toBe("hatch");
+            expect(tooltipSwatches[2]?.dataset.pattern).toBe("outline");
+
+            // Export-safety invariant: zero <foreignObject> and zero <filter>
+            expect(refs.svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+        });
+
+        it("supports per-datum callback patterns and updates tooltip swatch pattern per active bar", () => {
+            stubM5CanvasRect(560, 280);
+
+            const bindings = $state<{ active: number | null }>({ active: 0 });
+            const series: ChartSeries<VarianceRow>[] = [
+                {
+                    id: "val",
+                    label: "Scenario",
+                    pattern: (d) =>
+                        d.phase === "forecast"
+                            ? "hatch"
+                            : d.phase === "plan"
+                              ? "outline"
+                              : "solid",
+                },
+            ];
+
+            renderHost({
+                mode: "bar-chart",
+                variant: "elevated",
+                size: "md",
+                data: VARIANCE_DATA,
+                x: "month",
+                series,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const bars = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-bar-rect"),
+            ];
+            expect(bars).toHaveLength(4);
+            expect(bars[0]?.dataset.pattern).toBeUndefined(); // actual -> solid
+            expect(bars[1]?.dataset.pattern).toBeUndefined(); // actual -> solid
+            expect(bars[2]?.dataset.pattern).toBe("hatch"); // forecast -> hatch
+            expect(bars[3]?.dataset.pattern).toBe("outline"); // plan -> outline
+
+            // Active index 0 (solid) -> no data-pattern on tooltip swatch
+            expect(
+                container.querySelector<HTMLElement>(".cs-chart-tooltip-swatch")?.dataset.pattern,
+            ).toBeUndefined();
+
+            // Active index 2 (forecast) -> hatch on tooltip swatch
+            bindings.active = 2;
+            flushSync();
+            expect(
+                container.querySelector<HTMLElement>(".cs-chart-tooltip-swatch")?.dataset.pattern,
+            ).toBe("hatch");
+
+            // Active index 3 (plan) -> outline on tooltip swatch
+            bindings.active = 3;
+            flushSync();
+            expect(
+                container.querySelector<HTMLElement>(".cs-chart-tooltip-swatch")?.dataset.pattern,
+            ).toBe("outline");
+
+            // Zero <foreignObject> and zero <filter>
+            expect(
+                container.querySelectorAll(":scope svg foreignObject, :scope svg filter"),
+            ).toHaveLength(0);
+        });
+    });
+
+    describe("100% normalized stacking (mode='percent')", () => {
+        it("BarChart mode='percent' locks Y-axis to 0%–100%, renders dual raw + % share in tooltip, guards all-zero rows, and recalculates shares on legend toggle", () => {
+            stubM5CanvasRect(560, 280);
+
+            const bindings = $state<{ active: number | null }>({ active: 0 });
+            const series: ChartSeries<ShareRow>[] = [
+                { id: "alpha", label: "Alpha" },
+                { id: "beta", label: "Beta" },
+            ];
+
+            renderHost({
+                mode: "bar-chart",
+                barMode: "percent",
+                variant: "elevated",
+                size: "md",
+                data: SHARE_DATA,
+                x: "quarter",
+                series,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            // Left Y-axis ticks locked to 0%–100%
+            const leftTicks = [
+                ...container.querySelectorAll<SVGTextElement>(
+                    ':scope .cs-chart-layer-axes[data-position="left"] .cs-chart-axis-tick-text',
+                ),
+            ].map((el) => el.textContent?.trim());
+            expect(leftTicks).toEqual(["0%", "25%", "50%", "75%", "100%"]);
+
+            // All bar paths are free of NaN (including all-zero Q3 category)
+            const bars = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-bar-rect"),
+            ];
+            for (const bar of bars) {
+                expect(bar.getAttribute("d") ?? "").not.toContain("NaN");
+            }
+
+            // Tooltip shows dual raw values + % share for Q1 (25 / 75 -> 25% / 75%)
+            const sharesBefore = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-share"),
+            ].map((el) => el.textContent?.trim());
+            expect(sharesBefore).toEqual(["25%", "75%"]);
+
+            // Toggle "Beta" off via legend -> remaining "Alpha" recalculates to 100%
+            const legendButtons = [
+                ...container.querySelectorAll<HTMLButtonElement>("button.cs-chart-legend-item"),
+            ];
+            expect(legendButtons).toHaveLength(2);
+            legendButtons[1]?.click();
+            flushSync();
+
+            const sharesAfterHide = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-share"),
+            ].map((el) => el.textContent?.trim());
+            expect(sharesAfterHide).toEqual(["100%"]);
+
+            // Toggle "Beta" back on -> shares return to 25% / 75%
+            legendButtons[1]?.click();
+            flushSync();
+            const sharesAfterRestore = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-share"),
+            ].map((el) => el.textContent?.trim());
+            expect(sharesAfterRestore).toEqual(["25%", "75%"]);
+        });
+
+        it("AreaChart mode='percent' locks Y-axis to 0%–100%, renders valid area/line paths, and recalculates tooltip shares on legend toggle", () => {
+            stubM5CanvasRect(560, 280);
+
+            const bindings = $state<{ active: number | null }>({ active: 1 });
+            const series: ChartSeries<ShareRow>[] = [
+                { id: "alpha", label: "Alpha" },
+                { id: "beta", label: "Beta" },
+            ];
+
+            renderHost({
+                mode: "area-chart",
+                areaMode: "percent",
+                variant: "elevated",
+                size: "md",
+                data: SHARE_DATA,
+                x: "quarter",
+                series,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const leftTicks = [
+                ...container.querySelectorAll<SVGTextElement>(
+                    ':scope .cs-chart-layer-axes[data-position="left"] .cs-chart-axis-tick-text',
+                ),
+            ].map((el) => el.textContent?.trim());
+            expect(leftTicks).toEqual(["0%", "25%", "50%", "75%", "100%"]);
+
+            const areaPaths = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-area-fill"),
+            ];
+            expect(areaPaths).toHaveLength(2);
+            for (const path of areaPaths) {
+                const d = path.getAttribute("d") ?? "";
+                expect(d.length).toBeGreaterThan(0);
+                expect(d).not.toContain("NaN");
+            }
+
+            // Q2 (alpha=60, beta=40) -> 60% / 40%
+            const sharesBefore = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-share"),
+            ].map((el) => el.textContent?.trim());
+            expect(sharesBefore).toEqual(["60%", "40%"]);
+
+            // Toggle "Alpha" off -> "Beta" becomes 100%
+            const legendButtons = [
+                ...container.querySelectorAll<HTMLButtonElement>("button.cs-chart-legend-item"),
+            ];
+            legendButtons[0]?.click();
+            flushSync();
+
+            const sharesAfterHide = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-share"),
+            ].map((el) => el.textContent?.trim());
+            expect(sharesAfterHide).toEqual(["100%"]);
+        });
+    });
+
+    describe("Persistent $bindable selectedIndex (selectable={true})", () => {
+        it("BarChart pins selectedIndex on click and Enter/Space, persists across pointerleave, toggles off on repeat, and syncs bidirectionally", () => {
+            stubM5CanvasRect(560, 280);
+
+            const onPointClick = vi.fn();
+            const bindings = $state<{ selected: number | null; active: number | null }>({
+                selected: null,
+                active: null,
+            });
+
+            renderHost({
+                mode: "bar-chart",
+                variant: "elevated",
+                size: "md",
+                data: VARIANCE_DATA,
+                x: "month",
+                series: [{ id: "val", label: "Val" }],
+                selectable: true,
+                onPointClick,
+                get selectedIndex() {
+                    return bindings.selected;
+                },
+                set selectedIndex(v: number | null) {
+                    bindings.selected = v;
+                },
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const figure = container.querySelector<HTMLElement>("figure.cs-chart");
+            const canvas = container.querySelector<HTMLDivElement>(".cs-chart-canvas");
+            const barGroup = container.querySelector<SVGGElement>(".cs-chart-bar");
+
+            // Clean initial mount: no selection attributes or ring
+            expect(bindings.selected).toBeNull();
+            expect(figure?.dataset.hasSelection).toBeUndefined();
+            expect(canvas?.dataset.hasSelection).toBeUndefined();
+            expect(barGroup?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelector(".cs-chart-selection-ring")).toBeNull();
+
+            // Hover datum 1 then click -> pins selectedIndex = 1
+            bindings.active = 1;
+            flushSync();
+            canvas?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.selected).toBe(1);
+            expect(onPointClick).toHaveBeenCalledTimes(1);
+            expect(onPointClick).toHaveBeenLastCalledWith(VARIANCE_DATA[1], 1);
+            expect(figure?.dataset.hasSelection).toBe("");
+            expect(canvas?.dataset.hasSelection).toBe("");
+            expect(barGroup?.dataset.hasSelection).toBe("");
+            expect(
+                container.querySelector<SVGPathElement>(
+                    'path.cs-chart-bar-rect[data-index="1"]',
+                )?.dataset.selected,
+            ).toBe("");
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(1);
+
+            // pointerleave clears activeIndex, but selectedIndex & visual ring persist!
+            canvas?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(bindings.selected).toBe(1);
+            expect(figure?.dataset.hasSelection).toBe("");
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(1);
+
+            // Clicking the same index again clears selectedIndex to null
+            bindings.active = 1;
+            flushSync();
+            canvas?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+            expect(bindings.selected).toBeNull();
+            expect(figure?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelector(".cs-chart-selection-ring")).toBeNull();
+
+            // Keyboard ArrowRight (moves active from 1 -> 2) + Enter pins index 2, Space clears it
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(2);
+
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.selected).toBe(2);
+            expect(
+                container.querySelector<SVGPathElement>(
+                    'path.cs-chart-bar-rect[data-index="2"]',
+                )?.dataset.selected,
+            ).toBe("");
+
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.selected).toBeNull();
+            expect(figure?.dataset.hasSelection).toBeUndefined();
+
+            // Parent -> Chart -> User click cross-sequence
+            bindings.selected = 3;
+            flushSync();
+            expect(
+                container.querySelector<SVGPathElement>(
+                    'path.cs-chart-bar-rect[data-index="3"]',
+                )?.dataset.selected,
+            ).toBe("");
+            bindings.selected = null;
+            flushSync();
+            expect(figure?.dataset.hasSelection).toBeUndefined();
+        });
+
+        it("LineChart pins selected point ring on Enter/click even with showDots='active' and after pointerleave", () => {
+            stubM5CanvasRect(560, 280);
+
+            const bindings = $state<{ selected: number | null; active: number | null }>({
+                selected: null,
+                active: null,
+            });
+
+            renderHost({
+                mode: "line-chart",
+                variant: "elevated",
+                size: "md",
+                data: VARIANCE_DATA,
+                x: "month",
+                series: [{ id: "val", label: "Val" }],
+                lineShowDots: "active",
+                selectable: true,
+                get selectedIndex() {
+                    return bindings.selected;
+                },
+                set selectedIndex(v: number | null) {
+                    bindings.selected = v;
+                },
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const canvas = container.querySelector<HTMLDivElement>(".cs-chart-canvas");
+            const lineGroup = container.querySelector<SVGGElement>(".cs-chart-line");
+            expect(lineGroup?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelector(".cs-chart-selected-point-ring")).toBeNull();
+
+            // Navigate to index 0 with ArrowRight and press Enter
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+
+            expect(bindings.selected).toBe(0);
+            expect(lineGroup?.dataset.hasSelection).toBe("");
+            expect(container.querySelectorAll(".cs-chart-selected-point-ring")).toHaveLength(1);
+            expect(
+                container.querySelector<SVGCircleElement>(
+                    'circle.cs-chart-line-dot[data-index="0"]',
+                )?.dataset.selected,
+            ).toBe("");
+
+            // Leave canvas -> selected point dot and halo ring remain pinned
+            canvas?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(bindings.selected).toBe(0);
+            expect(container.querySelectorAll(".cs-chart-selected-point-ring")).toHaveLength(1);
+        });
+
+        it("DonutChart pins selected slice and center KPI across pointerleave, and clears on repeat click", () => {
+            stubM5CanvasRect(280, 260);
+
+            const bindings = $state<{ selected: number | null; active: number | null }>({
+                selected: null,
+                active: null,
+            });
+
+            renderHost({
+                mode: "donut-chart",
+                variant: "elevated",
+                size: "md",
+                data: DONUT_DATA,
+                donutValue: "amount",
+                donutName: "channel",
+                donutCenterLabel: "Total",
+                selectable: true,
+                get donutSelectedIndex() {
+                    return bindings.selected;
+                },
+                set donutSelectedIndex(v: number | null) {
+                    bindings.selected = v;
+                },
+                get donutActiveIndex() {
+                    return bindings.active;
+                },
+                set donutActiveIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const figure = container.querySelector<HTMLElement>("figure.cs-chart");
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-polar-stage");
+            const centerLabel = container.querySelector<HTMLElement>(".cs-chart-center-label");
+            const centerShare = container.querySelector<HTMLElement>(".cs-chart-center-share");
+            const slices = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-arc-slice"),
+            ];
+
+            expect(bindings.selected).toBeNull();
+            expect(figure?.dataset.hasSelection).toBeUndefined();
+            expect(stage?.dataset.hasSelection).toBeUndefined();
+            expect(centerLabel?.textContent?.trim()).toBe("Total");
+
+            // Click slice 1 ("Organic", 300 / 1000 = 30%)
+            slices[1]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            slices[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.selected).toBe(1);
+            expect(figure?.dataset.hasSelection).toBe("");
+            expect(stage?.dataset.hasSelection).toBe("");
+            expect(slices[1]?.dataset.selected).toBe("");
+            expect(container.querySelectorAll(".cs-chart-arc-selection-ring")).toHaveLength(1);
+
+            // pointerleave clears activeIndex, and center KPI stays pinned to "Organic" (30%)!
+            stage?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(bindings.selected).toBe(1);
+            expect(centerLabel?.textContent?.trim()).toBe("Organic");
+            expect(centerShare?.textContent?.trim()).toBe("30%");
+
+            // Clicking the same slice again clears selection and restores Total in center KPI
+            slices[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+            expect(bindings.selected).toBeNull();
+            expect(figure?.dataset.hasSelection).toBeUndefined();
+            expect(stage?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelector(".cs-chart-arc-selection-ring")).toBeNull();
+            expect(centerLabel?.textContent?.trim()).toBe("Total");
+        });
+    });
+
+    describe("Direct end-of-line labels (directLabels={true})", () => {
+        it("LineChart renders direct labels at each visible series's rightmost finite point, expands margin.right, and draws leader elbows on collision", () => {
+            stubM5CanvasRect(560, 280);
+
+            const trendData: TrendRow[] = [
+                { month: "Jan", s1: 20, s2: 80, s3: 10 },
+                { month: "Feb", s1: 50, s2: 50, s3: 40 },
+                // s1 and s2 collide at 50; s3's last point is null so its rightmost finite point is Feb (40)
+                { month: "Mar", s1: 50, s2: 50, s3: null },
+            ];
+            const trendSeries: ChartSeries<TrendRow>[] = [
+                { id: "s1", label: "Series One" },
+                { id: "s2", label: "Series Two" },
+                { id: "s3", label: "Series Three" },
+            ];
+
+            const refs: { svg: SVGSVGElement | null } = { svg: null };
+            const props = $state({
+                mode: "line-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: trendData,
+                x: "month",
+                series: trendSeries,
+                directLabels: false,
+                get svgRef() {
+                    return refs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    refs.svg = v;
+                },
+            });
+
+            renderHost(props);
+
+            const plotWidthWithoutDirectLabels = readM5PlotLayout(refs.svg).plotWidth;
+            expect(container.querySelectorAll(".cs-chart-direct-label")).toHaveLength(0);
+
+            // Enable directLabels -> margin.right expands automatically (plotWidth shrinks)
+            props.directLabels = true;
+            flushSync();
+
+            const plotWidthWithDirectLabels = readM5PlotLayout(refs.svg).plotWidth;
+            expect(plotWidthWithDirectLabels).toBeLessThan(plotWidthWithoutDirectLabels);
+
+            const directLabels = [
+                ...container.querySelectorAll<SVGTextElement>("text.cs-chart-direct-label"),
+            ];
+            expect(directLabels).toHaveLength(3);
+
+            // Colliding endpoints produce at least one leader elbow path and maintain >= 14px vertical separation
+            const leaders = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-direct-leader"),
+            ];
+            expect(leaders.length).toBeGreaterThanOrEqual(1);
+
+            const yPositions = directLabels
+                .map((el) => Number(el.getAttribute("y")))
+                .toSorted((a, b) => a - b);
+            for (let i = 1; i < yPositions.length; i++) {
+                expect((yPositions[i] ?? 0) - (yPositions[i - 1] ?? 0)).toBeGreaterThanOrEqual(14);
+            }
+
+            // Series Three uses its rightmost finite value (40 from Feb)
+            const s3Label = container.querySelector<SVGGElement>(
+                '.cs-chart-direct-label-item[data-series-id="s3"]',
+            );
+            expect(s3Label?.textContent).toContain("40");
+
+            // Hiding s2 via legend removes its direct label
+            const legendButtons = [
+                ...container.querySelectorAll<HTMLButtonElement>("button.cs-chart-legend-item"),
+            ];
+            legendButtons[1]?.click();
+            flushSync();
+            expect(container.querySelectorAll("text.cs-chart-direct-label")).toHaveLength(2);
+            expect(
+                container.querySelector('.cs-chart-direct-label-item[data-series-id="s2"]'),
+            ).toBeNull();
+        });
+
+        it("AreaChart renders direct labels with % formatting in percent mode and leader paths on vertical collision", () => {
+            stubM5CanvasRect(560, 280);
+
+            const areaData: ShareRow[] = [
+                { quarter: "Q1", alpha: 50, beta: 50 },
+                { quarter: "Q2", alpha: 98, beta: 2 },
+            ];
+            const areaSeries: ChartSeries<ShareRow>[] = [
+                { id: "alpha", label: "Alpha" },
+                { id: "beta", label: "Beta" },
+            ];
+
+            const refs: { svg: SVGSVGElement | null } = { svg: null };
+
+            renderHost({
+                mode: "area-chart",
+                areaMode: "percent",
+                directLabels: true,
+                variant: "elevated",
+                size: "md",
+                data: areaData,
+                x: "quarter",
+                series: areaSeries,
+                get svgRef() {
+                    return refs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    refs.svg = v;
+                },
+            });
+
+            const directLabels = [
+                ...container.querySelectorAll<SVGTextElement>("text.cs-chart-direct-label"),
+            ];
+            expect(directLabels).toHaveLength(2);
+
+            const alphaLabel = container.querySelector<SVGGElement>(
+                '.cs-chart-direct-label-item[data-series-id="alpha"]',
+            );
+            const betaLabel = container.querySelector<SVGGElement>(
+                '.cs-chart-direct-label-item[data-series-id="beta"]',
+            );
+            expect(alphaLabel?.textContent).toContain("98%");
+            expect(betaLabel?.textContent).toContain("2%");
+
+            // Stacked percent endpoints at 98% and 100% are ~4px apart -> collision triggers leader elbow
+            const leaders = [
+                ...container.querySelectorAll<SVGPathElement>("path.cs-chart-direct-leader"),
+            ];
+            expect(leaders.length).toBeGreaterThanOrEqual(1);
+        });
+    });
+
+    describe("M8 round-trip & regression guards", () => {
+        it("resets Y-axis ticks and tooltip share cleanly across BarChart ('percent' -> 'stacked' -> 'grouped') and AreaChart ('percent' -> 'stacked' -> 'overlay') mode round-trips", () => {
+            stubM5CanvasRect(560, 280);
+
+            const series: ChartSeries<ShareRow>[] = [
+                { id: "alpha", label: "Alpha" },
+                { id: "beta", label: "Beta" },
+            ];
+
+            // BarChart round-trip
+            const barBindings = $state<{ active: number | null }>({ active: 0 });
+            const barProps = $state({
+                mode: "bar-chart" as const,
+                barMode: "percent" as ChartBarMode,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: SHARE_DATA,
+                x: "quarter",
+                series,
+                get activeIndex() {
+                    return barBindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    barBindings.active = v;
+                },
+            });
+
+            const barInstance = renderHost(barProps);
+
+            expect(readM8LeftTicks(container)).toEqual(["0%", "25%", "50%", "75%", "100%"]);
+            expect(readM8TooltipShares(container)).toEqual(["25%", "75%"]);
+
+            // "percent" -> "stacked"
+            barProps.barMode = "stacked";
+            flushSync();
+            const stackedTicks = readM8LeftTicks(container);
+            expect(stackedTicks.length).toBeGreaterThan(0);
+            expect(stackedTicks.every((t) => !t.includes("%"))).toBe(true);
+            expect(readM8TooltipShares(container)).toEqual([]);
+
+            // "stacked" -> "grouped"
+            barProps.barMode = "grouped";
+            flushSync();
+            const groupedTicks = readM8LeftTicks(container);
+            expect(groupedTicks.length).toBeGreaterThan(0);
+            expect(groupedTicks.every((t) => !t.includes("%"))).toBe(true);
+            expect(readM8TooltipShares(container)).toEqual([]);
+
+            unmount(barInstance);
+            mounted.pop();
+
+            // AreaChart round-trip
+            const areaBindings = $state<{ active: number | null }>({ active: 1 });
+            const areaProps = $state({
+                mode: "area-chart" as const,
+                areaMode: "percent" as ChartAreaMode,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: SHARE_DATA,
+                x: "quarter",
+                series,
+                get activeIndex() {
+                    return areaBindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    areaBindings.active = v;
+                },
+            });
+
+            renderHost(areaProps);
+
+            expect(readM8LeftTicks(container)).toEqual(["0%", "25%", "50%", "75%", "100%"]);
+            expect(readM8TooltipShares(container)).toEqual(["60%", "40%"]);
+
+            // "percent" -> "stacked"
+            areaProps.areaMode = "stacked";
+            flushSync();
+            expect(readM8LeftTicks(container).every((t) => !t.includes("%"))).toBe(true);
+            expect(readM8TooltipShares(container)).toEqual([]);
+
+            // "stacked" -> "overlay"
+            areaProps.areaMode = "overlay";
+            flushSync();
+            expect(readM8LeftTicks(container).every((t) => !t.includes("%"))).toBe(true);
+            expect(readM8TooltipShares(container)).toEqual([]);
+        });
+
+        it("unmounts direct labels and restores margin.right across directLabels: true -> false on LineChart and AreaChart (and suppresses under y2Axis)", () => {
+            stubM5CanvasRect(560, 280);
+
+            const trendData: TrendRow[] = [
+                { month: "Jan", s1: 20, s2: 80 },
+                { month: "Feb", s1: 45, s2: 65 },
+                { month: "Mar", s1: 70, s2: 50 },
+            ];
+            const trendSeries: ChartSeries<TrendRow>[] = [
+                { id: "s1", label: "Series One" },
+                { id: "s2", label: "Series Two" },
+            ];
+
+            // LineChart true -> false round-trip
+            const lineRefs: { svg: SVGSVGElement | null } = { svg: null };
+            const lineProps = $state({
+                mode: "line-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: trendData,
+                x: "month",
+                series: trendSeries as readonly ChartSeries<TrendRow>[],
+                directLabels: true,
+                get svgRef() {
+                    return lineRefs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    lineRefs.svg = v;
+                },
+            });
+
+            const lineInstance = renderHost(lineProps);
+            expect(container.querySelector(".cs-chart-direct-labels")).not.toBeNull();
+            const widthWithDirect = readM5PlotLayout(lineRefs.svg).plotWidth;
+
+            lineProps.directLabels = false;
+            flushSync();
+            expect(container.querySelector(".cs-chart-direct-labels")).toBeNull();
+            const widthWithoutDirect = readM5PlotLayout(lineRefs.svg).plotWidth;
+            expect(widthWithoutDirect).toBeGreaterThan(widthWithDirect);
+
+            // Re-enable directLabels, then add y2Axis -> direct labels suppressed so right axis never collides
+            lineProps.directLabels = true;
+            flushSync();
+            expect(container.querySelector(".cs-chart-direct-labels")).not.toBeNull();
+
+            lineProps.series = [
+                { id: "s1", label: "Series One", yAxis: "left" },
+                { id: "s2", label: "Series Two", yAxis: "right" },
+            ];
+            flushSync();
+            expect(container.querySelector(".cs-chart-direct-labels")).toBeNull();
+
+            unmount(lineInstance);
+            mounted.pop();
+
+            // AreaChart true -> false round-trip
+            const areaRefs: { svg: SVGSVGElement | null } = { svg: null };
+            const areaProps = $state({
+                mode: "area-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: trendData,
+                x: "month",
+                series: trendSeries,
+                directLabels: true,
+                get svgRef() {
+                    return areaRefs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    areaRefs.svg = v;
+                },
+            });
+
+            renderHost(areaProps);
+            expect(container.querySelector(".cs-chart-direct-labels")).not.toBeNull();
+            const areaWidthWithDirect = readM5PlotLayout(areaRefs.svg).plotWidth;
+
+            areaProps.directLabels = false;
+            flushSync();
+            expect(container.querySelector(".cs-chart-direct-labels")).toBeNull();
+            expect(readM5PlotLayout(areaRefs.svg).plotWidth).toBeGreaterThan(areaWidthWithDirect);
+        });
+
+        it("stops click/Enter mutations when selectable toggles true -> false while still rendering programmatic selectedIndex highlights", () => {
+            stubM5CanvasRect(560, 280);
+
+            const onPointClick = vi.fn();
+            const bindings = $state<{ selected: number | null; active: number | null }>({
+                selected: null,
+                active: null,
+            });
+
+            const props = $state({
+                mode: "bar-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: VARIANCE_DATA,
+                x: "month",
+                series: [{ id: "val", label: "Val" }],
+                selectable: true,
+                onPointClick,
+                get selectedIndex() {
+                    return bindings.selected;
+                },
+                set selectedIndex(v: number | null) {
+                    bindings.selected = v;
+                },
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            renderHost(props);
+
+            const figure = container.querySelector<HTMLElement>("figure.cs-chart");
+            const canvas = container.querySelector<HTMLDivElement>(".cs-chart-canvas");
+
+            // While selectable=true, click pins selectedIndex
+            bindings.active = 1;
+            flushSync();
+            canvas?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+            expect(bindings.selected).toBe(1);
+            expect(figure?.dataset.hasSelection).toBe("");
+
+            // Toggle selectable -> false and clear selection
+            props.selectable = false;
+            bindings.selected = null;
+            flushSync();
+            expect(figure?.dataset.hasSelection).toBeUndefined();
+
+            // Click & Enter still fire onPointClick but must NOT mutate selectedIndex
+            bindings.active = 0;
+            flushSync();
+            canvas?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+            expect(bindings.selected).toBeNull();
+            expect(onPointClick).toHaveBeenCalledTimes(2);
+
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.selected).toBeNull();
+            expect(onPointClick).toHaveBeenCalledTimes(3);
+
+            // Programmatic selectedIndex still highlights marks even when selectable=false
+            bindings.selected = 2;
+            flushSync();
+            expect(figure?.dataset.hasSelection).toBe("");
+            expect(
+                container.querySelector<SVGPathElement>(
+                    'path.cs-chart-bar-rect[data-index="2"]',
+                )?.dataset.selected,
+            ).toBe("");
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(1);
+
+            // Clicking while selectable=false does not clear or overwrite programmatic selectedIndex
+            bindings.active = 2;
+            flushSync();
+            canvas?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+            expect(bindings.selected).toBe(2);
+        });
+
+        it("DonutChart clears selectedIndex when hiding the selected slice and remaps selectedIndex when hiding an earlier slice", () => {
+            stubM5CanvasRect(280, 260);
+
+            const bindings = $state<{ selected: number | null; hidden: readonly string[] }>({
+                selected: null,
+                hidden: [],
+            });
+
+            renderHost({
+                mode: "donut-chart",
+                variant: "elevated",
+                size: "md",
+                data: DONUT_DATA,
+                donutValue: "amount",
+                donutName: "channel",
+                donutCenterLabel: "Total",
+                selectable: true,
+                get donutSelectedIndex() {
+                    return bindings.selected;
+                },
+                set donutSelectedIndex(v: number | null) {
+                    bindings.selected = v;
+                },
+                get hiddenSliceIds() {
+                    return bindings.hidden;
+                },
+                set hiddenSliceIds(v: readonly string[]) {
+                    bindings.hidden = v;
+                },
+            });
+
+            const figure = container.querySelector<HTMLElement>("figure.cs-chart");
+            const centerLabel = container.querySelector<HTMLElement>(".cs-chart-center-label");
+            const centerShare = container.querySelector<HTMLElement>(".cs-chart-center-share");
+            const legendButtons = [
+                ...container.querySelectorAll<HTMLButtonElement>(
+                    "button.cs-chart-donut-legend-item",
+                ),
+            ];
+
+            // 1. Select slice 1 ("Organic"), then hide slice 1 in legend -> clears selectedIndex to null (never shifts to "Referral")
+            container
+                .querySelector<SVGPathElement>('path.cs-chart-arc-slice[data-slice-id="Organic"]')
+                ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+            expect(bindings.selected).toBe(1);
+            expect(centerLabel?.textContent?.trim()).toBe("Organic");
+
+            legendButtons[1]?.click();
+            flushSync();
+            expect(bindings.hidden).toEqual(["Organic"]);
+            expect(bindings.selected).toBeNull();
+            expect(figure?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelector(".cs-chart-arc-selection-ring")).toBeNull();
+            expect(centerLabel?.textContent?.trim()).toBe("Total");
+
+            // 2. Restore "Organic", select slice 1 ("Organic"), then hide slice 0 ("Direct") -> remaps selectedIndex to 0 ("Organic")
+            legendButtons[1]?.click();
+            flushSync();
+            container
+                .querySelector<SVGPathElement>('path.cs-chart-arc-slice[data-slice-id="Organic"]')
+                ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+            expect(bindings.selected).toBe(1);
+
+            legendButtons[0]?.click();
+            flushSync();
+            expect(bindings.hidden).toEqual(["Direct"]);
+            expect(bindings.selected).toBe(0);
+            expect(figure?.dataset.hasSelection).toBe("");
+            expect(
+                container.querySelector<SVGPathElement>(
+                    'path.cs-chart-arc-slice[data-slice-id="Organic"]',
+                )?.dataset.selected,
+            ).toBe("");
+            expect(centerLabel?.textContent?.trim()).toBe("Organic");
+            expect(centerShare?.textContent?.trim()).toBe("60%");
+        });
+
+        it("computes tooltip % share independently per normalized stack slot and omits % share on unstacked line series in ComposedChart", () => {
+            stubM5CanvasRect(600, 280);
+
+            interface ComposedPctRow extends ChartDatum {
+                month: string;
+                barA: number;
+                barB: number;
+                trend: number;
+            }
+
+            const composedData: ComposedPctRow[] = [
+                { month: "Jan", barA: 25, barB: 75, trend: 50 },
+                { month: "Feb", barA: 40, barB: 60, trend: 80 },
+            ];
+
+            const composedSeries: ChartSeries<ComposedPctRow>[] = [
+                { id: "barA", label: "Bar A", type: "bar" },
+                { id: "barB", label: "Bar B", type: "bar" },
+                { id: "trend", label: "Trend", type: "line", yAxis: "right" },
+            ];
+
+            const composedBindings = $state<{ active: number | null }>({ active: 0 });
+
+            const composedInstance = renderHost({
+                mode: "composed-chart",
+                barMode: "percent",
+                variant: "elevated",
+                size: "md",
+                data: composedData,
+                x: "month",
+                series: composedSeries,
+                get activeIndex() {
+                    return composedBindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    composedBindings.active = v;
+                },
+            });
+
+            // Only the two normalized bar series get % shares; the unstacked line series gets none
+            const composedShares = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-share"),
+            ].map((el) => el.textContent?.trim());
+            expect(composedShares).toEqual(["25%", "75%"]);
+
+            const composedValues = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-value"),
+            ];
+            expect(composedValues).toHaveLength(3);
+            expect(composedValues[2]?.querySelector(".cs-chart-tooltip-share")).toBeNull();
+
+            unmount(composedInstance);
+            mounted.pop();
+
+            // Named-stack BarChart mode="percent": each stack slot normalizes independently to 100%
+            interface NamedStackRow extends ChartDatum {
+                quarter: string;
+                planA: number;
+                planB: number;
+                actualA: number;
+                actualB: number;
+            }
+
+            const namedData: NamedStackRow[] = [
+                { quarter: "Q1", planA: 20, planB: 80, actualA: 30, actualB: 30 },
+            ];
+            const namedSeries: ChartSeries<NamedStackRow>[] = [
+                { id: "planA", label: "Plan A", stack: "plan" },
+                { id: "planB", label: "Plan B", stack: "plan" },
+                { id: "actualA", label: "Actual A", stack: "actual" },
+                { id: "actualB", label: "Actual B", stack: "actual" },
+            ];
+
+            const namedBindings = $state<{ active: number | null }>({ active: 0 });
+
+            renderHost({
+                mode: "bar-chart",
+                barMode: "percent",
+                variant: "elevated",
+                size: "md",
+                data: namedData,
+                x: "quarter",
+                series: namedSeries,
+                get activeIndex() {
+                    return namedBindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    namedBindings.active = v;
+                },
+            });
+
+            // plan slot: 20/100=20%, 80/100=80%; actual slot: 30/60=50%, 30/60=50%
+            const namedShares = [
+                ...container.querySelectorAll<HTMLElement>(".cs-chart-tooltip-share"),
+            ].map((el) => el.textContent?.trim());
+            expect(namedShares).toEqual(["20%", "80%", "50%", "50%"]);
+        });
+    });
+});
+
+interface SparklineSampleRow {
+    day: string;
+    rev: number | null | undefined;
+}
+
+function consumeBarPathCommand(
+    cmd: string,
+    tokens: readonly string[],
+    index: number,
+    yValues: number[],
+    arcEndYs: number[],
+): number {
+    switch (cmd) {
+        case "M":
+        case "L": {
+            const y = Number(tokens[index + 1]);
+            if (Number.isFinite(y)) yValues.push(y);
+            return index + 2;
+        }
+        case "H": {
+            return index + 1;
+        }
+        case "V": {
+            const y = Number(tokens[index]);
+            if (Number.isFinite(y)) yValues.push(y);
+            return index + 1;
+        }
+        case "A": {
+            // A rx ry xAxisRotation largeArcFlag sweepFlag x y
+            const y = Number(tokens[index + 6]);
+            if (Number.isFinite(y)) {
+                yValues.push(y);
+                arcEndYs.push(y);
+            }
+            return index + 7;
+        }
+        default: {
+            return index + 1;
+        }
+    }
+}
+
+function readBarPathBounds(pathD: string | null = ""): {
+    minY: number;
+    maxY: number;
+    height: number;
+    arcEndYs: number[];
+} {
+    const d = pathD ?? "";
+    expect(d.length).toBeGreaterThan(0);
+    expect(d).not.toContain("NaN");
+
+    // Parse M, L, H, V, A commands emitted by buildRoundedBarPath
+    const yValues: number[] = [];
+    const arcEndYs: number[] = [];
+    const tokens = d.match(/[MLHVAZ]|-?\d+(?:\.\d+)?/g) ?? [];
+
+    let cmd = "";
+    let i = 0;
+    while (i < tokens.length) {
+        const tok = tokens[i];
+        if (!tok) break;
+        if (/^[MLHVAZ]$/.test(tok)) {
+            cmd = tok;
+            i++;
+            continue;
+        }
+        i = consumeBarPathCommand(cmd, tokens, i, yValues, arcEndYs);
+    }
+
+    expect(yValues.length).toBeGreaterThan(0);
+    const minY = Math.min(...yValues);
+    const maxY = Math.max(...yValues);
+    return { minY, maxY, height: maxY - minY, arcEndYs };
+}
+
+function readLinePathYs(pathD: string | null = ""): number[] {
+    const d = pathD ?? "";
+    const ys: number[] = [];
+    const matches = d.matchAll(/[ML]\s*(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)/g);
+    for (const match of matches) {
+        const y = Number(match[2]);
+        if (Number.isFinite(y)) ys.push(y);
+    }
+    return ys;
+}
+
+describe("Charts M9 — Sparkline", () => {
+    let container: HTMLDivElement;
+    const mounted: ReturnType<typeof mount>[] = [];
+
+    function renderSparkline<TDatum = number | null | undefined>(
+        props: SparklineProps<TDatum>,
+    ): ReturnType<typeof mount> {
+        const instance = mount(Sparkline<TDatum>, { target: container, props });
+        flushSync();
+        mounted.push(instance);
+        return instance;
+    }
+
+    beforeEach(() => {
+        container = document.createElement("div");
+        document.body.append(container);
+    });
+
+    afterEach(() => {
+        while (mounted.length > 0) {
+            const instance = mounted.pop();
+            if (instance) unmount(instance);
+        }
+        container.remove();
+        activeResizeHarness = null;
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    describe("Modes (line, area, bar) & data shapes", () => {
+        it("renders line mode for plain number[] across monotone, linear, and step curves, toggles showEndDot, and emits zero foreignObject/filter", () => {
+            expect(CHART_SPARKLINE_TYPES).toEqual(["line", "area", "bar"]);
+
+            const props = $state<SparklineProps<number>>({
+                data: [10, 24, 18, 32],
+                width: 120,
+                height: 32,
+                curve: "monotone",
+                strokeWidth: 1.5,
+                showEndDot: undefined,
+            });
+
+            renderSparkline(props);
+
+            const root = container.querySelector<HTMLDivElement>(".cs-chart-sparkline");
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-sparkline-svg");
+            expect(root).not.toBeNull();
+            expect(svg).not.toBeNull();
+            expect(root?.dataset.type).toBe("line");
+            expect(root?.dataset.tone).toBe("accent");
+            expect(root?.style.inlineSize).toBe("120px");
+            expect(root?.style.blockSize).toBe("32px");
+            expect(svg?.getAttribute("width")).toBe("120");
+            expect(svg?.getAttribute("height")).toBe("32");
+            expect(svg?.getAttribute("viewBox")).toBe("0 0 120 32");
+
+            const line = svg?.querySelector<SVGPathElement>("path.cs-chart-sparkline-line");
+            expect(line).not.toBeNull();
+            const monotoneD = line?.getAttribute("d") ?? "";
+            expect(monotoneD).toContain("M");
+            expect(monotoneD).toContain("C");
+            expect(monotoneD).not.toContain("NaN");
+            expect(line?.getAttribute("stroke-width")).toBe("1.5");
+            expect(line?.getAttribute("stroke-linecap")).toBe("round");
+            expect(line?.getAttribute("stroke-linejoin")).toBe("round");
+
+            // Default showEndDot is true in line mode
+            const dots = svg?.querySelectorAll<SVGCircleElement>("circle.cs-chart-sparkline-dot");
+            expect(dots).toHaveLength(1);
+            const firstDotCx = Number(dots?.[0]?.getAttribute("cx"));
+            const firstDotCy = Number(dots?.[0]?.getAttribute("cy"));
+            expect(Number.isFinite(firstDotCx)).toBe(true);
+            expect(Number.isFinite(firstDotCy)).toBe(true);
+
+            // No area fill or linearGradient in line mode; export-safe SVG
+            expect(svg?.querySelector(".cs-chart-sparkline-area")).toBeNull();
+            expect(svg?.querySelector("linearGradient")).toBeNull();
+            expect(svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+
+            // Switch curve -> linear, strokeWidth -> 2.25, showEndDot -> false
+            props.curve = "linear";
+            props.strokeWidth = 2.25;
+            props.showEndDot = false;
+            flushSync();
+
+            const linearD = line?.getAttribute("d") ?? "";
+            expect(linearD).toContain("L");
+            expect(linearD).not.toContain("C");
+            expect(linearD).not.toBe(monotoneD);
+            expect(line?.getAttribute("stroke-width")).toBe("2.25");
+            expect(svg?.querySelectorAll("circle.cs-chart-sparkline-dot")).toHaveLength(0);
+
+            // Switch curve -> step
+            props.curve = "step";
+            flushSync();
+            const stepD = line?.getAttribute("d") ?? "";
+            expect(stepD).not.toBe(linearD);
+            expect(stepD).not.toBe(monotoneD);
+            expect(stepD).not.toContain("NaN");
+        });
+
+        it("supports object arrays via both value key and callback (datum, index) accessor", () => {
+            const rows: SparklineSampleRow[] = [
+                { day: "Mon", rev: 10 },
+                { day: "Tue", rev: 30 },
+                { day: "Wed", rev: 20 },
+            ];
+            const accessorSpy = vi.fn((datum: SparklineSampleRow, index: number) =>
+                datum.rev === null || datum.rev === undefined ? null : datum.rev * (index + 1),
+            );
+
+            const props = $state<SparklineProps<SparklineSampleRow>>({
+                data: rows,
+                value: "rev",
+                curve: "linear",
+                width: 120,
+                height: 32,
+            });
+
+            renderSparkline(props);
+
+            const line = container.querySelector<SVGPathElement>("path.cs-chart-sparkline-line");
+            const dot = container.querySelector<SVGCircleElement>("circle.cs-chart-sparkline-dot");
+            expect(line).not.toBeNull();
+            expect(dot).not.toBeNull();
+
+            // With value="rev" -> [10, 30, 20], Wed (20) sits at 50% height (16px)
+            const keyDotCy = Number(dot?.getAttribute("cy"));
+            expect(keyDotCy).toBeCloseTo(16, 4);
+            const keyD = line?.getAttribute("d") ?? "";
+            expect(keyD).not.toContain("NaN");
+
+            // Switch to callback accessor -> [10, 60, 60], Wed (60) sits at top (padTop = 4px)
+            props.value = accessorSpy;
+            flushSync();
+
+            expect(accessorSpy).toHaveBeenCalledWith(rows[0], 0);
+            expect(accessorSpy).toHaveBeenCalledWith(rows[1], 1);
+            expect(accessorSpy).toHaveBeenCalledWith(rows[2], 2);
+            const cbDotCy = Number(
+                container
+                    .querySelector<SVGCircleElement>("circle.cs-chart-sparkline-dot")
+                    ?.getAttribute("cy"),
+            );
+            expect(cbDotCy).toBeCloseTo(4, 4);
+            expect(line?.getAttribute("d")).not.toBe(keyD);
+            expect(line?.getAttribute("d")).not.toContain("NaN");
+        });
+
+        it("renders area mode with unique <linearGradient> IDs, .cs-chart-sparkline-area, .cs-chart-sparkline-line, and zero foreignObject/filter", () => {
+            renderSparkline({
+                data: [12, 19, 15, 28, 24],
+                type: "area",
+                width: 120,
+                height: 36,
+            });
+            renderSparkline({
+                data: [5, 14, 10, 22],
+                type: "area",
+                width: 120,
+                height: 36,
+            });
+
+            const svgs = [...container.querySelectorAll<SVGSVGElement>("svg.cs-chart-sparkline-svg")];
+            expect(svgs).toHaveLength(2);
+
+            const gradientIds: string[] = [];
+            for (const svg of svgs) {
+                const gradient = svg.querySelector<SVGLinearGradientElement>(
+                    ":scope defs linearGradient",
+                );
+                const area = svg.querySelector<SVGPathElement>("path.cs-chart-sparkline-area");
+                const line = svg.querySelector<SVGPathElement>("path.cs-chart-sparkline-line");
+                const dot = svg.querySelector<SVGCircleElement>("circle.cs-chart-sparkline-dot");
+
+                expect(gradient).not.toBeNull();
+                const id = gradient?.getAttribute("id") ?? "";
+                expect(id.length).toBeGreaterThan(0);
+                gradientIds.push(id);
+
+                expect(gradient?.querySelector(".cs-chart-sparkline-stop-top")).not.toBeNull();
+                expect(gradient?.querySelector(".cs-chart-sparkline-stop-bottom")).not.toBeNull();
+
+                expect(area).not.toBeNull();
+                expect(area?.getAttribute("fill")).toBe(`url(#${id})`);
+                expect(area?.getAttribute("d")).not.toContain("NaN");
+
+                expect(line).not.toBeNull();
+                expect(line?.getAttribute("d")).not.toContain("NaN");
+                expect(dot).not.toBeNull();
+                expect(svg.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+            }
+
+            // $props.id() guarantees zero gradient ID collisions across mounted instances
+            expect(new Set(gradientIds).size).toBe(2);
+        });
+
+        it("renders bar mode with rounded caps, clamps tiny non-zero bars to >= 2px, omits exact 0, and flips negative bar caps to bottom", () => {
+            renderSparkline({
+                data: [100, 0.001, 0, -40, 60],
+                type: "bar",
+                width: 120,
+                height: 40,
+            });
+
+            const root = container.querySelector<HTMLDivElement>(".cs-chart-sparkline");
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-sparkline-svg");
+            expect(root?.dataset.type).toBe("bar");
+            expect(svg?.querySelector("linearGradient")).toBeNull();
+            expect(svg?.querySelector(".cs-chart-sparkline-dot")).toBeNull();
+            expect(svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+
+            const bars = [
+                ...(svg?.querySelectorAll<SVGPathElement>("path.cs-chart-sparkline-bar") ?? []),
+            ];
+            // Index 2 (exact 0) is omitted
+            expect(bars).toHaveLength(4);
+            expect(bars.map((bar) => bar.dataset.index)).toEqual(["0", "1", "3", "4"]);
+
+            const posHigh = readBarPathBounds(bars[0]?.getAttribute("d") ?? null);
+            const tinyPos = readBarPathBounds(bars[1]?.getAttribute("d") ?? null);
+            const negBar = readBarPathBounds(bars[2]?.getAttribute("d") ?? null);
+
+            // Baseline sits between positive maxY and negative minY
+            const baseline = posHigh.maxY;
+            expect(negBar.minY).toBe(baseline);
+            expect(negBar.maxY).toBeGreaterThan(baseline);
+
+            // Tiny non-zero value clamps to >= 2px visual height
+            expect(tinyPos.height).toBeGreaterThanOrEqual(2);
+            expect(tinyPos.maxY).toBe(baseline);
+
+            // Positive bar rounds top cap (first arc lands at minY, bottom edge at baseline is square)
+            expect(posHigh.arcEndYs).toHaveLength(2);
+            expect(posHigh.arcEndYs[0]).toBe(posHigh.minY);
+            expect(posHigh.arcEndYs[1]).toBeLessThan(baseline);
+
+            // Negative bar flips rounded cap to bottom (first arc lands at maxY, top edge at baseline is square)
+            expect(negBar.arcEndYs).toHaveLength(2);
+            expect(negBar.arcEndYs[0]).toBe(negBar.maxY);
+            expect(negBar.arcEndYs[1]).toBeGreaterThan(baseline);
+        });
+    });
+
+    describe("Edge data guards", () => {
+        it("guards empty [], single point, all-zero / all-equal flat lines (centered at 50% height), and null/undefined/NaN gaps without NaN", () => {
+            const props = $state<SparklineProps<number | null | undefined>>({
+                data: [],
+                type: "line",
+                curve: "linear",
+                width: 100,
+                height: 32,
+            });
+
+            renderSparkline(props);
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-sparkline-svg");
+
+            // 1. Empty array -> renders empty svg without marks or NaN
+            expect(svg?.querySelector(".cs-chart-sparkline-line")).toBeNull();
+            expect(svg?.querySelector(".cs-chart-sparkline-area")).toBeNull();
+            expect(svg?.querySelector(".cs-chart-sparkline-dot")).toBeNull();
+            expect(svg?.querySelector(".cs-chart-sparkline-bar")).toBeNull();
+
+            // 2. Single point -> visible dot centered in plot width (padLeft=1, padRight=4 -> 48.5) & 50% height (16px), zero NaN
+            props.data = [42];
+            flushSync();
+            const singleDot = svg?.querySelector<SVGCircleElement>("circle.cs-chart-sparkline-dot");
+            expect(singleDot).not.toBeNull();
+            expect(Number(singleDot?.getAttribute("cx"))).toBeCloseTo(48.5, 4);
+            expect(Number(singleDot?.getAttribute("cy"))).toBeCloseTo(16, 4);
+            const singleLine = svg?.querySelector<SVGPathElement>("path.cs-chart-sparkline-line");
+            if (singleLine) {
+                expect(singleLine.getAttribute("d")).not.toContain("NaN");
+            }
+
+            // 3. All-zero flat line -> centered at exact 50% height (16px), no NaN
+            props.data = [0, 0, 0, 0];
+            flushSync();
+            const zeroLine = svg?.querySelector<SVGPathElement>("path.cs-chart-sparkline-line");
+            expect(zeroLine).not.toBeNull();
+            const zeroYs = readLinePathYs(zeroLine?.getAttribute("d") ?? null);
+            expect(zeroYs).toHaveLength(4);
+            for (const y of zeroYs) {
+                expect(y).toBeCloseTo(16, 4);
+            }
+            expect(
+                Number(
+                    svg
+                        ?.querySelector<SVGCircleElement>("circle.cs-chart-sparkline-dot")
+                        ?.getAttribute("cy"),
+                ),
+            ).toBeCloseTo(16, 4);
+
+            // 4. All-equal non-zero flat line -> centered at exact 50% height (16px), no NaN
+            props.data = [15, 15, 15];
+            flushSync();
+            const equalYs = readLinePathYs(
+                svg
+                    ?.querySelector<SVGPathElement>("path.cs-chart-sparkline-line")
+                    ?.getAttribute("d") ?? null,
+            );
+            expect(equalYs).toHaveLength(3);
+            for (const y of equalYs) {
+                expect(y).toBeCloseTo(16, 4);
+            }
+
+            // 5. All-zero in bar mode -> zero bar paths, zero NaN
+            props.type = "bar";
+            props.data = [0, 0, 0];
+            flushSync();
+            expect(svg?.querySelectorAll("path.cs-chart-sparkline-bar")).toHaveLength(0);
+
+            // 6. null / undefined / NaN gaps split paths cleanly in both line and area modes
+            props.type = "area";
+            props.data = [10, 20, null, undefined, NaN, 30, 40];
+            flushSync();
+
+            const gappedLineD =
+                svg
+                    ?.querySelector<SVGPathElement>("path.cs-chart-sparkline-line")
+                    ?.getAttribute("d") ?? "";
+            const gappedAreaD =
+                svg
+                    ?.querySelector<SVGPathElement>("path.cs-chart-sparkline-area")
+                    ?.getAttribute("d") ?? "";
+            expect(countMoveToCommands(gappedLineD)).toBe(2);
+            expect(countMoveToCommands(gappedAreaD)).toBe(2);
+            expect(gappedLineD).not.toContain("NaN");
+            expect(gappedAreaD).not.toContain("NaN");
+
+            // Trailing nulls -> end dot stays on last finite datum (index 1 -> value 25, top = 4px)
+            props.data = [10, 25, null, undefined];
+            flushSync();
+            const trailingDot = svg?.querySelector<SVGCircleElement>(
+                "circle.cs-chart-sparkline-dot",
+            );
+            expect(trailingDot).not.toBeNull();
+            expect(Number(trailingDot?.getAttribute("cy"))).toBeCloseTo(4, 4);
+        });
+    });
+
+    describe("Target hairline, tones, custom color, accessibility & bindings", () => {
+        it("renders snapped target hairline (n + 0.5, stroke-dasharray='3 2') and respects domain / includeZero", () => {
+            const props = $state<SparklineProps<number>>({
+                data: [10, 20, 30],
+                target: 20,
+                width: 120,
+                height: 32,
+                includeZero: false,
+                domain: undefined as ChartAxisDomain | undefined,
+            });
+
+            renderSparkline(props);
+
+            const targetLine = container.querySelector<SVGLineElement>(
+                "line.cs-chart-sparkline-target",
+            );
+            expect(targetLine).not.toBeNull();
+            const y1 = Number(targetLine?.getAttribute("y1"));
+            const y2 = Number(targetLine?.getAttribute("y2"));
+            expect(y1).toBe(y2);
+            expect(Math.abs((y1 - 0.5) % 1)).toBeCloseTo(0, 6);
+            expect(targetLine?.getAttribute("shape-rendering")).toBe("crispEdges");
+            expect(targetLine?.getAttribute("stroke-dasharray")).toBe("3 2");
+
+            // Explicit domain shifts target y position cleanly
+            props.domain = [0, 100];
+            flushSync();
+            const shiftedY = Number(
+                container
+                    .querySelector<SVGLineElement>("line.cs-chart-sparkline-target")
+                    ?.getAttribute("y1"),
+            );
+            expect(shiftedY).not.toBe(y1);
+            expect(Math.abs((shiftedY - 0.5) % 1)).toBeCloseTo(0, 6);
+
+            // Target still renders on empty data without NaN
+            props.data = [];
+            flushSync();
+            const emptyTarget = container.querySelector<SVGLineElement>(
+                "line.cs-chart-sparkline-target",
+            );
+            expect(emptyTarget).not.toBeNull();
+            const emptyTargetY = Number(emptyTarget?.getAttribute("y1"));
+            expect(Number.isFinite(emptyTargetY)).toBe(true);
+
+            // Removing target removes the hairline
+            props.target = undefined;
+            flushSync();
+            expect(container.querySelector("line.cs-chart-sparkline-target")).toBeNull();
+        });
+
+        it("applies all semantic tones (accent, positive, caution, negative, base) and custom color override across line, area, and bar modes", () => {
+            const props = $state<SparklineProps<number>>({
+                data: [8, 16, 12, 24],
+                type: "line" as ChartSparklineType,
+                tone: "accent" as ChartTone,
+                color: undefined,
+                width: 120,
+                height: 32,
+            });
+
+            renderSparkline(props);
+            const root = container.querySelector<HTMLDivElement>(".cs-chart-sparkline");
+
+            for (const tone of CHART_TONES) {
+                props.tone = tone;
+                flushSync();
+
+                const expected = resolveToneColor(tone);
+                expect(root?.dataset.tone).toBe(tone);
+                expect(
+                    container
+                        .querySelector<SVGPathElement>("path.cs-chart-sparkline-line")
+                        ?.getAttribute("stroke"),
+                ).toBe(expected);
+                expect(
+                    container
+                        .querySelector<SVGCircleElement>("circle.cs-chart-sparkline-dot")
+                        ?.getAttribute("fill"),
+                ).toBe(expected);
+            }
+
+            // Custom color overrides tone across line, area gradient stops, and bars
+            props.color = "#0ea5e9";
+            flushSync();
+            expect(
+                container
+                    .querySelector<SVGPathElement>("path.cs-chart-sparkline-line")
+                    ?.getAttribute("stroke"),
+            ).toBe("#0ea5e9");
+            expect(
+                container
+                    .querySelector<SVGCircleElement>("circle.cs-chart-sparkline-dot")
+                    ?.getAttribute("fill"),
+            ).toBe("#0ea5e9");
+
+            props.type = "area";
+            flushSync();
+            expect(
+                container
+                    .querySelector<SVGStopElement>(".cs-chart-sparkline-stop-top")
+                    ?.getAttribute("stop-color"),
+            ).toBe("#0ea5e9");
+            expect(
+                container
+                    .querySelector<SVGStopElement>(".cs-chart-sparkline-stop-bottom")
+                    ?.getAttribute("stop-color"),
+            ).toBe("#0ea5e9");
+
+            props.type = "bar";
+            flushSync();
+            const bars = container.querySelectorAll<SVGPathElement>("path.cs-chart-sparkline-bar");
+            expect(bars.length).toBe(4);
+            for (const bar of bars) {
+                expect(bar.getAttribute("fill")).toBe("#0ea5e9");
+            }
+        });
+
+        it("sets decorative vs labelled accessibility attributes, binds ref & svgRef, forwards {...rest}, and cleans up ResizeObserver on unmount", () => {
+            const observeSpy = vi.fn();
+            const disconnectSpy = vi.fn();
+            activeResizeHarness = {
+                callback: null,
+                observe: observeSpy,
+                unobserve: vi.fn(),
+                disconnect: disconnectSpy,
+            };
+            vi.stubGlobal("ResizeObserver", MockResizeObserver);
+
+            const rafQueue: FrameRequestCallback[] = [];
+            const cancelRafSpy = vi.fn();
+            vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+                rafQueue.push(cb);
+                return rafQueue.length;
+            });
+            vi.stubGlobal("cancelAnimationFrame", cancelRafSpy);
+            vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+                makeDomRect(0, 0),
+            );
+
+            const refs: { root: HTMLDivElement | null; svg: SVGSVGElement | null } = {
+                root: null,
+                svg: null,
+            };
+
+            const props = $state<SparklineProps<number> & Record<string, unknown>>({
+                data: [5, 12, 9, 18],
+                width: "100%",
+                height: 32,
+                label: undefined,
+                interactive: false,
+                class: "custom-spark",
+                id: "kpi-spark",
+                "data-testid": "spark-host",
+                get ref() {
+                    return refs.root;
+                },
+                set ref(v: HTMLDivElement | null) {
+                    refs.root = v;
+                },
+                get svgRef() {
+                    return refs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    refs.svg = v;
+                },
+            });
+
+            const instance = renderSparkline(props);
+
+            const root = container.querySelector<HTMLDivElement>('[data-testid="spark-host"]');
+            const svg = root?.querySelector<SVGSVGElement>("svg.cs-chart-sparkline-svg") ?? null;
+            expect(root).not.toBeNull();
+            expect(svg).not.toBeNull();
+            expect(refs.root).toBe(root);
+            expect(refs.svg).toBe(svg);
+            expect(root?.id).toBe("kpi-spark");
+            expect(root?.classList.contains("cs-chart-sparkline")).toBe(true);
+            expect(root?.classList.contains("custom-spark")).toBe(true);
+            expect(observeSpy).toHaveBeenCalledWith(root);
+
+            // 0-width fluid container guards mark rendering until ResizeObserver + rAF delivers size
+            expect(svg?.querySelector(".cs-chart-sparkline-line")).toBeNull();
+            expect(svg?.getAttribute("viewBox")).toBeNull();
+
+            // Decorative (!label && !interactive) -> aria-hidden="true", no role/aria-label
+            expect(svg?.getAttribute("aria-hidden")).toBe("true");
+            expect(svg?.getAttribute("role")).toBeNull();
+            expect(svg?.getAttribute("aria-label")).toBeNull();
+
+            // Labelled -> role="img", aria-label, no aria-hidden
+            props.label = "7-day revenue trend";
+            flushSync();
+            expect(svg?.getAttribute("role")).toBe("img");
+            expect(svg?.getAttribute("aria-label")).toBe("7-day revenue trend");
+            expect(svg?.getAttribute("aria-hidden")).toBeNull();
+
+            // Interactive without label -> not aria-hidden
+            props.label = undefined;
+            props.interactive = true;
+            flushSync();
+            expect(svg?.getAttribute("aria-hidden")).toBeNull();
+            expect(svg?.getAttribute("role")).toBeNull();
+
+            // ResizeObserver delivers width -> rAF updates observedWidth -> marks render
+            activeResizeHarness.callback?.(
+                [
+                    {
+                        contentRect: makeDomRect(140, 32),
+                        target: root as Element,
+                    } as unknown as ResizeObserverEntry,
+                ],
+                {} as ResizeObserver,
+            );
+            expect(rafQueue).toHaveLength(1);
+            rafQueue.shift()?.(16);
+            flushSync();
+            expect(svg?.getAttribute("viewBox")).toBe("0 0 140 32");
+            expect(svg?.querySelector("path.cs-chart-sparkline-line")).not.toBeNull();
+
+            // Queue another resize and unmount before rAF runs -> disconnects observer & cancels rAF
+            activeResizeHarness.callback?.(
+                [
+                    {
+                        contentRect: makeDomRect(180, 32),
+                        target: root as Element,
+                    } as unknown as ResizeObserverEntry,
+                ],
+                {} as ResizeObserver,
+            );
+            unmount(instance);
+            mounted.pop();
+            expect(disconnectSpy).toHaveBeenCalledTimes(1);
+            expect(cancelRafSpy).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe("Interactive hover scrubbing & $bindable sync", () => {
+        it("scrubs activeIndex on pointermove, fires onHover(index, value, datum), renders snapped crosshair & active dot, syncs bidirectionally, and clears on pointerleave", () => {
+            stubLayoutRect(120, 32);
+
+            const rows: SparklineSampleRow[] = [
+                { day: "Mon", rev: 10 },
+                { day: "Tue", rev: null },
+                { day: "Wed", rev: 30 },
+                { day: "Thu", rev: 20 },
+            ];
+            const bindings = $state<{ active: number | null }>({ active: null });
+            const onHover = vi.fn();
+
+            renderSparkline<SparklineSampleRow>({
+                data: rows,
+                value: "rev",
+                type: "line",
+                width: 120,
+                height: 32,
+                interactive: true,
+                onHover,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const root = container.querySelector<HTMLDivElement>(".cs-chart-sparkline");
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-sparkline-svg");
+
+            // Initial mount: clean idle state, no spurious onHover
+            expect(root?.dataset.interactive).toBe("");
+            expect(root?.dataset.hasActive).toBeUndefined();
+            expect(bindings.active).toBeNull();
+            expect(onHover).not.toHaveBeenCalled();
+            expect(svg?.querySelector(".cs-chart-sparkline-crosshair")).toBeNull();
+            expect(svg?.querySelector(".cs-chart-sparkline-dot[data-active]")).toBeNull();
+            expect(svg?.querySelectorAll(".cs-chart-sparkline-dot")).toHaveLength(1);
+
+            // Scrub to index 0 (left edge, x ≈ 4)
+            root?.dispatchEvent(new PointerEvent("pointermove", { clientX: 6, bubbles: true }));
+            flushSync();
+
+            expect(bindings.active).toBe(0);
+            expect(root?.dataset.hasActive).toBe("");
+            expect(onHover).toHaveBeenCalledTimes(1);
+            expect(onHover).toHaveBeenLastCalledWith(0, 10, rows[0]);
+
+            const crosshair = svg?.querySelector<SVGLineElement>(
+                "line.cs-chart-sparkline-crosshair",
+            );
+            expect(crosshair).not.toBeNull();
+            const x1 = Number(crosshair?.getAttribute("x1"));
+            expect(x1).toBe(Number(crosshair?.getAttribute("x2")));
+            expect(Math.abs((x1 - 0.5) % 1)).toBeCloseTo(0, 6);
+            expect(svg?.querySelectorAll(".cs-chart-sparkline-dot")).toHaveLength(2);
+            expect(svg?.querySelector(".cs-chart-sparkline-dot[data-active]")).not.toBeNull();
+
+            // Idempotent pointermove within same nearest index -> does NOT re-fire onHover
+            root?.dispatchEvent(new PointerEvent("pointermove", { clientX: 8, bubbles: true }));
+            flushSync();
+            expect(onHover).toHaveBeenCalledTimes(1);
+
+            // Scrub onto null gap (index 1, x ≈ 41) -> crosshair renders, active dot omitted, onHover receives null value
+            root?.dispatchEvent(new PointerEvent("pointermove", { clientX: 41, bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBe(1);
+            expect(onHover).toHaveBeenCalledTimes(2);
+            expect(onHover).toHaveBeenLastCalledWith(1, null, rows[1]);
+            expect(svg?.querySelector("line.cs-chart-sparkline-crosshair")).not.toBeNull();
+            expect(svg?.querySelector(".cs-chart-sparkline-dot[data-active]")).toBeNull();
+
+            // Scrub onto last valid point (index 3, x ≈ 116) -> active dot replaces end dot (no duplicate circle)
+            root?.dispatchEvent(new PointerEvent("pointermove", { clientX: 116, bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBe(3);
+            expect(onHover).toHaveBeenCalledTimes(3);
+            expect(onHover).toHaveBeenLastCalledWith(3, 20, rows[3]);
+            expect(svg?.querySelectorAll(".cs-chart-sparkline-dot")).toHaveLength(1);
+            expect(svg?.querySelector(".cs-chart-sparkline-dot[data-active]")).not.toBeNull();
+
+            // Cross-sequence A -> B -> A: external $bindable write updates DOM without breaking pointer sync
+            bindings.active = 2;
+            flushSync();
+            expect(onHover).toHaveBeenCalledTimes(3);
+            expect(svg?.querySelectorAll(".cs-chart-sparkline-dot")).toHaveLength(2);
+
+            root?.dispatchEvent(new PointerEvent("pointermove", { clientX: 6, bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBe(0);
+            expect(onHover).toHaveBeenCalledTimes(4);
+            expect(onHover).toHaveBeenLastCalledWith(0, 10, rows[0]);
+
+            // pointerleave clears activeIndex to null and fires onHover(null, null, null)
+            root?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(root?.dataset.hasActive).toBeUndefined();
+            expect(svg?.querySelector(".cs-chart-sparkline-crosshair")).toBeNull();
+            expect(svg?.querySelector(".cs-chart-sparkline-dot[data-active]")).toBeNull();
+            expect(svg?.querySelectorAll(".cs-chart-sparkline-dot")).toHaveLength(1);
+            expect(onHover).toHaveBeenCalledTimes(5);
+            expect(onHover).toHaveBeenLastCalledWith(null, null, null);
+
+            // Second pointerleave when already null -> idempotent (no spurious onHover)
+            root?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(onHover).toHaveBeenCalledTimes(5);
+        });
+
+        it("emphasizes active bar in interactive bar mode and preserves strict controlled activeIndex sync", () => {
+            stubLayoutRect(120, 32);
+
+            const data = [15, 40, 25, 60];
+            const bindings = $state<{ active: number | null }>({ active: null });
+            const onHover = vi.fn();
+
+            const barInstance = renderSparkline({
+                data,
+                type: "bar",
+                width: 120,
+                height: 32,
+                interactive: true,
+                onHover,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const root = container.querySelector<HTMLDivElement>(".cs-chart-sparkline");
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-sparkline-svg");
+
+            // Hover over bar index 2 (x ≈ 75)
+            root?.dispatchEvent(new PointerEvent("pointermove", { clientX: 75, bubbles: true }));
+            flushSync();
+
+            expect(bindings.active).toBe(2);
+            expect(root?.dataset.hasActive).toBe("");
+            expect(onHover).toHaveBeenLastCalledWith(2, 25, 25);
+            expect(svg?.querySelector(".cs-chart-sparkline-crosshair")).toBeNull();
+
+            const activeBars = svg?.querySelectorAll<SVGPathElement>(
+                "path.cs-chart-sparkline-bar[data-active]",
+            );
+            expect(activeBars).toHaveLength(1);
+            expect(activeBars?.[0]?.dataset.index).toBe("2");
+
+            // Leave clears bar emphasis
+            root?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(root?.dataset.hasActive).toBeUndefined();
+            expect(svg?.querySelectorAll("path.cs-chart-sparkline-bar[data-active]")).toHaveLength(
+                0,
+            );
+            expect(onHover).toHaveBeenLastCalledWith(null, null, null);
+
+            unmount(barInstance);
+            mounted.pop();
+
+            // Strict controlled mode (read-only setter): pointermove never detaches external control
+            const controlled = $state<{ active: number | null }>({ active: 1 });
+            renderSparkline({
+                data,
+                type: "bar",
+                width: 120,
+                height: 32,
+                interactive: true,
+                get activeIndex() {
+                    return controlled.active;
+                },
+                set activeIndex(_v: number | null) {
+                    // Intentionally ignore internal writes
+                },
+            });
+
+            const ctrlRoot = container.querySelector<HTMLDivElement>(".cs-chart-sparkline");
+            expect(
+                ctrlRoot?.querySelector<SVGPathElement>("path.cs-chart-sparkline-bar[data-active]")
+                    ?.dataset.index,
+            ).toBe("1");
+
+            ctrlRoot?.dispatchEvent(
+                new PointerEvent("pointermove", { clientX: 110, bubbles: true }),
+            );
+            flushSync();
+            expect(
+                ctrlRoot?.querySelector<SVGPathElement>("path.cs-chart-sparkline-bar[data-active]")
+                    ?.dataset.index,
+            ).toBe("1");
+
+            controlled.active = 3;
+            flushSync();
+            expect(
+                ctrlRoot?.querySelector<SVGPathElement>("path.cs-chart-sparkline-bar[data-active]")
+                    ?.dataset.index,
+            ).toBe("3");
+        });
+
+        it("ignores pointer scrubbing when interactive={false} while still forwarding consumer pointer callbacks", () => {
+            stubLayoutRect(120, 32);
+
+            const bindings = $state<{ active: number | null }>({ active: null });
+            const onHover = vi.fn();
+            const onPointerMove = vi.fn();
+            const onPointerLeave = vi.fn();
+
+            renderSparkline({
+                data: [10, 25, 18, 35],
+                type: "line",
+                width: 120,
+                height: 32,
+                interactive: false,
+                onHover,
+                onpointermove: onPointerMove,
+                onpointerleave: onPointerLeave,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const root = container.querySelector<HTMLDivElement>(".cs-chart-sparkline");
+            expect(root?.dataset.interactive).toBeUndefined();
+
+            root?.dispatchEvent(new PointerEvent("pointermove", { clientX: 60, bubbles: true }));
+            flushSync();
+            root?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.active).toBeNull();
+            expect(onHover).not.toHaveBeenCalled();
+            expect(root?.dataset.hasActive).toBeUndefined();
+            expect(container.querySelector(".cs-chart-sparkline-crosshair")).toBeNull();
+            expect(container.querySelector(".cs-chart-sparkline-dot[data-active]")).toBeNull();
+            expect(onPointerMove).toHaveBeenCalledTimes(1);
+            expect(onPointerLeave).toHaveBeenCalledTimes(1);
+        });
+    });
+});
+
+interface WaterfallRow extends ChartDatum {
+    step: string;
+    amount: number | null;
+    kind: ChartWaterfallRowType;
+    tone?: ChartTone;
+    color?: string;
+    pattern?: ChartBarPattern;
+}
+
+const PNL_BRIDGE_DATA: readonly WaterfallRow[] = [
+    { step: "Revenue", amount: 1200, kind: "start" },
+    { step: "COGS", amount: -420, kind: "delta" },
+    { step: "Gross Profit", amount: null, kind: "subtotal" },
+    { step: "Upsell", amount: 180, kind: "delta" },
+    { step: "OpEx", amount: -360, kind: "delta" },
+    { step: "Net Income", amount: null, kind: "total" },
+];
+
+const ZERO_CROSSING_BRIDGE_DATA: readonly WaterfallRow[] = [
+    { step: "Opening", amount: 80, kind: "start" },
+    { step: "Write-off", amount: -140, kind: "delta" },
+    { step: "Penalty", amount: -30, kind: "delta" },
+    { step: "Recovery", amount: 120, kind: "delta" },
+    { step: "Closing", amount: null, kind: "total" },
+];
+
+describe("Charts M10 — WaterfallChart & ChartWaterfall", () => {
+    let container: HTMLDivElement;
+    const mounted: ReturnType<typeof mount>[] = [];
+
+    function renderHost(props: Record<string, unknown> = {}): ReturnType<typeof mount> {
+        const instance = mount(ChartTestHost, { target: container, props });
+        flushSync();
+        mounted.push(instance);
+        return instance;
+    }
+
+    beforeEach(() => {
+        clearMeasureCache();
+        container = document.createElement("div");
+        document.body.append(container);
+    });
+
+    afterEach(() => {
+        while (mounted.length > 0) {
+            const instance = mounted.pop();
+            if (instance) unmount(instance);
+        }
+        container.remove();
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    describe("WaterfallChart shell, refs, rest attrs & export safety", () => {
+        it("forwards required variant/size, ref/svgRef, {...rest}, header/children/overlay, and renders zero foreignObject or filter", () => {
+            stubM5CanvasRect(640, 300);
+
+            for (const variant of CHART_VARIANTS) {
+                for (const size of CHART_SIZES) {
+                    const refs: { root: HTMLElement | null; svg: SVGSVGElement | null } = {
+                        root: null,
+                        svg: null,
+                    };
+                    const instance = renderHost({
+                        mode: "waterfall-chart",
+                        variant,
+                        size,
+                        data: PNL_BRIDGE_DATA,
+                        x: "step",
+                        waterfallValue: "amount",
+                        waterfallType: "kind",
+                        tier2Title: "Q4 P&L Bridge",
+                        tier2Description: "Revenue to Net Income",
+                        showActions: true,
+                        tier2CustomLayerText: "FY26",
+                        showOverlay: true,
+                        chartClass: "custom-wf",
+                        chartAttrs: { id: `wf-${variant}-${size}`, "data-testid": "wf-host" },
+                        get chartRef() {
+                            return refs.root;
+                        },
+                        set chartRef(v: HTMLElement | null) {
+                            refs.root = v;
+                        },
+                        get svgRef() {
+                            return refs.svg;
+                        },
+                        set svgRef(v: SVGSVGElement | null) {
+                            refs.svg = v;
+                        },
+                    });
+
+                    const root = container.querySelector<HTMLElement>('[data-testid="wf-host"]');
+                    const svg = root?.querySelector<SVGSVGElement>("svg.cs-chart-svg") ?? null;
+
+                    expect(root).not.toBeNull();
+                    expect(svg).not.toBeNull();
+                    expect(refs.root).toBe(root);
+                    expect(refs.svg).toBe(svg);
+                    expect(root?.id).toBe(`wf-${variant}-${size}`);
+                    expect(root?.classList.contains("cs-chart")).toBe(true);
+                    expect(root?.classList.contains("custom-wf")).toBe(true);
+                    expect(root?.dataset.variant).toBe(variant);
+                    expect(root?.dataset.size).toBe(size);
+                    expect(root?.querySelector(".cs-chart-title")?.textContent?.trim()).toBe(
+                        "Q4 P&L Bridge",
+                    );
+                    expect(root?.querySelector(".cs-chart-description")?.textContent?.trim()).toBe(
+                        "Revenue to Net Income",
+                    );
+                    expect(root?.querySelector('[data-testid="tier2-action-btn"]')).not.toBeNull();
+                    expect(
+                        svg?.querySelector('[data-testid="custom-svg-layer"]')?.textContent?.trim(),
+                    ).toBe("FY26");
+                    expect(root?.querySelector('[data-testid="tier2-overlay"]')).not.toBeNull();
+
+                    // Export safety: 100% pure SVG inside <svg>
+                    expect(svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+
+                    unmount(instance);
+                    mounted.pop();
+                }
+            }
+        });
+    });
+
+    describe("Bars, kinds, connectors, signed labels, colors & IBCS patterns", () => {
+        it("renders start/positive/negative/subtotal/total bars, snapped connectors, signed labels, and toggles connectors/valueLabels", () => {
+            stubM5CanvasRect(640, 300);
+
+            const props = $state({
+                mode: "waterfall-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: PNL_BRIDGE_DATA,
+                x: "step",
+                waterfallValue: "amount",
+                waterfallType: "kind",
+                waterfallConnectors: true,
+                waterfallValueLabels: true,
+                waterfallTotalTone: "base" as "base" | "accent",
+                waterfallFormatLabel: undefined as
+                    | ((value: number, item: ChartWaterfallItem<ChartDatum>) => string)
+                    | undefined,
+            });
+
+            renderHost(props);
+
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-svg");
+            expect(svg).not.toBeNull();
+
+            const bars = [
+                ...(svg?.querySelectorAll<SVGPathElement>("path.cs-chart-waterfall-bar") ?? []),
+            ];
+            expect(bars).toHaveLength(6);
+            expect(bars.map((b) => b.dataset.kind)).toEqual([
+                "start",
+                "negative",
+                "subtotal",
+                "positive",
+                "negative",
+                "total",
+            ]);
+            expect(bars.map((b) => b.dataset.type)).toEqual([
+                "start",
+                "delta",
+                "subtotal",
+                "delta",
+                "delta",
+                "total",
+            ]);
+            expect(bars.map((b) => b.dataset.index)).toEqual(["0", "1", "2", "3", "4", "5"]);
+
+            // Semantic default colors: totalTone="base" for anchors, positive/negative for deltas
+            expect(bars[0]?.style.fill).toBe("var(--cs-chart-waterfall-total)");
+            expect(bars[1]?.style.fill).toBe("var(--cs-chart-negative)");
+            expect(bars[1]?.dataset.negative).toBe("");
+            expect(bars[2]?.style.fill).toBe("var(--cs-chart-waterfall-total)");
+            expect(bars[3]?.style.fill).toBe("var(--cs-chart-positive)");
+            expect(bars[3]?.dataset.negative).toBeUndefined();
+            expect(bars[4]?.style.fill).toBe("var(--cs-chart-negative)");
+            expect(bars[5]?.style.fill).toBe("var(--cs-chart-waterfall-total)");
+
+            // Every path is non-empty and free of NaN
+            for (const bar of bars) {
+                const d = bar.getAttribute("d") ?? "";
+                expect(d.length).toBeGreaterThan(0);
+                expect(d).not.toContain("NaN");
+            }
+
+            // Connectors: 5 dashed 1px crispEdges lines snapped to n + 0.5
+            const connectors = [
+                ...(svg?.querySelectorAll<SVGLineElement>("line.cs-chart-waterfall-connector") ??
+                    []),
+            ];
+            expect(connectors).toHaveLength(5);
+            for (const line of connectors) {
+                expect(line.getAttribute("stroke-dasharray")).toBe("3 2");
+                expect(line.getAttribute("shape-rendering")).toBe("crispEdges");
+                expect(line.getAttribute("y1")).toBe(line.getAttribute("y2"));
+                expect(isHalfPixel(line.getAttribute("y1"))).toBe(true);
+                expect(Number(line.getAttribute("x2"))).toBeGreaterThan(
+                    Number(line.getAttribute("x1")),
+                );
+            }
+
+            // Signed outside labels: + for positive delta, - for negative delta, unsigned for anchors
+            const labels = [
+                ...(svg?.querySelectorAll<SVGTextElement>("text.cs-chart-waterfall-label") ?? []),
+            ];
+            expect(labels).toHaveLength(6);
+            expect(labels[0]?.textContent?.trim()).toMatch(/^1,?200$/);
+            expect(labels[1]?.textContent?.trim()).toMatch(/^[-−]420$/);
+            expect(labels[2]?.textContent?.trim()).toBe("780");
+            expect(labels[3]?.textContent?.trim()).toBe("+180");
+            expect(labels[4]?.textContent?.trim()).toMatch(/^[-−]360$/);
+            expect(labels[5]?.textContent?.trim()).toBe("600");
+
+            // totalTone="accent" switches anchor bars to --cs-chart-series-1
+            props.waterfallTotalTone = "accent";
+            flushSync();
+            expect(bars[0]?.style.fill).toBe("var(--cs-chart-series-1)");
+            expect(bars[2]?.style.fill).toBe("var(--cs-chart-series-1)");
+            expect(bars[5]?.style.fill).toBe("var(--cs-chart-series-1)");
+
+            // Custom formatLabel overrides default labels
+            props.waterfallFormatLabel = (val, item) => `${item.kind}:${val}`;
+            flushSync();
+            const customLabels = [
+                ...(svg?.querySelectorAll<SVGTextElement>("text.cs-chart-waterfall-label") ?? []),
+            ];
+            expect(customLabels[0]?.textContent?.trim()).toBe("start:1200");
+            expect(customLabels[3]?.textContent?.trim()).toBe("positive:180");
+
+            // connectors={false} and valueLabels={false} hide connectors & labels
+            props.waterfallConnectors = false;
+            props.waterfallValueLabels = false;
+            flushSync();
+            expect(svg?.querySelectorAll("line.cs-chart-waterfall-connector")).toHaveLength(0);
+            expect(svg?.querySelectorAll("text.cs-chart-waterfall-label")).toHaveLength(0);
+        });
+
+        it("supports per-datum color/tone overrides and unique $props.id() IBCS hatch/outline patterns across multiple instances", () => {
+            stubM5CanvasRect(560, 280);
+
+            const patternData: readonly WaterfallRow[] = [
+                { step: "Actual", amount: 500, kind: "start", pattern: "solid" },
+                { step: "Forecast", amount: 150, kind: "delta", tone: "caution", pattern: "hatch" },
+                { step: "Plan Adj", amount: -80, kind: "delta", color: "#0f766e", pattern: "outline" },
+                { step: "Target", amount: null, kind: "total", pattern: "hatch" },
+            ];
+
+            const sharedProps = {
+                mode: "waterfall-chart" as const,
+                variant: "soft" as const,
+                size: "sm" as const,
+                data: patternData,
+                x: "step",
+                waterfallValue: "amount",
+                waterfallType: "kind",
+                waterfallColor: "color",
+                waterfallTone: "tone",
+                waterfallPattern: (datum: ChartDatum) => (datum as WaterfallRow).pattern,
+            };
+
+            renderHost({ ...sharedProps, chartAttrs: { "data-testid": "wf-a" } });
+            renderHost({ ...sharedProps, chartAttrs: { "data-testid": "wf-b" } });
+
+            const svgA = container.querySelector<SVGSVGElement>(':scope [data-testid="wf-a"] svg');
+            const svgB = container.querySelector<SVGSVGElement>(':scope [data-testid="wf-b"] svg');
+
+            const barsA = [
+                ...(svgA?.querySelectorAll<SVGPathElement>("path.cs-chart-waterfall-bar") ?? []),
+            ];
+            expect(barsA[1]?.dataset.pattern).toBe("hatch");
+            expect(barsA[1]?.getAttribute("fill")).toMatch(/^url\(#cs-chart-waterfall-hatch-/);
+            expect(barsA[1]?.style.stroke).toBe("var(--cs-chart-caution)");
+
+            expect(barsA[2]?.dataset.pattern).toBe("outline");
+            expect(barsA[2]?.style.fill).toBe("#0f766e");
+            expect(barsA[2]?.style.stroke).toBe("#0f766e");
+
+            // Pattern IDs are unique across the two mounted instances
+            const idsA = [...(svgA?.querySelectorAll(":scope defs pattern") ?? [])].map((p) => p.id);
+            const idsB = [...(svgB?.querySelectorAll(":scope defs pattern") ?? [])].map((p) => p.id);
+            expect(idsA.length).toBeGreaterThan(0);
+            expect(idsB.length).toBe(idsA.length);
+            for (const id of idsA) {
+                expect(idsB).not.toContain(id);
+            }
+
+            expect(svgA?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+            expect(svgB?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+        });
+    });
+
+    describe("Zero-crossing bridge & emphasized zero-line", () => {
+        it("automatically renders .cs-chart-grid-zero[data-style='strong'] on zero-crossing bridges and omits it on all-positive bridges", () => {
+            stubM5CanvasRect(600, 300);
+
+            const props = $state<{ data: readonly WaterfallRow[] }>({
+                data: ZERO_CROSSING_BRIDGE_DATA,
+            });
+
+            renderHost({
+                mode: "waterfall-chart",
+                variant: "elevated",
+                size: "md",
+                get data() {
+                    return props.data;
+                },
+                x: "step",
+                waterfallValue: "amount",
+                waterfallType: "kind",
+            });
+
+            const zeroLine = container.querySelector<SVGLineElement>("line.cs-chart-grid-zero");
+            expect(zeroLine).not.toBeNull();
+            expect(zeroLine?.dataset.style).toBe("strong");
+            expect(isHalfPixel(zeroLine?.getAttribute("y1") ?? null)).toBe(true);
+
+            // Switch to all-positive P&L bridge (does not cross zero) -> zero line is omitted
+            props.data = PNL_BRIDGE_DATA;
+            flushSync();
+
+            expect(container.querySelector("line.cs-chart-grid-zero")).toBeNull();
+        });
+    });
+
+    describe("Hover / keyboard scrubbing, floating popover tooltip (NumberMorph) & live announcements", () => {
+        it("opens floating popover='manual' tooltip with signed delta + running total, updates .cs-chart-sr-live, and supports pointer/keyboard/$bindable cross-sequences", () => {
+            stubM5CanvasRect(640, 300);
+
+            const bindings = $state<{ active: number | null }>({ active: null });
+            const refs: { svg: SVGSVGElement | null } = { svg: null };
+
+            renderHost({
+                mode: "waterfall-chart",
+                variant: "elevated",
+                size: "md",
+                data: PNL_BRIDGE_DATA,
+                x: "step",
+                waterfallValue: "amount",
+                waterfallType: "kind",
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+                get svgRef() {
+                    return refs.svg;
+                },
+                set svgRef(v: SVGSVGElement | null) {
+                    refs.svg = v;
+                },
+            });
+
+            const canvas = container.querySelector<HTMLDivElement>(".cs-chart-canvas");
+            const tooltip = container.querySelector<HTMLDivElement>(".cs-chart-tooltip");
+            const srLive = container.querySelector<HTMLDivElement>(".cs-chart-sr-live");
+
+            expect(canvas).not.toBeNull();
+            expect(tooltip).not.toBeNull();
+            expect(tooltip?.getAttribute("popover")).toBe("manual");
+            expect(tooltip?.dataset.open).toBeUndefined();
+            expect(srLive?.textContent?.trim()).toBe("");
+
+            // Keyboard ArrowRight -> index 0 ("Revenue", start)
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+
+            expect(bindings.active).toBe(0);
+            expect(tooltip?.dataset.open).toBe("");
+            expect(tooltip?.querySelector(".cs-chart-tooltip-header")?.textContent?.trim()).toBe(
+                "Revenue",
+            );
+            expect(tooltip?.querySelector(".cs-chart-tooltip-label")?.textContent?.trim()).toBe(
+                "Start",
+            );
+            expect(
+                tooltip?.querySelector(":scope .cs-chart-tooltip-value .cs-number-morph"),
+            ).not.toBeNull();
+            // Start row does not duplicate a separate Running total row
+            expect(tooltip?.querySelector(".cs-chart-tooltip-total")).toBeNull();
+            expect(srLive?.textContent?.trim()).toContain("Revenue");
+            expect(srLive?.textContent?.trim()).toContain("Start");
+
+            // Keyboard ArrowRight -> index 1 ("COGS", negative delta -420, running total 780)
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+
+            expect(bindings.active).toBe(1);
+            expect(tooltip?.querySelector(".cs-chart-tooltip-header")?.textContent?.trim()).toBe(
+                "COGS",
+            );
+            expect(tooltip?.querySelector(".cs-chart-tooltip-label")?.textContent?.trim()).toBe(
+                "Change",
+            );
+            expect(
+                tooltip?.querySelector(":scope .cs-chart-tooltip-value .cs-number-morph"),
+            ).not.toBeNull();
+            expect(
+                tooltip?.querySelector(".cs-chart-tooltip-total-label")?.textContent?.trim(),
+            ).toBe("Running total");
+            expect(
+                tooltip?.querySelector(":scope .cs-chart-tooltip-total-value .cs-number-morph"),
+            ).not.toBeNull();
+            expect(srLive?.textContent?.trim()).toContain("COGS");
+            expect(srLive?.textContent?.trim()).toContain("780");
+
+            // Active bar gets data-active
+            const activeBars = container.querySelectorAll<SVGPathElement>(
+                "path.cs-chart-waterfall-bar[data-active]",
+            );
+            expect(activeBars).toHaveLength(1);
+            expect(activeBars[0]?.dataset.index).toBe("1");
+
+            // Cross-sequence: pointermove over right side of plot -> updates activeIndex
+            const layout = readM5PlotLayout(refs.svg);
+            canvas?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            canvas?.dispatchEvent(
+                new PointerEvent("pointermove", {
+                    clientX: layout.left + layout.plotWidth - 10,
+                    clientY: layout.top + layout.plotHeight / 2,
+                    bubbles: true,
+                }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(5);
+            expect(tooltip?.querySelector(".cs-chart-tooltip-header")?.textContent?.trim()).toBe(
+                "Net Income",
+            );
+            expect(tooltip?.querySelector(".cs-chart-tooltip-label")?.textContent?.trim()).toBe(
+                "Total",
+            );
+            expect(tooltip?.querySelector(".cs-chart-tooltip-total")).toBeNull();
+
+            // Pointer leave clears activeIndex and closes tooltip
+            canvas?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(tooltip?.dataset.open).toBeUndefined();
+
+            // External $bindable write -> opens tooltip at index 3 ("Upsell", +180, running 960)
+            bindings.active = 3;
+            flushSync();
+            expect(tooltip?.dataset.open).toBe("");
+            expect(tooltip?.querySelector(".cs-chart-tooltip-header")?.textContent?.trim()).toBe(
+                "Upsell",
+            );
+            expect(tooltip?.querySelector(".cs-chart-tooltip-total")).not.toBeNull();
+
+            // Keyboard Escape closes tooltip and clears activeIndex
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(tooltip?.dataset.open).toBeUndefined();
+        });
+
+        it("respects tooltipMode='none', tooltip={false}, and custom tooltip snippet context", () => {
+            stubM5CanvasRect(600, 280);
+
+            const props = $state<{
+                tooltipMode: ChartTooltipMode;
+                tier2Tooltip: boolean;
+                waterfallTooltipRenderer:
+                    | ((ctx: ChartWaterfallTooltipContext<ChartDatum>) => string)
+                    | undefined;
+                activeIndex: number | null;
+            }>({
+                tooltipMode: "none",
+                tier2Tooltip: true,
+                waterfallTooltipRenderer: undefined,
+                activeIndex: 3,
+            });
+
+            renderHost({
+                mode: "waterfall-chart",
+                variant: "elevated",
+                size: "md",
+                data: PNL_BRIDGE_DATA,
+                x: "step",
+                waterfallValue: "amount",
+                waterfallType: "kind",
+                get tooltipMode() {
+                    return props.tooltipMode;
+                },
+                get tier2Tooltip() {
+                    return props.tier2Tooltip;
+                },
+                get waterfallTooltipRenderer() {
+                    return props.waterfallTooltipRenderer;
+                },
+                get activeIndex() {
+                    return props.activeIndex;
+                },
+                set activeIndex(v: number | null) {
+                    props.activeIndex = v;
+                },
+            });
+
+            // tooltipMode="none" omits ChartTooltip
+            expect(container.querySelector(".cs-chart-tooltip")).toBeNull();
+
+            // tooltipMode="axis" + tooltip={false} also omits ChartTooltip
+            props.tooltipMode = "axis";
+            props.tier2Tooltip = false;
+            flushSync();
+            expect(container.querySelector(".cs-chart-tooltip")).toBeNull();
+
+            // Custom tooltip snippet receives ChartWaterfallTooltipContext
+            props.tier2Tooltip = true;
+            props.waterfallTooltipRenderer = (ctx) =>
+                `${ctx.index}:${ctx.item.label}:${ctx.formattedValue}|run=${ctx.formattedRunningTotal}`;
+            flushSync();
+
+            const custom = container.querySelector('[data-testid="custom-waterfall-tooltip"]');
+            expect(custom?.textContent?.trim()).toBe("3:Upsell:+180|run=960");
+        });
+    });
+
+    describe("Selection (selectable + $bindable selectedIndex), overlays, legend, loading & empty states", () => {
+        it("toggles selectedIndex via click & Enter/Space, renders .cs-chart-selection-ring, and preserves strict controlled sync", () => {
+            stubM5CanvasRect(640, 300);
+
+            const onPointClick = vi.fn();
+            const bindings = $state<{ active: number | null; selected: number | null }>({
+                active: null,
+                selected: null,
+            });
+
+            const instance = renderHost({
+                mode: "waterfall-chart",
+                variant: "elevated",
+                size: "md",
+                data: PNL_BRIDGE_DATA,
+                x: "step",
+                waterfallValue: "amount",
+                waterfallType: "kind",
+                selectable: true,
+                onPointClick,
+                get activeIndex() {
+                    return bindings.active;
+                },
+                set activeIndex(v: number | null) {
+                    bindings.active = v;
+                },
+                get selectedIndex() {
+                    return bindings.selected;
+                },
+                set selectedIndex(v: number | null) {
+                    bindings.selected = v;
+                },
+            });
+
+            const root = container.querySelector<HTMLElement>("figure.cs-chart");
+            const canvas = container.querySelector<HTMLDivElement>(".cs-chart-canvas");
+            const wfGroup = container.querySelector<SVGGElement>("g.cs-chart-waterfall");
+
+            // Initial mount: no selection
+            expect(root?.dataset.hasSelection).toBeUndefined();
+            expect(wfGroup?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(0);
+
+            // Keyboard Home -> index 0, Enter selects index 0
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Home", bubbles: true, cancelable: true }),
+            );
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+
+            expect(bindings.selected).toBe(0);
+            expect(onPointClick).toHaveBeenLastCalledWith(PNL_BRIDGE_DATA[0], 0);
+            expect(root?.dataset.hasSelection).toBe("");
+            expect(wfGroup?.dataset.hasSelection).toBe("");
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(1);
+            expect(
+                container.querySelector<SVGPathElement>(
+                    'path.cs-chart-waterfall-bar[data-index="0"]',
+                )?.dataset.selected,
+            ).toBe("");
+            expect(
+                container.querySelector<SVGTextElement>(
+                    'text.cs-chart-waterfall-label[data-index="0"]',
+                )?.dataset.selected,
+            ).toBe("");
+
+            // ArrowRight -> index 1, click switches selection directly to index 1
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            canvas?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.selected).toBe(1);
+            expect(onPointClick).toHaveBeenLastCalledWith(PNL_BRIDGE_DATA[1], 1);
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(1);
+            expect(
+                container.querySelector<SVGPathElement>(
+                    'path.cs-chart-waterfall-bar[data-index="1"]',
+                )?.dataset.selected,
+            ).toBe("");
+
+            // Space on already-selected index 1 toggles selection off
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.selected).toBeNull();
+            expect(root?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(0);
+
+            // External $bindable write -> DOM updates, then Enter toggles it off
+            bindings.selected = 2;
+            bindings.active = 2;
+            flushSync();
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(1);
+
+            canvas?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.selected).toBeNull();
+
+            unmount(instance);
+            mounted.pop();
+
+            // Strict controlled selectedIndex (read-only setter) stays synced with external prop
+            const controlled = $state<{ selected: number | null }>({ selected: 4 });
+            renderHost({
+                mode: "waterfall-chart",
+                variant: "elevated",
+                size: "md",
+                data: PNL_BRIDGE_DATA,
+                x: "step",
+                waterfallValue: "amount",
+                waterfallType: "kind",
+                selectable: true,
+                get selectedIndex() {
+                    return controlled.selected;
+                },
+                set selectedIndex(_v: number | null) {
+                    // Intentionally ignore internal writes
+                },
+            });
+
+            expect(
+                container.querySelector<SVGPathElement>(
+                    "path.cs-chart-waterfall-bar[data-selected]",
+                )?.dataset.index,
+            ).toBe("4");
+
+            controlled.selected = 0;
+            flushSync();
+            expect(
+                container.querySelector<SVGPathElement>(
+                    "path.cs-chart-waterfall-bar[data-selected]",
+                )?.dataset.index,
+            ).toBe("0");
+        });
+
+        it("renders referenceLines, referenceBands, annotations, legend placements, loading shape='bars', and empty state", () => {
+            stubM5CanvasRect(640, 300);
+
+            const props = $state<{
+                data: readonly WaterfallRow[];
+                tier2Legend: ChartLegendPosition;
+                loading: boolean;
+                empty: boolean | undefined;
+            }>({
+                data: PNL_BRIDGE_DATA,
+                tier2Legend: "top",
+                loading: false,
+                empty: undefined,
+            });
+
+            renderHost({
+                mode: "waterfall-chart",
+                variant: "elevated",
+                size: "md",
+                get data() {
+                    return props.data;
+                },
+                x: "step",
+                waterfallValue: "amount",
+                waterfallType: "kind",
+                get tier2Legend() {
+                    return props.tier2Legend;
+                },
+                get loading() {
+                    return props.loading;
+                },
+                get empty() {
+                    return props.empty;
+                },
+                emptyTitle: "No bridge data",
+                emptyDescription: "Add rows to render waterfall",
+                referenceLines: [{ id: "budget", axis: "y", value: 700, label: "Budget" }],
+                referenceBands: [{ id: "corridor", axis: "y", from: 500, to: 800, label: "Target" }],
+                annotations: [{ id: "peak", x: "Revenue", y: 1200, label: "Starting Base" }],
+            });
+
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-svg");
+            expect(svg?.querySelector(".cs-chart-ref-line")).not.toBeNull();
+            expect(svg?.querySelector(".cs-chart-ref-band")).not.toBeNull();
+            expect(svg?.querySelector(".cs-chart-annotation")).not.toBeNull();
+            expect(svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+
+            // Legend placements: top -> bottom -> end -> none
+            expect(
+                container.querySelector<HTMLDivElement>(".cs-chart-legend")?.dataset.position,
+            ).toBe("top");
+            expect(container.querySelectorAll(".cs-chart-legend-entry")).toHaveLength(3);
+
+            props.tier2Legend = "bottom";
+            flushSync();
+            expect(
+                container.querySelector<HTMLDivElement>(".cs-chart-legend")?.dataset.position,
+            ).toBe("bottom");
+
+            props.tier2Legend = "end";
+            flushSync();
+            expect(
+                container.querySelector<HTMLDivElement>(".cs-chart-legend")?.dataset.position,
+            ).toBe("end");
+
+            props.tier2Legend = "none";
+            flushSync();
+            expect(container.querySelector(".cs-chart-legend")).toBeNull();
+
+            // Loading state renders <ChartLoading shape="bars" /> and hides svg & legend
+            props.tier2Legend = "top";
+            props.loading = true;
+            flushSync();
+            const loadingEl = container.querySelector<HTMLDivElement>(".cs-chart-loading");
+            expect(loadingEl).not.toBeNull();
+            expect(loadingEl?.dataset.shape).toBe("bars");
+            expect(container.querySelector("svg.cs-chart-svg")).toBeNull();
+            expect(container.querySelector(".cs-chart-legend")).toBeNull();
+
+            // Empty data renders <ChartEmpty /> with custom copy and hides svg & legend
+            props.loading = false;
+            props.data = [];
+            flushSync();
+            const emptyEl = container.querySelector<HTMLDivElement>(".cs-chart-empty");
+            expect(emptyEl).not.toBeNull();
+            expect(emptyEl?.textContent).toContain("No bridge data");
+            expect(emptyEl?.textContent).toContain("Add rows to render waterfall");
+            expect(container.querySelector("svg.cs-chart-svg")).toBeNull();
+            expect(container.querySelector(".cs-chart-legend")).toBeNull();
+        });
+    });
+
+    describe("Tier-1 ChartWaterfall standalone composition", () => {
+        it("registers externalYExtent on ChartState, binds ref, and clears externalYExtent on unmount", () => {
+            const state = new ChartState<WaterfallRow>({
+                data: ZERO_CROSSING_BRIDGE_DATA,
+                x: "step",
+                preferBandX: true,
+                width: 560,
+                height: 280,
+            });
+            const refs: { waterfall: SVGGElement | null } = { waterfall: null };
+
+            const instance = renderHost({
+                mode: "cartesian",
+                variant: "soft",
+                size: "md",
+                state,
+                showCanvas: true,
+                showGrid: true,
+                showWaterfall: true,
+                waterfallValue: "amount",
+                waterfallType: "kind",
+                waterfallAttrs: { "data-testid": "tier1-wf" },
+                get waterfallRef() {
+                    return refs.waterfall;
+                },
+                set waterfallRef(v: SVGGElement | null) {
+                    refs.waterfall = v;
+                },
+            });
+
+            const g = container.querySelector<SVGGElement>('[data-testid="tier1-wf"]');
+            expect(g).not.toBeNull();
+            expect(refs.waterfall).toBe(g);
+            expect(state.externalYExtent).toEqual([-90, 80]);
+            expect(g?.querySelectorAll("path.cs-chart-waterfall-bar")).toHaveLength(5);
+            expect(g?.querySelectorAll("line.cs-chart-waterfall-connector")).toHaveLength(4);
+
+            unmount(instance);
+            mounted.pop();
+            expect(state.externalYExtent).toBeNull();
+        });
+    });
+});
+
+interface BulletKpiRow extends ChartDatum {
+    kpi: string;
+    subtitle?: string;
+    unit?: string;
+    actual: number;
+    target: number;
+    prior?: number | null;
+    ranges?: readonly (number | ChartBulletRange)[];
+    max?: number;
+    tone?: ChartTone;
+    color?: string;
+    pattern?: ChartBarPattern;
+}
+
+const SCORECARD_BULLET_DATA: readonly BulletKpiRow[] = [
+    {
+        kpi: "Revenue",
+        subtitle: "USD M",
+        actual: 275,
+        target: 250,
+        prior: 230,
+        ranges: [150, 225, 300],
+    },
+    {
+        kpi: "Gross Margin",
+        unit: "%",
+        actual: 61,
+        target: 65,
+        prior: 60,
+        ranges: [50, 60, 75],
+    },
+    {
+        kpi: "Net Promoter Score",
+        actual: 54,
+        target: 54,
+        prior: null,
+        ranges: [30, 50, 75],
+    },
+];
+
+describe("Charts M11 — BulletChart & ChartBullet", () => {
+    let container: HTMLDivElement;
+    const mounted: ReturnType<typeof mount>[] = [];
+
+    function renderHost(props: Record<string, unknown> = {}): ReturnType<typeof mount> {
+        const instance = mount(ChartTestHost, { target: container, props });
+        flushSync();
+        mounted.push(instance);
+        return instance;
+    }
+
+    beforeEach(() => {
+        clearMeasureCache();
+        container = document.createElement("div");
+        document.body.append(container);
+    });
+
+    afterEach(() => {
+        while (mounted.length > 0) {
+            const instance = mounted.pop();
+            if (instance) unmount(instance);
+        }
+        container.remove();
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    describe("BulletChart shell, required variant & size, refs, rest attrs & export safety", () => {
+        it("forwards required variant/size (sm/md/lg), ref/svgRef, {...rest}, header/actions/custom SVG children, and renders zero foreignObject or filter", () => {
+            stubM5CanvasRect(560, 220);
+
+            for (const variant of CHART_VARIANTS) {
+                for (const size of CHART_SIZES) {
+                    const refs: { root: HTMLElement | null; svg: SVGSVGElement | null } = {
+                        root: null,
+                        svg: null,
+                    };
+                    const instance = renderHost({
+                        mode: "bullet-chart",
+                        variant,
+                        size,
+                        data: SCORECARD_BULLET_DATA,
+                        bulletLabel: "kpi",
+                        bulletSubtitle: "subtitle",
+                        bulletUnit: "unit",
+                        bulletActual: "actual",
+                        bulletTarget: "target",
+                        bulletComparative: "prior",
+                        bulletRanges: "ranges",
+                        tier2Title: "Executive KPI Scorecard",
+                        tier2Description: "Q4 Plan vs. Actual",
+                        showActions: true,
+                        tier2CustomLayerText: "IBCS",
+                        chartClass: "custom-bullet",
+                        chartAttrs: {
+                            id: `bullet-${variant}-${size}`,
+                            "data-testid": "bullet-host",
+                        },
+                        get chartRef() {
+                            return refs.root;
+                        },
+                        set chartRef(v: HTMLElement | null) {
+                            refs.root = v;
+                        },
+                        get svgRef() {
+                            return refs.svg;
+                        },
+                        set svgRef(v: SVGSVGElement | null) {
+                            refs.svg = v;
+                        },
+                    });
+
+                    const root = container.querySelector<HTMLElement>(
+                        '[data-testid="bullet-host"]',
+                    );
+                    const svg = root?.querySelector<SVGSVGElement>("svg.cs-chart-svg") ?? null;
+                    const bulletGroup =
+                        svg?.querySelector<SVGGElement>("g.cs-chart-bullet") ?? null;
+
+                    expect(root).not.toBeNull();
+                    expect(svg).not.toBeNull();
+                    expect(bulletGroup).not.toBeNull();
+                    expect(refs.root).toBe(root);
+                    expect(refs.svg).toBe(svg);
+                    expect(root?.id).toBe(`bullet-${variant}-${size}`);
+                    expect(root?.classList.contains("cs-chart")).toBe(true);
+                    expect(root?.classList.contains("custom-bullet")).toBe(true);
+                    expect(root?.dataset.variant).toBe(variant);
+                    expect(root?.dataset.size).toBe(size);
+                    expect(bulletGroup?.dataset.size).toBe(size);
+                    expect(root?.querySelector(".cs-chart-title")?.textContent?.trim()).toBe(
+                        "Executive KPI Scorecard",
+                    );
+                    expect(root?.querySelector(".cs-chart-description")?.textContent?.trim()).toBe(
+                        "Q4 Plan vs. Actual",
+                    );
+                    expect(root?.querySelector('[data-testid="tier2-action-btn"]')).not.toBeNull();
+                    expect(
+                        svg?.querySelector('[data-testid="custom-svg-layer"]')?.textContent?.trim(),
+                    ).toBe("IBCS");
+
+                    // 100% pure SVG inside <svg>: zero <foreignObject> and zero <filter>
+                    expect(svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+
+                    unmount(instance);
+                    mounted.pop();
+                }
+            }
+        });
+    });
+
+    describe("Track clipPath, qualitative bands, centered actual bar, target/comparative ticks, labels/readouts & sharedScale", () => {
+        it("renders per-row <clipPath>, 3 qualitative .cs-chart-bullet-range bands, centered actual bar, target tick, optional comparative tick, and showReadout/showVariance toggles", () => {
+            stubM5CanvasRect(560, 220);
+
+            const props = $state({
+                mode: "bullet-chart" as const,
+                variant: "elevated" as const,
+                size: "md" as const,
+                data: SCORECARD_BULLET_DATA,
+                bulletLabel: "kpi",
+                bulletSubtitle: "subtitle",
+                bulletUnit: "unit",
+                bulletActual: "actual",
+                bulletTarget: "target",
+                bulletComparative: "prior",
+                bulletRanges: "ranges",
+                bulletSharedScale: false,
+                bulletShowReadout: true,
+                bulletShowVariance: false,
+                bulletFormatValue: undefined as
+                    | ((value: number, datum?: ChartDatum) => string)
+                    | undefined,
+            });
+
+            renderHost(props);
+
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-svg");
+            expect(svg).not.toBeNull();
+
+            // Per-row <clipPath> inside <defs>
+            const clipPaths = [
+                ...(svg?.querySelectorAll<SVGClipPathElement>(":scope defs clipPath") ?? []),
+            ];
+            expect(clipPaths).toHaveLength(3);
+            for (const clip of clipPaths) {
+                expect(clip.id).toMatch(/^cs-chart-bullet-clip-/);
+                const rect = clip.querySelector("rect");
+                expect(rect).not.toBeNull();
+                expect(Number(rect?.getAttribute("width"))).toBe(560);
+                expect(Number(rect?.getAttribute("height"))).toBe(16);
+            }
+
+            const rows = [...(svg?.querySelectorAll<SVGGElement>("g.cs-chart-bullet-row") ?? [])];
+            expect(rows).toHaveLength(3);
+
+            // Each row has a clipped track with 3 qualitative range rects (tiers 1, 2, 3)
+            for (const [idx, rowEl] of rows.entries()) {
+                const track = rowEl.querySelector<SVGGElement>("g.cs-chart-bullet-track");
+                expect(track?.getAttribute("clip-path")).toBe(`url(#${clipPaths[idx]?.id})`);
+                const bands = [
+                    ...(track?.querySelectorAll<SVGRectElement>("rect.cs-chart-bullet-range") ??
+                        []),
+                ];
+                expect(bands).toHaveLength(3);
+                expect(bands.map((b) => b.dataset.tier)).toEqual(["1", "2", "3"]);
+
+                // Centered actual bar
+                const bar = rowEl.querySelector<SVGPathElement>("path.cs-chart-bullet-bar");
+                expect(bar).not.toBeNull();
+                const d = bar?.getAttribute("d") ?? "";
+                expect(d.length).toBeGreaterThan(0);
+                expect(d).not.toContain("NaN");
+
+                // Crisp target tick
+                const targetTick = rowEl.querySelector<SVGRectElement>("rect.cs-chart-bullet-target");
+                expect(targetTick).not.toBeNull();
+                expect(targetTick?.getAttribute("width")).toBe("2.5");
+                expect(Number(targetTick?.getAttribute("height"))).toBe(14); // barHeight(8) + 6
+            }
+
+            // Rows 0 and 1 have prior period comparative ticks; row 2 (prior: null) omits it
+            expect(rows[0]?.querySelector("rect.cs-chart-bullet-comparative")).not.toBeNull();
+            expect(rows[1]?.querySelector("rect.cs-chart-bullet-comparative")).not.toBeNull();
+            expect(rows[2]?.querySelector("rect.cs-chart-bullet-comparative")).toBeNull();
+
+            // Flush-left labels with subtitle / unit tspan
+            const labels = [
+                ...(svg?.querySelectorAll<SVGTextElement>("text.cs-chart-bullet-label") ?? []),
+            ];
+            expect(labels).toHaveLength(3);
+            expect(labels[0]?.getAttribute("text-anchor")).toBe("start");
+            expect(labels[0]?.textContent).toContain("Revenue");
+            expect(
+                labels[0]?.querySelector(".cs-chart-bullet-subtitle")?.textContent?.trim(),
+            ).toBe("USD M");
+            expect(
+                labels[1]?.querySelector(".cs-chart-bullet-subtitle")?.textContent?.trim(),
+            ).toBe("%");
+
+            // Flush-right readouts (showReadout={true}, showVariance={false})
+            const readouts = [
+                ...(svg?.querySelectorAll<SVGTextElement>("text.cs-chart-bullet-readout") ?? []),
+            ];
+            expect(readouts).toHaveLength(3);
+            expect(readouts[0]?.getAttribute("text-anchor")).toBe("end");
+            expect(
+                readouts[0]?.querySelector(".cs-chart-bullet-actual-text")?.textContent?.trim(),
+            ).toBe("275");
+            expect(
+                readouts[0]?.querySelector(".cs-chart-bullet-target-text")?.textContent?.trim(),
+            ).toBe("/ 250");
+            expect(readouts[0]?.querySelector(".cs-chart-bullet-variance-text")).toBeNull();
+
+            // Enable showVariance={true} -> renders (+25), (-4), (0) with data-sign
+            props.bulletShowVariance = true;
+            flushSync();
+
+            const varianceSpans = [
+                ...(svg?.querySelectorAll<SVGTSpanElement>("tspan.cs-chart-bullet-variance-text") ??
+                    []),
+            ];
+            expect(varianceSpans).toHaveLength(3);
+            expect(varianceSpans[0]?.textContent?.trim()).toBe("(+25)");
+            expect(varianceSpans[0]?.dataset.sign).toBe("positive");
+            expect(varianceSpans[1]?.textContent?.trim()).toBe("(-4)");
+            expect(varianceSpans[1]?.dataset.sign).toBe("negative");
+            expect(varianceSpans[2]?.textContent?.trim()).toBe("(0)");
+            expect(varianceSpans[2]?.dataset.sign).toBe("neutral");
+
+            // showReadout={false} removes all readout texts
+            props.bulletShowReadout = false;
+            flushSync();
+            expect(svg?.querySelectorAll("text.cs-chart-bullet-readout")).toHaveLength(0);
+
+            // sharedScale={false} omits bottom axis; sharedScale={true} renders bottom axis ticks
+            expect(svg?.querySelector("g.cs-chart-bullet-axis")).toBeNull();
+            props.bulletSharedScale = true;
+            flushSync();
+
+            const axis = svg?.querySelector<SVGGElement>("g.cs-chart-bullet-axis");
+            expect(axis).not.toBeNull();
+            const ticks = [
+                ...(axis?.querySelectorAll<SVGTextElement>("text.cs-chart-bullet-tick") ?? []),
+            ];
+            expect(ticks.length).toBeGreaterThanOrEqual(2);
+            expect(ticks[0]?.getAttribute("text-anchor")).toBe("start");
+            expect(ticks.at(-1)?.getAttribute("text-anchor")).toBe("end");
+        });
+
+        it("truncates long KPI labels with <title>, supports per-datum conditional tone/color/pattern callbacks, and generates unique $props.id() defs across instances", () => {
+            stubM5CanvasRect(220, 180);
+
+            const customData: readonly BulletKpiRow[] = [
+                {
+                    kpi: "Enterprise Annual Recurring Revenue Expansion & Net Retention Index",
+                    actual: 180,
+                    target: 200,
+                    ranges: [
+                        { to: 120, tone: "negative" },
+                        { to: 180, color: "#cbd5e1" },
+                        { to: 240 },
+                    ],
+                },
+                {
+                    kpi: "Customer Acquisition Payback",
+                    actual: 240,
+                    target: 200,
+                    ranges: [100, 180, 250],
+                },
+            ];
+
+            const sharedProps = {
+                mode: "bullet-chart" as const,
+                variant: "soft" as const,
+                size: "sm" as const,
+                data: customData,
+                bulletLabel: "kpi",
+                bulletActual: "actual",
+                bulletTarget: "target",
+                bulletRanges: "ranges",
+                bulletTone: (d: ChartDatum): ChartTone => {
+                    const row = d as BulletKpiRow;
+                    return row.actual >= row.target ? "positive" : "negative";
+                },
+                bulletColor: (d: ChartDatum, idx: number): string | undefined =>
+                    idx === 1 ? "#0d9488" : undefined,
+                bulletPattern: (_d: ChartDatum, idx: number): ChartBarPattern =>
+                    idx === 0 ? "hatch" : "outline",
+            };
+
+            renderHost({ ...sharedProps, chartAttrs: { "data-testid": "bullet-a" } });
+            renderHost({ ...sharedProps, chartAttrs: { "data-testid": "bullet-b" } });
+
+            const svgA = container.querySelector<SVGSVGElement>(
+                ':scope [data-testid="bullet-a"] svg',
+            );
+            const svgB = container.querySelector<SVGSVGElement>(
+                ':scope [data-testid="bullet-b"] svg',
+            );
+
+            // Long label on narrow 220px width truncates with ellipsis and includes <title> with full text
+            const firstLabel = svgA?.querySelector<SVGTextElement>("text.cs-chart-bullet-label");
+            const titleEl = firstLabel?.querySelector("title");
+            expect(titleEl).not.toBeNull();
+            expect(titleEl?.textContent).toBe(
+                "Enterprise Annual Recurring Revenue Expansion & Net Retention Index",
+            );
+            expect(firstLabel?.textContent).toContain("…");
+
+            // Per-datum conditional tone/color & IBCS patterns
+            const barsA = [
+                ...(svgA?.querySelectorAll<SVGPathElement>("path.cs-chart-bullet-bar") ?? []),
+            ];
+            expect(barsA).toHaveLength(2);
+            // Row 0: actual(180) < target(200) -> tone="negative" + pattern="hatch"
+            expect(barsA[0]?.dataset.pattern).toBe("hatch");
+            expect(barsA[0]?.getAttribute("fill")).toMatch(/^url\(#cs-chart-bullet-hatch-/);
+            expect(barsA[0]?.style.stroke).toBe("var(--cs-chart-negative)");
+
+            // Row 1: explicit color callback "#0d9488" overrides tone + pattern="outline"
+            expect(barsA[1]?.dataset.pattern).toBe("outline");
+            expect(barsA[1]?.style.fill).toBe("#0d9488");
+            expect(barsA[1]?.style.stroke).toBe("#0d9488");
+
+            // Custom range band tone/color applied to track bands
+            const row0Bands = [
+                ...(svgA?.querySelectorAll<SVGRectElement>(
+                    ':scope .cs-chart-bullet-row[data-index="0"] rect.cs-chart-bullet-range',
+                ) ?? []),
+            ];
+            expect(row0Bands[0]?.style.fill).toBe("var(--cs-chart-negative)");
+            expect(row0Bands[1]?.style.fill).toBe("#cbd5e1");
+
+            // Unique <clipPath> and <pattern> IDs across mounted instances
+            const clipIdsA = [...(svgA?.querySelectorAll(":scope defs clipPath") ?? [])].map(
+                (c) => c.id,
+            );
+            const clipIdsB = [...(svgB?.querySelectorAll(":scope defs clipPath") ?? [])].map(
+                (c) => c.id,
+            );
+            expect(clipIdsA).toHaveLength(2);
+            for (const id of clipIdsA) {
+                expect(clipIdsB).not.toContain(id);
+            }
+
+            const patIdsA = [...(svgA?.querySelectorAll(":scope defs pattern") ?? [])].map(
+                (p) => p.id,
+            );
+            const patIdsB = [...(svgB?.querySelectorAll(":scope defs pattern") ?? [])].map(
+                (p) => p.id,
+            );
+            expect(patIdsA).toHaveLength(1);
+            expect(patIdsB).toHaveLength(1);
+            expect(patIdsA[0]).not.toBe(patIdsB[0]);
+
+            expect(svgA?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+            expect(svgB?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+        });
+    });
+
+    describe("Hover & keyboard row navigation, floating popover tooltip (NumberMorph), rapid-scrub gliding & live announcements", () => {
+        it("navigates rows via pointer & keyboard (ArrowDown/ArrowUp/Home/End/Escape), morphs actual/target/comparative/variance+% delta, manages data-gliding, and updates .cs-chart-sr-live", () => {
+            stubM5CanvasRect(560, 220);
+
+            const rafCallbacks: FrameRequestCallback[] = [];
+            vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+                rafCallbacks.push(cb);
+                return rafCallbacks.length;
+            });
+            vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
+
+            const bindings = $state<{ active: number | null }>({ active: null });
+
+            renderHost({
+                mode: "bullet-chart",
+                variant: "elevated",
+                size: "md",
+                data: SCORECARD_BULLET_DATA,
+                bulletLabel: "kpi",
+                bulletSubtitle: "subtitle",
+                bulletUnit: "unit",
+                bulletActual: "actual",
+                bulletTarget: "target",
+                bulletComparative: "prior",
+                bulletRanges: "ranges",
+                get bulletActiveIndex() {
+                    return bindings.active;
+                },
+                set bulletActiveIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-bullet-stage");
+            const tooltip = container.querySelector<HTMLDivElement>(".cs-chart-bullet-tooltip");
+            const srLive = container.querySelector<HTMLDivElement>(".cs-chart-sr-live");
+            const hits = [
+                ...container.querySelectorAll<SVGRectElement>("rect.cs-chart-bullet-hit"),
+            ];
+
+            expect(stage).not.toBeNull();
+            expect(stage?.getAttribute("role")).toBe("application");
+            expect(stage?.getAttribute("tabindex")).toBe("0");
+            expect(tooltip).not.toBeNull();
+            expect(tooltip?.getAttribute("popover")).toBe("manual");
+            expect(tooltip?.dataset.open).toBeUndefined();
+            expect(tooltip?.dataset.gliding).toBeUndefined();
+            expect(srLive?.textContent?.trim()).toBe("");
+            expect(hits).toHaveLength(3);
+
+            // 1. Pointer hover row 0 ("Revenue": actual 275, target 250, prior 230, variance +25 / +10%)
+            hits[0]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.active).toBe(0);
+            expect(stage?.dataset.scrubbing).toBe("");
+            expect(tooltip?.dataset.open).toBe("");
+            // First open positions instantaneously before rAF enables data-gliding
+            expect(tooltip?.dataset.gliding).toBeUndefined();
+
+            // Flush rAF -> data-gliding activates for subsequent row scrubs
+            while (rafCallbacks.length > 0) {
+                const cb = rafCallbacks.shift();
+                cb?.(16);
+            }
+            flushSync();
+            expect(tooltip?.dataset.gliding).toBe("");
+
+            expect(tooltip?.querySelector(".cs-chart-tooltip-header")?.textContent).toContain(
+                "Revenue",
+            );
+            expect(
+                tooltip?.querySelector(".cs-chart-bullet-tooltip-meta")?.textContent?.trim(),
+            ).toBe("USD M");
+            // 4 NumberMorph instances on row 0: Actual, Target, Prior (comparative), Variance
+            expect(tooltip?.querySelectorAll(".cs-number-morph")).toHaveLength(4);
+            expect(
+                tooltip?.querySelector<HTMLElement>(".cs-chart-bullet-tooltip-variance")?.dataset
+                    .sign,
+            ).toBe("positive");
+            expect(tooltip?.querySelector(".cs-chart-tooltip-share")?.textContent?.trim()).toBe(
+                "+10%",
+            );
+            expect(srLive?.textContent?.trim()).toContain("Revenue");
+            expect(srLive?.textContent?.trim()).toContain("275");
+            expect(srLive?.textContent?.trim()).toContain("250");
+
+            // 2. Rapid scrub via keyboard ArrowDown -> row 1 ("Gross Margin": actual 61, target 65, prior 60, variance -4 / -6.2%)
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+
+            expect(bindings.active).toBe(1);
+            expect(tooltip?.dataset.open).toBe("");
+            expect(tooltip?.dataset.gliding).toBe("");
+            expect(tooltip?.querySelector(".cs-chart-tooltip-header")?.textContent).toContain(
+                "Gross Margin",
+            );
+            expect(
+                tooltip?.querySelector<HTMLElement>(".cs-chart-bullet-tooltip-variance")?.dataset
+                    .sign,
+            ).toBe("negative");
+            expect(tooltip?.querySelector(".cs-chart-tooltip-share")?.textContent?.trim()).toMatch(
+                /^[-−]6(\.2)?%$/,
+            );
+            expect(srLive?.textContent?.trim()).toContain("Gross Margin");
+
+            // 3. Keyboard End -> row 2 ("Net Promoter Score": actual 54, target 54, prior: null -> 3 NumberMorphs, neutral variance 0%)
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "End", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+
+            expect(bindings.active).toBe(2);
+            expect(tooltip?.querySelectorAll(".cs-number-morph")).toHaveLength(3);
+            expect(
+                tooltip?.querySelector<HTMLElement>(".cs-chart-bullet-tooltip-variance")?.dataset
+                    .sign,
+            ).toBe("neutral");
+            expect(tooltip?.querySelector(".cs-chart-tooltip-share")?.textContent?.trim()).toBe(
+                "0%",
+            );
+
+            // 4. Keyboard ArrowUp -> row 1, Home -> row 0
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(1);
+
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Home", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(0);
+
+            // 5. Keyboard Escape closes tooltip and resets data-gliding
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(stage?.dataset.scrubbing).toBeUndefined();
+            expect(tooltip?.dataset.open).toBeUndefined();
+            expect(tooltip?.dataset.gliding).toBeUndefined();
+            expect(srLive?.textContent?.trim()).toBe("");
+
+            // 6. Pointer hover re-opens, pointerleave closes & resets
+            hits[1]?.dispatchEvent(new PointerEvent("pointermove", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBe(1);
+            expect(tooltip?.dataset.open).toBe("");
+
+            stage?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(tooltip?.dataset.open).toBeUndefined();
+            expect(tooltip?.dataset.gliding).toBeUndefined();
+        });
+
+        it("respects tooltipMode='none', tooltip={false}, formatValue text fallback, and custom tooltip snippet", () => {
+            stubM5CanvasRect(560, 220);
+
+            const props = $state<{
+                tooltipMode: ChartTooltipMode;
+                tier2Tooltip: boolean;
+                bulletFormatValue: ((value: number) => string) | undefined;
+                bulletTooltipRenderer:
+                    | ((ctx: ChartBulletTooltipContext<ChartDatum>) => string)
+                    | undefined;
+                activeIndex: number | null;
+            }>({
+                tooltipMode: "none",
+                tier2Tooltip: true,
+                bulletFormatValue: undefined,
+                bulletTooltipRenderer: undefined,
+                activeIndex: 0,
+            });
+
+            renderHost({
+                mode: "bullet-chart",
+                variant: "elevated",
+                size: "md",
+                data: SCORECARD_BULLET_DATA,
+                bulletLabel: "kpi",
+                bulletActual: "actual",
+                bulletTarget: "target",
+                bulletComparative: "prior",
+                bulletRanges: "ranges",
+                get tooltipMode() {
+                    return props.tooltipMode;
+                },
+                get tier2Tooltip() {
+                    return props.tier2Tooltip;
+                },
+                get bulletFormatValue() {
+                    return props.bulletFormatValue;
+                },
+                get bulletTooltipRenderer() {
+                    return props.bulletTooltipRenderer;
+                },
+                get bulletActiveIndex() {
+                    return props.activeIndex;
+                },
+                set bulletActiveIndex(v: number | null) {
+                    props.activeIndex = v;
+                },
+            });
+
+            // tooltipMode="none" omits tooltip element
+            expect(container.querySelector(".cs-chart-bullet-tooltip")).toBeNull();
+
+            // tooltip={false} also omits tooltip element
+            props.tooltipMode = "item";
+            props.tier2Tooltip = false;
+            flushSync();
+            expect(container.querySelector(".cs-chart-bullet-tooltip")).toBeNull();
+
+            // formatValue renders formatted text strings instead of NumberMorph in default tooltip
+            props.tier2Tooltip = true;
+            props.bulletFormatValue = (v) => `$${v}M`;
+            flushSync();
+
+            const tooltip = container.querySelector<HTMLDivElement>(".cs-chart-bullet-tooltip");
+            expect(tooltip?.dataset.open).toBe("");
+            expect(tooltip?.querySelectorAll(".cs-number-morph")).toHaveLength(0);
+            const values = [
+                ...(tooltip?.querySelectorAll<HTMLElement>(".cs-chart-tooltip-value") ?? []),
+            ].map((el) => el.textContent?.trim());
+            expect(values).toEqual(["$275M", "$250M", "$230M"]);
+            expect(
+                tooltip?.querySelector(".cs-chart-bullet-tooltip-variance")?.textContent,
+            ).toContain("+$25M");
+
+            // Custom tooltip snippet receives ChartBulletTooltipContext
+            props.bulletTooltipRenderer = (ctx) =>
+                `${ctx.index}:${ctx.row.label}|act=${ctx.formattedActual}|tgt=${ctx.formattedTarget}|var=${ctx.formattedVariance}|pct=${ctx.formattedVariancePercent}`;
+            flushSync();
+
+            const custom = container.querySelector('[data-testid="custom-bullet-tooltip"]');
+            expect(custom?.textContent?.trim()).toBe(
+                "0:Revenue|act=$275M|tgt=$250M|var=+$25M|pct=+10%",
+            );
+        });
+    });
+
+    describe("Selection (selectable + $bindable selectedIndex), loading & empty states, and Tier-1 ChartBullet", () => {
+        it("toggles selectedIndex via row click & Enter/Space, renders .cs-chart-selection-ring, dims unselected rows, fires onRowClick, and supports strict controlled mode", () => {
+            stubM5CanvasRect(560, 220);
+
+            const onRowClick = vi.fn();
+            const bindings = $state<{ active: number | null; selected: number | null }>({
+                active: null,
+                selected: null,
+            });
+
+            const instance = renderHost({
+                mode: "bullet-chart",
+                variant: "elevated",
+                size: "md",
+                data: SCORECARD_BULLET_DATA,
+                bulletLabel: "kpi",
+                bulletActual: "actual",
+                bulletTarget: "target",
+                bulletRanges: "ranges",
+                selectable: true,
+                onRowClick,
+                get bulletActiveIndex() {
+                    return bindings.active;
+                },
+                set bulletActiveIndex(v: number | null) {
+                    bindings.active = v;
+                },
+                get bulletSelectedIndex() {
+                    return bindings.selected;
+                },
+                set bulletSelectedIndex(v: number | null) {
+                    bindings.selected = v;
+                },
+            });
+
+            const root = container.querySelector<HTMLElement>("figure.cs-chart");
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-bullet-stage");
+            const bulletGroup = container.querySelector<SVGGElement>("g.cs-chart-bullet");
+            const hits = [
+                ...container.querySelectorAll<SVGRectElement>("rect.cs-chart-bullet-hit"),
+            ];
+
+            // Initial mount: no selection
+            expect(root?.dataset.hasSelection).toBeUndefined();
+            expect(stage?.dataset.hasSelection).toBeUndefined();
+            expect(bulletGroup?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(0);
+
+            // 1. Click row 0 -> selects row 0, renders selection ring, dims rows 1 & 2, fires onRowClick
+            hits[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.selected).toBe(0);
+            expect(onRowClick).toHaveBeenCalledTimes(1);
+            expect(onRowClick).toHaveBeenLastCalledWith(
+                SCORECARD_BULLET_DATA[0],
+                0,
+                expect.objectContaining({ index: 0, label: "Revenue", actual: 275, target: 250 }),
+            );
+            expect(root?.dataset.hasSelection).toBe("");
+            expect(stage?.dataset.hasSelection).toBe("");
+            expect(bulletGroup?.dataset.hasSelection).toBe("");
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(1);
+
+            const row0 = container.querySelector<SVGGElement>(
+                '.cs-chart-bullet-row[data-index="0"]',
+            );
+            const row1 = container.querySelector<SVGGElement>(
+                '.cs-chart-bullet-row[data-index="1"]',
+            );
+            expect(row0?.dataset.selected).toBe("");
+            expect(row0?.dataset.dimmed).toBeUndefined();
+            expect(row1?.dataset.selected).toBeUndefined();
+            expect(row1?.dataset.dimmed).toBe("");
+
+            // 2. Keyboard ArrowDown -> row 0 active, ArrowDown -> row 1 active, Enter switches selection to row 1
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+            );
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+            );
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+
+            expect(bindings.active).toBe(1);
+            expect(bindings.selected).toBe(1);
+            expect(row0?.dataset.selected).toBeUndefined();
+            expect(row0?.dataset.dimmed).toBe("");
+            expect(row1?.dataset.selected).toBe("");
+            expect(row1?.dataset.dimmed).toBeUndefined();
+
+            // 3. Space on already-selected row 1 toggles selection off
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+
+            expect(bindings.selected).toBeNull();
+            expect(root?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelectorAll(".cs-chart-selection-ring")).toHaveLength(0);
+
+            unmount(instance);
+            mounted.pop();
+
+            // 4. Strict controlled selectedIndex (read-only setter)
+            const controlled = $state<{ selected: number | null }>({ selected: 2 });
+            renderHost({
+                mode: "bullet-chart",
+                variant: "elevated",
+                size: "md",
+                data: SCORECARD_BULLET_DATA,
+                bulletLabel: "kpi",
+                bulletActual: "actual",
+                bulletTarget: "target",
+                bulletRanges: "ranges",
+                selectable: true,
+                get bulletSelectedIndex() {
+                    return controlled.selected;
+                },
+                set bulletSelectedIndex(_v: number | null) {
+                    // Ignore internal writes
+                },
+            });
+
+            expect(
+                container.querySelector<SVGGElement>(".cs-chart-bullet-row[data-selected]")?.dataset
+                    .index,
+            ).toBe("2");
+
+            controlled.selected = 0;
+            flushSync();
+            expect(
+                container.querySelector<SVGGElement>(".cs-chart-bullet-row[data-selected]")?.dataset
+                    .index,
+            ).toBe("0");
+        });
+
+        it("renders <ChartLoading shape='bars' /> when loading={true}, <ChartEmpty /> when data={[]}, and standalone Tier-1 <ChartBullet>", () => {
+            stubM5CanvasRect(560, 220);
+
+            const props = $state<{
+                data: readonly BulletKpiRow[];
+                loading: boolean;
+            }>({
+                data: SCORECARD_BULLET_DATA,
+                loading: true,
+            });
+
+            const instance = renderHost({
+                mode: "bullet-chart",
+                variant: "elevated",
+                size: "md",
+                get data() {
+                    return props.data;
+                },
+                bulletLabel: "kpi",
+                bulletActual: "actual",
+                bulletTarget: "target",
+                get loading() {
+                    return props.loading;
+                },
+                emptyTitle: "No KPIs configured",
+                emptyDescription: "Add metrics to compare plan vs. actual",
+            });
+
+            // 1. loading={true} -> <ChartLoading shape="bars" />
+            const loadingEl = container.querySelector<HTMLDivElement>(".cs-chart-loading");
+            expect(loadingEl).not.toBeNull();
+            expect(loadingEl?.dataset.shape).toBe("bars");
+            expect(container.querySelector("svg.cs-chart-svg")).toBeNull();
+
+            // 2. loading={false} + data={[]} -> <ChartEmpty />
+            props.loading = false;
+            props.data = [];
+            flushSync();
+
+            const emptyEl = container.querySelector<HTMLDivElement>(".cs-chart-empty");
+            expect(emptyEl).not.toBeNull();
+            expect(emptyEl?.textContent).toContain("No KPIs configured");
+            expect(emptyEl?.textContent).toContain("Add metrics to compare plan vs. actual");
+            expect(container.querySelector("svg.cs-chart-svg")).toBeNull();
+
+            unmount(instance);
+            mounted.pop();
+
+            // 3. Standalone Tier-1 <ChartBullet> with explicit items, ref binding & callbacks
+            const refs: { bullet: SVGGElement | null } = { bullet: null };
+            const onRowHover = vi.fn();
+            const onRowClick = vi.fn();
+
+            renderHost({
+                mode: "standalone-bullet",
+                bulletWidth: 480,
+                bulletHeight: 120,
+                size: "lg",
+                bulletItems: [
+                    {
+                        label: "Standalone KPI",
+                        actual: 88,
+                        target: 80,
+                        comparative: 75,
+                        ranges: [50, 75, 100],
+                        tone: "positive",
+                    },
+                ],
+                onRowHover,
+                onRowClick,
+                bulletAttrs: { "data-testid": "tier1-bullet" },
+                get bulletRef() {
+                    return refs.bullet;
+                },
+                set bulletRef(v: SVGGElement | null) {
+                    refs.bullet = v;
+                },
+            });
+
+            const tier1 = container.querySelector<SVGGElement>('[data-testid="tier1-bullet"]');
+            expect(tier1).not.toBeNull();
+            expect(refs.bullet).toBe(tier1);
+            expect(tier1?.dataset.size).toBe("lg");
+
+            const hit = tier1?.querySelector<SVGRectElement>("rect.cs-chart-bullet-hit");
+            hit?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            hit?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+
+            expect(onRowHover).toHaveBeenCalledWith(
+                0,
+                expect.objectContaining({ label: "Standalone KPI", actual: 88, target: 80 }),
+            );
+            expect(onRowClick).toHaveBeenCalledTimes(1);
+        });
+    });
+});
+
+interface HeatmapMatrixRow extends ChartDatum {
+    day: string;
+    shift: string;
+    load: number | null;
+}
+
+const HEATMAP_MATRIX_DATA: readonly HeatmapMatrixRow[] = [
+    // Row 0 ("Morning"): cols 0 ("Mon"), 1 ("Tue"), 2 ("Wed")
+    { day: "Mon", shift: "Morning", load: 10 },
+    { day: "Tue", shift: "Morning", load: 50 },
+    { day: "Wed", shift: "Morning", load: 90 },
+    // Row 1 ("Afternoon"): col 1 ("Tue") is explicit null
+    { day: "Mon", shift: "Afternoon", load: 30 },
+    { day: "Tue", shift: "Afternoon", load: null },
+    { day: "Wed", shift: "Afternoon", load: 100 },
+];
+
+const HEATMAP_DIVERGING_DATA: readonly HeatmapMatrixRow[] = [
+    { day: "Q1", shift: "North", load: -80 },
+    { day: "Q2", shift: "North", load: 0 },
+    { day: "Q3", shift: "North", load: 60 },
+    { day: "Q1", shift: "South", load: -15 },
+    { day: "Q2", shift: "South", load: 20 },
+    { day: "Q3", shift: "South", load: 100 },
+];
+
+describe("Charts M12 — HeatmapChart & ChartHeatmap", () => {
+    let container: HTMLDivElement;
+    const mounted: ReturnType<typeof mount>[] = [];
+
+    function renderHost(props: Record<string, unknown> = {}): ReturnType<typeof mount> {
+        const instance = mount(ChartTestHost, { target: container, props });
+        flushSync();
+        mounted.push(instance);
+        return instance;
+    }
+
+    beforeEach(() => {
+        clearMeasureCache();
+        container = document.createElement("div");
+        document.body.append(container);
+    });
+
+    afterEach(() => {
+        while (mounted.length > 0) {
+            const instance = mounted.pop();
+            if (instance) unmount(instance);
+        }
+        container.remove();
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
+    describe("HeatmapChart shell, required variant & size, refs, rest attrs & export safety", () => {
+        it("forwards required variant/size (sm/md/lg), ref/svgRef, {...rest}, header/actions/custom SVG children, and renders zero foreignObject or filter", () => {
+            stubM5CanvasRect(560, 220);
+
+            for (const variant of CHART_VARIANTS) {
+                for (const size of CHART_SIZES) {
+                    const refs: { root: HTMLElement | null; svg: SVGSVGElement | null } = {
+                        root: null,
+                        svg: null,
+                    };
+                    const instance = renderHost({
+                        mode: "heatmap-chart",
+                        variant,
+                        size,
+                        data: HEATMAP_MATRIX_DATA,
+                        heatmapX: "day",
+                        heatmapY: "shift",
+                        heatmapValue: "load",
+                        tier2Title: "Cluster Utilization Matrix",
+                        tier2Description: "Peak load % by day and shift",
+                        showActions: true,
+                        tier2CustomLayerText: "SLA",
+                        chartClass: "custom-heatmap",
+                        chartAttrs: {
+                            id: `heatmap-${variant}-${size}`,
+                            "data-testid": "heatmap-host",
+                        },
+                        get chartRef() {
+                            return refs.root;
+                        },
+                        set chartRef(v: HTMLElement | null) {
+                            refs.root = v;
+                        },
+                        get svgRef() {
+                            return refs.svg;
+                        },
+                        set svgRef(v: SVGSVGElement | null) {
+                            refs.svg = v;
+                        },
+                    });
+
+                    const root = container.querySelector<HTMLElement>(
+                        '[data-testid="heatmap-host"]',
+                    );
+                    const svg = root?.querySelector<SVGSVGElement>("svg.cs-chart-svg") ?? null;
+                    const heatmapGroup =
+                        svg?.querySelector<SVGGElement>("g.cs-chart-heatmap") ?? null;
+
+                    expect(root).not.toBeNull();
+                    expect(svg).not.toBeNull();
+                    expect(heatmapGroup).not.toBeNull();
+                    expect(refs.root).toBe(root);
+                    expect(refs.svg).toBe(svg);
+                    expect(root?.id).toBe(`heatmap-${variant}-${size}`);
+                    expect(root?.classList.contains("cs-chart")).toBe(true);
+                    expect(root?.classList.contains("custom-heatmap")).toBe(true);
+                    expect(root?.dataset.variant).toBe(variant);
+                    expect(root?.dataset.size).toBe(size);
+                    expect(heatmapGroup?.dataset.size).toBe(size);
+                    expect(root?.querySelector(".cs-chart-title")?.textContent?.trim()).toBe(
+                        "Cluster Utilization Matrix",
+                    );
+                    expect(root?.querySelector(".cs-chart-description")?.textContent?.trim()).toBe(
+                        "Peak load % by day and shift",
+                    );
+                    expect(root?.querySelector('[data-testid="tier2-action-btn"]')).not.toBeNull();
+                    expect(
+                        svg?.querySelector('[data-testid="custom-svg-layer"]')?.textContent?.trim(),
+                    ).toBe("SLA");
+
+                    // 100% pure SVG inside <svg>: zero <foreignObject> and zero <filter>
+                    expect(svg?.querySelectorAll("foreignObject, filter")).toHaveLength(0);
+
+                    unmount(instance);
+                    mounted.pop();
+                }
+            }
+        });
+    });
+
+    describe("Cell rects, contrast-safe value labels, sequential & diverging ramps, and ramp legend", () => {
+        it("renders .cs-chart-heatmap-cell rects with data-row/data-col/data-empty, contrast-safe .cs-chart-heatmap-value labels (data-invert-fg), and suppresses labels when narrow/short/disabled/empty", () => {
+            stubM5CanvasRect(560, 220);
+
+            const props = $state<{
+                valueLabels: boolean;
+                height: number | undefined;
+            }>({
+                valueLabels: true,
+                height: undefined,
+            });
+
+            renderHost({
+                mode: "heatmap-chart",
+                variant: "elevated",
+                size: "md",
+                data: HEATMAP_MATRIX_DATA,
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                get heatmapValueLabels() {
+                    return props.valueLabels;
+                },
+                get tier2Height() {
+                    return props.height;
+                },
+            });
+
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-chart-svg");
+            const cells = [
+                ...(svg?.querySelectorAll<SVGRectElement>("rect.cs-chart-heatmap-cell") ?? []),
+            ];
+            expect(cells).toHaveLength(6);
+
+            // Verify 2D row/col attributes and integer-snapped geometry
+            expect(cells[0]?.dataset.row).toBe("0");
+            expect(cells[0]?.dataset.col).toBe("0");
+            expect(cells[0]?.dataset.empty).toBeUndefined();
+            expect(cells[4]?.dataset.row).toBe("1");
+            expect(cells[4]?.dataset.col).toBe("1");
+            expect(cells[4]?.dataset.empty).toBe("");
+            expect(cells[4]?.getAttribute("fill")).toBe("var(--cs-chart-heatmap-empty)");
+
+            for (const rect of cells) {
+                expect(isIntegerAttr(rect.getAttribute("x"))).toBe(true);
+                expect(isIntegerAttr(rect.getAttribute("y"))).toBe(true);
+                expect(isIntegerAttr(rect.getAttribute("width"))).toBe(true);
+                expect(isIntegerAttr(rect.getAttribute("height"))).toBe(true);
+            }
+
+            // 5 non-empty cells render centered value texts; empty cell (index 4) omits <text>
+            const valueTexts = [
+                ...(svg?.querySelectorAll<SVGTextElement>("text.cs-chart-heatmap-value") ?? []),
+            ];
+            expect(valueTexts).toHaveLength(5);
+            expect(valueTexts.map((el) => el.textContent?.trim())).toEqual([
+                "10",
+                "50",
+                "90",
+                "30",
+                "100",
+            ]);
+
+            // Low/mid cells (10 -> t=0, 50 -> t=40/90=0.444, 30 -> t=20/90=0.222) do NOT set data-invert-fg
+            expect(valueTexts[0]?.dataset.invertFg).toBeUndefined();
+            expect(valueTexts[1]?.dataset.invertFg).toBeUndefined();
+            expect(valueTexts[3]?.dataset.invertFg).toBeUndefined();
+
+            // Deep cells (90 -> t=80/90=0.888 >= 0.55, 100 -> t=1 >= 0.55) set data-invert-fg=""
+            expect(valueTexts[2]?.dataset.invertFg).toBe("");
+            expect(valueTexts[4]?.dataset.invertFg).toBe("");
+
+            // valueLabels={false} suppresses all cell value labels
+            props.valueLabels = false;
+            flushSync();
+            expect(svg?.querySelectorAll("text.cs-chart-heatmap-value")).toHaveLength(0);
+
+            props.valueLabels = true;
+            flushSync();
+            expect(svg?.querySelectorAll("text.cs-chart-heatmap-value")).toHaveLength(5);
+        });
+
+        it("suppresses .cs-chart-heatmap-value when cell is too narrow or too short (< 16px height)", () => {
+            // 1. Standalone ChartHeatmap with cell height < 16px (e.g. 2 rows in 26px height -> cell height ~12px)
+            const instanceShort = renderHost({
+                mode: "standalone-heatmap",
+                data: HEATMAP_MATRIX_DATA,
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                heatmapWidth: 300,
+                heatmapHeight: 26,
+            });
+            expect(
+                container.querySelectorAll("rect.cs-chart-heatmap-cell"),
+            ).toHaveLength(6);
+            expect(
+                container.querySelectorAll("text.cs-chart-heatmap-value"),
+            ).toHaveLength(0);
+
+            unmount(instanceShort);
+            mounted.pop();
+
+            // 2. Standalone ChartHeatmap with cell width too narrow for formatted text (e.g. 3 cols in 30px width -> cell width ~8px)
+            renderHost({
+                mode: "standalone-heatmap",
+                data: HEATMAP_MATRIX_DATA,
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                heatmapWidth: 30,
+                heatmapHeight: 120,
+            });
+            expect(
+                container.querySelectorAll("rect.cs-chart-heatmap-cell"),
+            ).toHaveLength(6);
+            expect(
+                container.querySelectorAll("text.cs-chart-heatmap-value"),
+            ).toHaveLength(0);
+        });
+
+        it("supports all sequential ramps (accent/teal/emerald/slate/amber/rose), mode='diverging', and ramp legend positions ('bottom' | 'top' | 'none') with active value notch", () => {
+            stubM5CanvasRect(560, 220);
+
+            const props = $state<{
+                mode: ChartHeatmapMode;
+                ramp: ChartHeatmapRamp | undefined;
+                legend: ChartLegendPosition;
+                data: readonly HeatmapMatrixRow[];
+                active: number | null;
+            }>({
+                mode: "sequential",
+                ramp: "accent",
+                legend: "bottom",
+                data: HEATMAP_MATRIX_DATA,
+                active: null,
+            });
+
+            renderHost({
+                mode: "heatmap-chart",
+                variant: "elevated",
+                size: "md",
+                get data() {
+                    return props.data;
+                },
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                get heatmapMode() {
+                    return props.mode;
+                },
+                get heatmapRamp() {
+                    return props.ramp;
+                },
+                get heatmapLegend() {
+                    return props.legend;
+                },
+                get heatmapActiveIndex() {
+                    return props.active;
+                },
+                set heatmapActiveIndex(v: number | null) {
+                    props.active = v;
+                },
+            });
+
+            const heatmapGroup = (): SVGGElement | null =>
+                container.querySelector<SVGGElement>("g.cs-chart-heatmap");
+            const legendEl = (): HTMLDivElement | null =>
+                container.querySelector<HTMLDivElement>(".cs-chart-heatmap-legend");
+
+            // Test every sequential ramp
+            for (const ramp of ["accent", "teal", "emerald", "slate", "amber", "rose"] as const) {
+                props.ramp = ramp;
+                flushSync();
+                expect(heatmapGroup()?.dataset.mode).toBe("sequential");
+                expect(heatmapGroup()?.dataset.ramp).toBe(ramp);
+                expect(legendEl()?.dataset.ramp).toBe(ramp);
+                const maxCell = container.querySelector<SVGRectElement>(
+                    'rect.cs-chart-heatmap-cell[data-index="5"]',
+                );
+                expect(maxCell?.getAttribute("fill")).toBe(`var(--cs-chart-heatmap-${ramp}-7)`);
+            }
+
+            // Legend min/max bounds & active value notch
+            const bounds = [
+                ...(legendEl()?.querySelectorAll<HTMLSpanElement>(
+                    ".cs-chart-heatmap-legend-bound",
+                ) ?? []),
+            ];
+            expect(bounds.map((b) => b.textContent?.trim())).toEqual(["10", "100"]);
+            expect(legendEl()?.dataset.position).toBe("bottom");
+            expect(legendEl()?.querySelector(".cs-chart-heatmap-legend-notch")).toBeNull();
+
+            // Activate cell 1 (value=50 in [10, 100] -> t = 40/90 = 44.444%) -> renders active notch
+            props.active = 1;
+            flushSync();
+            const notch = legendEl()?.querySelector<HTMLSpanElement>(
+                ".cs-chart-heatmap-legend-notch",
+            );
+            expect(notch).not.toBeNull();
+            expect(notch?.style.insetInlineStart).toContain("%");
+
+            // Activate empty cell 4 (value=null -> t=null) -> omits active notch
+            props.active = 4;
+            flushSync();
+            expect(legendEl()?.querySelector(".cs-chart-heatmap-legend-notch")).toBeNull();
+
+            // Legend="top"
+            props.legend = "top";
+            flushSync();
+            expect(legendEl()?.dataset.position).toBe("top");
+
+            // Legend="none" omits legend
+            props.legend = "none";
+            flushSync();
+            expect(legendEl()).toBeNull();
+
+            // Diverging mode around pivot = 0
+            props.legend = "bottom";
+            props.mode = "diverging";
+            props.ramp = undefined;
+            props.data = HEATMAP_DIVERGING_DATA;
+            props.active = 1; // value = 0 (pivot) -> t = 0.5 -> notch at 50%
+            flushSync();
+
+            expect(heatmapGroup()?.dataset.mode).toBe("diverging");
+            expect(heatmapGroup()?.dataset.ramp).toBe("diverging");
+            expect(legendEl()?.dataset.mode).toBe("diverging");
+            expect(legendEl()?.querySelector(".cs-chart-heatmap-legend-pivot")).not.toBeNull();
+            expect(
+                legendEl()?.querySelector(".cs-chart-heatmap-legend-mid-label")?.textContent,
+            ).toContain("0");
+            expect(
+                legendEl()?.querySelector<HTMLSpanElement>(".cs-chart-heatmap-legend-notch")?.style
+                    .insetInlineStart,
+            ).toBe("50%");
+
+            const divCells = [
+                ...container.querySelectorAll<SVGRectElement>("rect.cs-chart-heatmap-cell"),
+            ];
+            // Index 0: -80 -> negative diverging token
+            expect(divCells[0]?.getAttribute("fill")).toBe("var(--cs-chart-heatmap-div-neg-3)");
+            // Index 1: 0 -> mid pivot token
+            expect(divCells[1]?.getAttribute("fill")).toBe("var(--cs-chart-heatmap-mid)");
+            // Index 5: +100 -> positive diverging token
+            expect(divCells[5]?.getAttribute("fill")).toBe("var(--cs-chart-heatmap-div-pos-3)");
+        });
+    });
+
+    describe("Active cell hover, 2D keyboard navigation, axis tick promotion, top focus overlay, popover tooltip & live announcements", () => {
+        it("navigates 2D cells via pointer & keyboard (ArrowRight/ArrowLeft/ArrowDown/ArrowUp/Home/End/Escape), promotes active row/col axis ticks, renders dual-stroke .cs-chart-heatmap-focus ring, morphs tooltip value + coordinates, manages data-gliding, and updates .cs-chart-sr-live", () => {
+            stubM5CanvasRect(560, 220);
+
+            const rafCallbacks: FrameRequestCallback[] = [];
+            vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+                rafCallbacks.push(cb);
+                return rafCallbacks.length;
+            });
+            vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
+
+            const bindings = $state<{ active: number | null }>({ active: null });
+
+            renderHost({
+                mode: "heatmap-chart",
+                variant: "elevated",
+                size: "md",
+                data: HEATMAP_MATRIX_DATA,
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                get heatmapActiveIndex() {
+                    return bindings.active;
+                },
+                set heatmapActiveIndex(v: number | null) {
+                    bindings.active = v;
+                },
+            });
+
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-heatmap-stage");
+            const tooltip = container.querySelector<HTMLDivElement>(".cs-chart-heatmap-tooltip");
+            const srLive = container.querySelector<HTMLDivElement>(".cs-chart-sr-live");
+            const cellGroups = [
+                ...container.querySelectorAll<SVGGElement>("g.cs-chart-heatmap-cell-group"),
+            ];
+            const xTicks = [
+                ...container.querySelectorAll<SVGTextElement>(
+                    ":scope g.cs-chart-heatmap-axis-x text.cs-chart-heatmap-tick",
+                ),
+            ];
+            const yTicks = [
+                ...container.querySelectorAll<SVGTextElement>(
+                    ":scope g.cs-chart-heatmap-axis-y text.cs-chart-heatmap-tick",
+                ),
+            ];
+
+            expect(stage?.getAttribute("role")).toBe("application");
+            expect(stage?.getAttribute("tabindex")).toBe("0");
+            expect(tooltip?.getAttribute("popover")).toBe("manual");
+            expect(tooltip?.dataset.open).toBeUndefined();
+            expect(tooltip?.dataset.gliding).toBeUndefined();
+            expect(srLive?.textContent?.trim()).toBe("");
+            expect(cellGroups).toHaveLength(6);
+            expect(xTicks).toHaveLength(3);
+            expect(yTicks).toHaveLength(2);
+            expect(container.querySelector("g.cs-chart-heatmap-focus")).toBeNull();
+
+            // 1. Pointer hover cell (row 0, col 1 -> index 1: Morning, Tue = 50)
+            cellGroups[1]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.active).toBe(1);
+            expect(stage?.dataset.scrubbing).toBe("");
+            expect(cellGroups[1]?.dataset.active).toBe("");
+            // Active row 0 ("Morning") & col 1 ("Tue") axis ticks promoted with data-active
+            expect(yTicks[0]?.dataset.active).toBe("");
+            expect(yTicks[1]?.dataset.active).toBeUndefined();
+            expect(xTicks[0]?.dataset.active).toBeUndefined();
+            expect(xTicks[1]?.dataset.active).toBe("");
+            expect(xTicks[2]?.dataset.active).toBeUndefined();
+
+            // Top focus overlay renders dual-stroke inner + outer ring
+            const focusOverlay = container.querySelector<SVGGElement>("g.cs-chart-heatmap-focus");
+            expect(focusOverlay).not.toBeNull();
+            expect(
+                focusOverlay?.querySelector<SVGRectElement>("rect.cs-chart-heatmap-ring-inner")
+                    ?.dataset.kind,
+            ).toBe("active");
+            expect(
+                focusOverlay?.querySelector<SVGRectElement>("rect.cs-chart-heatmap-ring-outer")
+                    ?.dataset.kind,
+            ).toBe("active");
+
+            // Tooltip opens immediately without data-gliding on first open, then activates gliding after rAF
+            expect(tooltip?.dataset.open).toBe("");
+            expect(tooltip?.dataset.gliding).toBeUndefined();
+            while (rafCallbacks.length > 0) {
+                const cb = rafCallbacks.shift();
+                cb?.(16);
+            }
+            flushSync();
+            expect(tooltip?.dataset.gliding).toBe("");
+
+            expect(tooltip?.querySelector(".cs-chart-tooltip-header")?.textContent).toContain(
+                "Morning",
+            );
+            expect(
+                tooltip?.querySelector(".cs-chart-heatmap-tooltip-coord")?.textContent?.trim(),
+            ).toBe("Tue");
+            expect(tooltip?.querySelectorAll(".cs-number-morph")).toHaveLength(1);
+            expect(srLive?.textContent?.trim()).toBe("Morning, Tue: 50");
+
+            // 2. 2D Keyboard navigation:
+            // ArrowRight: (0, 1) -> (0, 2) [index 2: Morning, Wed = 90]
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(2);
+            expect(xTicks[2]?.dataset.active).toBe("");
+            expect(yTicks[0]?.dataset.active).toBe("");
+            expect(srLive?.textContent?.trim()).toBe("Morning, Wed: 90");
+
+            // ArrowRight at rightmost column (col 2) clamps at (0, 2)
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(2);
+
+            // ArrowDown: (0, 2) -> (1, 2) [index 5: Afternoon, Wed = 100]
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(5);
+            expect(yTicks[0]?.dataset.active).toBeUndefined();
+            expect(yTicks[1]?.dataset.active).toBe("");
+            expect(xTicks[2]?.dataset.active).toBe("");
+            expect(srLive?.textContent?.trim()).toBe("Afternoon, Wed: 100");
+
+            // ArrowLeft: (1, 2) -> (1, 1) [index 4: Afternoon, Tue = null ("No data" / "Keine Daten", zero NumberMorph)]
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(4);
+            expect(xTicks[1]?.dataset.active).toBe("");
+            expect(yTicks[1]?.dataset.active).toBe("");
+            expect(tooltip?.querySelectorAll(".cs-number-morph")).toHaveLength(0);
+            expect(
+                tooltip?.querySelector(".cs-chart-tooltip-value")?.textContent?.trim(),
+            ).toBe(t({ de: "Keine Daten", en: "No data" }));
+
+            // ArrowUp: (1, 1) -> (0, 1) [index 1]
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(1);
+
+            // Home -> index 0 (0, 0), End -> index 5 (1, 2)
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Home", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(0);
+
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "End", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBe(5);
+
+            // Escape clears activeIndex, closes tooltip, resets data-gliding, and removes focus overlay
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.active).toBeNull();
+            expect(stage?.dataset.scrubbing).toBeUndefined();
+            expect(tooltip?.dataset.open).toBeUndefined();
+            expect(tooltip?.dataset.gliding).toBeUndefined();
+            expect(container.querySelector("g.cs-chart-heatmap-focus")).toBeNull();
+            expect(srLive?.textContent?.trim()).toBe("");
+        });
+
+        it("respects tooltipMode='none', tooltip={false}, formatValue text fallback, and custom tooltip snippet", () => {
+            stubM5CanvasRect(560, 220);
+
+            const props = $state<{
+                tooltipMode: ChartTooltipMode;
+                tier2Tooltip: boolean;
+                formatValue: ((value: number) => string) | undefined;
+                tooltipRenderer:
+                    | ((ctx: ChartHeatmapTooltipContext<ChartDatum>) => string)
+                    | undefined;
+                activeIndex: number | null;
+            }>({
+                tooltipMode: "none",
+                tier2Tooltip: true,
+                formatValue: undefined,
+                tooltipRenderer: undefined,
+                activeIndex: 2,
+            });
+
+            renderHost({
+                mode: "heatmap-chart",
+                variant: "elevated",
+                size: "md",
+                data: HEATMAP_MATRIX_DATA,
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                get tooltipMode() {
+                    return props.tooltipMode;
+                },
+                get tier2Tooltip() {
+                    return props.tier2Tooltip;
+                },
+                get heatmapFormatValue() {
+                    return props.formatValue;
+                },
+                get heatmapTooltipRenderer() {
+                    return props.tooltipRenderer;
+                },
+                get heatmapActiveIndex() {
+                    return props.activeIndex;
+                },
+                set heatmapActiveIndex(v: number | null) {
+                    props.activeIndex = v;
+                },
+            });
+
+            // 1. tooltipMode="none" omits tooltip element
+            expect(container.querySelector(".cs-chart-heatmap-tooltip")).toBeNull();
+
+            // 2. tooltip={false} also omits tooltip element
+            props.tooltipMode = "item";
+            props.tier2Tooltip = false;
+            flushSync();
+            expect(container.querySelector(".cs-chart-heatmap-tooltip")).toBeNull();
+
+            // 3. formatValue renders formatted string instead of NumberMorph
+            props.tier2Tooltip = true;
+            props.formatValue = (v) => `${v}%`;
+            flushSync();
+
+            const tooltip = container.querySelector<HTMLDivElement>(".cs-chart-heatmap-tooltip");
+            expect(tooltip?.dataset.open).toBe("");
+            expect(tooltip?.querySelectorAll(".cs-number-morph")).toHaveLength(0);
+            expect(tooltip?.querySelector(".cs-chart-tooltip-value")?.textContent?.trim()).toBe(
+                "90%",
+            );
+
+            // 4. Custom tooltip snippet receives ChartHeatmapTooltipContext
+            props.tooltipRenderer = (ctx) =>
+                `idx=${ctx.index}|r=${ctx.row},c=${ctx.col}|${ctx.yLabel}@${ctx.xLabel}=${ctx.formattedValue}`;
+            flushSync();
+
+            const custom = container.querySelector('[data-testid="custom-heatmap-tooltip"]');
+            expect(custom?.textContent?.trim()).toBe("idx=2|r=0,c=2|Morning@Wed=90%");
+        });
+    });
+
+    describe("Selection (selectable + $bindable selectedIndex), loading & empty states, and Tier-1 ChartHeatmap", () => {
+        it("toggles selectedIndex via cell click & Enter/Space, renders dual-stroke focus rings for selected + active cells, dims unselected cells, fires onCellClick, and supports strict controlled mode", () => {
+            stubM5CanvasRect(560, 220);
+
+            const onCellClick = vi.fn();
+            const bindings = $state<{ active: number | null; selected: number | null }>({
+                active: null,
+                selected: null,
+            });
+
+            const instance = renderHost({
+                mode: "heatmap-chart",
+                variant: "elevated",
+                size: "md",
+                data: HEATMAP_MATRIX_DATA,
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                selectable: true,
+                onCellClick,
+                get heatmapActiveIndex() {
+                    return bindings.active;
+                },
+                set heatmapActiveIndex(v: number | null) {
+                    bindings.active = v;
+                },
+                get heatmapSelectedIndex() {
+                    return bindings.selected;
+                },
+                set heatmapSelectedIndex(v: number | null) {
+                    bindings.selected = v;
+                },
+            });
+
+            const root = container.querySelector<HTMLElement>("figure.cs-chart");
+            const stage = container.querySelector<HTMLDivElement>(".cs-chart-heatmap-stage");
+            const heatmapGroup = container.querySelector<SVGGElement>("g.cs-chart-heatmap");
+            const cellGroups = [
+                ...container.querySelectorAll<SVGGElement>("g.cs-chart-heatmap-cell-group"),
+            ];
+
+            // Initial mount: no selection
+            expect(root?.dataset.hasSelection).toBeUndefined();
+            expect(stage?.dataset.hasSelection).toBeUndefined();
+            expect(heatmapGroup?.dataset.hasSelection).toBeUndefined();
+            expect(container.querySelector("g.cs-chart-heatmap-focus")).toBeNull();
+
+            // 1. Click cell 0 -> selects index 0, dims siblings, renders "selected" dual-stroke ring, fires onCellClick
+            cellGroups[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            flushSync();
+
+            expect(bindings.selected).toBe(0);
+            expect(onCellClick).toHaveBeenCalledTimes(1);
+            expect(onCellClick).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    index: 0,
+                    row: 0,
+                    col: 0,
+                    xCategory: "Mon",
+                    yCategory: "Morning",
+                    value: 10,
+                }),
+                0,
+            );
+            expect(root?.dataset.hasSelection).toBe("");
+            expect(stage?.dataset.hasSelection).toBe("");
+            expect(heatmapGroup?.dataset.hasSelection).toBe("");
+            expect(cellGroups[0]?.dataset.selected).toBe("");
+            expect(cellGroups[0]?.dataset.dimmed).toBeUndefined();
+            expect(cellGroups[1]?.dataset.selected).toBeUndefined();
+            expect(cellGroups[1]?.dataset.dimmed).toBe("");
+
+            const focusOverlay = (): SVGGElement | null =>
+                container.querySelector<SVGGElement>("g.cs-chart-heatmap-focus");
+            expect(
+                focusOverlay()?.querySelectorAll('rect[data-kind="selected"]'),
+            ).toHaveLength(2);
+
+            // 2. Hover cell 2 while cell 0 is selected -> focus overlay renders BOTH "selected" and "active" dual-stroke rings
+            cellGroups[2]?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            flushSync();
+            expect(bindings.active).toBe(2);
+            expect(
+                focusOverlay()?.querySelectorAll('rect[data-kind="selected"]'),
+            ).toHaveLength(2);
+            expect(
+                focusOverlay()?.querySelectorAll('rect[data-kind="active"]'),
+            ).toHaveLength(2);
+
+            // 3. Keyboard Enter on active cell 2 switches selection to index 2
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.selected).toBe(2);
+            expect(cellGroups[0]?.dataset.selected).toBeUndefined();
+            expect(cellGroups[0]?.dataset.dimmed).toBe("");
+            expect(cellGroups[2]?.dataset.selected).toBe("");
+            expect(cellGroups[2]?.dataset.dimmed).toBeUndefined();
+
+            // 4. Keyboard Space on already-selected cell 2 toggles selection off
+            stage?.dispatchEvent(
+                new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }),
+            );
+            flushSync();
+            expect(bindings.selected).toBeNull();
+            expect(root?.dataset.hasSelection).toBeUndefined();
+
+            unmount(instance);
+            mounted.pop();
+
+            // 5. Strict controlled selectedIndex (read-only setter ignores internal mutations)
+            const controlled = $state<{ selected: number | null }>({ selected: 3 });
+            renderHost({
+                mode: "heatmap-chart",
+                variant: "elevated",
+                size: "md",
+                data: HEATMAP_MATRIX_DATA,
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                selectable: true,
+                get heatmapSelectedIndex() {
+                    return controlled.selected;
+                },
+                set heatmapSelectedIndex(_v: number | null) {
+                    // Ignore internal writes
+                },
+            });
+
+            expect(
+                container.querySelector<SVGGElement>(
+                    "g.cs-chart-heatmap-cell-group[data-selected]",
+                )?.dataset.index,
+            ).toBe("3");
+
+            controlled.selected = 5;
+            flushSync();
+            expect(
+                container.querySelector<SVGGElement>(
+                    "g.cs-chart-heatmap-cell-group[data-selected]",
+                )?.dataset.index,
+            ).toBe("5");
+        });
+
+        it("renders <ChartLoading shape='bars' /> when loading={true}, <ChartEmpty /> when data={[]}, and standalone Tier-1 <ChartHeatmap> with {row, col} coordinates", () => {
+            stubM5CanvasRect(560, 220);
+
+            const props = $state<{
+                data: readonly HeatmapMatrixRow[];
+                loading: boolean;
+            }>({
+                data: HEATMAP_MATRIX_DATA,
+                loading: true,
+            });
+
+            const instance = renderHost({
+                mode: "heatmap-chart",
+                variant: "elevated",
+                size: "md",
+                get data() {
+                    return props.data;
+                },
+                heatmapX: "day",
+                heatmapY: "shift",
+                heatmapValue: "load",
+                get loading() {
+                    return props.loading;
+                },
+                emptyTitle: "No cohort cells",
+                emptyDescription: "Populate matrix observations to inspect density",
+            });
+
+            // 1. loading={true} -> <ChartLoading shape="bars" /> and hides legend
+            const loadingEl = container.querySelector<HTMLDivElement>(".cs-chart-loading");
+            expect(loadingEl).not.toBeNull();
+            expect(loadingEl?.dataset.shape).toBe("bars");
+            expect(container.querySelector("svg.cs-chart-svg")).toBeNull();
+            expect(container.querySelector(".cs-chart-heatmap-legend")).toBeNull();
+
+            // 2. loading={false} + data={[]} -> <ChartEmpty /> and hides legend
+            props.loading = false;
+            props.data = [];
+            flushSync();
+
+            const emptyEl = container.querySelector<HTMLDivElement>(".cs-chart-empty");
+            expect(emptyEl).not.toBeNull();
+            expect(emptyEl?.textContent).toContain("No cohort cells");
+            expect(emptyEl?.textContent).toContain(
+                "Populate matrix observations to inspect density",
+            );
+            expect(container.querySelector("svg.cs-chart-svg")).toBeNull();
+            expect(container.querySelector(".cs-chart-heatmap-legend")).toBeNull();
+
+            unmount(instance);
+            mounted.pop();
+
+            // 3. Standalone Tier-1 <ChartHeatmap> with explicit cells, {row, col} activeCell/selectedCell, ref binding & callbacks
+            const refs: { heatmap: SVGGElement | null } = { heatmap: null };
+            const onCellHover = vi.fn();
+            const onCellClick = vi.fn();
+
+            renderHost({
+                mode: "standalone-heatmap",
+                heatmapWidth: 360,
+                heatmapHeight: 160,
+                size: "lg",
+                heatmapCells: [
+                    { x: "C1", y: "R1", value: 15 },
+                    { x: "C2", y: "R1", value: 85 },
+                    { x: "C1", y: "R2", value: 45 },
+                    { x: "C2", y: "R2", value: 95 },
+                ],
+                heatmapActiveCell: { row: 0, col: 1 }, // index 1
+                heatmapSelectedCell: { row: 1, col: 0 }, // index 2
+                onCellHover,
+                onCellClick,
+                heatmapAttrs: { "data-testid": "tier1-heatmap" },
+                get heatmapRef() {
+                    return refs.heatmap;
+                },
+                set heatmapRef(v: SVGGElement | null) {
+                    refs.heatmap = v;
+                },
+            });
+
+            const tier1 = container.querySelector<SVGGElement>('[data-testid="tier1-heatmap"]');
+            expect(tier1).not.toBeNull();
+            expect(refs.heatmap).toBe(tier1);
+            expect(tier1?.dataset.size).toBe("lg");
+            expect(
+                tier1?.querySelector<SVGGElement>('g.cs-chart-heatmap-cell-group[data-index="1"]')
+                    ?.dataset.active,
+            ).toBe("");
+            expect(
+                tier1?.querySelector<SVGGElement>('g.cs-chart-heatmap-cell-group[data-index="2"]')
+                    ?.dataset.selected,
+            ).toBe("");
+
+            const cell0 = tier1?.querySelector<SVGGElement>(
+                'g.cs-chart-heatmap-cell-group[data-index="0"]',
+            );
+            cell0?.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+            cell0?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            cell0?.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true }));
+            flushSync();
+
+            expect(onCellHover).toHaveBeenCalledWith(
+                0,
+                expect.objectContaining({ index: 0, xCategory: "C1", yCategory: "R1", value: 15 }),
+            );
+            expect(onCellHover).toHaveBeenLastCalledWith(null, null);
+            expect(onCellClick).toHaveBeenCalledWith(
+                expect.objectContaining({ index: 0, value: 15 }),
+                0,
+            );
         });
     });
 });

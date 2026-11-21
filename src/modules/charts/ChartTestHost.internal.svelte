@@ -4,6 +4,7 @@
     import {
         AreaChart,
         BarChart,
+        BulletChart,
         Chart,
         ChartActions,
         ChartAnnotation,
@@ -11,12 +12,14 @@
         ChartArea,
         ChartAxis,
         ChartBar,
+        ChartBullet,
         ChartCanvas,
         ChartCrosshair,
         ChartDescription,
         ChartEmpty,
         ChartGrid,
         ChartHeader,
+        ChartHeatmap,
         ChartLegend,
         ChartLine,
         ChartLoading,
@@ -25,9 +28,12 @@
         ChartReferenceLine,
         ChartTitle,
         ChartTooltip,
+        ChartWaterfall,
         ComposedChart,
         DonutChart,
+        HeatmapChart,
         LineChart,
+        WaterfallChart,
         type ChartAnnotationConfig,
         type ChartArcItem,
         type ChartAreaMode,
@@ -35,13 +41,23 @@
         type ChartBarInsideLabelOrientation,
         type ChartBarLabelLayout,
         type ChartBarMode,
+        type ChartBarPattern,
         type ChartBarValueLabels,
+        type ChartBulletItem,
+        type ChartBulletRange,
+        type ChartBulletRow,
+        type ChartBulletTooltipContext,
         type ChartCurve,
         type ChartDatum,
         type ChartDonutCenterContext,
         type ChartDonutCenterMode,
         type ChartDonutTooltipContext,
         type ChartGridOption,
+        type ChartHeatmapCell,
+        type ChartHeatmapCellInput,
+        type ChartHeatmapMode,
+        type ChartHeatmapRamp,
+        type ChartHeatmapTooltipContext,
         type ChartLegendMarker,
         type ChartLegendPlacement,
         type ChartLegendPosition,
@@ -62,6 +78,10 @@
         type ChartTooltipContext,
         type ChartTooltipMode,
         type ChartVariant,
+        type ChartWaterfallItem,
+        type ChartWaterfallRowType,
+        type ChartWaterfallTooltipContext,
+        type ChartWaterfallTotalTone,
         type ChartXScaleType,
         type ChartXValue,
         type ChartZeroLineStyle,
@@ -80,7 +100,12 @@
             | "bar-chart"
             | "composed-chart"
             | "standalone-arc"
-            | "donut-chart";
+            | "donut-chart"
+            | "waterfall-chart"
+            | "standalone-bullet"
+            | "bullet-chart"
+            | "standalone-heatmap"
+            | "heatmap-chart";
 
         cardVariant?: CardVariant;
         cardSize?: CardSize;
@@ -100,9 +125,13 @@
         y2Axis?: ChartAxisConfig;
         orientation?: ChartOrientation;
         stacked?: boolean;
+        percent?: boolean;
+        directLabels?: boolean;
+        selectable?: boolean;
         margin?: Partial<ChartMargins>;
         hiddenSeriesIds?: readonly string[];
         activeIndex?: number | null;
+        selectedIndex?: number | null;
         hoveredSeriesId?: string | null;
         tooltipMode?: ChartTooltipMode;
         loading?: boolean;
@@ -356,7 +385,100 @@
         donutLegend?: ChartLegendPosition;
         hiddenSliceIds?: readonly string[];
         donutActiveIndex?: number | null;
+        donutSelectedIndex?: number | null;
         hoveredSliceId?: string | null;
+
+        showWaterfall?: boolean;
+        waterfallRef?: SVGGElement | null;
+        waterfallValue?:
+            | string
+            | ((datum: ChartDatum, index: number) => number | null | undefined);
+        waterfallType?: string | ((datum: ChartDatum, index: number) => ChartWaterfallRowType);
+        waterfallColor?: string | ((datum: ChartDatum, index: number) => string | undefined);
+        waterfallTone?: string | ((datum: ChartDatum, index: number) => ChartTone | undefined);
+        waterfallPattern?:
+            | ChartBarPattern
+            | ((datum: ChartDatum, index: number) => ChartBarPattern | undefined);
+        waterfallConnectors?: boolean;
+        waterfallValueLabels?: boolean;
+        waterfallFormatLabel?: (value: number, item: ChartWaterfallItem<ChartDatum>) => string;
+        waterfallRadius?: number;
+        waterfallMaxBarWidth?: number;
+        waterfallMinBarLength?: number;
+        waterfallTotalTone?: ChartWaterfallTotalTone;
+        waterfallTooltipRenderer?: (ctx: ChartWaterfallTooltipContext<ChartDatum>) => string;
+        waterfallAttrs?: Record<string, unknown>;
+
+        bulletRef?: SVGGElement | null;
+        bulletItems?: readonly ChartBulletItem<ChartDatum>[];
+        bulletLabel?: string | ((datum: ChartDatum, index: number) => string);
+        bulletSubtitle?: string | ((datum: ChartDatum, index: number) => string | undefined);
+        bulletUnit?: string | ((datum: ChartDatum, index: number) => string | undefined);
+        bulletActual?: string | ((datum: ChartDatum, index: number) => number);
+        bulletTarget?: string;
+        bulletComparative?:
+            | string
+            | ((datum: ChartDatum, index: number) => number | null | undefined);
+        bulletRanges?:
+            | string
+            | ((
+                  datum: ChartDatum,
+                  index: number,
+              ) => readonly (number | ChartBulletRange)[] | undefined);
+        bulletMax?: string;
+        bulletTone?: ChartTone | ((datum: ChartDatum, index: number) => ChartTone | undefined);
+        bulletColor?: string | ((datum: ChartDatum, index: number) => string | undefined);
+        bulletPattern?:
+            | ChartBarPattern
+            | ((datum: ChartDatum, index: number) => ChartBarPattern | undefined);
+        bulletWidth?: number;
+        bulletHeight?: number;
+        bulletSharedScale?: boolean;
+        bulletShowReadout?: boolean;
+        bulletShowVariance?: boolean;
+        bulletMinBarLength?: number;
+        bulletFormatValue?: (value: number, datum?: ChartDatum) => string;
+        bulletInteractive?: boolean;
+        bulletActiveIndex?: number | null;
+        bulletSelectedIndex?: number | null;
+        bulletTooltipRenderer?: (ctx: ChartBulletTooltipContext<ChartDatum>) => string;
+        bulletAttrs?: Record<string, unknown>;
+        onRowHover?: (index: number | null, row: ChartBulletRow<ChartDatum> | null) => void;
+        onRowClick?: (
+            datum: ChartDatum,
+            index: number,
+            row: ChartBulletRow<ChartDatum>,
+        ) => void;
+
+        heatmapRef?: SVGGElement | null;
+        heatmapCells?: readonly ChartHeatmapCellInput<ChartDatum>[];
+        heatmapX?: string | ((datum: ChartDatum, index: number) => string | number);
+        heatmapY?: string | ((datum: ChartDatum, index: number) => string | number);
+        heatmapValue?:
+            | string
+            | ((datum: ChartDatum, index: number) => number | null | undefined);
+        heatmapXCategories?: readonly string[];
+        heatmapYCategories?: readonly string[];
+        heatmapWidth?: number;
+        heatmapHeight?: number;
+        heatmapMode?: ChartHeatmapMode;
+        heatmapRamp?: ChartHeatmapRamp;
+        heatmapDomain?: readonly [number, number];
+        heatmapPivot?: number;
+        heatmapGap?: number;
+        heatmapRadius?: number;
+        heatmapValueLabels?: boolean;
+        heatmapFormatValue?: (value: number, cell: ChartHeatmapCell<ChartDatum>) => string;
+        heatmapInteractive?: boolean;
+        heatmapActiveCell?: number | { readonly row: number; readonly col: number } | null;
+        heatmapSelectedCell?: number | { readonly row: number; readonly col: number } | null;
+        heatmapActiveIndex?: number | null;
+        heatmapSelectedIndex?: number | null;
+        heatmapLegend?: ChartLegendPosition;
+        heatmapTooltipRenderer?: (ctx: ChartHeatmapTooltipContext<ChartDatum>) => string;
+        heatmapAttrs?: Record<string, unknown>;
+        onCellHover?: (index: number | null, cell: ChartHeatmapCell<ChartDatum> | null) => void;
+        onCellClick?: (cell: ChartHeatmapCell<ChartDatum>, index: number) => void;
     }
 
     let {
@@ -380,9 +502,13 @@
         y2Axis,
         orientation,
         stacked,
+        percent,
+        directLabels,
+        selectable,
         margin,
         hiddenSeriesIds = $bindable(),
         activeIndex = $bindable(),
+        selectedIndex = $bindable(),
         hoveredSeriesId = $bindable(),
         tooltipMode,
         loading = false,
@@ -628,7 +754,81 @@
         donutLegend,
         hiddenSliceIds = $bindable<readonly string[]>([]),
         donutActiveIndex = $bindable<number | null>(null),
+        donutSelectedIndex = $bindable<number | null>(null),
         hoveredSliceId = $bindable<string | null>(null),
+
+        showWaterfall = false,
+        waterfallRef = $bindable(null),
+        waterfallValue = "value",
+        waterfallType,
+        waterfallColor,
+        waterfallTone,
+        waterfallPattern,
+        waterfallConnectors = true,
+        waterfallValueLabels = true,
+        waterfallFormatLabel,
+        waterfallRadius,
+        waterfallMaxBarWidth,
+        waterfallMinBarLength,
+        waterfallTotalTone,
+        waterfallTooltipRenderer,
+        waterfallAttrs = {},
+
+        bulletRef = $bindable(null),
+        bulletItems,
+        bulletLabel = "label",
+        bulletSubtitle,
+        bulletUnit,
+        bulletActual = "actual",
+        bulletTarget = "target",
+        bulletComparative,
+        bulletRanges,
+        bulletMax,
+        bulletTone,
+        bulletColor,
+        bulletPattern,
+        bulletWidth = 560,
+        bulletHeight = 200,
+        bulletSharedScale = false,
+        bulletShowReadout = true,
+        bulletShowVariance = false,
+        bulletMinBarLength = 2,
+        bulletFormatValue,
+        bulletInteractive = true,
+        bulletActiveIndex = $bindable<number | null>(null),
+        bulletSelectedIndex = $bindable<number | null>(null),
+        bulletTooltipRenderer,
+        bulletAttrs = {},
+        onRowHover,
+        onRowClick,
+
+        heatmapRef = $bindable(null),
+        heatmapCells,
+        heatmapX = "x",
+        heatmapY = "y",
+        heatmapValue = "value",
+        heatmapXCategories,
+        heatmapYCategories,
+        heatmapWidth = 480,
+        heatmapHeight = 200,
+        heatmapMode = "sequential",
+        heatmapRamp,
+        heatmapDomain,
+        heatmapPivot = 0,
+        heatmapGap,
+        heatmapRadius,
+        heatmapValueLabels = true,
+        heatmapFormatValue,
+        heatmapInteractive = true,
+        heatmapActiveCell,
+        heatmapSelectedCell,
+        heatmapActiveIndex = $bindable<number | null>(null),
+        heatmapSelectedIndex = $bindable<number | null>(null),
+        heatmapLegend = "bottom",
+        heatmapTooltipRenderer,
+        heatmapAttrs = {},
+        onCellHover,
+        onCellClick,
     }: Props = $props();
 </script>
 
@@ -637,6 +837,7 @@
         bind:ref={chartRef}
         bind:hiddenSeriesIds
         bind:activeIndex
+        bind:selectedIndex
         bind:hoveredSeriesId
         {variant}
         {size}
@@ -653,6 +854,9 @@
         {y2Axis}
         {orientation}
         {stacked}
+        {percent}
+        {directLabels}
+        {selectable}
         {margin}
         {tooltipMode}
         {loading}
@@ -793,6 +997,7 @@
                         connectNulls={lineConnectNulls}
                         showDots={lineShowDots}
                         showLabels={lineShowLabels}
+                        {directLabels}
                         formatLabel={lineFormatLabel}
                         {...lineAttrs}
                     />
@@ -810,6 +1015,7 @@
                         dashed={areaDashed}
                         connectNulls={areaConnectNulls}
                         showDots={areaShowDots}
+                        {directLabels}
                         {...areaAttrs}
                     />
                 {/if}
@@ -829,6 +1035,25 @@
                         formatLabel={barFormatLabel}
                         labelLayout={barLabelLayout}
                         {...barAttrs}
+                    />
+                {/if}
+
+                {#if showWaterfall}
+                    <ChartWaterfall
+                        bind:ref={waterfallRef}
+                        value={waterfallValue}
+                        type={waterfallType}
+                        color={waterfallColor}
+                        tone={waterfallTone}
+                        pattern={waterfallPattern}
+                        connectors={waterfallConnectors}
+                        valueLabels={waterfallValueLabels}
+                        formatLabel={waterfallFormatLabel}
+                        radius={waterfallRadius}
+                        maxBarWidth={waterfallMaxBarWidth}
+                        minBarLength={waterfallMinBarLength}
+                        totalTone={waterfallTotalTone}
+                        {...waterfallAttrs}
                     />
                 {/if}
 
@@ -987,6 +1212,18 @@
     <div data-testid="custom-donut-tooltip">{donutTooltipRenderer?.(ctx)}</div>
 {/snippet}
 
+{#snippet customWaterfallTooltip(ctx: ChartWaterfallTooltipContext<ChartDatum>)}
+    <div data-testid="custom-waterfall-tooltip">{waterfallTooltipRenderer?.(ctx)}</div>
+{/snippet}
+
+{#snippet customBulletTooltip(ctx: ChartBulletTooltipContext<ChartDatum>)}
+    <div data-testid="custom-bullet-tooltip">{bulletTooltipRenderer?.(ctx)}</div>
+{/snippet}
+
+{#snippet customHeatmapTooltip(ctx: ChartHeatmapTooltipContext<ChartDatum>)}
+    <div data-testid="custom-heatmap-tooltip">{heatmapTooltipRenderer?.(ctx)}</div>
+{/snippet}
+
 {#if mode === "nested-in-card"}
     <Card variant={cardVariant} size={cardSize}>
         {@render chartContent()}
@@ -1052,6 +1289,7 @@
         bind:svgRef
         bind:hiddenSeriesIds
         bind:activeIndex
+        bind:selectedIndex
         bind:hoveredSeriesId
         {variant}
         {size}
@@ -1064,6 +1302,7 @@
         showDots={lineShowDots}
         connectNulls={lineConnectNulls}
         showLabels={lineShowLabels}
+        {directLabels}
         formatLabel={lineFormatLabel}
         {referenceLines}
         {referenceBands}
@@ -1089,6 +1328,7 @@
         {emptyTitle}
         {emptyDescription}
         interactive={tier2Interactive}
+        {selectable}
         {onPointClick}
         {label}
         {labelledBy}
@@ -1103,6 +1343,7 @@
         bind:svgRef
         bind:hiddenSeriesIds
         bind:activeIndex
+        bind:selectedIndex
         bind:hoveredSeriesId
         {variant}
         {size}
@@ -1117,6 +1358,7 @@
         strokeWidth={areaStrokeWidth}
         showDots={areaShowDots}
         connectNulls={areaConnectNulls}
+        {directLabels}
         {referenceLines}
         {referenceBands}
         {annotations}
@@ -1141,6 +1383,7 @@
         {emptyTitle}
         {emptyDescription}
         interactive={tier2Interactive}
+        {selectable}
         {onPointClick}
         {label}
         {labelledBy}
@@ -1155,6 +1398,7 @@
         bind:svgRef
         bind:hiddenSeriesIds
         bind:activeIndex
+        bind:selectedIndex
         bind:hoveredSeriesId
         {variant}
         {size}
@@ -1197,6 +1441,7 @@
         {emptyTitle}
         {emptyDescription}
         interactive={tier2Interactive}
+        {selectable}
         {onPointClick}
         {label}
         {labelledBy}
@@ -1298,6 +1543,7 @@
         bind:svgRef
         bind:hiddenSliceIds
         bind:activeIndex={donutActiveIndex}
+        bind:selectedIndex={donutSelectedIndex}
         bind:hoveredSliceId
         {variant}
         {size}
@@ -1335,7 +1581,225 @@
         {emptyTitle}
         {emptyDescription}
         interactive={tier2Interactive}
+        {selectable}
         {onSliceClick}
+        {label}
+        {labelledBy}
+        children={tier2CustomLayerText ? customTier2Layer : undefined}
+        class={chartClass}
+        {...chartAttrs}
+    />
+{:else if mode === "waterfall-chart"}
+    <WaterfallChart
+        bind:ref={chartRef}
+        bind:svgRef
+        bind:activeIndex
+        bind:selectedIndex
+        {variant}
+        {size}
+        data={data ?? []}
+        x={x ?? "label"}
+        {xScaleType}
+        value={waterfallValue}
+        type={waterfallType}
+        color={waterfallColor}
+        tone={waterfallTone}
+        pattern={waterfallPattern}
+        connectors={waterfallConnectors}
+        valueLabels={waterfallValueLabels}
+        formatLabel={waterfallFormatLabel}
+        radius={waterfallRadius}
+        maxBarWidth={waterfallMaxBarWidth}
+        minBarLength={waterfallMinBarLength}
+        totalTone={waterfallTotalTone}
+        {referenceLines}
+        {referenceBands}
+        {annotations}
+        grid={tier2Grid}
+        {xAxis}
+        {yAxis}
+        legend={tier2Legend}
+        tooltip={waterfallTooltipRenderer ? customWaterfallTooltip : tier2Tooltip}
+        {tooltipMode}
+        numberFormat={tooltipNumberFormat}
+        locales={tooltipLocales}
+        {palette}
+        {monotone}
+        title={tier2Title}
+        description={tier2Description}
+        actions={showActions ? customTier2Actions : undefined}
+        height={tier2Height}
+        aspectRatio={tier2AspectRatio}
+        {margin}
+        {loading}
+        {empty}
+        {emptyTitle}
+        {emptyDescription}
+        interactive={tier2Interactive}
+        {selectable}
+        {onPointClick}
+        {label}
+        {labelledBy}
+        children={tier2CustomLayerText ? customTier2Layer : undefined}
+        overlay={showOverlay ? customTier2Overlay : undefined}
+        class={chartClass}
+        {...chartAttrs}
+    />
+{:else if mode === "standalone-bullet"}
+    <svg bind:this={svgRef} width={bulletWidth} height={bulletHeight}>
+        <ChartBullet
+            bind:ref={bulletRef}
+            items={bulletItems}
+            {data}
+            label={bulletLabel}
+            subtitle={bulletSubtitle}
+            unit={bulletUnit}
+            actual={bulletActual}
+            target={bulletTarget}
+            comparative={bulletComparative}
+            ranges={bulletRanges}
+            max={bulletMax}
+            tone={bulletTone}
+            color={bulletColor}
+            pattern={bulletPattern}
+            width={bulletWidth}
+            {size}
+            sharedScale={bulletSharedScale}
+            showReadout={bulletShowReadout}
+            showVariance={bulletShowVariance}
+            minBarLength={bulletMinBarLength}
+            formatValue={bulletFormatValue}
+            interactive={bulletInteractive}
+            {selectable}
+            {activeIndex}
+            {selectedIndex}
+            {onRowHover}
+            {onRowClick}
+            {...bulletAttrs}
+        />
+    </svg>
+{:else if mode === "bullet-chart"}
+    <BulletChart
+        bind:ref={chartRef}
+        bind:svgRef
+        bind:activeIndex={bulletActiveIndex}
+        bind:selectedIndex={bulletSelectedIndex}
+        {variant}
+        {size}
+        data={data ?? []}
+        label={bulletLabel}
+        subtitle={bulletSubtitle}
+        unit={bulletUnit}
+        actual={bulletActual}
+        target={bulletTarget}
+        comparative={bulletComparative}
+        ranges={bulletRanges}
+        max={bulletMax}
+        tone={bulletTone}
+        color={bulletColor}
+        pattern={bulletPattern}
+        sharedScale={bulletSharedScale}
+        showReadout={bulletShowReadout}
+        showVariance={bulletShowVariance}
+        minBarLength={bulletMinBarLength}
+        formatValue={bulletFormatValue}
+        numberFormat={tooltipNumberFormat}
+        locales={tooltipLocales}
+        tooltip={bulletTooltipRenderer ? customBulletTooltip : tier2Tooltip}
+        {tooltipMode}
+        {selectable}
+        {onRowClick}
+        {palette}
+        {monotone}
+        title={tier2Title}
+        description={tier2Description}
+        actions={showActions ? customTier2Actions : undefined}
+        height={tier2Height}
+        {loading}
+        {empty}
+        {emptyTitle}
+        {emptyDescription}
+        interactive={tier2Interactive}
+        {labelledBy}
+        children={tier2CustomLayerText ? customTier2Layer : undefined}
+        class={chartClass}
+        {...chartAttrs}
+    />
+{:else if mode === "standalone-heatmap"}
+    <svg bind:this={svgRef} width={heatmapWidth} height={heatmapHeight}>
+        <ChartHeatmap
+            bind:ref={heatmapRef}
+            cells={heatmapCells}
+            {data}
+            x={heatmapX}
+            y={heatmapY}
+            value={heatmapValue}
+            xCategories={heatmapXCategories}
+            yCategories={heatmapYCategories}
+            width={heatmapWidth}
+            height={heatmapHeight}
+            {size}
+            mode={heatmapMode}
+            ramp={heatmapRamp}
+            domain={heatmapDomain}
+            pivot={heatmapPivot}
+            gap={heatmapGap}
+            radius={heatmapRadius}
+            valueLabels={heatmapValueLabels}
+            formatValue={heatmapFormatValue}
+            interactive={heatmapInteractive}
+            {selectable}
+            activeCell={heatmapActiveCell}
+            selectedCell={heatmapSelectedCell}
+            {onCellHover}
+            {onCellClick}
+            {...heatmapAttrs}
+        />
+    </svg>
+{:else if mode === "heatmap-chart"}
+    <HeatmapChart
+        bind:ref={chartRef}
+        bind:svgRef
+        bind:activeIndex={heatmapActiveIndex}
+        bind:selectedIndex={heatmapSelectedIndex}
+        {variant}
+        {size}
+        data={data ?? []}
+        x={heatmapX}
+        y={heatmapY}
+        value={heatmapValue}
+        xCategories={heatmapXCategories}
+        yCategories={heatmapYCategories}
+        mode={heatmapMode}
+        ramp={heatmapRamp}
+        domain={heatmapDomain}
+        pivot={heatmapPivot}
+        gap={heatmapGap}
+        radius={heatmapRadius}
+        valueLabels={heatmapValueLabels}
+        formatValue={heatmapFormatValue}
+        numberFormat={tooltipNumberFormat}
+        locales={tooltipLocales}
+        {xAxis}
+        {yAxis}
+        legend={heatmapLegend}
+        tooltip={heatmapTooltipRenderer ? customHeatmapTooltip : tier2Tooltip}
+        {tooltipMode}
+        {selectable}
+        {onCellClick}
+        {palette}
+        {monotone}
+        title={tier2Title}
+        description={tier2Description}
+        actions={showActions ? customTier2Actions : undefined}
+        height={tier2Height}
+        aspectRatio={tier2AspectRatio}
+        {margin}
+        {loading}
+        {empty}
+        {emptyTitle}
+        {emptyDescription}
+        interactive={tier2Interactive}
         {label}
         {labelledBy}
         children={tier2CustomLayerText ? customTier2Layer : undefined}

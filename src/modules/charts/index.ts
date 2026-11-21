@@ -6,13 +6,17 @@ import type {
     ChartAnnotationConfig,
     ChartAreaMode,
     ChartAxisConfig,
+    ChartAxisDomain,
     ChartAxisPosition,
     ChartBarInsideLabelOrientation,
     ChartBarLabelLayout,
     ChartBarMode,
+    ChartBarPattern,
     ChartBarValueLabels,
     ChartCurve,
     ChartDatum,
+    ChartHeatmapMode,
+    ChartHeatmapRamp,
     ChartLegendMarker,
     ChartLegendPlacement,
     ChartLegendPosition,
@@ -31,6 +35,9 @@ import type {
     ChartTooltipContext,
     ChartTooltipMode,
     ChartVariant,
+    ChartWaterfallBarKind,
+    ChartWaterfallRowType,
+    ChartWaterfallTotalTone,
     ChartXScaleType,
     ChartXValue,
     ChartZeroLineStyle,
@@ -49,6 +56,9 @@ export { default as ChartLine } from "./ChartLine.svelte";
 export { default as ChartArea } from "./ChartArea.svelte";
 export { default as ChartBar } from "./ChartBar.svelte";
 export { default as ChartArc } from "./ChartArc.svelte";
+export { default as ChartWaterfall } from "./ChartWaterfall.svelte";
+export { default as ChartBullet } from "./ChartBullet.svelte";
+export { default as ChartHeatmap } from "./ChartHeatmap.svelte";
 export { default as ChartReferenceLine } from "./ChartReferenceLine.svelte";
 export { default as ChartReferenceBand } from "./ChartReferenceBand.svelte";
 export { default as ChartAnnotation } from "./ChartAnnotation.svelte";
@@ -62,6 +72,10 @@ export { default as AreaChart } from "./AreaChart.svelte";
 export { default as BarChart } from "./BarChart.svelte";
 export { default as ComposedChart } from "./ComposedChart.svelte";
 export { default as DonutChart } from "./DonutChart.svelte";
+export { default as Sparkline } from "./Sparkline.svelte";
+export { default as WaterfallChart } from "./WaterfallChart.svelte";
+export { default as BulletChart } from "./BulletChart.svelte";
+export { default as HeatmapChart } from "./HeatmapChart.svelte";
 
 export {
     getChartContext,
@@ -82,6 +96,7 @@ export {
     CHART_CURVES,
     CHART_ORIENTATIONS,
     CHART_BAR_MODES,
+    CHART_BAR_PATTERNS,
     CHART_BAR_VALUE_LABELS,
     CHART_BAR_INSIDE_LABEL_ORIENTATIONS,
     CHART_BAR_LABEL_LAYOUTS,
@@ -95,6 +110,10 @@ export {
     CHART_X_SCALE_TYPES,
     CHART_TICK_ANGLES,
     CHART_TITLE_ELEMENTS,
+    CHART_WATERFALL_ROW_TYPES,
+    CHART_WATERFALL_TOTAL_TONES,
+    CHART_HEATMAP_MODES,
+    CHART_HEATMAP_RAMPS,
     type ChartVariant,
     type ChartSize,
     type ChartPalette,
@@ -103,6 +122,7 @@ export {
     type ChartCurve,
     type ChartOrientation,
     type ChartBarMode,
+    type ChartBarPattern,
     type ChartBarValueLabelsMode,
     type ChartBarValueLabels,
     type ChartBarInsideLabelOrientation,
@@ -118,6 +138,11 @@ export {
     type ChartResolvedXScaleType,
     type ChartTickAngle,
     type ChartTitleElement,
+    type ChartWaterfallRowType,
+    type ChartWaterfallTotalTone,
+    type ChartWaterfallBarKind,
+    type ChartHeatmapMode,
+    type ChartHeatmapRamp,
     type ChartDatum,
     type ChartXValue,
     type ChartSeriesType,
@@ -156,9 +181,13 @@ export type ChartProps<TDatum = ChartDatum> = Omit<HTMLAttributes<HTMLElement>, 
     y2Axis?: ChartAxisConfig;
     orientation?: ChartOrientation;
     stacked?: boolean;
+    percent?: boolean;
+    directLabels?: boolean;
     margin?: Partial<ChartMargins>;
     hiddenSeriesIds?: readonly string[];
     activeIndex?: number | null;
+    selectedIndex?: number | null;
+    selectable?: boolean;
     hoveredSeriesId?: string | null;
     tooltipMode?: ChartTooltipMode;
     loading?: boolean;
@@ -299,6 +328,7 @@ export type ChartLineProps<TDatum = ChartDatum> = Omit<SVGAttributes<SVGGElement
     connectNulls?: boolean;
     showDots?: ChartLineDotsMode;
     showLabels?: boolean;
+    directLabels?: boolean;
     formatLabel?: (value: number, datum: TDatum, series: ChartSeries<TDatum>) => string;
 };
 
@@ -318,6 +348,7 @@ export type ChartAreaProps = Omit<SVGAttributes<SVGGElement>, "children"> & {
     dashed?: boolean;
     connectNulls?: boolean;
     showDots?: ChartLineDotsMode;
+    directLabels?: boolean;
 };
 
 export type ChartBarProps<TDatum = ChartDatum> = Omit<SVGAttributes<SVGGElement>, "children"> & {
@@ -396,6 +427,7 @@ export type LineChartProps<TDatum = ChartDatum> = Omit<
     showDots?: ChartLineDotsMode;
     connectNulls?: boolean;
     showLabels?: boolean;
+    directLabels?: boolean;
     formatLabel?: (value: number, datum: TDatum, series: ChartSeries<TDatum>) => string;
     referenceLines?: readonly ChartReferenceLineConfig[];
     referenceBands?: readonly ChartReferenceBandConfig[];
@@ -421,9 +453,11 @@ export type LineChartProps<TDatum = ChartDatum> = Omit<
     emptyTitle?: string;
     emptyDescription?: string;
     interactive?: boolean;
+    selectable?: boolean;
     onPointClick?: (datum: TDatum, index: number) => void;
     hiddenSeriesIds?: readonly string[];
     activeIndex?: number | null;
+    selectedIndex?: number | null;
     hoveredSeriesId?: string | null;
     label?: string;
     labelledBy?: string;
@@ -450,6 +484,7 @@ export type AreaChartProps<TDatum = ChartDatum> = Omit<
     strokeWidth?: number;
     showDots?: ChartLineDotsMode;
     connectNulls?: boolean;
+    directLabels?: boolean;
     referenceLines?: readonly ChartReferenceLineConfig[];
     referenceBands?: readonly ChartReferenceBandConfig[];
     annotations?: readonly ChartAnnotationConfig[];
@@ -474,9 +509,11 @@ export type AreaChartProps<TDatum = ChartDatum> = Omit<
     emptyTitle?: string;
     emptyDescription?: string;
     interactive?: boolean;
+    selectable?: boolean;
     onPointClick?: (datum: TDatum, index: number) => void;
     hiddenSeriesIds?: readonly string[];
     activeIndex?: number | null;
+    selectedIndex?: number | null;
     hoveredSeriesId?: string | null;
     label?: string;
     labelledBy?: string;
@@ -531,9 +568,11 @@ export type BarChartProps<TDatum = ChartDatum> = Omit<
     emptyTitle?: string;
     emptyDescription?: string;
     interactive?: boolean;
+    selectable?: boolean;
     onPointClick?: (datum: TDatum, index: number) => void;
     hiddenSeriesIds?: readonly string[];
     activeIndex?: number | null;
+    selectedIndex?: number | null;
     hoveredSeriesId?: string | null;
     label?: string;
     labelledBy?: string;
@@ -591,16 +630,17 @@ export type ComposedChartProps<TDatum = ChartDatum> = Omit<
     emptyTitle?: string;
     emptyDescription?: string;
     interactive?: boolean;
+    selectable?: boolean;
     onPointClick?: (datum: TDatum, index: number) => void;
     hiddenSeriesIds?: readonly string[];
     activeIndex?: number | null;
+    selectedIndex?: number | null;
     hoveredSeriesId?: string | null;
     label?: string;
     labelledBy?: string;
     children?: Snippet;
     overlay?: Snippet;
 };
-
 
 export const CHART_DONUT_CENTER_MODES = ["auto", "total", "active"] as const;
 export type ChartDonutCenterMode = (typeof CHART_DONUT_CENTER_MODES)[number];
@@ -629,6 +669,8 @@ export interface ChartArcItem<TDatum = ChartDatum> {
     outerRadius: number;
     path: string;
     hoverPath: string;
+    selectedPath: string;
+    selectionRingPath: string;
     datum: TDatum;
 }
 
@@ -668,7 +710,9 @@ export type ChartArcProps<TDatum = ChartDatum> = Omit<
     valueLabels?: boolean;
     formatValue?: (value: number, datum: TDatum) => string;
     interactive?: boolean;
+    selectable?: boolean;
     activeIndex?: number | null;
+    selectedIndex?: number | null;
     hoveredSliceId?: string | null;
     onSliceHover?: (index: number | null, arc: ChartArcItem<TDatum> | null) => void;
     onSliceClick?: (datum: TDatum, index: number, slice: ChartArcItem<TDatum>) => void;
@@ -716,10 +760,398 @@ export type DonutChartProps<TDatum = ChartDatum> = Omit<
     emptyTitle?: string;
     emptyDescription?: string;
     interactive?: boolean;
+    selectable?: boolean;
     onSliceClick?: (datum: TDatum, index: number, slice: ChartArcItem<TDatum>) => void;
     hiddenSliceIds?: readonly string[];
     activeIndex?: number | null;
+    selectedIndex?: number | null;
     hoveredSliceId?: string | null;
+    label?: string;
+    labelledBy?: string;
+    children?: Snippet;
+};
+
+export const CHART_SPARKLINE_TYPES = ["line", "area", "bar"] as const;
+export type ChartSparklineType = (typeof CHART_SPARKLINE_TYPES)[number];
+
+export type SparklineProps<TDatum = number | null | undefined> = Omit<
+    HTMLAttributes<HTMLDivElement>,
+    "children" | "color"
+> & {
+    ref?: HTMLDivElement | null;
+    svgRef?: SVGSVGElement | null;
+    data: readonly TDatum[];
+    value?: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    type?: ChartSparklineType;
+    curve?: ChartCurve;
+    strokeWidth?: number;
+    tone?: ChartTone;
+    color?: string;
+    target?: number;
+    showEndDot?: boolean;
+    includeZero?: boolean;
+    domain?: ChartAxisDomain;
+    interactive?: boolean;
+    activeIndex?: number | null;
+    onHover?: (index: number | null, value: number | null, datum: TDatum | null) => void;
+    height?: number | string;
+    width?: number | string;
+    label?: string;
+};
+
+export interface ChartWaterfallItem<TDatum = ChartDatum> {
+    readonly index: number;
+    readonly label: string;
+    readonly xValue: ChartXValue;
+    readonly type: ChartWaterfallRowType;
+    readonly kind: ChartWaterfallBarKind;
+    readonly value: number;
+    readonly y0: number;
+    readonly y1: number;
+    readonly runningTotal: number;
+    readonly isPositive: boolean;
+    readonly isNegative: boolean;
+    readonly color: string;
+    readonly pattern: ChartBarPattern;
+    readonly datum: TDatum;
+}
+
+export type ChartWaterfallBar<TDatum = ChartDatum> = ChartWaterfallItem<TDatum>;
+
+export interface ChartWaterfallTooltipContext<TDatum = ChartDatum> {
+    readonly index: number;
+    readonly item: ChartWaterfallItem<TDatum>;
+    readonly bar: ChartWaterfallItem<TDatum>;
+    readonly formattedValue: string;
+    readonly formattedRunningTotal: string;
+}
+
+export type ChartWaterfallProps<TDatum = ChartDatum> = Omit<
+    SVGAttributes<SVGGElement>,
+    "children" | "color" | "type" | "value"
+> & {
+    ref?: SVGGElement | null;
+    value: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    type?: keyof TDatum | ((datum: TDatum, index: number) => ChartWaterfallRowType);
+    color?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined);
+    tone?: keyof TDatum | ((datum: TDatum, index: number) => ChartTone | undefined);
+    pattern?: ChartBarPattern | ((datum: TDatum, index: number) => ChartBarPattern | undefined);
+    connectors?: boolean;
+    valueLabels?: boolean;
+    formatLabel?: (value: number, item: ChartWaterfallItem<TDatum>) => string;
+    radius?: number;
+    maxBarWidth?: number;
+    minBarLength?: number;
+    totalTone?: ChartWaterfallTotalTone;
+};
+
+export type WaterfallChartProps<TDatum = ChartDatum> = Omit<
+    HTMLAttributes<HTMLElement>,
+    "children" | "title" | "color" | "type"
+> & {
+    ref?: HTMLElement | null;
+    svgRef?: SVGSVGElement | null;
+    variant: ChartVariant;
+    size: ChartSize;
+    data: readonly TDatum[];
+    x: keyof TDatum | ((datum: TDatum, index: number) => ChartXValue);
+    xScaleType?: ChartXScaleType;
+    value: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    type?: keyof TDatum | ((datum: TDatum, index: number) => ChartWaterfallRowType);
+    color?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined);
+    tone?: keyof TDatum | ((datum: TDatum, index: number) => ChartTone | undefined);
+    pattern?: ChartBarPattern | ((datum: TDatum, index: number) => ChartBarPattern | undefined);
+    connectors?: boolean;
+    valueLabels?: boolean;
+    formatLabel?: (value: number, item: ChartWaterfallItem<TDatum>) => string;
+    radius?: number;
+    maxBarWidth?: number;
+    minBarLength?: number;
+    totalTone?: ChartWaterfallTotalTone;
+    referenceLines?: readonly ChartReferenceLineConfig[];
+    referenceBands?: readonly ChartReferenceBandConfig[];
+    annotations?: readonly ChartAnnotationConfig[];
+    grid?: ChartGridOption;
+    xAxis?: ChartAxisConfig;
+    yAxis?: ChartAxisConfig;
+    legend?: ChartLegendPosition;
+    tooltip?: boolean | Snippet<[ChartWaterfallTooltipContext<TDatum>]>;
+    tooltipMode?: ChartTooltipMode;
+    numberFormat?: NumberMorphFormat;
+    locales?: Intl.LocalesArgument;
+    palette?: ChartPalette;
+    monotone?: ChartMonotoneHue;
+    title?: string;
+    description?: string;
+    actions?: Snippet;
+    height?: number | string;
+    aspectRatio?: string;
+    margin?: Partial<ChartMargins>;
+    loading?: boolean;
+    empty?: boolean;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    interactive?: boolean;
+    selectable?: boolean;
+    onPointClick?: (datum: TDatum, index: number) => void;
+    activeIndex?: number | null;
+    selectedIndex?: number | null;
+    label?: string;
+    labelledBy?: string;
+    children?: Snippet;
+    overlay?: Snippet;
+};
+
+export interface ChartBulletRange {
+    readonly to: number;
+    readonly tone?: ChartTone;
+    readonly color?: string;
+}
+
+export interface ChartBulletItem<TDatum = ChartDatum> {
+    readonly index?: number;
+    readonly label: string;
+    readonly subtitle?: string;
+    readonly unit?: string;
+    readonly actual: number;
+    readonly target: number;
+    readonly comparative?: number | null;
+    readonly ranges?: readonly (number | ChartBulletRange)[];
+    readonly max?: number;
+    readonly tone?: ChartTone;
+    readonly color?: string;
+    readonly pattern?: ChartBarPattern;
+    readonly datum?: TDatum;
+}
+
+export interface ChartBulletRow<TDatum = ChartDatum> {
+    readonly index: number;
+    readonly label: string;
+    readonly subtitle?: string;
+    readonly unit?: string;
+    readonly actual: number;
+    readonly target: number;
+    readonly comparative: number | null;
+    readonly ranges: readonly ChartBulletRange[];
+    readonly max: number;
+    readonly color: string;
+    readonly pattern: ChartBarPattern;
+    readonly datum: TDatum;
+}
+
+export interface ChartBulletTooltipContext<TDatum = ChartDatum> {
+    readonly index: number;
+    readonly row: ChartBulletRow<TDatum>;
+    readonly variance: number;
+    readonly variancePercent: number | null;
+    readonly formattedActual: string;
+    readonly formattedTarget: string;
+    readonly formattedVariance: string;
+    readonly formattedVariancePercent: string | null;
+    readonly formattedComparative?: string;
+}
+
+export type ChartBulletProps<TDatum = ChartDatum> = Omit<
+    SVGAttributes<SVGGElement>,
+    "children" | "color"
+> & {
+    ref?: SVGGElement | null;
+    items?: readonly ChartBulletItem<TDatum>[];
+    data?: readonly TDatum[];
+    label?: keyof TDatum | ((datum: TDatum, index: number) => string);
+    subtitle?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined);
+    unit?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined);
+    actual?: keyof TDatum | ((datum: TDatum, index: number) => number);
+    target?: keyof TDatum | ((datum: TDatum, index: number) => number);
+    comparative?: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    ranges?:
+        | keyof TDatum
+        | ((datum: TDatum, index: number) => readonly (number | ChartBulletRange)[] | undefined);
+    max?: keyof TDatum | ((datum: TDatum, index: number) => number | undefined);
+    tone?: ChartTone | ((datum: TDatum, index: number) => ChartTone | undefined);
+    color?: string | ((datum: TDatum, index: number) => string | undefined);
+    pattern?: ChartBarPattern | ((datum: TDatum, index: number) => ChartBarPattern | undefined);
+    width?: number;
+    size?: ChartSize;
+    sharedScale?: boolean;
+    showReadout?: boolean;
+    showVariance?: boolean;
+    minBarLength?: number;
+    formatValue?: (value: number, datum?: TDatum) => string;
+    interactive?: boolean;
+    selectable?: boolean;
+    activeIndex?: number | null;
+    selectedIndex?: number | null;
+    onRowHover?: (index: number | null, row: ChartBulletRow<TDatum> | null) => void;
+    onRowClick?: (datum: TDatum, index: number, row: ChartBulletRow<TDatum>) => void;
+};
+
+export type BulletChartProps<TDatum = ChartDatum> = Omit<
+    HTMLAttributes<HTMLElement>,
+    "children" | "title" | "color"
+> & {
+    ref?: HTMLElement | null;
+    svgRef?: SVGSVGElement | null;
+    variant: ChartVariant;
+    size: ChartSize;
+    data: readonly TDatum[];
+    label: keyof TDatum | ((datum: TDatum, index: number) => string);
+    subtitle?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined);
+    unit?: keyof TDatum | ((datum: TDatum, index: number) => string | undefined);
+    actual: keyof TDatum | ((datum: TDatum, index: number) => number);
+    target: keyof TDatum | ((datum: TDatum, index: number) => number);
+    comparative?: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    ranges?:
+        | keyof TDatum
+        | ((datum: TDatum, index: number) => readonly (number | ChartBulletRange)[] | undefined);
+    max?: keyof TDatum | ((datum: TDatum, index: number) => number | undefined);
+    tone?: ChartTone | ((datum: TDatum, index: number) => ChartTone | undefined);
+    color?: string | ((datum: TDatum, index: number) => string | undefined);
+    pattern?: ChartBarPattern | ((datum: TDatum, index: number) => ChartBarPattern | undefined);
+    sharedScale?: boolean;
+    showReadout?: boolean;
+    showVariance?: boolean;
+    minBarLength?: number;
+    formatValue?: (value: number, datum?: TDatum) => string;
+    numberFormat?: NumberMorphFormat;
+    locales?: Intl.LocalesArgument;
+    tooltip?: boolean | Snippet<[ChartBulletTooltipContext<TDatum>]>;
+    tooltipMode?: ChartTooltipMode;
+    selectable?: boolean;
+    selectedIndex?: number | null;
+    activeIndex?: number | null;
+    onRowClick?: (datum: TDatum, index: number, row: ChartBulletRow<TDatum>) => void;
+    palette?: ChartPalette;
+    monotone?: ChartMonotoneHue;
+    title?: string;
+    description?: string;
+    actions?: Snippet;
+    height?: number | string;
+    loading?: boolean;
+    empty?: boolean;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    interactive?: boolean;
+    labelledBy?: string;
+    children?: Snippet;
+};
+
+export interface ChartHeatmapCellInput<TDatum = ChartDatum> {
+    readonly x: string | number;
+    readonly y: string | number;
+    readonly value: number | null | undefined;
+    readonly datum?: TDatum;
+}
+
+export interface ChartHeatmapCell<TDatum = ChartDatum> {
+    readonly index: number;
+    readonly row: number;
+    readonly col: number;
+    readonly xCategory: string;
+    readonly yCategory: string;
+    readonly value: number | null;
+    readonly isEmpty: boolean;
+    readonly t: number | null;
+    readonly invertFg: boolean;
+    readonly color: string;
+    readonly formattedValue: string;
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+    readonly rx: number;
+    readonly centerX: number;
+    readonly centerY: number;
+    readonly datum: TDatum | null;
+}
+
+export interface ChartHeatmapTooltipContext<TDatum = ChartDatum> {
+    readonly index: number;
+    readonly row: number;
+    readonly col: number;
+    readonly cell: ChartHeatmapCell<TDatum>;
+    readonly xLabel: string;
+    readonly yLabel: string;
+    readonly formattedValue: string;
+}
+
+export type ChartHeatmapProps<TDatum = ChartDatum> = Omit<
+    SVGAttributes<SVGGElement>,
+    "children" | "x" | "y" | "width" | "height"
+> & {
+    ref?: SVGGElement | null;
+    cells?: readonly ChartHeatmapCellInput<TDatum>[];
+    data?: readonly TDatum[];
+    x?: keyof TDatum | ((datum: TDatum, index: number) => string | number);
+    y?: keyof TDatum | ((datum: TDatum, index: number) => string | number);
+    value?: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    xCategories?: readonly string[];
+    yCategories?: readonly string[];
+    width?: number;
+    height?: number;
+    size?: ChartSize;
+    mode?: ChartHeatmapMode;
+    ramp?: ChartHeatmapRamp;
+    domain?: readonly [number, number];
+    pivot?: number;
+    gap?: number;
+    radius?: number;
+    valueLabels?: boolean;
+    formatValue?: (value: number, cell: ChartHeatmapCell<TDatum>) => string;
+    interactive?: boolean;
+    selectable?: boolean;
+    activeCell?: number | { readonly row: number; readonly col: number } | null;
+    selectedCell?: number | { readonly row: number; readonly col: number } | null;
+    onCellHover?: (index: number | null, cell: ChartHeatmapCell<TDatum> | null) => void;
+    onCellClick?: (cell: ChartHeatmapCell<TDatum>, index: number) => void;
+};
+
+export type HeatmapChartProps<TDatum = ChartDatum> = Omit<
+    HTMLAttributes<HTMLElement>,
+    "children" | "title"
+> & {
+    ref?: HTMLElement | null;
+    svgRef?: SVGSVGElement | null;
+    variant: ChartVariant;
+    size: ChartSize;
+    data: readonly TDatum[];
+    x: keyof TDatum | ((datum: TDatum, index: number) => string | number);
+    y: keyof TDatum | ((datum: TDatum, index: number) => string | number);
+    value: keyof TDatum | ((datum: TDatum, index: number) => number | null | undefined);
+    xCategories?: readonly string[];
+    yCategories?: readonly string[];
+    mode?: ChartHeatmapMode;
+    ramp?: ChartHeatmapRamp;
+    domain?: readonly [number, number];
+    pivot?: number;
+    gap?: number;
+    radius?: number;
+    valueLabels?: boolean;
+    formatValue?: (value: number, cell: ChartHeatmapCell<TDatum>) => string;
+    numberFormat?: NumberMorphFormat;
+    locales?: Intl.LocalesArgument;
+    xAxis?: ChartAxisConfig;
+    yAxis?: ChartAxisConfig;
+    legend?: ChartLegendPosition;
+    tooltip?: boolean | Snippet<[ChartHeatmapTooltipContext<TDatum>]>;
+    tooltipMode?: ChartTooltipMode;
+    selectable?: boolean;
+    selectedIndex?: number | null;
+    activeIndex?: number | null;
+    onCellClick?: (cell: ChartHeatmapCell<TDatum>, index: number) => void;
+    palette?: ChartPalette;
+    monotone?: ChartMonotoneHue;
+    title?: string;
+    description?: string;
+    actions?: Snippet;
+    height?: number | string;
+    aspectRatio?: string;
+    margin?: Partial<ChartMargins>;
+    loading?: boolean;
+    empty?: boolean;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    interactive?: boolean;
     label?: string;
     labelledBy?: string;
     children?: Snippet;

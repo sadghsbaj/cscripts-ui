@@ -9,6 +9,7 @@
     import {
         AreaChart,
         BarChart,
+        BulletChart,
         CHART_AREA_MODES,
         CHART_BAR_LABEL_LAYOUTS,
         CHART_BAR_MODES,
@@ -36,25 +37,43 @@
         ChartTooltip,
         ComposedChart,
         DonutChart,
+        HeatmapChart,
         LineChart,
+        Sparkline,
+        WaterfallChart,
         type ChartAnnotationConfig,
         type ChartAreaMode,
         type ChartBarLabelLayout,
         type ChartBarMode,
         type ChartBarValueLabelsMode,
         type ChartCurve,
+        type ChartHeatmapRamp,
         type ChartLoadingShape,
         type ChartMonotoneHue,
         type ChartReferenceBandConfig,
         type ChartReferenceLineConfig,
         type ChartSeries,
         type ChartSize,
+        type ChartSparklineType,
         type ChartTone,
         type ChartTooltipMode,
         type ChartVariant,
+        type ChartWaterfallRowType,
         type ChartXValue,
         type ChartZeroLineStyle,
     } from "cs/svelte/charts";
+    import {
+        KpiCard,
+        KpiCardComparison,
+        KpiCardDelta,
+        KpiCardGroup,
+        KpiCardHeader,
+        KpiCardLabel,
+        KpiCardMetric,
+        KpiCardValue,
+        KpiCardVisual,
+    } from "cs/svelte/kpi-card";
+    import { NumberMorph, type NumberMorphFormat } from "cs/svelte/number-morph";
     import { SegmentedControl, SegmentedControlItem, SegmentedControlLabel } from "cs/svelte/segmented-control";
     import { ToggleButton, ToggleButtonLabel } from "cs/svelte/toggle-button";
 
@@ -182,9 +201,9 @@
     ];
 
     const QUARTERLY_BOOKINGS_SERIES: readonly ChartSeries<QuarterlyBookingsDatum>[] = [
-        { id: "enterprise", label: "Enterprise" },
-        { id: "midMarket", label: "Mid-Market" },
-        { id: "selfServe", label: "Self-Serve" },
+        { id: "enterprise", label: "Enterprise", format: formatUsdCompact },
+        { id: "midMarket", label: "Mid-Market", format: formatUsdCompact },
+        { id: "selfServe", label: "Self-Serve", format: formatUsdCompact },
     ];
 
     const PLAN_VS_ACTUAL_DATA: readonly PlanVsActualDatum[] = [
@@ -289,6 +308,65 @@
         },
     ];
 
+    interface ControllingMonthlyDatum {
+        month: string;
+        revenue: number;
+        isForecast: boolean;
+        attainment: number;
+    }
+
+    const CONTROLLING_MONTHLY_DATA: readonly ControllingMonthlyDatum[] = [
+        { month: "Jan", revenue: 312_000, isForecast: false, attainment: 102 },
+        { month: "Feb", revenue: 328_000, isForecast: false, attainment: 104 },
+        { month: "Mar", revenue: 356_000, isForecast: false, attainment: 108 },
+        { month: "Apr", revenue: 334_000, isForecast: false, attainment: 95 },
+        { month: "May", revenue: 372_000, isForecast: false, attainment: 103 },
+        { month: "Jun", revenue: 398_000, isForecast: false, attainment: 107 },
+        { month: "Jul", revenue: 365_000, isForecast: false, attainment: 88 },
+        { month: "Aug", revenue: 384_000, isForecast: false, attainment: 93 },
+        { month: "Sep", revenue: 418_000, isForecast: false, attainment: 105 },
+        { month: "Oct", revenue: 436_000, isForecast: true, attainment: 101 },
+        { month: "Nov", revenue: 454_000, isForecast: true, attainment: 96 },
+        { month: "Dec", revenue: 482_000, isForecast: true, attainment: 106 },
+    ];
+
+    function getAttainmentTone(
+        attainment: number,
+    ): Extract<ChartTone, "positive" | "caution" | "negative"> {
+        if (attainment >= 100) return "positive";
+        if (attainment >= 90) return "caution";
+        return "negative";
+    }
+
+    const ACTUAL_FORECAST_SERIES: readonly ChartSeries<ControllingMonthlyDatum>[] = [
+        {
+            id: "revenue",
+            label: "Revenue",
+            tone: "accent",
+            pattern: (datum) => (datum.isForecast ? "hatch" : "solid"),
+        },
+    ];
+
+    const ATTAINMENT_SERIES: readonly ChartSeries<ControllingMonthlyDatum>[] = [
+        {
+            id: "attainment",
+            label: "Plan Attainment",
+            tone: (datum) => getAttainmentTone(datum.attainment),
+        },
+    ];
+
+    const ATTAINMENT_TARGET_LINES: readonly ChartReferenceLineConfig[] = [
+        {
+            id: "plan-target",
+            axis: "y",
+            value: 100,
+            tone: "base",
+            label: "Target 100%",
+            labelPosition: "end",
+            dashed: true,
+        },
+    ];
+
     interface RevenueSegmentDatum {
         segment: string;
         revenue: number;
@@ -332,6 +410,317 @@
         notation: "compact",
         maximumFractionDigits: 1,
     } as const;
+
+    const SPARKLINE_MRR: readonly number[] = [
+        118.4, 120.2, 121.8, 124.5, 123.9, 126.4, 129.1, 131.6, 133.2, 135.8, 138.4, 140.1, 141.5, 142.8,
+    ];
+
+    const SPARKLINE_LATENCY: readonly number[] = [
+        148, 144, 152, 139, 136, 142, 134, 129, 131, 126, 124, 121, 122, 118,
+    ];
+
+    const SPARKLINE_INCIDENTS: readonly number[] = [2, 1, 3, 2, 0, 1, 4, 2, 1, 3, 2, 5, 2, 4];
+
+    const SPARKLINE_DAYS: readonly string[] = [
+        "May 1",
+        "May 2",
+        "May 3",
+        "May 4",
+        "May 5",
+        "May 6",
+        "May 7",
+        "May 8",
+        "May 9",
+        "May 10",
+        "May 11",
+        "May 12",
+        "May 13",
+        "May 14",
+    ];
+
+    interface SparklineServiceRow {
+        id: string;
+        name: string;
+        region: string;
+        type: ChartSparklineType;
+        tone: ChartTone;
+        data: readonly number[];
+        target?: number;
+        prefix?: string;
+        suffix?: string;
+        format?: NumberMorphFormat;
+    }
+
+    const SPARKLINE_SERVICES: readonly SparklineServiceRow[] = [
+        {
+            id: "checkout",
+            name: "Checkout API",
+            region: "eu-central-1",
+            type: "area",
+            tone: "positive",
+            data: [412, 428, 435, 449, 442, 468, 476, 485, 492, 508, 514, 526, 538, 546],
+            suffix: " req/s",
+            format: { maximumFractionDigits: 0 },
+        },
+        {
+            id: "auth",
+            name: "Auth Gateway",
+            region: "us-east-1",
+            type: "line",
+            tone: "accent",
+            data: [94, 92, 96, 89, 88, 91, 86, 84, 85, 82, 83, 80, 79, 78],
+            target: 90,
+            suffix: " ms",
+            format: { maximumFractionDigits: 0 },
+        },
+        {
+            id: "search",
+            name: "Search Index",
+            region: "eu-west-1",
+            type: "bar",
+            tone: "caution",
+            data: [12, 9, 15, 11, 8, 14, 19, 13, 10, 16, 12, 21, 14, 17],
+            suffix: " retries",
+            format: { maximumFractionDigits: 0 },
+        },
+        {
+            id: "webhooks",
+            name: "Webhook Queue",
+            region: "ap-northeast-1",
+            type: "line",
+            tone: "negative",
+            data: [1.4, 1.5, 1.3, 1.6, 1.8, 1.7, 2, 2.2, 2.1, 2.4, 2.6, 2.5, 2.8, 2.9],
+            target: 2,
+            suffix: "% err",
+            format: { minimumFractionDigits: 1, maximumFractionDigits: 1 },
+        },
+    ];
+
+    interface WaterfallBridgeDatum {
+        step: string;
+        amount: number | null;
+        type: ChartWaterfallRowType;
+    }
+
+    const ARR_BRIDGE_DATA: readonly WaterfallBridgeDatum[] = [
+        { step: "Opening ARR", amount: 2_400_000, type: "start" },
+        { step: "New Logos", amount: 680_000, type: "delta" },
+        { step: "Expansion", amount: 420_000, type: "delta" },
+        { step: "Gross ARR", amount: null, type: "subtotal" },
+        { step: "Contraction", amount: -165_000, type: "delta" },
+        { step: "Churn", amount: -235_000, type: "delta" },
+        { step: "Net ARR", amount: null, type: "total" },
+    ];
+
+    const EBITDA_BRIDGE_DATA: readonly WaterfallBridgeDatum[] = [
+        { step: "FY25 EBITDA", amount: 820_000, type: "start" },
+        { step: "Q1 Ops", amount: 185_000, type: "delta" },
+        { step: "Q2 Ops", amount: 240_000, type: "delta" },
+        { step: "H1 Subtotal", amount: null, type: "subtotal" },
+        { step: "Q3 Hiring", amount: -310_000, type: "delta" },
+        { step: "Q4 Ops", amount: 295_000, type: "delta" },
+        { step: "FY26 EBITDA", amount: null, type: "total" },
+    ];
+
+    interface PlantKpiDatum {
+        metric: string;
+        unit: string;
+        actual: number;
+        target: number;
+        prior: number;
+        ranges: readonly number[];
+        max: number;
+    }
+
+    interface RegionalQuotaDatum {
+        region: string;
+        actual: number;
+        target: number;
+        prior: number;
+        ranges: readonly number[];
+    }
+
+    const PLANT_KPI_DATA: readonly PlantKpiDatum[] = [
+        {
+            metric: "OEE",
+            unit: "%",
+            actual: 86,
+            target: 85,
+            prior: 81,
+            ranges: [60, 80, 100],
+            max: 100,
+        },
+        {
+            metric: "Throughput",
+            unit: "t/h",
+            actual: 142,
+            target: 150,
+            prior: 136,
+            ranges: [90, 130, 180],
+            max: 180,
+        },
+        {
+            metric: "First-Pass Yield",
+            unit: "%",
+            actual: 97.4,
+            target: 96,
+            prior: 94.8,
+            ranges: [80, 92, 100],
+            max: 100,
+        },
+        {
+            metric: "Energy Efficiency",
+            unit: "%",
+            actual: 74,
+            target: 88,
+            prior: 79,
+            ranges: [60, 80, 100],
+            max: 100,
+        },
+        {
+            metric: "Line Utilization",
+            unit: "%",
+            actual: 84,
+            target: 90,
+            prior: 82,
+            ranges: [60, 80, 100],
+            max: 100,
+        },
+    ];
+
+    const REGIONAL_QUOTA_DATA: readonly RegionalQuotaDatum[] = [
+        {
+            region: "North America",
+            actual: 1_840_000,
+            target: 1_750_000,
+            prior: 1_620_000,
+            ranges: [1_000_000, 1_500_000, 2_000_000],
+        },
+        {
+            region: "EMEA",
+            actual: 1_420_000,
+            target: 1_500_000,
+            prior: 1_310_000,
+            ranges: [1_000_000, 1_500_000, 2_000_000],
+        },
+        {
+            region: "DACH",
+            actual: 1_180_000,
+            target: 1_100_000,
+            prior: 980_000,
+            ranges: [1_000_000, 1_500_000, 2_000_000],
+        },
+        {
+            region: "APAC",
+            actual: 860_000,
+            target: 1_050_000,
+            prior: 910_000,
+            ranges: [1_000_000, 1_500_000, 2_000_000],
+        },
+    ];
+
+    const BULLET_NUMBER_FORMAT: NumberMorphFormat = {
+        maximumFractionDigits: 1,
+    };
+
+    const BULLET_CURRENCY_FORMAT: NumberMorphFormat = {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+    };
+
+    function resolveBulletTone(datum: { actual: number; target: number }): ChartTone {
+        if (datum.actual >= datum.target) return "positive";
+        if (datum.actual >= datum.target * 0.9) return "caution";
+        return "negative";
+    }
+
+    type HeatmapSequentialRamp = Exclude<ChartHeatmapRamp, "diverging">;
+
+    const HEATMAP_SEQUENTIAL_RAMPS: readonly HeatmapSequentialRamp[] = [
+        "accent",
+        "teal",
+        "emerald",
+        "amber",
+        "rose",
+        "slate",
+    ];
+
+    interface CohortRetentionCellDatum {
+        cohort: string;
+        month: string;
+        retention: number | null;
+    }
+
+    const COHORT_RETENTION_DATA: readonly CohortRetentionCellDatum[] = [
+        { cohort: "Jan '26", month: "M0", retention: 100 },
+        { cohort: "Jan '26", month: "M1", retention: 94 },
+        { cohort: "Jan '26", month: "M2", retention: 89 },
+        { cohort: "Jan '26", month: "M3", retention: 85 },
+        { cohort: "Jan '26", month: "M4", retention: 82 },
+        { cohort: "Jan '26", month: "M5", retention: 79 },
+        { cohort: "Feb '26", month: "M0", retention: 100 },
+        { cohort: "Feb '26", month: "M1", retention: 92 },
+        { cohort: "Feb '26", month: "M2", retention: 87 },
+        { cohort: "Feb '26", month: "M3", retention: 83 },
+        { cohort: "Feb '26", month: "M4", retention: 80 },
+        { cohort: "Feb '26", month: "M5", retention: null },
+        { cohort: "Mar '26", month: "M0", retention: 100 },
+        { cohort: "Mar '26", month: "M1", retention: 95 },
+        { cohort: "Mar '26", month: "M2", retention: 91 },
+        { cohort: "Mar '26", month: "M3", retention: 88 },
+        { cohort: "Mar '26", month: "M4", retention: null },
+        { cohort: "Mar '26", month: "M5", retention: null },
+        { cohort: "Apr '26", month: "M0", retention: 100 },
+        { cohort: "Apr '26", month: "M1", retention: 91 },
+        { cohort: "Apr '26", month: "M2", retention: 86 },
+        { cohort: "Apr '26", month: "M3", retention: null },
+        { cohort: "Apr '26", month: "M4", retention: null },
+        { cohort: "Apr '26", month: "M5", retention: null },
+        { cohort: "May '26", month: "M0", retention: 100 },
+        { cohort: "May '26", month: "M1", retention: 96 },
+        { cohort: "May '26", month: "M2", retention: null },
+        { cohort: "May '26", month: "M3", retention: null },
+        { cohort: "May '26", month: "M4", retention: null },
+        { cohort: "May '26", month: "M5", retention: null },
+    ];
+
+    interface MarginVarianceCellDatum {
+        region: string;
+        quarter: string;
+        variance: number;
+    }
+
+    const MARGIN_VARIANCE_DATA: readonly MarginVarianceCellDatum[] = [
+        { region: "DACH", quarter: "Q1", variance: 0.042 },
+        { region: "DACH", quarter: "Q2", variance: 0.058 },
+        { region: "DACH", quarter: "Q3", variance: 0.031 },
+        { region: "DACH", quarter: "Q4", variance: 0.064 },
+        { region: "North America", quarter: "Q1", variance: 0.018 },
+        { region: "North America", quarter: "Q2", variance: -0.024 },
+        { region: "North America", quarter: "Q3", variance: 0.036 },
+        { region: "North America", quarter: "Q4", variance: 0.051 },
+        { region: "UK & Ireland", quarter: "Q1", variance: -0.015 },
+        { region: "UK & Ireland", quarter: "Q2", variance: -0.038 },
+        { region: "UK & Ireland", quarter: "Q3", variance: -0.012 },
+        { region: "UK & Ireland", quarter: "Q4", variance: 0.022 },
+        { region: "Nordics", quarter: "Q1", variance: 0.029 },
+        { region: "Nordics", quarter: "Q2", variance: 0.014 },
+        { region: "Nordics", quarter: "Q3", variance: -0.046 },
+        { region: "Nordics", quarter: "Q4", variance: -0.019 },
+    ];
+
+    const HEATMAP_RETENTION_FORMAT: NumberMorphFormat = {
+        maximumFractionDigits: 0,
+    };
+
+    const HEATMAP_VARIANCE_FORMAT: NumberMorphFormat = {
+        style: "percent",
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+        signDisplay: "exceptZero",
+    };
 
     interface MonthlyDatum {
         month: string;
@@ -557,6 +946,7 @@
     let lineCurve = $state<ChartCurve>("monotone");
     let lineTooltipMode = $state<ChartTooltipMode>("axis");
     let connectNulls = $state(false);
+    let lineDirectLabels = $state(false);
     let areaMode = $state<ChartAreaMode>("stacked");
     let barMode = $state<ChartBarMode>("grouped");
     let barValueLabels = $state<ChartBarValueLabelsMode>("none");
@@ -566,9 +956,35 @@
     let divergingZeroLine = $state<ChartZeroLineStyle>("solid");
     let horizontalLabelLayout = $state<ChartBarLabelLayout>("gutter");
     let composedTooltipMode = $state<ChartTooltipMode>("axis");
+    let selectedControllingIndex = $state<number | null>(null);
+    const selectedControllingDatum = $derived(
+        selectedControllingIndex !== null
+            ? (CONTROLLING_MONTHLY_DATA[selectedControllingIndex] ?? null)
+            : null,
+    );
     let donutShape = $state<"donut" | "pie">("donut");
     let donutGap = $state(false);
     let donutValueLabels = $state(false);
+    let sparklineActiveIndices = $state<Record<string, number | null>>({
+        checkout: null,
+        auth: null,
+        search: null,
+        webhooks: null,
+    });
+    let waterfallConnectors = $state(true);
+    let waterfallValueLabels = $state(true);
+    let selectedQuotaIndex = $state<number | null>(null);
+    const selectedQuotaDatum = $derived(
+        selectedQuotaIndex !== null ? (REGIONAL_QUOTA_DATA[selectedQuotaIndex] ?? null) : null,
+    );
+    let heatmapRamp = $state<HeatmapSequentialRamp>("accent");
+    let heatmapValueLabels = $state(true);
+    let selectedVarianceCellIndex = $state<number | null>(null);
+    const selectedVarianceCell = $derived(
+        selectedVarianceCellIndex !== null
+            ? (MARGIN_VARIANCE_DATA[selectedVarianceCellIndex] ?? null)
+            : null,
+    );
 
     const closeScript = ["</", "script>"].join("");
 
@@ -584,6 +1000,7 @@
     let curve = $state<ChartCurve>("monotone");
     let tooltipMode = $state<ChartTooltipMode>("axis");
     let connectNulls = $state(false);
+    let directLabels = $state(false);
 
     const series: ChartSeries<ArrTimeDatum>[] = [
         { id: "actual", label: "Actual ARR" },
@@ -602,6 +1019,8 @@ ${closeScript}
     {curve}
     {tooltipMode}
     {connectNulls}
+    {directLabels}
+    legend={directLabels ? "none" : "top"}
     height={280}
 />`;
 
@@ -647,7 +1066,7 @@ ${closeScript}
     {mode}
     {valueLabels}
     {tooltipMode}
-    yAxis={{ format: formatUsdCompact }}
+    yAxis={mode === "percent" ? undefined : { format: formatUsdCompact }}
     height={290}
 />`;
 
@@ -779,6 +1198,61 @@ ${closeScript}
     height={320}
 />`;
 
+    const controllingCode = `<script lang="ts">
+    import { Badge, BadgeLabel } from "cs/svelte/badge";
+    import { BarChart, type ChartSeries } from "cs/svelte/charts";
+
+    let selectedIndex = $state<number | null>(null);
+    const selectedDatum = $derived(selectedIndex !== null ? data[selectedIndex] ?? null : null);
+
+    const actualForecastSeries: ChartSeries<ControllingMonthlyDatum>[] = [
+        {
+            id: "revenue",
+            label: "Revenue",
+            tone: "accent",
+            pattern: (datum) => (datum.isForecast ? "hatch" : "solid"),
+        },
+    ];
+
+    const attainmentSeries: ChartSeries<ControllingMonthlyDatum>[] = [
+        {
+            id: "attainment",
+            label: "Plan Attainment",
+            tone: (datum) =>
+                datum.attainment >= 100
+                    ? "positive"
+                    : datum.attainment >= 90
+                      ? "caution"
+                      : "negative",
+        },
+    ];
+${closeScript}
+
+<BarChart
+    variant="elevated"
+    size="md"
+    title="Revenue Actual vs. Forecast"
+    description="Jan–Sep actuals and Q4 forecast"
+    {data}
+    x="month"
+    series={actualForecastSeries}
+    legend="none"
+    selectable={true}
+    bind:selectedIndex
+    yAxis={{ format: formatUsdCompact }}
+    height={260}
+>
+    {#snippet actions()}
+        <Badge variant="soft" color={selectedDatum ? "accent" : "base"} size="sm">
+            <BadgeLabel>
+                {selectedDatum
+                    ? \`\${selectedDatum.month}: \${formatUsdCompact(selectedDatum.revenue)} (\${selectedDatum.isForecast ? "Forecast" : "Actual"})\`
+                    : "FY 2026"}
+            </BadgeLabel>
+        </Badge>
+    {/snippet}
+</BarChart>`;
+
     const donutChartCode = `<script lang="ts">
     import { DonutChart } from "cs/svelte/charts";
 
@@ -811,6 +1285,217 @@ ${closeScript}
     locales="en-US"
     legend="end"
     height={280}
+/>`;
+
+    const sparklineCode = `<script lang="ts">
+    import { Sparkline } from "cs/svelte/charts";
+    import {
+        KpiCard,
+        KpiCardComparison,
+        KpiCardDelta,
+        KpiCardGroup,
+        KpiCardHeader,
+        KpiCardLabel,
+        KpiCardMetric,
+        KpiCardValue,
+        KpiCardVisual,
+    } from "cs/svelte/kpi-card";
+    import { NumberMorph } from "cs/svelte/number-morph";
+
+    let activeIndex = $state<number | null>(null);
+    const activeValue = $derived(latencyData[activeIndex ?? latencyData.length - 1]);
+${closeScript}
+
+<KpiCardGroup columns={3}>
+    <KpiCard variant="elevated" size="md">
+        <KpiCardHeader>
+            <KpiCardLabel>Monthly Recurring Revenue</KpiCardLabel>
+        </KpiCardHeader>
+        <KpiCardMetric>
+            <KpiCardValue>$142.8k</KpiCardValue>
+            <KpiCardDelta trend="up">+12.4%</KpiCardDelta>
+        </KpiCardMetric>
+        <KpiCardComparison>vs. last 14 days</KpiCardComparison>
+        <KpiCardVisual>
+            <Sparkline data={mrrData} type="area" tone="positive" height={52} />
+        </KpiCardVisual>
+    </KpiCard>
+
+    <KpiCard variant="elevated" size="md">
+        <KpiCardHeader>
+            <KpiCardLabel>API Latency (p95)</KpiCardLabel>
+        </KpiCardHeader>
+        <KpiCardMetric>
+            <KpiCardValue><NumberMorph value={activeValue} suffix=" ms" /></KpiCardValue>
+            <KpiCardDelta trend="down" color="positive">-8.2%</KpiCardDelta>
+        </KpiCardMetric>
+        <KpiCardComparison>SLA target 140 ms</KpiCardComparison>
+        <KpiCardVisual>
+            <Sparkline
+                data={latencyData}
+                type="line"
+                tone="accent"
+                target={140}
+                height={52}
+                interactive
+                bind:activeIndex
+            />
+        </KpiCardVisual>
+    </KpiCard>
+</KpiCardGroup>`;
+
+    const waterfallChartCode = `<script lang="ts">
+    import { WaterfallChart, type ChartWaterfallRowType } from "cs/svelte/charts";
+
+    interface BridgeStep {
+        step: string;
+        amount: number | null;
+        type: ChartWaterfallRowType;
+    }
+
+    const data: BridgeStep[] = [
+        { step: "Opening ARR", amount: 2_400_000, type: "start" },
+        { step: "New Logos", amount: 680_000, type: "delta" },
+        { step: "Expansion", amount: 420_000, type: "delta" },
+        { step: "Gross ARR", amount: null, type: "subtotal" },
+        { step: "Contraction", amount: -165_000, type: "delta" },
+        { step: "Churn", amount: -235_000, type: "delta" },
+        { step: "Net ARR", amount: null, type: "total" },
+    ];
+
+    let connectors = $state(true);
+    let valueLabels = $state(true);
+${closeScript}
+
+<WaterfallChart
+    variant="elevated"
+    size="md"
+    title="ARR Bridge"
+    description="FY 2026 recurring revenue movement from opening to closing ARR"
+    {data}
+    x="step"
+    value="amount"
+    type="type"
+    {connectors}
+    {valueLabels}
+    numberFormat={{ style: "currency", currency: "USD", maximumFractionDigits: 0 }}
+    locales="en-US"
+    yAxis={{ label: "ARR ($)" }}
+    height={300}
+/>`;
+
+    const bulletChartCode = `<script lang="ts">
+    import { BulletChart, type ChartTone } from "cs/svelte/charts";
+
+    interface PlantKpiDatum {
+        metric: string;
+        unit: string;
+        actual: number;
+        target: number;
+        prior: number;
+        ranges: readonly number[];
+        max: number;
+    }
+
+    const kpis: PlantKpiDatum[] = [
+        { metric: "OEE", unit: "%", actual: 86, target: 85, prior: 81, ranges: [60, 80, 100], max: 100 },
+        { metric: "Throughput", unit: "t/h", actual: 142, target: 150, prior: 136, ranges: [90, 130, 180], max: 180 },
+        { metric: "First-Pass Yield", unit: "%", actual: 97.4, target: 96, prior: 94.8, ranges: [80, 92, 100], max: 100 },
+        { metric: "Energy Efficiency", unit: "%", actual: 74, target: 88, prior: 79, ranges: [60, 80, 100], max: 100 },
+        { metric: "Line Utilization", unit: "%", actual: 84, target: 90, prior: 82, ranges: [60, 80, 100], max: 100 },
+    ];
+
+    let selectedIndex = $state<number | null>(null);
+
+    function resolveTone(datum: { actual: number; target: number }): ChartTone {
+        if (datum.actual >= datum.target) return "positive";
+        if (datum.actual >= datum.target * 0.9) return "caution";
+        return "negative";
+    }
+${closeScript}
+
+<BulletChart
+    variant="elevated"
+    size="md"
+    title="Plant Operations KPIs"
+    description="Q4 actuals against target and prior-quarter benchmark"
+    data={kpis}
+    label="metric"
+    unit="unit"
+    actual="actual"
+    target="target"
+    comparative="prior"
+    ranges="ranges"
+    max="max"
+    tone={resolveTone}
+    numberFormat={{ maximumFractionDigits: 1 }}
+    locales="en-US"
+/>
+
+<BulletChart
+    variant="elevated"
+    size="md"
+    title="Regional Sales Quota"
+    description="Q4 closed bookings against regional quota"
+    data={regionalQuota}
+    label="region"
+    actual="actual"
+    target="target"
+    comparative="prior"
+    ranges="ranges"
+    tone={resolveTone}
+    sharedScale={true}
+    selectable={true}
+    bind:selectedIndex
+    numberFormat={{ style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 }}
+    locales="en-US"
+/>`;
+
+    const heatmapChartCode = `<script lang="ts">
+    import { HeatmapChart, type ChartHeatmapRamp } from "cs/svelte/charts";
+
+    let ramp = $state<Exclude<ChartHeatmapRamp, "diverging">>("accent");
+    let valueLabels = $state(true);
+    let selectedIndex = $state<number | null>(null);
+${closeScript}
+
+<HeatmapChart
+    variant="elevated"
+    size="md"
+    title="Cohort Retention Matrix"
+    description="Monthly account retention by signup cohort (%)"
+    data={cohortRetention}
+    x="month"
+    y="cohort"
+    value="retention"
+    mode="sequential"
+    {ramp}
+    domain={[75, 100]}
+    {valueLabels}
+    numberFormat={{ maximumFractionDigits: 0 }}
+    locales="en-US"
+/>
+
+<HeatmapChart
+    variant="elevated"
+    size="md"
+    title="Regional Margin Variance"
+    description="Operating margin variance vs. plan around 0% pivot"
+    data={marginVariance}
+    x="quarter"
+    y="region"
+    value="variance"
+    mode="diverging"
+    pivot={0}
+    selectable={true}
+    bind:selectedIndex
+    numberFormat={{
+        style: "percent",
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+        signDisplay: "exceptZero",
+    }}
+    locales="en-US"
 />`;
 
     const interactiveCode = `<script lang="ts">
@@ -926,7 +1611,7 @@ ${closeScript}
 <div class="flex flex-col gap-10">
     <PreviewHeader
         title="Charts"
-        description="Borderless OKLCH chart shell, line, area, bar, composed, and donut presets, reference overlays, responsive SVG canvas, interactive crosshair, top-layer tooltip, and legend."
+        description="Borderless OKLCH chart shell, line, area, bar, composed, donut, and sparkline presets, reference overlays, responsive SVG canvas, interactive crosshair, top-layer tooltip, and legend."
     />
 
     <PreviewSection
@@ -946,6 +1631,8 @@ ${closeScript}
                 curve={lineCurve}
                 tooltipMode={lineTooltipMode}
                 {connectNulls}
+                directLabels={lineDirectLabels}
+                legend={lineDirectLabels ? "none" : "top"}
                 height={280}
             >
                 {#snippet actions()}
@@ -965,6 +1652,9 @@ ${closeScript}
                     </SegmentedControl>
                     <ToggleButton variant="soft" color="accent" size="xs" bind:pressed={connectNulls}>
                         <ToggleButtonLabel>Connect nulls</ToggleButtonLabel>
+                    </ToggleButton>
+                    <ToggleButton variant="soft" color="accent" size="xs" bind:pressed={lineDirectLabels}>
+                        <ToggleButtonLabel>Direct labels</ToggleButtonLabel>
                     </ToggleButton>
                 {/snippet}
             </LineChart>
@@ -1007,7 +1697,7 @@ ${closeScript}
 
     <PreviewSection
         title="Area Chart"
-        description="Vertical OKLCH gradients with overlay and stacked modes, live stacked totals, and interactive legend filtering."
+        description="Vertical OKLCH gradients with overlay, stacked, and 100% stacked modes, live stacked totals, and interactive legend filtering."
         code={areaChartCode}
     >
         <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
@@ -1037,7 +1727,7 @@ ${closeScript}
 
     <PreviewSection
         title="Bar Chart"
-        description="Grouped and stacked vertical columns with hover band, morphing tooltip totals, and optional value labels."
+        description="Grouped, stacked, and 100% stacked vertical columns with hover band, morphing tooltip totals, and optional value labels."
         code={barChartCode}
     >
         <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
@@ -1052,7 +1742,7 @@ ${closeScript}
                 mode={barMode}
                 valueLabels={barValueLabels}
                 tooltipMode={barTooltipMode}
-                yAxis={{ format: formatUsdCompact }}
+                yAxis={barMode === "percent" ? undefined : { format: formatUsdCompact }}
                 height={290}
             >
                 {#snippet actions()}
@@ -1239,6 +1929,81 @@ ${closeScript}
     </PreviewSection>
 
     <PreviewSection
+        title="Controlling & IBCS"
+        description="IBCS actual vs. forecast hatching, conditional threshold coloring, and synchronized click-to-select cross-filtering."
+        code={controllingCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <BarChart
+                    variant="elevated"
+                    size="md"
+                    title="Revenue Actual vs. Forecast"
+                    description="Jan–Sep actuals and Q4 forecast"
+                    data={CONTROLLING_MONTHLY_DATA}
+                    x="month"
+                    series={ACTUAL_FORECAST_SERIES}
+                    legend="none"
+                    selectable={true}
+                    bind:selectedIndex={selectedControllingIndex}
+                    yAxis={{ format: formatUsdCompact }}
+                    height={260}
+                >
+                    {#snippet actions()}
+                        {#if selectedControllingDatum}
+                            <Badge variant="soft" color="accent" size="sm">
+                                <BadgeLabel>
+                                    {selectedControllingDatum.month}: {formatUsdCompact(
+                                        selectedControllingDatum.revenue,
+                                    )} ({selectedControllingDatum.isForecast ? "Forecast" : "Actual"})
+                                </BadgeLabel>
+                            </Badge>
+                        {:else}
+                            <Badge variant="soft" color="base" size="sm">
+                                <BadgeLabel>FY 2026</BadgeLabel>
+                            </Badge>
+                        {/if}
+                    {/snippet}
+                </BarChart>
+
+                <BarChart
+                    variant="elevated"
+                    size="md"
+                    title="Plan Attainment"
+                    description="Monthly target realization (%)"
+                    data={CONTROLLING_MONTHLY_DATA}
+                    x="month"
+                    series={ATTAINMENT_SERIES}
+                    referenceLines={ATTAINMENT_TARGET_LINES}
+                    legend="none"
+                    selectable={true}
+                    bind:selectedIndex={selectedControllingIndex}
+                    yAxis={{ format: formatPercent, domain: [0, 120] }}
+                    height={260}
+                >
+                    {#snippet actions()}
+                        {#if selectedControllingDatum}
+                            <Badge
+                                variant="soft"
+                                color={getAttainmentTone(selectedControllingDatum.attainment)}
+                                size="sm"
+                            >
+                                <BadgeLabel>
+                                    {selectedControllingDatum.month}: {selectedControllingDatum.attainment}%
+                                </BadgeLabel>
+                            </Badge>
+                        {:else}
+                            <Badge variant="soft" color="base" size="sm">
+                                <BadgeLabel>Target 100%</BadgeLabel>
+                            </Badge>
+                        {/if}
+                    {/snippet}
+                </BarChart>
+            </div>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
         title="Donut & Pie"
         description="Interactive donut and pie rings with morphing center KPI, percentage legend filtering, monotone ramps, and semantic slice tones."
         code={donutChartCode}
@@ -1316,6 +2081,299 @@ ${closeScript}
                     height={208}
                 />
             </div>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Sparklines"
+        description="Zero-chrome line, area, and bar micro-trends inside KPI cards and interactive table rows."
+        code={sparklineCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8 flex flex-col gap-6">
+            <KpiCardGroup columns="auto">
+                <KpiCard variant="elevated" size="md">
+                    <KpiCardHeader>
+                        <KpiCardLabel>Monthly Recurring Revenue</KpiCardLabel>
+                    </KpiCardHeader>
+                    <KpiCardMetric>
+                        <KpiCardValue>$142.8k</KpiCardValue>
+                        <KpiCardDelta trend="up">+12.4%</KpiCardDelta>
+                    </KpiCardMetric>
+                    <KpiCardComparison>vs. last 14 days</KpiCardComparison>
+                    <KpiCardVisual>
+                        <Sparkline
+                            data={SPARKLINE_MRR}
+                            type="area"
+                            tone="positive"
+                            height={52}
+                            label="Monthly recurring revenue trend"
+                        />
+                    </KpiCardVisual>
+                </KpiCard>
+
+                <KpiCard variant="elevated" size="md">
+                    <KpiCardHeader>
+                        <KpiCardLabel>API Latency (p95)</KpiCardLabel>
+                    </KpiCardHeader>
+                    <KpiCardMetric>
+                        <KpiCardValue>118 ms</KpiCardValue>
+                        <KpiCardDelta trend="down" color="positive">-8.2%</KpiCardDelta>
+                    </KpiCardMetric>
+                    <KpiCardComparison>SLA target 140 ms</KpiCardComparison>
+                    <KpiCardVisual>
+                        <Sparkline
+                            data={SPARKLINE_LATENCY}
+                            type="line"
+                            tone="accent"
+                            target={140}
+                            height={52}
+                            label="API p95 latency trend"
+                        />
+                    </KpiCardVisual>
+                </KpiCard>
+
+                <KpiCard variant="elevated" size="md">
+                    <KpiCardHeader>
+                        <KpiCardLabel>Daily Incidents</KpiCardLabel>
+                    </KpiCardHeader>
+                    <KpiCardMetric>
+                        <KpiCardValue>4</KpiCardValue>
+                        <KpiCardDelta trend="up" color="caution">+2</KpiCardDelta>
+                    </KpiCardMetric>
+                    <KpiCardComparison>Last 14 days</KpiCardComparison>
+                    <KpiCardVisual>
+                        <Sparkline
+                            data={SPARKLINE_INCIDENTS}
+                            type="bar"
+                            tone="caution"
+                            height={52}
+                            label="Daily incidents trend"
+                        />
+                    </KpiCardVisual>
+                </KpiCard>
+            </KpiCardGroup>
+
+            <Card variant="elevated" size="md">
+                <CardHeader>
+                    <CardTitle>Service Telemetry</CardTitle>
+                    <CardDescription>14-day endpoint activity</CardDescription>
+                </CardHeader>
+                <CardBody>
+                    <div class="flex flex-col divide-y divide-base-weak">
+                        {#each SPARKLINE_SERVICES as row (row.id)}
+                            <div class="grid grid-cols-[minmax(0,1fr)_140px_112px] sm:grid-cols-[minmax(0,1fr)_180px_128px] items-center gap-4 py-3 first:pt-0 last:pb-0">
+                                <div class="min-w-0 flex flex-col">
+                                    <span class="text-sm font-medium text-strong truncate">{row.name}</span>
+                                    <span class="text-xs text-weak truncate">{row.region}</span>
+                                </div>
+                                <Sparkline
+                                    data={row.data}
+                                    type={row.type}
+                                    tone={row.tone}
+                                    target={row.target}
+                                    height={28}
+                                    interactive
+                                    bind:activeIndex={sparklineActiveIndices[row.id]}
+                                    label={`${row.name} 14-day trend`}
+                                />
+                                <div class="flex flex-col items-end tabular-nums">
+                                    <span class="text-sm font-semibold text-strong">
+                                        <NumberMorph
+                                            value={row.data[sparklineActiveIndices[row.id] ?? row.data.length - 1] ?? 0}
+                                            prefix={row.prefix}
+                                            suffix={row.suffix}
+                                            format={row.format}
+                                        />
+                                    </span>
+                                    <span class="text-xs text-weak">
+                                        {SPARKLINE_DAYS[sparklineActiveIndices[row.id] ?? row.data.length - 1] ?? ""}
+                                    </span>
+                                </div>
+                            </div>
+                        {/each}
+                    </div>
+                </CardBody>
+            </Card>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Waterfall"
+        description="Cumulative financial bridges with start, positive and negative delta, subtotal, and total bars, dashed step connectors, and morphing running-total tooltips."
+        code={waterfallChartCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8 flex flex-col gap-6">
+            <WaterfallChart
+                variant="elevated"
+                size="md"
+                title="ARR Bridge"
+                description="FY 2026 recurring revenue movement from opening to closing ARR"
+                data={ARR_BRIDGE_DATA}
+                x="step"
+                value="amount"
+                type="type"
+                connectors={waterfallConnectors}
+                valueLabels={waterfallValueLabels}
+                numberFormat={TOOLTIP_CURRENCY_FORMAT}
+                locales="en-US"
+                yAxis={{ label: "ARR ($)" }}
+                height={300}
+            >
+                {#snippet actions()}
+                    <ToggleButton variant="soft" color="accent" size="xs" bind:pressed={waterfallConnectors}>
+                        <ToggleButtonLabel>Connectors</ToggleButtonLabel>
+                    </ToggleButton>
+                    <ToggleButton variant="soft" color="accent" size="xs" bind:pressed={waterfallValueLabels}>
+                        <ToggleButtonLabel>Labels</ToggleButtonLabel>
+                    </ToggleButton>
+                {/snippet}
+            </WaterfallChart>
+
+            <WaterfallChart
+                variant="elevated"
+                size="md"
+                title="Q1–Q4 EBITDA Bridge"
+                description="Quarterly operating earnings progression with H1 subtotal"
+                data={EBITDA_BRIDGE_DATA}
+                x="step"
+                value="amount"
+                type="type"
+                totalTone="accent"
+                numberFormat={TOOLTIP_CURRENCY_FORMAT}
+                locales="en-US"
+                yAxis={{ label: "EBITDA ($)" }}
+                height={270}
+            />
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Bullet"
+        description="Compact target-vs-actual KPI tracks with qualitative range bands, comparative prior-period markers, and shared-scale comparison."
+        code={bulletChartCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <BulletChart
+                    variant="elevated"
+                    size="md"
+                    title="Plant Operations KPIs"
+                    description="Q4 actuals against target and prior-quarter benchmark"
+                    data={PLANT_KPI_DATA}
+                    label="metric"
+                    unit="unit"
+                    actual="actual"
+                    target="target"
+                    comparative="prior"
+                    ranges="ranges"
+                    max="max"
+                    tone={resolveBulletTone}
+                    numberFormat={BULLET_NUMBER_FORMAT}
+                    locales="en-US"
+                />
+
+                <BulletChart
+                    variant="elevated"
+                    size="md"
+                    title="Regional Sales Quota"
+                    description="Q4 closed bookings against regional quota"
+                    data={REGIONAL_QUOTA_DATA}
+                    label="region"
+                    actual="actual"
+                    target="target"
+                    comparative="prior"
+                    ranges="ranges"
+                    tone={resolveBulletTone}
+                    sharedScale={true}
+                    selectable={true}
+                    bind:selectedIndex={selectedQuotaIndex}
+                    numberFormat={BULLET_CURRENCY_FORMAT}
+                    locales="en-US"
+                >
+                    {#snippet actions()}
+                        <Badge variant="soft" color={selectedQuotaDatum ? "accent" : "base"} size="sm">
+                            <BadgeLabel>
+                                {selectedQuotaDatum
+                                    ? `${selectedQuotaDatum.region}: ${formatUsdCompact(selectedQuotaDatum.actual)}`
+                                    : "Q4 FY26"}
+                            </BadgeLabel>
+                        </Badge>
+                    {/snippet}
+                </BulletChart>
+            </div>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="Heatmap & Matrix"
+        description="Sequential and diverging 2D matrices with OKLCH color ramps, contrast-safe cell values, gliding legend notch, and 2D keyboard navigation."
+        code={heatmapChartCode}
+    >
+        <div class="w-full rounded-2xl squircle-soft bg-canvas p-6 md:p-8 flex flex-col gap-6">
+            <HeatmapChart
+                variant="elevated"
+                size="md"
+                title="Cohort Retention Matrix"
+                description="Monthly account retention by signup cohort (%)"
+                data={COHORT_RETENTION_DATA}
+                x="month"
+                y="cohort"
+                value="retention"
+                mode="sequential"
+                ramp={heatmapRamp}
+                domain={[75, 100]}
+                valueLabels={heatmapValueLabels}
+                numberFormat={HEATMAP_RETENTION_FORMAT}
+                locales="en-US"
+            >
+                {#snippet actions()}
+                    <SegmentedControl size="xs" bind:value={heatmapRamp} aria-label="Heatmap color ramp">
+                        {#each HEATMAP_SEQUENTIAL_RAMPS as ramp (ramp)}
+                            <SegmentedControlItem value={ramp}>
+                                <SegmentedControlLabel class="capitalize">{ramp}</SegmentedControlLabel>
+                            </SegmentedControlItem>
+                        {/each}
+                    </SegmentedControl>
+                    <ToggleButton variant="soft" color="accent" size="xs" bind:pressed={heatmapValueLabels}>
+                        <ToggleButtonLabel>Values</ToggleButtonLabel>
+                    </ToggleButton>
+                {/snippet}
+            </HeatmapChart>
+
+            <HeatmapChart
+                variant="elevated"
+                size="md"
+                title="Regional Margin Variance"
+                description="Operating margin variance vs. plan around 0% pivot"
+                data={MARGIN_VARIANCE_DATA}
+                x="quarter"
+                y="region"
+                value="variance"
+                mode="diverging"
+                pivot={0}
+                selectable={true}
+                bind:selectedIndex={selectedVarianceCellIndex}
+                numberFormat={HEATMAP_VARIANCE_FORMAT}
+                locales="en-US"
+            >
+                {#snippet actions()}
+                    <Badge
+                        variant="soft"
+                        color={selectedVarianceCell
+                            ? selectedVarianceCell.variance >= 0
+                                ? "positive"
+                                : "negative"
+                            : "base"}
+                        size="sm"
+                    >
+                        <BadgeLabel>
+                            {selectedVarianceCell
+                                ? `${selectedVarianceCell.region} ${selectedVarianceCell.quarter}: ${new Intl.NumberFormat("en-US", HEATMAP_VARIANCE_FORMAT).format(selectedVarianceCell.variance)}`
+                                : "FY 2026"}
+                        </BadgeLabel>
+                    </Badge>
+                {/snippet}
+            </HeatmapChart>
         </div>
     </PreviewSection>
 

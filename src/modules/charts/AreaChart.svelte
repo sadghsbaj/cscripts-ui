@@ -35,6 +35,7 @@
         strokeWidth,
         showDots = "active",
         connectNulls = false,
+        directLabels = false,
         referenceLines,
         referenceBands,
         annotations,
@@ -59,9 +60,11 @@
         emptyTitle,
         emptyDescription,
         interactive = true,
+        selectable = false,
         onPointClick,
         hiddenSeriesIds = $bindable(),
         activeIndex = $bindable(),
+        selectedIndex = $bindable(),
         hoveredSeriesId = $bindable(),
         label,
         labelledBy,
@@ -87,7 +90,8 @@
     const gridHorizontal = $derived(typeof grid === "object" ? (grid.horizontal ?? true) : true);
     const gridVertical = $derived(typeof grid === "object" ? (grid.vertical ?? false) : false);
     const gridZeroLine = $derived(typeof grid === "object" ? (grid.zeroLine ?? true) : true);
-    const resolvedShowTotal = $derived(showTotal ?? mode === "stacked");
+    const isStacked = $derived(mode === "stacked" || mode === "percent");
+    const resolvedShowTotal = $derived(showTotal ?? isStacked);
     const customTooltip = $derived(typeof tooltip === "function" ? tooltip : undefined);
     const showTooltip = $derived(
         interactive && tooltip !== false && tooltipMode !== "none" && !loading && !isEmptyState,
@@ -148,6 +152,7 @@
                 {strokeWidth}
                 {showDots}
                 {connectNulls}
+                {directLabels}
             />
 
             {#if referenceLines}
@@ -223,10 +228,14 @@
     {xAxis}
     {yAxis}
     {y2Axis}
-    stacked={mode === "stacked"}
+    stacked={isStacked}
+    percent={mode === "percent"}
+    {directLabels}
+    {selectable}
     {margin}
     bind:hiddenSeriesIds
     bind:activeIndex
+    bind:selectedIndex
     bind:hoveredSeriesId
     {tooltipMode}
     {loading}

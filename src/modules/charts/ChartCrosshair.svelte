@@ -92,6 +92,7 @@
                     chart.extractSeriesValue(item, datum, datumIndex),
                 ),
             })),
+            { normalized: chart.isMarkTypePercent("area") },
         );
         const lookup: Record<string, number> = {};
         for (const layer of layers) {
@@ -137,7 +138,7 @@
                 seriesId: seriesItem.id,
                 cx: isHorizontal ? valueCoord : xCenter,
                 cy: isHorizontal ? xCenter : valueCoord,
-                color: chart.getSeriesColor(seriesItem.id),
+                color: chart.resolveDatumColor(seriesItem.id, datum, index),
                 dimmed: chart.isSeriesDimmed(seriesItem.id),
             });
         }

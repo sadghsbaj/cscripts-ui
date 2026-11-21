@@ -65,6 +65,7 @@
             {const isActive = $derived(chart.hoveredSeriesId === item.id)}
             {const color = $derived(chart.getSeriesColor(item.id))}
             {const swatchKind = $derived(resolveSwatchKind(item, marker))}
+            {const pattern = $derived(chart.resolveSeriesPattern(item.id))}
 
             <div class="cs-chart-legend-entry" role="listitem">
                 {#if interactive}
@@ -84,6 +85,7 @@
                         <span
                             class="cs-chart-legend-swatch"
                             data-kind={swatchKind}
+                            data-pattern={pattern !== "solid" ? pattern : undefined}
                             style:--cs-chart-swatch-color={color}
                             aria-hidden="true"
                         ></span>
@@ -98,6 +100,7 @@
                         <span
                             class="cs-chart-legend-swatch"
                             data-kind={swatchKind}
+                            data-pattern={pattern !== "solid" ? pattern : undefined}
                             style:--cs-chart-swatch-color={color}
                             aria-hidden="true"
                         ></span>

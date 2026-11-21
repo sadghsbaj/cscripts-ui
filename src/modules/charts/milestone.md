@@ -298,3 +298,196 @@ Harden edge cases, complete accessibility & reduced-motion audits, verify SVG ex
 - [ ] All 5 Tier-2 charts + full Tier-1 primitive layer documented and showcased.
 - [ ] Zero `<foreignObject>`, zero SVG `<filter>`, zero `*.internal.*` exports, zero UnoCSS in library files.
 - [ ] `bun run test`, `bun run typecheck`, `bun run lint`, and `bun run build:docs` all pass cleanly.
+
+---
+
+# V2 — Executive & Controlling Expansion (M8–M12)
+
+Extends `src/modules/charts/` (`cs/svelte/charts`) per [charts.blueprint.md §6](./charts.blueprint.md) while strictly preserving all V1 invariants: 100% pure SVG inside `<svg>` (zero `<foreignObject>`, zero `<filter>`), required `variant` & `size` on shelled Tier-2 charts, `$props.id()` for unique SVG `<defs>`, `NumberMorph` in floating `popover="manual"` tooltips, and zero `*.internal.*` public exports.
+
+## V2 Dependency Order Overview
+
+```text
+M8 Controlling Upgrades (Callbacks, IBCS Patterns, 100% Percent Stack, selectedIndex, Direct Labels)
+  ├──▶ M9 <Sparkline> Micro-Chart (KpiCardVisual & DataTable)
+  ├──▶ M10 <WaterfallChart> & <ChartWaterfall> (Bridge Chart)
+  ├──▶ M11 <BulletChart> & <ChartBullet> (IBCS Scorecard)
+  └──▶ M12 <HeatmapChart> & <ChartHeatmap> (Matrix + Final V2 Docs & Full Playground Gate)
+```
+
+---
+
+## M8 — Controlling Upgrades on Existing Charts
+
+### 1. Goal & Scope
+Upgrade the existing V1 kernel, Tier-1 primitives, and Tier-2 charts with five executive/controlling capabilities: per-datum conditional `color`/`tone` callbacks, IBCS scenario fill patterns (`solid` / `hatch` / `outline`), 100% normalized stacking (`mode="percent"`), persistent `$bindable selectedIndex` cross-filtering, and direct end-of-line series labels (`directLabels`).
+
+### 2. Files to Create / Update
+- **Update:**
+  - `src/modules/charts/chart-scales.internal.ts` — Add `[0, 1]` percent domain lock and default `%` tick formatter when `percent` mode is active.
+  - `src/modules/charts/chart-geometry.internal.ts` — Add `stackOffsetExpand` support (`mode="percent"`) with safe zero-sum row clamping (`[0, 0]`, never `NaN`) and per-datum share computation.
+  - `src/modules/charts/chart-measure.internal.ts` — Add `resolveDirectLabelPositions()` greedy vertical collision nudging (`minGap`, `[0, plotHeight]` clamping) and automatic `margin.right` reservation for `directLabels`.
+  - `src/modules/charts/chart-state.svelte.ts` — Extend `ChartSeries<TDatum>` (`color`/`tone`/`pattern` callbacks), add `resolveDatumColor()` & `resolveDatumPattern()`, extend `CHART_BAR_MODES` & `CHART_AREA_MODES` with `"percent"`, add `CHART_BAR_PATTERNS`, add `percent?: boolean`, `selectedIndex`, `selectable`, `directLabels`, and extend `ChartTooltipItem` with `share` / `formattedShare`.
+  - `src/modules/charts/Chart.svelte` — Wire `selectedIndex = $bindable(null)`, `selectable`, `percent`, and `data-has-selection` on root `.cs-chart`.
+  - `src/modules/charts/ChartBar.svelte` — Per-datum color/tone resolution, export-safe `<defs><pattern>` with `$props.id()` (`hatch` / `outline`), `mode="percent"`, and `data-selected` mark attributes.
+  - `src/modules/charts/ChartArea.svelte` — `mode="percent"` normalized stacking and `directLabels` support.
+  - `src/modules/charts/ChartLine.svelte` — Per-datum dot/active color resolution, `data-selected`, and `directLabels` SVG `<text>` end-of-line labels with collision nudging.
+  - `src/modules/charts/ChartArc.svelte` — Persistent `selectedIndex` & `data-selected` slice emphasis.
+  - `src/modules/charts/ChartCrosshair.svelte` — Resolve active point dot color via `resolveDatumColor()`.
+  - `src/modules/charts/ChartTooltip.svelte` — Resolve per-datum swatch color at `activeIndex`; render **both** raw value (`NumberMorph`) and `% share` in `mode="percent"`.
+  - `src/modules/charts/ChartLegend.svelte` — Reflect static `hatch` / `outline` scenario patterns on swatch indicators.
+  - `src/modules/charts/LineChart.svelte`, `AreaChart.svelte`, `BarChart.svelte`, `ComposedChart.svelte`, `DonutChart.svelte` — Forward `selectedIndex = $bindable(null)`, `selectable`, `directLabels` (`LineChart` / `AreaChart`), and `mode="percent"` (`BarChart` / `AreaChart`).
+  - `src/modules/charts/charts.css` — Add `--cs-chart-unselected-opacity`, `[data-has-selection]` dimming, `[data-selected]` highlight styling, legend `hatch`/`outline` swatch styles, direct label typography, and dual value+share tooltip row layout.
+  - `src/modules/charts/index.ts` — Export `CHART_BAR_PATTERNS`, `ChartBarPattern`, and updated prop/series types.
+  - `src/modules/charts/charts.test.ts`, `src/modules/charts/charts.svelte.test.ts`, and `src/modules/charts/Charts.preview.svelte`.
+
+### 3. Verification & Testing Gate
+- **Vitest Unit & DOM (`charts.test.ts`, `charts.svelte.test.ts`):**
+  - Per-datum `color`/`tone` callbacks override series defaults across `ChartBar`, `ChartLine` dots, `ChartCrosshair`, and `ChartTooltip` swatches.
+  - IBCS `pattern="hatch"` and `pattern="outline"` emit unique `$props.id()` SVG `<pattern>` defs (no ID collisions across multiple mounted charts) with zero `<foreignObject>` or `<filter>`.
+  - `mode="percent"` normalizes stacks to `[0, 1]`, handles all-zero rows without `NaN`, auto-formats axis ticks as `%`, and renders both raw value and `% share` in `ChartTooltip`.
+  - `selectedIndex` persists independently of hover `activeIndex`, toggles on click / `Enter`/`Space` when `selectable={true}`, and sets `data-selected` + `data-has-selection`.
+  - `directLabels` nudges colliding endpoints apart by `>= minGap`, clamps within plot height, and reserves `margin.right` without clipping.
+- **Playwright Visual Check:**
+  - Verify IBCS Actual/Forecast/Plan bar chart (`solid`/`hatch`/`outline`), 100% stacked `BarChart` & `AreaChart` with dual raw+`%` tooltip, cross-filter `selectedIndex` highlight, and `directLabels` on a multi-series `LineChart` in Light & Dark modes.
+- **Static Checks:** `bun run typecheck` and `bun run lint`.
+
+### 4. Done Criteria
+- [ ] All 5 M8 features work across Tier-1 primitives and Tier-2 charts with zero breaking changes to V1 APIs.
+- [ ] Zero SVG `<pattern>` ID collisions across multiple instances; zero `<foreignObject>` or `<filter>`.
+- [ ] Unit/component tests, Playwright checks, `typecheck`, and `lint` pass.
+
+---
+
+## M9 — `<Sparkline>` Micro-Chart
+
+### 1. Goal & Scope
+Deliver the featherweight, zero-chrome `<Sparkline>` primitive (`type="line" | "area" | "bar"`) designed to drop directly into `KpiCardVisual` (`52px`) and `DataTable` cells (`24–32px`) with minimal DOM/SVG footprint, optional `target` hairline, `showEndDot`, and optional lightweight `interactive` scrubbing.
+
+### 2. Files to Create / Update
+- **Create:**
+  - `src/modules/charts/Sparkline.svelte` — Standalone frameless micro-chart (`ref = $bindable(null)`, `svgRef = $bindable(null)`, `type`, `data`, `value`, `tone`, `color`, `curve`, `strokeWidth`, `target`, `showEndDot`, `interactive`, `activeIndex = $bindable(null)`, `domain`, `height`, `width`, `label`, `{...rest}`). Uses `$props.id()` for unique area gradient `<defs>`, rAF-coalesced `ResizeObserver` when width is fluid, and pure SVG marks.
+- **Update:**
+  - `src/modules/charts/charts.css` — Add `.cs-sparkline` and `.cs-sparkline-svg` styles (zero padding/chrome, crisp target hairline, end-dot halo).
+  - `src/modules/charts/index.ts` — Export `Sparkline`, `SPARKLINE_TYPES`, `SparklineType`, `SparklineProps`.
+  - `src/modules/charts/charts.svelte.test.ts` and `src/modules/charts/Charts.preview.svelte` (including live `KpiCardVisual` `52px` and compact `24–32px` table-cell previews).
+
+### 3. Verification & Testing Gate
+- **Vitest DOM (`charts.svelte.test.ts`):**
+  - Renders `type="line"`, `type="area"` (with unique `<linearGradient>` ID), and `type="bar"` for both `number[]` and object `data` + `value` accessor.
+  - Handles empty `[]`, single point, all-equal values, and `null` gaps without `NaN` SVG attributes.
+  - Renders dashed `target` hairline snapped to `snapHalf(y)` and `showEndDot` on the last valid datum.
+  - `interactive={true}` updates `activeIndex` on pointer move and clears on pointer leave; `ref`, `svgRef`, and `{...rest}` forward cleanly.
+  - Zero `<foreignObject>` and zero `<filter>`.
+- **Playwright Visual Check:**
+  - Inspect `Sparkline` (`line`, `area`, `bar`, `positive`/`negative`/`accent` tones, `target` hairline, `showEndDot`) inside `KpiCardVisual` (`52px`) and dense `24–32px` table rows in Light & Dark modes.
+- **Static Checks:** `bun run typecheck` and `bun run lint`.
+
+### 4. Done Criteria
+- [ ] `Sparkline` renders crisply at `24px`, `32px`, and `52px` with zero shell chrome or clipping.
+- [ ] Tests, Playwright visual checks, `typecheck`, and `lint` pass.
+
+---
+
+## M10 — `<WaterfallChart>` & `<ChartWaterfall>` (Bridge Chart)
+
+### 1. Goal & Scope
+Implement financial bridge visualization via pure-math running-base cumulative geometry (`y0 → y1`) in `chart-geometry.internal.ts`, Tier-1 `<ChartWaterfall>`, and Tier-2 `<WaterfallChart>` (`variant` & `size` required, no defaults) supporting `start | delta | subtotal | total` rows, semantic positive/negative delta coloring, dashed `1px` step connectors, signed delta value labels, `NumberMorph` tooltip, and keyboard scrubbing.
+
+### 2. Files to Create / Update
+- **Update:**
+  - `src/modules/charts/chart-geometry.internal.ts` — Add `computeWaterfallBars()` running-base cumulative layout (`start`, `delta`, `subtotal`, `total`), zero-crossing cap-radius direction, and connector line segments.
+  - `src/modules/charts/charts.css` — Add `--cs-chart-waterfall-connector`, `--cs-chart-waterfall-subtotal`, `--cs-chart-waterfall-total`, and waterfall bar/connector/label rules.
+  - `src/modules/charts/index.ts` — Export `ChartWaterfall`, `WaterfallChart`, `CHART_WATERFALL_ROW_TYPES`, `ChartWaterfallRowType`, `ChartWaterfallBar`, `ChartWaterfallTooltipContext`, `ChartWaterfallProps`, `WaterfallChartProps`.
+- **Create:**
+  - `src/modules/charts/ChartWaterfall.svelte` — Tier-1 SVG waterfall layer (bars with per-datum color/tone/IBCS pattern support, snapped `1px` dashed horizontal connectors, signed outside delta value labels, `data-selected` support).
+  - `src/modules/charts/WaterfallChart.svelte` — Tier-2 batteries-included Waterfall Chart (`variant` & `size` required, interactive `popover="manual"` tooltip with `NumberMorph` delta + running balance, keyboard scrubbing, `selectedIndex = $bindable(null)`).
+- **Update:** `src/modules/charts/charts.test.ts`, `src/modules/charts/charts.svelte.test.ts`, and `src/modules/charts/Charts.preview.svelte`.
+
+### 3. Verification & Testing Gate
+- **Vitest Unit & DOM:**
+  - `computeWaterfallBars()` accurately computes cumulative `y0 → y1` across `start`, positive/negative `delta`, `subtotal`, and `total` rows, including zero-crossing bridges.
+  - Positive deltas resolve to `--cs-chart-positive`, negative deltas to `--cs-chart-negative`, subtotals/totals to neutral/accent tokens (overridable via `color`/`tone`).
+  - Connectors snap to `snapHalf(y)` from bar `i` exit level to bar `i + 1` entry edge; delta labels include explicit `+`/`-` signs.
+  - Keyboard scrubbing (`ArrowLeft`/`ArrowRight`/`Home`/`End`/`Escape`/`Enter`/`Space`), `.cs-chart-sr-live`, `selectedIndex`, and `ChartTooltip` (`NumberMorph`) all function cleanly.
+  - Zero `<foreignObject>` and zero `<filter>`.
+- **Playwright Visual Check:**
+  - Inspect executive P&L bridge (Revenue → COGS → Gross Profit subtotal → OpEx → Tax → Net Income total) and zero-crossing variance bridge in Light & Dark modes.
+- **Static Checks:** `bun run typecheck` and `bun run lint`.
+
+### 4. Done Criteria
+- [ ] `WaterfallChart` and `ChartWaterfall` render crisp bridges with accurate cumulative math, connectors, signed labels, and interactive tooltips.
+- [ ] `variant` and `size` are required with no defaults; `ref`/`svgRef`/`{...rest}` forwarded.
+- [ ] Tests, Playwright visual checks, `typecheck`, and `lint` pass.
+
+---
+
+## M11 — `<BulletChart>` & `<ChartBullet>` (IBCS Plan/Actual/Target Scorecard)
+
+### 1. Goal & Scope
+Implement compact single-row and multi-row IBCS Plan/Actual/Target scorecards via Tier-1 `<ChartBullet>` and Tier-2 `<BulletChart>` (`variant` & `size` required, no defaults) featuring calm stepped qualitative range bands, actual bar, crisp vertical target tick, optional comparative prior-period marker, inline pure-SVG labels & `tabular-nums` readouts, hover tooltip, and vertical keyboard row navigation.
+
+### 2. Files to Create / Update
+- **Update:**
+  - `src/modules/charts/chart-geometry.internal.ts` — Add `computeBulletRows()` layout helper (per-row or `sharedScale` horizontal coordinates, qualitative range band rects, actual bar rect, target tick line, comparative marker).
+  - `src/modules/charts/charts.css` — Add `--cs-chart-bullet-range-1..3`, `--cs-chart-bullet-target`, `--cs-chart-bullet-row-height`, and row hover/selection styles.
+  - `src/modules/charts/index.ts` — Export `ChartBullet`, `BulletChart`, `ChartBulletRange`, `ChartBulletRow`, `ChartBulletTooltipContext`, `ChartBulletProps`, `BulletChartProps`.
+- **Create:**
+  - `src/modules/charts/ChartBullet.svelte` — Tier-1 pure-SVG bullet layer (stepped qualitative bands, centered actual bar, crisp target tick with `--cs-chart-point-ring-bg` halo, optional comparative marker, truncated left label with `<title>`, right-aligned `tabular-nums` actual/target readout).
+  - `src/modules/charts/BulletChart.svelte` — Tier-2 batteries-included Bullet scorecard (`variant` & `size` required, `sharedScale`, `showReadout`, `showVariance`, floating `popover="manual"` tooltip with `NumberMorph` actual/target/variance, vertical `ArrowUp`/`ArrowDown` keyboard row navigation, `selectedIndex = $bindable(null)`).
+- **Update:** `src/modules/charts/charts.test.ts`, `src/modules/charts/charts.svelte.test.ts`, and `src/modules/charts/Charts.preview.svelte`.
+
+### 3. Verification & Testing Gate
+- **Vitest Unit & DOM:**
+  - Single-row and multi-row layouts compute accurate band/actual/target/comparative coordinates in both per-row scale and `sharedScale={true}` modes.
+  - Long KPI row labels truncate cleanly with `<title>`; target tick renders crisply when `target >= max` or `actual > target`.
+  - Keyboard `ArrowUp`/`ArrowDown`/`Home`/`End`/`Escape`/`Enter`/`Space` navigates rows, updates `.cs-chart-sr-live`, opens tooltip, and toggles `selectedIndex` when `selectable={true}`.
+  - Zero `<foreignObject>` and zero `<filter>`.
+- **Playwright Visual Check:**
+  - Inspect multi-KPI executive scorecard (Revenue `$`, Gross Margin `%`, NPS, Churn `%` with comparative markers) and single-row compact bullet in Light & Dark modes.
+- **Static Checks:** `bun run typecheck` and `bun run lint`.
+
+### 4. Done Criteria
+- [ ] `BulletChart` & `ChartBullet` deliver crisp IBCS Plan/Actual/Target scorecards with zero `<foreignObject>`.
+- [ ] `variant` and `size` are required with no defaults; keyboard navigation and tooltips pass.
+- [ ] Tests, Playwright visual checks, `typecheck`, and `lint` pass.
+
+---
+
+## M12 — `<HeatmapChart>` & `<ChartHeatmap>`, V2 Docs & Full Playground Gate
+
+### 1. Goal & Scope
+Implement the 2D operations/cohort `<HeatmapChart>` & `<ChartHeatmap>` (`variant` & `size` required, no defaults) with dual band scales, OKLCH sequential & diverging ramps, contrast-safe centered `tabular-nums` cell values, continuous/stepped ramp legend, floating `popover="manual"` tooltip (`NumberMorph`), and 2D keyboard grid navigation — then complete V2 consumer documentation (`charts.docs.md`) and run the full repository verification gate.
+
+### 2. Files to Create / Update
+- **Update:**
+  - `src/modules/charts/chart-scales.internal.ts` — Add dual band-scale matrix helper and OKLCH sequential (`accent | teal | emerald | slate | amber | rose`) & diverging (`negative ↔ neutral ↔ positive`) color + contrast-safe foreground resolvers.
+  - `src/modules/charts/chart-geometry.internal.ts` — Add `computeHeatmapCells()` integer-snapped cell geometry (`cellGap`, `cellRadius`, `square` aspect clamping, missing-cell placeholders).
+  - `src/modules/charts/charts.css` — Add `--cs-chart-heatmap-empty`, `--cs-chart-heatmap-mid`, `--cs-chart-heatmap-cell-fg-light`/`-dark`, ramp legend (`.cs-chart-ramp-legend` continuous & stepped), and cell hover/selection double-ring styles.
+  - `src/modules/charts/index.ts` — Export `ChartHeatmap`, `HeatmapChart`, `CHART_HEATMAP_COLOR_SCALES`, `CHART_HEATMAP_RAMPS`, `CHART_HEATMAP_LEGEND_STYLES`, `ChartHeatmapColorScale`, `ChartHeatmapRamp`, `ChartHeatmapLegendStyle`, `ChartHeatmapCoord`, `ChartHeatmapCell`, `ChartHeatmapTooltipContext`, `ChartHeatmapProps`, `HeatmapChartProps`.
+- **Create:**
+  - `src/modules/charts/ChartHeatmap.svelte` — Tier-1 pure-SVG matrix layer (integer-snapped cell rects, contrast-safe centered `tabular-nums` SVG `<text>` auto-hidden on small cells, hover & `data-selected` ring outlines).
+  - `src/modules/charts/HeatmapChart.svelte` — Tier-2 batteries-included Heatmap Chart (`variant` & `size` required, dual `ChartAxis`, continuous/stepped ramp legend, floating `popover="manual"` tooltip with `NumberMorph`, full 2D keyboard navigation `ArrowLeft`/`ArrowRight`/`ArrowUp`/`ArrowDown`/`Home`/`End`/`Escape`/`Enter`/`Space`, `activeCell = $bindable(null)`, `selectedCell = $bindable(null)`).
+- **Update (Final V2 Polish & Docs):**
+  - `src/modules/charts/charts.docs.md` — Add complete V2 sections (M8 controlling features, `Sparkline`, `WaterfallChart`, `BulletChart`, `HeatmapChart` API tables, IBCS recipes, and 2D keyboard shortcuts).
+  - `src/modules/charts/Charts.preview.svelte` — Complete V2 showcase (IBCS scenario bars, 100% normalized stacks, `selectedIndex` cross-filtering, `directLabels`, `Sparkline` in `KpiCardVisual` & table cells, `WaterfallChart`, `BulletChart`, and sequential/diverging `HeatmapChart`).
+  - `src/modules/charts/charts.test.ts` & `src/modules/charts/charts.svelte.test.ts` — Unit, 2D keyboard, contrast-threshold, and V2 export-safety regression tests.
+
+### 3. Verification & Testing Gate
+- **Vitest Unit & DOM:**
+  - Dual band scales handle sparse/missing cells cleanly (`null` → `--cs-chart-heatmap-empty`) and clamp `square={true}` without overflow.
+  - Sequential & diverging ramps map values monotonically and switch cell foreground for contrast safety; cell labels auto-suppress below `28×18px`.
+  - 2D keyboard navigation (`ArrowLeft`/`ArrowRight`/`ArrowUp`/`ArrowDown`/`Home`/`End`/`Escape`/`Enter`/`Space`) traverses rows/columns accurately, updates `activeCell`/`selectedCell`, and announces via `.cs-chart-sr-live`.
+  - **V2 Export-Safety Audit:** Assert `svg.querySelectorAll("foreignObject, filter").length === 0` across all V1 + V2 charts (`Sparkline`, `WaterfallChart`, `BulletChart`, `HeatmapChart`, plus M8 IBCS patterns & direct labels).
+- **Full Repository Gate:**
+  - `bun run test` — 100% passing.
+  - `bun run typecheck` — 0 errors.
+  - `bun run lint` — 0 errors / warnings.
+  - `bun run build:docs` — builds cleanly with updated `charts.docs.md` and `Charts.preview.svelte`.
+  - End-to-end Playwright visual walkthrough of all V2 sections in `Charts.preview.svelte` across Light & Dark modes.
+
+### 4. Done Criteria
+- [ ] `HeatmapChart` & `ChartHeatmap` ship with sequential/diverging OKLCH ramps, contrast-safe labels, ramp legend, and 2D keyboard navigation.
+- [ ] `charts.docs.md` and `Charts.preview.svelte` cover all V1 + V2 capabilities completely.
+- [ ] Zero `<foreignObject>`, zero SVG `<filter>`, zero `*.internal.*` exports, zero UnoCSS in library files.
+- [ ] `bun run test`, `bun run typecheck`, `bun run lint`, and `bun run build:docs` all pass cleanly.

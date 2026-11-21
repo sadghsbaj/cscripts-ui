@@ -42,13 +42,249 @@
             color-mix(in oklab, var(--cs-color-base-100) 18%, transparent)
         );
 
-        /* Area & isolation defaults */
+        /* Area, pattern & selection defaults */
         --cs-chart-area-top-opacity: 0.22;
         --cs-chart-area-bottom-opacity: 0;
         --cs-chart-area-stacked-top-opacity: 0.45;
         --cs-chart-area-stacked-bottom-opacity: 0.25;
         --cs-chart-ref-band-opacity: 0.065;
         --cs-chart-dim-opacity: 0.24;
+        --cs-chart-hatch-bg-opacity: 0.14;
+        --cs-chart-hatch-stripe-opacity: 0.85;
+        --cs-chart-outline-fill-opacity: 0.09;
+        --cs-chart-selected-ring: var(--cs-color-text-strong);
+        --cs-chart-unselected-opacity: 0.38;
+
+        /* Waterfall tokens */
+        --cs-chart-waterfall-connector: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 24%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 26%, transparent)
+        );
+        --cs-chart-waterfall-subtotal: light-dark(
+            var(--cs-color-slate-600),
+            var(--cs-color-slate-400)
+        );
+        --cs-chart-waterfall-total: light-dark(
+            var(--cs-color-slate-700),
+            var(--cs-color-slate-300)
+        );
+
+        /* Bullet scorecard tokens (mixed against opaque surface cutout backing) */
+        --cs-chart-bullet-range-1: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 15%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 20%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-bullet-range-2: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 9.5%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 13%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-bullet-range-3: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 4.5%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 6.5%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-bullet-target: var(--cs-color-text-strong);
+        --cs-chart-bullet-comparative: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 44%, transparent),
+            color-mix(in oklab, var(--cs-color-base-100) 48%, transparent)
+        );
+
+        /* Heatmap matrix & 7-step OKLCH ramp tokens */
+        --cs-chart-heatmap-empty: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 4%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 6%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-heatmap-mid: light-dark(
+            color-mix(in oklab, var(--cs-color-base-900) 6%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-base-100) 10%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-heatmap-cell-fg: light-dark(
+            var(--cs-color-base-900),
+            var(--cs-color-base-100)
+        );
+        --cs-chart-heatmap-cell-fg-invert: light-dark(white, var(--cs-color-base-950));
+
+        /* Sequential 7-step ramps (accent | teal | emerald | slate | amber | rose) */
+        --cs-chart-heatmap-accent-1: light-dark(
+            color-mix(in oklch, var(--cs-color-accent-500) 8%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklch, var(--cs-color-accent-500) 14%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-heatmap-accent-2: light-dark(
+            var(--cs-color-accent-100),
+            color-mix(in oklch, var(--cs-color-accent-900) 65%, var(--cs-color-accent-800))
+        );
+        --cs-chart-heatmap-accent-3: light-dark(
+            var(--cs-color-accent-200),
+            var(--cs-color-accent-800)
+        );
+        --cs-chart-heatmap-accent-4: light-dark(
+            var(--cs-color-accent-300),
+            var(--cs-color-accent-700)
+        );
+        --cs-chart-heatmap-accent-5: var(--cs-color-accent-500);
+        --cs-chart-heatmap-accent-6: light-dark(
+            var(--cs-color-accent-600),
+            var(--cs-color-accent-400)
+        );
+        --cs-chart-heatmap-accent-7: light-dark(
+            var(--cs-color-accent-700),
+            var(--cs-color-accent-300)
+        );
+
+        --cs-chart-heatmap-teal-1: light-dark(
+            color-mix(in oklch, var(--cs-color-teal-500) 8%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklch, var(--cs-color-teal-500) 14%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-heatmap-teal-2: light-dark(
+            var(--cs-color-teal-100),
+            color-mix(in oklch, var(--cs-color-teal-900) 65%, var(--cs-color-teal-800))
+        );
+        --cs-chart-heatmap-teal-3: light-dark(
+            var(--cs-color-teal-200),
+            var(--cs-color-teal-800)
+        );
+        --cs-chart-heatmap-teal-4: light-dark(
+            var(--cs-color-teal-300),
+            var(--cs-color-teal-700)
+        );
+        --cs-chart-heatmap-teal-5: var(--cs-color-teal-500);
+        --cs-chart-heatmap-teal-6: light-dark(
+            var(--cs-color-teal-600),
+            var(--cs-color-teal-400)
+        );
+        --cs-chart-heatmap-teal-7: light-dark(
+            var(--cs-color-teal-700),
+            var(--cs-color-teal-300)
+        );
+
+        --cs-chart-heatmap-emerald-1: light-dark(
+            color-mix(in oklch, var(--cs-color-emerald-500) 8%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklch, var(--cs-color-emerald-500) 14%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-heatmap-emerald-2: light-dark(
+            var(--cs-color-emerald-100),
+            color-mix(in oklch, var(--cs-color-emerald-900) 65%, var(--cs-color-emerald-800))
+        );
+        --cs-chart-heatmap-emerald-3: light-dark(
+            var(--cs-color-emerald-200),
+            var(--cs-color-emerald-800)
+        );
+        --cs-chart-heatmap-emerald-4: light-dark(
+            var(--cs-color-emerald-300),
+            var(--cs-color-emerald-700)
+        );
+        --cs-chart-heatmap-emerald-5: var(--cs-color-emerald-500);
+        --cs-chart-heatmap-emerald-6: light-dark(
+            var(--cs-color-emerald-600),
+            var(--cs-color-emerald-400)
+        );
+        --cs-chart-heatmap-emerald-7: light-dark(
+            var(--cs-color-emerald-700),
+            var(--cs-color-emerald-300)
+        );
+
+        --cs-chart-heatmap-slate-1: light-dark(
+            color-mix(in oklab, var(--cs-color-slate-500) 8%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklab, var(--cs-color-slate-500) 14%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-heatmap-slate-2: light-dark(
+            var(--cs-color-slate-100),
+            color-mix(in oklab, var(--cs-color-slate-900) 65%, var(--cs-color-slate-800))
+        );
+        --cs-chart-heatmap-slate-3: light-dark(
+            var(--cs-color-slate-200),
+            var(--cs-color-slate-800)
+        );
+        --cs-chart-heatmap-slate-4: light-dark(
+            var(--cs-color-slate-300),
+            var(--cs-color-slate-700)
+        );
+        --cs-chart-heatmap-slate-5: var(--cs-color-slate-500);
+        --cs-chart-heatmap-slate-6: light-dark(
+            var(--cs-color-slate-600),
+            var(--cs-color-slate-400)
+        );
+        --cs-chart-heatmap-slate-7: light-dark(
+            var(--cs-color-slate-700),
+            var(--cs-color-slate-300)
+        );
+
+        --cs-chart-heatmap-amber-1: light-dark(
+            color-mix(in oklch, var(--cs-color-amber-500) 8%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklch, var(--cs-color-amber-500) 14%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-heatmap-amber-2: light-dark(
+            var(--cs-color-amber-100),
+            color-mix(in oklch, var(--cs-color-amber-900) 65%, var(--cs-color-amber-800))
+        );
+        --cs-chart-heatmap-amber-3: light-dark(
+            var(--cs-color-amber-200),
+            var(--cs-color-amber-800)
+        );
+        --cs-chart-heatmap-amber-4: light-dark(
+            var(--cs-color-amber-300),
+            var(--cs-color-amber-700)
+        );
+        --cs-chart-heatmap-amber-5: var(--cs-color-amber-500);
+        --cs-chart-heatmap-amber-6: light-dark(
+            var(--cs-color-amber-600),
+            var(--cs-color-amber-400)
+        );
+        --cs-chart-heatmap-amber-7: light-dark(
+            var(--cs-color-amber-700),
+            var(--cs-color-amber-300)
+        );
+
+        --cs-chart-heatmap-rose-1: light-dark(
+            color-mix(in oklch, var(--cs-color-rose-500) 8%, var(--cs-chart-point-ring-bg)),
+            color-mix(in oklch, var(--cs-color-rose-500) 14%, var(--cs-chart-point-ring-bg))
+        );
+        --cs-chart-heatmap-rose-2: light-dark(
+            var(--cs-color-rose-100),
+            color-mix(in oklch, var(--cs-color-rose-900) 65%, var(--cs-color-rose-800))
+        );
+        --cs-chart-heatmap-rose-3: light-dark(
+            var(--cs-color-rose-200),
+            var(--cs-color-rose-800)
+        );
+        --cs-chart-heatmap-rose-4: light-dark(
+            var(--cs-color-rose-300),
+            var(--cs-color-rose-700)
+        );
+        --cs-chart-heatmap-rose-5: var(--cs-color-rose-500);
+        --cs-chart-heatmap-rose-6: light-dark(
+            var(--cs-color-rose-600),
+            var(--cs-color-rose-400)
+        );
+        --cs-chart-heatmap-rose-7: light-dark(
+            var(--cs-color-rose-700),
+            var(--cs-color-rose-300)
+        );
+
+        /* Diverging 7-step ramp (negative ↔ neutral midpoint ↔ positive) */
+        --cs-chart-heatmap-div-neg-3: light-dark(
+            var(--cs-color-negative-600),
+            var(--cs-color-negative-400)
+        );
+        --cs-chart-heatmap-div-neg-2: light-dark(
+            var(--cs-color-negative-400),
+            var(--cs-color-negative-600)
+        );
+        --cs-chart-heatmap-div-neg-1: light-dark(
+            var(--cs-color-negative-200),
+            var(--cs-color-negative-800)
+        );
+        --cs-chart-heatmap-div-pos-1: light-dark(
+            var(--cs-color-positive-200),
+            var(--cs-color-positive-800)
+        );
+        --cs-chart-heatmap-div-pos-2: light-dark(
+            var(--cs-color-positive-400),
+            var(--cs-color-positive-600)
+        );
+        --cs-chart-heatmap-div-pos-3: light-dark(
+            var(--cs-color-positive-600),
+            var(--cs-color-positive-400)
+        );
 
         /* Tooltip surface tokens */
         --cs-chart-tooltip-bg: var(--cs-color-elevated);
@@ -351,6 +587,9 @@
         --cs-chart-area-stacked-top-opacity: 0.5;
         --cs-chart-area-stacked-bottom-opacity: 0.22;
         --cs-chart-ref-band-opacity: 0.095;
+        --cs-chart-hatch-bg-opacity: 0.18;
+        --cs-chart-hatch-stripe-opacity: 0.88;
+        --cs-chart-outline-fill-opacity: 0.12;
     }
 
     /* =========================================================
@@ -632,7 +871,8 @@
         stroke-width: var(--cs-chart-stroke-width, 2px);
         vector-effect: non-scaling-stroke;
 
-        &[data-area-mode="stacked"] {
+        &[data-area-mode="stacked"],
+        &[data-area-mode="percent"] {
             stroke-width: 1.5px;
         }
     }
@@ -641,6 +881,57 @@
         r: 3px;
         stroke: var(--cs-chart-point-ring-bg);
         stroke-width: 1.5px;
+
+        &[data-selected] {
+            r: calc(var(--cs-chart-point-radius, 4px) + 0.5px);
+            stroke-width: 2px;
+        }
+    }
+
+    .cs-chart-selected-point-ring {
+        r: calc(var(--cs-chart-point-radius, 4px) + 3.5px);
+        fill: none;
+        stroke: var(--cs-chart-selected-ring);
+        stroke-width: 1.5px;
+        pointer-events: none;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: cs-chart-selection-ring-enter var(--cs-dur-160) var(--cs-spring-snappy) both;
+    }
+
+    .cs-chart-direct-labels {
+        pointer-events: none;
+    }
+
+    .cs-chart-direct-label-item {
+        animation: cs-chart-fade-in var(--cs-dur-200) var(--cs-ease-quad-out) 280ms both;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-dimmed] {
+            opacity: var(--cs-chart-dim-opacity);
+        }
+    }
+
+    .cs-chart-direct-leader {
+        fill: none;
+        stroke-width: 1px;
+        stroke-opacity: 0.35;
+        stroke-linecap: round;
+    }
+
+    .cs-chart-direct-label {
+        font-family: var(--cs-font-sans);
+        font-size: 11px;
+    }
+
+    .cs-chart-direct-label-name {
+        font-weight: 600;
+    }
+
+    .cs-chart-direct-label-value {
+        fill: var(--cs-color-text-weak);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums lining-nums;
     }
 
     .cs-chart-area-fill {
@@ -650,7 +941,8 @@
         &[data-solid] {
             fill-opacity: var(--cs-chart-area-top-opacity);
 
-            &[data-mode="stacked"] {
+            &[data-mode="stacked"],
+            &[data-mode="percent"] {
                 fill-opacity: var(--cs-chart-area-stacked-top-opacity);
             }
         }
@@ -659,7 +951,8 @@
     .cs-chart-area-stop-top {
         stop-opacity: var(--cs-chart-area-top-opacity);
 
-        &[data-mode="stacked"] {
+        &[data-mode="stacked"],
+        &[data-mode="percent"] {
             stop-opacity: var(--cs-chart-area-stacked-top-opacity);
         }
     }
@@ -667,7 +960,8 @@
     .cs-chart-area-stop-bottom {
         stop-opacity: var(--cs-chart-area-bottom-opacity, 0);
 
-        &[data-mode="stacked"] {
+        &[data-mode="stacked"],
+        &[data-mode="percent"] {
             stop-opacity: var(--cs-chart-area-stacked-bottom-opacity);
         }
     }
@@ -692,6 +986,14 @@
         pointer-events: none;
     }
 
+    .cs-chart-hatch-bg {
+        fill-opacity: var(--cs-chart-hatch-bg-opacity, 0.14);
+    }
+
+    .cs-chart-hatch-stripe {
+        fill-opacity: var(--cs-chart-hatch-stripe-opacity, 0.85);
+    }
+
     .cs-chart-bar-rect {
         /* Anchor baseline growth in plot user coordinates so positive and negative bars grow from zero. */
         transform-box: view-box;
@@ -705,6 +1007,24 @@
             animation-name: cs-chart-bar-grow-x;
         }
 
+        &[data-pattern="hatch"] {
+            stroke-opacity: 0.55;
+            stroke-width: 1px;
+        }
+
+        &[data-pattern="outline"] {
+            fill-opacity: var(--cs-chart-outline-fill-opacity, 0.09);
+            stroke-width: 1.5px;
+        }
+
+        .cs-chart-bar[data-has-selection] &:not([data-selected]):not([data-dimmed]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
+
+        .cs-chart-bar[data-has-selection] &[data-active]:not([data-selected]):not([data-dimmed]) {
+            opacity: 0.88;
+        }
+
         &[data-dimmed] {
             opacity: var(--cs-chart-dim-opacity);
         }
@@ -712,6 +1032,16 @@
         .cs-chart-bar[data-tooltip-mode="item"] & {
             pointer-events: all;
         }
+    }
+
+    .cs-chart-selection-ring {
+        fill: none;
+        stroke: var(--cs-chart-selected-ring);
+        stroke-width: 1.75px;
+        pointer-events: none;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: cs-chart-selection-ring-enter var(--cs-dur-160) var(--cs-spring-snappy) both;
     }
 
     .cs-chart-bar-value-label {
@@ -727,6 +1057,10 @@
         pointer-events: none;
         transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
 
+        .cs-chart-bar[data-has-selection] &:not([data-selected]):not([data-dimmed]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
+
         &[data-dimmed] {
             opacity: var(--cs-chart-dim-opacity);
         }
@@ -740,6 +1074,15 @@
         font-variant-numeric: tabular-nums lining-nums;
         pointer-events: none;
         transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-pattern="hatch"],
+        &[data-pattern="outline"] {
+            fill: var(--cs-chart-label-fg);
+        }
+
+        .cs-chart-bar[data-has-selection] &:not([data-selected]):not([data-dimmed]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
 
         &[data-dimmed] {
             opacity: var(--cs-chart-dim-opacity);
@@ -766,6 +1109,86 @@
         font-weight: 600;
         font-variant-numeric: tabular-nums lining-nums;
         pointer-events: none;
+    }
+
+    /* =========================================================
+     * WATERFALL MARKS (SVG)
+     * ========================================================= */
+    .cs-chart-waterfall {
+        pointer-events: none;
+    }
+
+    .cs-chart-waterfall-connector {
+        fill: none;
+        stroke: var(--cs-chart-waterfall-connector);
+        stroke-width: 1px;
+        pointer-events: none;
+        animation: cs-chart-fade-in var(--cs-dur-200) var(--cs-ease-quad-out) 180ms both;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        .cs-chart-waterfall[data-has-selection] & {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
+    }
+
+    .cs-chart-waterfall-bar {
+        transform-box: view-box;
+        transform-origin: var(--cs-chart-bar-origin, 0px 0px);
+        animation: cs-chart-bar-grow-y var(--cs-chart-dur-bar, 420ms)
+            var(--cs-chart-ease-data, var(--cs-ease-quart-out))
+            var(--cs-chart-bar-delay, 0ms) both;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-pattern="hatch"] {
+            stroke-opacity: 0.55;
+            stroke-width: 1px;
+        }
+
+        &[data-pattern="outline"] {
+            fill-opacity: var(--cs-chart-outline-fill-opacity, 0.09);
+            stroke-width: 1.5px;
+        }
+
+        .cs-chart-waterfall[data-has-selection] &:not([data-selected]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
+
+        .cs-chart-waterfall[data-has-selection] &[data-active]:not([data-selected]) {
+            opacity: 0.88;
+        }
+    }
+
+    .cs-chart-waterfall-label {
+        fill: var(--cs-chart-label-fg);
+        stroke: var(--cs-chart-point-ring-bg);
+        stroke-width: 3px;
+        stroke-linejoin: round;
+        paint-order: stroke fill;
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-value-label-size, 11px);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums lining-nums;
+        pointer-events: none;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-kind="start"],
+        &[data-kind="subtotal"],
+        &[data-kind="total"] {
+            fill: var(--cs-color-text-strong);
+            font-weight: 600;
+        }
+
+        &[data-kind="positive"] {
+            fill: var(--cs-chart-positive-fg);
+        }
+
+        &[data-kind="negative"] {
+            fill: var(--cs-chart-negative-fg);
+        }
+
+        .cs-chart-waterfall[data-has-selection] &:not([data-selected]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
     }
 
     /* =========================================================
@@ -1229,6 +1652,24 @@
         block-size: 10px;
         border-radius: 9999px;
         background-color: var(--cs-chart-swatch-color);
+
+        &[data-pattern="hatch"] {
+            inline-size: 4px;
+            background-color: transparent;
+            background-image: repeating-linear-gradient(
+                -45deg,
+                var(--cs-chart-swatch-color) 0 1.5px,
+                color-mix(in oklch, var(--cs-chart-swatch-color) 14%, transparent) 1.5px 3.5px
+            );
+            box-shadow: inset 0 0 0 1px
+                color-mix(in oklch, var(--cs-chart-swatch-color) 50%, transparent);
+        }
+
+        &[data-pattern="outline"] {
+            inline-size: 4px;
+            background-color: color-mix(in oklch, var(--cs-chart-swatch-color) 10%, transparent);
+            box-shadow: inset 0 0 0 1px var(--cs-chart-swatch-color);
+        }
     }
 
     .cs-chart-tooltip-label {
@@ -1250,6 +1691,23 @@
         line-height: round(up, 18px, 1px);
         font-variant-numeric: tabular-nums lining-nums;
         white-space: nowrap;
+    }
+
+    .cs-chart-tooltip-sep {
+        display: inline-block;
+        inline-size: 2.5px;
+        block-size: 2.5px;
+        margin-inline: 5px;
+        vertical-align: middle;
+        border-radius: 9999px;
+        background-color: var(--cs-color-text-weaker);
+    }
+
+    .cs-chart-tooltip-share {
+        color: var(--cs-color-text-weak);
+        font-size: 11px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums lining-nums;
     }
 
     .cs-chart-tooltip-total {
@@ -1397,6 +1855,22 @@
                 transparent 4px 7px
             );
         }
+
+        &[data-pattern="hatch"] {
+            background-color: transparent;
+            background-image: repeating-linear-gradient(
+                -45deg,
+                var(--cs-chart-swatch-color) 0 1.75px,
+                color-mix(in oklch, var(--cs-chart-swatch-color) 14%, transparent) 1.75px 4.5px
+            );
+            box-shadow: inset 0 0 0 1px
+                color-mix(in oklch, var(--cs-chart-swatch-color) 50%, transparent);
+        }
+
+        &[data-pattern="outline"] {
+            background-color: color-mix(in oklch, var(--cs-chart-swatch-color) 10%, transparent);
+            box-shadow: inset 0 0 0 1.5px var(--cs-chart-swatch-color);
+        }
     }
 
     /* =========================================================
@@ -1450,9 +1924,26 @@
             stroke-linejoin: round;
         }
 
+        .cs-chart-arc[data-has-selection] &:not([data-selected]):not([data-dimmed]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
+
+        .cs-chart-arc[data-has-selection] &[data-active]:not([data-selected]):not([data-dimmed]) {
+            opacity: 0.88;
+        }
+
         &[data-dimmed] {
             opacity: var(--cs-chart-dim-opacity);
         }
+    }
+
+    .cs-chart-arc-selection-ring {
+        fill: none;
+        stroke: var(--cs-chart-selected-ring);
+        stroke-width: 1.75px;
+        stroke-linecap: round;
+        pointer-events: none;
+        animation: cs-chart-fade-in var(--cs-dur-160) var(--cs-ease-effect) both;
     }
 
     .cs-chart-arc-label {
@@ -1463,6 +1954,10 @@
         font-variant-numeric: tabular-nums lining-nums;
         pointer-events: none;
         transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        .cs-chart-arc[data-has-selection] &:not([data-selected]):not([data-dimmed]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
 
         &[data-dimmed] {
             opacity: var(--cs-chart-dim-opacity);
@@ -1528,6 +2023,12 @@
     }
 
     .cs-chart-donut-legend-item {
+        &[data-selected] {
+            background-color: var(--cs-chart-legend-hover-bg);
+            color: var(--cs-color-text-strong);
+            font-weight: 500;
+        }
+
         & .cs-chart-legend-label {
             min-inline-size: 0;
             overflow: hidden;
@@ -1570,6 +2071,585 @@
         color: var(--cs-color-text-strong);
         font-weight: 600;
         font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    /* =========================================================
+     * SPARKLINE MICRO-CHART (STANDALONE, ZERO-CHROME)
+     * ========================================================= */
+    .cs-chart-sparkline {
+        --cs-chart-series-1: light-dark(
+            var(--cs-color-accent-solid),
+            color-mix(in oklch, var(--cs-color-accent-400) 65%, var(--cs-color-accent-500))
+        );
+        --cs-chart-positive: light-dark(var(--cs-color-positive-solid), var(--cs-color-positive-400));
+        --cs-chart-caution: light-dark(var(--cs-color-caution-solid), var(--cs-color-caution-400));
+        --cs-chart-negative: light-dark(var(--cs-color-negative-solid), var(--cs-color-negative-400));
+        --cs-chart-axis: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 14%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 15%, transparent)
+        );
+        --cs-chart-crosshair: light-dark(
+            color-mix(in oklch, var(--cs-color-base-900) 18%, transparent),
+            color-mix(in oklch, var(--cs-color-base-100) 22%, transparent)
+        );
+        --cs-chart-point-ring-bg: var(--cs-chart-backdrop-bg, var(--cs-color-elevated));
+        --cs-chart-sparkline-area-top-opacity: 0.18;
+
+        position: relative;
+        display: block;
+        inline-size: 100%;
+        block-size: var(--cs-chart-sparkline-height, 32px);
+        min-inline-size: 0;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+        cursor: default;
+        user-select: none;
+    }
+
+    :root[data-theme="dark"] .cs-chart-sparkline {
+        --cs-chart-sparkline-area-top-opacity: 0.22;
+    }
+
+    .cs-chart-sparkline-svg {
+        display: block;
+        inline-size: 100%;
+        block-size: 100%;
+        overflow: visible;
+    }
+
+    .cs-chart-sparkline-reveal-rect {
+        transform-box: fill-box;
+        transform-origin: 0 50%;
+        animation: cs-chart-reveal-x var(--cs-dur-320) var(--cs-ease-expo-out) both;
+    }
+
+    .cs-chart-sparkline-line {
+        fill: none;
+        vector-effect: non-scaling-stroke;
+        pointer-events: none;
+    }
+
+    .cs-chart-sparkline-area {
+        stroke: none;
+        pointer-events: none;
+        animation: cs-chart-fade-in var(--cs-dur-240) var(--cs-ease-quad-out) 40ms both;
+    }
+
+    .cs-chart-sparkline-stop-top {
+        stop-opacity: var(--cs-chart-sparkline-area-top-opacity);
+    }
+
+    .cs-chart-sparkline-stop-bottom {
+        stop-opacity: 0;
+    }
+
+    .cs-chart-sparkline-bar {
+        transform-box: view-box;
+        transform-origin: var(--cs-chart-bar-origin, 0px 0px);
+        pointer-events: none;
+        animation: cs-chart-bar-grow-y var(--cs-dur-280) var(--cs-ease-quart-out)
+            var(--cs-chart-bar-delay, 0ms) both;
+        transition: opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+
+        .cs-chart-sparkline[data-has-active] &:not([data-active]) {
+            opacity: 0.42;
+        }
+    }
+
+    .cs-chart-sparkline-dot {
+        stroke: var(--cs-chart-point-ring-bg);
+        stroke-width: 1.5px;
+        pointer-events: none;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: cs-chart-sparkline-dot-enter var(--cs-dur-180) var(--cs-spring-snappy) 220ms
+            both;
+
+        &[data-active],
+        &[data-settled] {
+            animation: none;
+        }
+    }
+
+    .cs-chart-sparkline-target {
+        fill: none;
+        stroke: var(--cs-chart-axis);
+        stroke-width: 1px;
+        stroke-dasharray: 3 2;
+        pointer-events: none;
+    }
+
+    .cs-chart-sparkline-crosshair {
+        fill: none;
+        stroke: var(--cs-chart-crosshair);
+        stroke-width: 1px;
+        pointer-events: none;
+    }
+
+    /* =========================================================
+     * BULLET SCORECARD MARKS (SVG & STAGE)
+     * ========================================================= */
+    .cs-chart-bullet-stage {
+        position: relative;
+        flex: 0 0 auto;
+        inline-size: 100%;
+        min-inline-size: 0;
+
+        &:focus-visible {
+            outline-offset: -2px;
+            border-radius: max(6px, calc(var(--cs-chart-radius, 0px) - var(--cs-chart-padding, 0px)));
+        }
+    }
+
+    .cs-chart-bullet {
+        --cs-chart-bullet-label-size: 12px;
+        --cs-chart-bullet-tick-size: 11px;
+
+        &[data-size="sm"] {
+            --cs-chart-bullet-label-size: 11px;
+            --cs-chart-bullet-tick-size: 10px;
+        }
+
+        &[data-size="lg"] {
+            --cs-chart-bullet-label-size: 13px;
+            --cs-chart-bullet-tick-size: 11px;
+        }
+    }
+
+    .cs-chart-bullet-row {
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        .cs-chart-bullet[data-has-selection] &:not([data-selected]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
+
+        .cs-chart-bullet[data-has-selection] &[data-active]:not([data-selected]) {
+            opacity: 0.88;
+        }
+    }
+
+    .cs-chart-bullet-hit {
+        cursor: default;
+        pointer-events: all;
+    }
+
+    .cs-chart-bullet-label {
+        fill: var(--cs-color-text-strong);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-bullet-label-size, 12px);
+        font-weight: 500;
+        pointer-events: none;
+    }
+
+    .cs-chart-bullet-subtitle {
+        fill: var(--cs-color-text-weak);
+        font-size: max(10px, calc(var(--cs-chart-bullet-label-size, 12px) - 1px));
+        font-weight: 400;
+    }
+
+    .cs-chart-bullet-readout {
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-bullet-label-size, 12px);
+        font-variant-numeric: tabular-nums lining-nums;
+        pointer-events: none;
+    }
+
+    .cs-chart-bullet-actual-text {
+        fill: var(--cs-color-text-strong);
+        font-weight: 600;
+    }
+
+    .cs-chart-bullet-target-text {
+        fill: var(--cs-color-text-weak);
+        font-weight: 400;
+    }
+
+    .cs-chart-bullet-variance-text {
+        fill: var(--cs-color-text-weak);
+        font-weight: 500;
+
+        &[data-sign="positive"] {
+            fill: var(--cs-chart-positive-fg);
+        }
+
+        &[data-sign="negative"] {
+            fill: var(--cs-chart-negative-fg);
+        }
+    }
+
+    .cs-chart-bullet-range {
+        pointer-events: none;
+
+        &[data-tier="1"] {
+            fill: var(--cs-chart-bullet-range-1);
+        }
+
+        &[data-tier="2"] {
+            fill: var(--cs-chart-bullet-range-2);
+        }
+
+        &[data-tier="3"] {
+            fill: var(--cs-chart-bullet-range-3);
+        }
+    }
+
+    .cs-chart-bullet-bar {
+        transform-box: view-box;
+        transform-origin: var(--cs-chart-bar-origin, 0px 0px);
+        pointer-events: none;
+        animation: cs-chart-bar-grow-x var(--cs-chart-dur-bar, 420ms)
+            var(--cs-chart-ease-data, var(--cs-ease-quart-out))
+            var(--cs-chart-bar-delay, 0ms) both;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-pattern="hatch"] {
+            stroke-opacity: 0.55;
+            stroke-width: 1px;
+        }
+
+        &[data-pattern="outline"] {
+            fill-opacity: var(--cs-chart-outline-fill-opacity, 0.09);
+            stroke-width: 1.5px;
+        }
+
+        &[data-dimmed] {
+            opacity: var(--cs-chart-dim-opacity);
+        }
+    }
+
+    .cs-chart-bullet-comparative {
+        fill: var(--cs-chart-bullet-comparative);
+        stroke: var(--cs-chart-point-ring-bg);
+        stroke-width: 0.75px;
+        paint-order: stroke fill;
+        pointer-events: none;
+    }
+
+    .cs-chart-bullet-target {
+        fill: var(--cs-chart-bullet-target);
+        stroke: var(--cs-chart-point-ring-bg);
+        stroke-width: 1px;
+        paint-order: stroke fill;
+        pointer-events: none;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: cs-chart-bullet-target-enter var(--cs-dur-240) var(--cs-spring-snappy)
+            var(--cs-chart-bullet-target-delay, 120ms) both;
+    }
+
+    .cs-chart-bullet-tick {
+        fill: var(--cs-chart-tick-fg);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-bullet-tick-size, 11px);
+        font-weight: 400;
+        font-variant-numeric: tabular-nums lining-nums;
+        pointer-events: none;
+    }
+
+    .cs-chart-bullet-tooltip-meta {
+        margin-inline-start: 6px;
+        color: var(--cs-color-text-weaker);
+        font-weight: 400;
+    }
+
+    .cs-chart-bullet-tooltip-target-swatch {
+        inline-size: 2.5px;
+        block-size: 11px;
+        background-color: var(--cs-chart-bullet-target);
+    }
+
+    .cs-chart-bullet-tooltip-comparative-swatch {
+        inline-size: 2px;
+        block-size: 9px;
+        background-color: var(--cs-chart-bullet-comparative);
+    }
+
+    .cs-chart-bullet-tooltip-variance {
+        &[data-sign="positive"] {
+            color: var(--cs-chart-positive-fg);
+        }
+
+        &[data-sign="negative"] {
+            color: var(--cs-chart-negative-fg);
+        }
+    }
+
+    /* =========================================================
+     * HEATMAP MATRIX MARKS & RAMP LEGEND
+     * ========================================================= */
+    .cs-chart-heatmap-stage {
+        position: relative;
+        flex: 1 1 auto;
+        inline-size: 100%;
+        min-inline-size: 0;
+
+        &:focus-visible {
+            outline-offset: -2px;
+            border-radius: max(6px, calc(var(--cs-chart-radius, 0px) - var(--cs-chart-padding, 0px)));
+        }
+    }
+
+    .cs-chart-heatmap {
+        --cs-chart-heatmap-value-size: var(--cs-chart-value-label-size, 11px);
+
+        &[data-size="sm"] {
+            --cs-chart-heatmap-value-size: 10px;
+        }
+    }
+
+    .cs-chart-heatmap-cell-group {
+        cursor: default;
+        transition: opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        .cs-chart-heatmap[data-has-selection] &:not([data-selected]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
+
+        .cs-chart-heatmap[data-has-selection] &[data-active]:not([data-selected]) {
+            opacity: 0.88;
+        }
+
+        &[data-dimmed]:not([data-active]) {
+            opacity: var(--cs-chart-unselected-opacity, 0.38);
+        }
+    }
+
+    .cs-chart-heatmap-cell {
+        stroke: none;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: cs-chart-heatmap-cell-enter var(--cs-dur-240) var(--cs-ease-quart-out)
+            var(--cs-chart-heatmap-delay, 0ms) both;
+        transition:
+            fill var(--cs-dur-effect) var(--cs-ease-effect),
+            opacity var(--cs-dur-effect) var(--cs-ease-effect);
+    }
+
+    .cs-chart-heatmap-value {
+        fill: var(--cs-chart-heatmap-cell-fg);
+        font-family: var(--cs-font-sans);
+        font-size: var(--cs-chart-heatmap-value-size, 11px);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums lining-nums;
+        pointer-events: none;
+        user-select: none;
+        animation: cs-chart-fade-in var(--cs-dur-200) var(--cs-ease-quad-out)
+            calc(var(--cs-chart-heatmap-delay, 0ms) + 40ms) both;
+        transition:
+            fill var(--cs-dur-effect) var(--cs-ease-effect),
+            opacity var(--cs-dur-effect) var(--cs-ease-effect);
+
+        &[data-invert-fg] {
+            fill: var(--cs-chart-heatmap-cell-fg-invert);
+        }
+
+        &[data-active],
+        &[data-selected] {
+            font-weight: 600;
+        }
+    }
+
+    .cs-chart-heatmap-focus {
+        pointer-events: none;
+    }
+
+    .cs-chart-heatmap-ring-inner {
+        fill: none;
+        stroke: var(--cs-chart-point-ring-bg);
+        stroke-width: 1.5px;
+        pointer-events: none;
+        transition:
+            x var(--cs-dur-60) var(--cs-ease-quad-out),
+            y var(--cs-dur-60) var(--cs-ease-quad-out),
+            width var(--cs-dur-60) var(--cs-ease-quad-out),
+            height var(--cs-dur-60) var(--cs-ease-quad-out),
+            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+    }
+
+    .cs-chart-heatmap-ring-outer {
+        fill: none;
+        stroke: var(--cs-color-text-strong);
+        stroke-width: 2px;
+        pointer-events: none;
+        animation: cs-chart-fade-in var(--cs-dur-effect-fast) var(--cs-ease-effect) both;
+        transition:
+            x var(--cs-dur-60) var(--cs-ease-quad-out),
+            y var(--cs-dur-60) var(--cs-ease-quad-out),
+            width var(--cs-dur-60) var(--cs-ease-quad-out),
+            height var(--cs-dur-60) var(--cs-ease-quad-out),
+            opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+    }
+
+    .cs-chart-heatmap-tick {
+        transition:
+            fill var(--cs-dur-hover) var(--cs-ease-hover),
+            font-weight var(--cs-dur-hover) var(--cs-ease-hover);
+
+        &[data-active] {
+            fill: var(--cs-color-text-strong);
+            font-weight: 600;
+        }
+    }
+
+    .cs-chart-heatmap-legend {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        &[data-position="end"] {
+            flex-direction: row;
+            align-self: center;
+        }
+    }
+
+    .cs-chart-heatmap-legend-bound {
+        color: var(--cs-color-text-weak);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 15px;
+        font-variant-numeric: tabular-nums lining-nums;
+        white-space: nowrap;
+    }
+
+    .cs-chart-heatmap-legend-mid-label {
+        color: var(--cs-color-text-weaker);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 15px;
+        font-variant-numeric: tabular-nums lining-nums;
+        white-space: nowrap;
+    }
+
+    .cs-chart-heatmap-legend-bar {
+        position: relative;
+        inline-size: 148px;
+        block-size: 8px;
+        border-radius: 9999px;
+        background-image: linear-gradient(
+            to right,
+            var(--cs-chart-heatmap-accent-1),
+            var(--cs-chart-heatmap-accent-2),
+            var(--cs-chart-heatmap-accent-3),
+            var(--cs-chart-heatmap-accent-4),
+            var(--cs-chart-heatmap-accent-5),
+            var(--cs-chart-heatmap-accent-6),
+            var(--cs-chart-heatmap-accent-7)
+        );
+
+        .cs-chart[data-size="sm"] & {
+            inline-size: 120px;
+        }
+
+        &[data-ramp="teal"] {
+            background-image: linear-gradient(
+                to right,
+                var(--cs-chart-heatmap-teal-1),
+                var(--cs-chart-heatmap-teal-2),
+                var(--cs-chart-heatmap-teal-3),
+                var(--cs-chart-heatmap-teal-4),
+                var(--cs-chart-heatmap-teal-5),
+                var(--cs-chart-heatmap-teal-6),
+                var(--cs-chart-heatmap-teal-7)
+            );
+        }
+
+        &[data-ramp="emerald"] {
+            background-image: linear-gradient(
+                to right,
+                var(--cs-chart-heatmap-emerald-1),
+                var(--cs-chart-heatmap-emerald-2),
+                var(--cs-chart-heatmap-emerald-3),
+                var(--cs-chart-heatmap-emerald-4),
+                var(--cs-chart-heatmap-emerald-5),
+                var(--cs-chart-heatmap-emerald-6),
+                var(--cs-chart-heatmap-emerald-7)
+            );
+        }
+
+        &[data-ramp="slate"] {
+            background-image: linear-gradient(
+                to right,
+                var(--cs-chart-heatmap-slate-1),
+                var(--cs-chart-heatmap-slate-2),
+                var(--cs-chart-heatmap-slate-3),
+                var(--cs-chart-heatmap-slate-4),
+                var(--cs-chart-heatmap-slate-5),
+                var(--cs-chart-heatmap-slate-6),
+                var(--cs-chart-heatmap-slate-7)
+            );
+        }
+
+        &[data-ramp="amber"] {
+            background-image: linear-gradient(
+                to right,
+                var(--cs-chart-heatmap-amber-1),
+                var(--cs-chart-heatmap-amber-2),
+                var(--cs-chart-heatmap-amber-3),
+                var(--cs-chart-heatmap-amber-4),
+                var(--cs-chart-heatmap-amber-5),
+                var(--cs-chart-heatmap-amber-6),
+                var(--cs-chart-heatmap-amber-7)
+            );
+        }
+
+        &[data-ramp="rose"] {
+            background-image: linear-gradient(
+                to right,
+                var(--cs-chart-heatmap-rose-1),
+                var(--cs-chart-heatmap-rose-2),
+                var(--cs-chart-heatmap-rose-3),
+                var(--cs-chart-heatmap-rose-4),
+                var(--cs-chart-heatmap-rose-5),
+                var(--cs-chart-heatmap-rose-6),
+                var(--cs-chart-heatmap-rose-7)
+            );
+        }
+
+        &[data-mode="diverging"],
+        &[data-ramp="diverging"] {
+            background-image: linear-gradient(
+                to right,
+                var(--cs-chart-heatmap-div-neg-3),
+                var(--cs-chart-heatmap-div-neg-2),
+                var(--cs-chart-heatmap-div-neg-1),
+                var(--cs-chart-heatmap-mid),
+                var(--cs-chart-heatmap-div-pos-1),
+                var(--cs-chart-heatmap-div-pos-2),
+                var(--cs-chart-heatmap-div-pos-3)
+            );
+        }
+    }
+
+    .cs-chart-heatmap-legend-pivot {
+        position: absolute;
+        inset-block: -1px;
+        inset-inline-start: 50%;
+        inline-size: 1px;
+        background-color: var(--cs-chart-axis);
+        translate: -50% 0;
+        pointer-events: none;
+    }
+
+    .cs-chart-heatmap-legend-notch {
+        position: absolute;
+        inset-block-start: -2px;
+        inline-size: 2px;
+        block-size: 12px;
+        background-color: var(--cs-color-text-strong);
+        border-radius: 9999px;
+        box-shadow: 0 0 0 1.5px var(--cs-chart-point-ring-bg);
+        translate: -50% 0;
+        pointer-events: none;
+        transition: inset-inline-start var(--cs-dur-80) var(--cs-ease-cubic-out);
+    }
+
+    .cs-chart-heatmap-tooltip-coord {
+        color: var(--cs-color-text-weak);
+        font-weight: 400;
     }
 
     /* =========================================================
@@ -1655,6 +2735,50 @@
         to {
             opacity: 1;
             transform: translateY(0);
+        }
+    }
+
+    @keyframes cs-chart-selection-ring-enter {
+        from {
+            opacity: 0;
+            scale: 0.96;
+        }
+        to {
+            opacity: 1;
+            scale: 1;
+        }
+    }
+
+    @keyframes cs-chart-sparkline-dot-enter {
+        from {
+            opacity: 0;
+            scale: 0.4;
+        }
+        to {
+            opacity: 1;
+            scale: 1;
+        }
+    }
+
+    @keyframes cs-chart-bullet-target-enter {
+        from {
+            opacity: 0;
+            transform: scaleY(0.5);
+        }
+        to {
+            opacity: 1;
+            transform: scaleY(1);
+        }
+    }
+
+    @keyframes cs-chart-heatmap-cell-enter {
+        from {
+            opacity: 0;
+            scale: 0.92;
+        }
+        to {
+            opacity: 1;
+            scale: 1;
         }
     }
 }

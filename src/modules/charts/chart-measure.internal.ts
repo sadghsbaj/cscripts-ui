@@ -29,6 +29,18 @@ export interface ThinAxisTicksOptions {
     maxTickWidth?: number;
 }
 
+export interface DirectLabelInput {
+    readonly id: string;
+    readonly y: number;
+}
+
+export interface DirectLabelPlacement {
+    readonly id: string;
+    readonly yTrue: number;
+    readonly y: number;
+    readonly nudged: boolean;
+}
+
 export interface ComputeChartMarginsOptions {
     hasXAxis?: boolean;
     hasYAxis?: boolean;
@@ -45,6 +57,7 @@ export interface ComputeChartMarginsOptions {
     yMaxTickWidth?: number;
     hasTopValueLabels?: boolean;
     hasRightValueLabels?: boolean;
+    directLabelsWidth?: number;
     font?: ChartMeasureFont;
     overrides?: Partial<ChartMargins>;
 }
@@ -335,6 +348,62 @@ export function thinAxisTicks(
     return keptIndices;
 }
 
+export function resolveDirectLabelPositions(
+    items: readonly DirectLabelInput[],
+    plotHeight: number,
+    minGap = 14,
+    padding = 8,
+): readonly DirectLabelPlacement[] {
+    if (items.length === 0) return [];
+
+    const safeHeight = Math.max(0, plotHeight);
+    const minY = Math.min(padding, safeHeight / 2);
+    const maxY = Math.max(minY, safeHeight - padding);
+
+    const sorted = items
+        .map((item, order) => ({
+            id: item.id,
+            yTrue: item.y,
+            y: Math.max(minY, Math.min(maxY, item.y)),
+            order,
+        }))
+        .toSorted((a, b) => (a.yTrue === b.yTrue ? a.order - b.order : a.yTrue - b.yTrue));
+
+    // Forward pass: push overlapping labels downward to maintain >= minGap spacing.
+    for (let index = 1; index < sorted.length; index++) {
+        const prev = sorted[index - 1];
+        const curr = sorted[index];
+        if (prev && curr && curr.y - prev.y < minGap) {
+            curr.y = prev.y + minGap;
+        }
+    }
+
+    // Backward pass: clamp bottom label into [minY, maxY] and pull predecessors upward.
+    const last = sorted.at(-1);
+    if (last && last.y > maxY) {
+        last.y = maxY;
+        for (let index = sorted.length - 2; index >= 0; index--) {
+            const curr = sorted[index];
+            const next = sorted[index + 1];
+            if (curr && next && next.y - curr.y < minGap) {
+                curr.y = next.y - minGap;
+            }
+        }
+    }
+
+    // Final clamp into [minY, maxY] for cases where total required height exceeds plotHeight.
+    for (const entry of sorted) {
+        entry.y = Math.max(minY, Math.min(maxY, entry.y));
+    }
+
+    return sorted.map((entry) => ({
+        id: entry.id,
+        yTrue: entry.yTrue,
+        y: entry.y,
+        nudged: Math.abs(entry.y - entry.yTrue) > 3,
+    }));
+}
+
 export function computeChartMargins(options: ComputeChartMarginsOptions): ChartMargins {
     const {
         hasXAxis = true,
@@ -352,6 +421,7 @@ export function computeChartMargins(options: ComputeChartMarginsOptions): ChartM
         yMaxTickWidth,
         hasTopValueLabels = false,
         hasRightValueLabels = false,
+        directLabelsWidth,
         font,
         overrides,
     } = options;
@@ -394,6 +464,8 @@ export function computeChartMargins(options: ComputeChartMarginsOptions): ChartM
     let computedRight = 12;
     if (hasY2Axis) {
         computedRight = Math.ceil(maxY2Width + tickGap + (y2AxisLabel ? axisTitleSize : 0) + 4);
+    } else if (directLabelsWidth !== undefined && directLabelsWidth > 0) {
+        computedRight = Math.max(computedRight, Math.ceil(directLabelsWidth));
     } else if (hasRightValueLabels) {
         computedRight = 36;
     }

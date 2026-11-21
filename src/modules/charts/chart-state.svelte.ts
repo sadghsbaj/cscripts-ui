@@ -9,6 +9,7 @@ import {
     createNumericScale,
     createXScale,
     formatDefaultTick,
+    formatPercentTick,
     inferXScaleType,
 } from "./chart-scales.internal.ts";
 
@@ -28,11 +29,12 @@ export const CHART_MONOTONE_HUES = [
 export const CHART_TONES = ["base", "accent", "positive", "caution", "negative"] as const;
 export const CHART_CURVES = ["linear", "monotone", "step"] as const;
 export const CHART_ORIENTATIONS = ["vertical", "horizontal"] as const;
-export const CHART_BAR_MODES = ["grouped", "stacked"] as const;
+export const CHART_BAR_MODES = ["grouped", "stacked", "percent"] as const;
+export const CHART_BAR_PATTERNS = ["solid", "hatch", "outline"] as const;
 export const CHART_BAR_VALUE_LABELS = ["none", "outside", "inside", "both"] as const;
 export const CHART_BAR_INSIDE_LABEL_ORIENTATIONS = ["auto", "horizontal", "vertical"] as const;
 export const CHART_BAR_LABEL_LAYOUTS = ["gutter", "above"] as const;
-export const CHART_AREA_MODES = ["overlay", "stacked"] as const;
+export const CHART_AREA_MODES = ["overlay", "stacked", "percent"] as const;
 export const CHART_AXIS_POSITIONS = ["bottom", "left", "right"] as const;
 export const CHART_LEGEND_POSITIONS = ["top", "bottom", "end", "none"] as const;
 export const CHART_LEGEND_PLACEMENTS = ["top", "bottom", "end"] as const;
@@ -42,6 +44,18 @@ export const CHART_ZERO_LINE_STYLES = ["solid", "dashed", "strong"] as const;
 export const CHART_X_SCALE_TYPES = ["auto", "band", "point", "time", "linear"] as const;
 export const CHART_TICK_ANGLES = ["auto", 0, -35, -45] as const;
 export const CHART_TITLE_ELEMENTS = ["h2", "h3", "h4", "h5", "h6", "div"] as const;
+export const CHART_WATERFALL_ROW_TYPES = ["start", "delta", "subtotal", "total"] as const;
+export const CHART_WATERFALL_TOTAL_TONES = ["base", "accent"] as const;
+export const CHART_HEATMAP_MODES = ["sequential", "diverging"] as const;
+export const CHART_HEATMAP_RAMPS = [
+    "accent",
+    "teal",
+    "emerald",
+    "slate",
+    "amber",
+    "rose",
+    "diverging",
+] as const;
 
 export type ChartVariant = (typeof CHART_VARIANTS)[number];
 export type ChartSize = (typeof CHART_SIZES)[number];
@@ -51,6 +65,7 @@ export type ChartTone = (typeof CHART_TONES)[number];
 export type ChartCurve = (typeof CHART_CURVES)[number];
 export type ChartOrientation = (typeof CHART_ORIENTATIONS)[number];
 export type ChartBarMode = (typeof CHART_BAR_MODES)[number];
+export type ChartBarPattern = (typeof CHART_BAR_PATTERNS)[number];
 export type ChartBarValueLabelsMode = (typeof CHART_BAR_VALUE_LABELS)[number];
 export type ChartBarValueLabels = boolean | ChartBarValueLabelsMode;
 export type ChartBarInsideLabelOrientation = (typeof CHART_BAR_INSIDE_LABEL_ORIENTATIONS)[number];
@@ -66,6 +81,11 @@ export type ChartXScaleType = (typeof CHART_X_SCALE_TYPES)[number];
 export type ChartResolvedXScaleType = Exclude<ChartXScaleType, "auto">;
 export type ChartTickAngle = (typeof CHART_TICK_ANGLES)[number];
 export type ChartTitleElement = (typeof CHART_TITLE_ELEMENTS)[number];
+export type ChartWaterfallRowType = (typeof CHART_WATERFALL_ROW_TYPES)[number];
+export type ChartWaterfallTotalTone = (typeof CHART_WATERFALL_TOTAL_TONES)[number];
+export type ChartWaterfallBarKind = "start" | "positive" | "negative" | "subtotal" | "total";
+export type ChartHeatmapMode = (typeof CHART_HEATMAP_MODES)[number];
+export type ChartHeatmapRamp = (typeof CHART_HEATMAP_RAMPS)[number];
 
 export type ChartDatum = Record<string, unknown>;
 export type ChartXValue = string | number | Date;
@@ -130,10 +150,12 @@ export interface ChartSeries<TDatum = ChartDatum> {
     stack?: string;
     /** Mark type when used inside `ComposedChart`. @default "line" */
     type?: ChartSeriesType;
-    /** Semantic status tone override (`base | accent | positive | caution | negative`). */
-    tone?: ChartTone;
-    /** Explicit CSS color override (e.g. `"var(--cs-color-teal-500)"` or hex/oklch). */
-    color?: string;
+    /** Static or per-datum semantic status tone override (`base | accent | positive | caution | negative`). */
+    tone?: ChartTone | ((datum: TDatum, index: number) => ChartTone | undefined);
+    /** Static or per-datum explicit CSS color override (e.g. `"var(--cs-color-teal-500)"` or hex/oklch). */
+    color?: string | ((datum: TDatum, index: number) => string | undefined);
+    /** Static or per-datum IBCS scenario fill pattern (`solid` = Actual, `hatch` = Forecast, `outline` = Plan). @default "solid" */
+    pattern?: ChartBarPattern | ((datum: TDatum, index: number) => ChartBarPattern | undefined);
     /** Optional dashed stroke style (Line / Area top stroke / Reference). */
     dashed?: boolean;
     /** Optional per-series value formatter (overrides axis/chart formatter in tooltips & value labels). */
@@ -192,6 +214,9 @@ export interface ChartTooltipItem<TDatum = ChartDatum> {
     value: number | null;
     formatted: string;
     color: string;
+    share?: number;
+    formattedShare?: string;
+    pattern?: ChartBarPattern;
 }
 
 export interface ChartTooltipContext<TDatum = ChartDatum> {
@@ -228,11 +253,15 @@ export interface ChartStateOptions<TDatum = ChartDatum> {
     yAxis?: ChartAxisConfig;
     y2Axis?: ChartAxisConfig;
     stacked?: boolean;
+    percent?: boolean;
+    directLabels?: boolean;
     width?: number;
     height?: number;
     margin?: Partial<ChartMargins>;
     hiddenSeriesIds?: readonly string[];
     activeIndex?: number | null;
+    selectedIndex?: number | null;
+    selectable?: boolean;
     hoveredSeriesId?: string | null;
     tooltipMode?: ChartTooltipMode;
 }
@@ -266,14 +295,18 @@ export function resolveToneColor(tone: ChartTone): string {
     }
 }
 
-export function resolveSeriesColor(
-    seriesItem: Pick<ChartSeries, "color" | "tone">,
+export function resolveSeriesColor<TDatum = ChartDatum>(
+    seriesItem: Pick<ChartSeries<TDatum>, "color" | "tone">,
     slotIndex: number,
     palette: ChartPalette = "categorical",
     monotone?: ChartMonotoneHue,
 ): string {
-    if (seriesItem.color) return seriesItem.color;
-    if (seriesItem.tone) return resolveToneColor(seriesItem.tone);
+    if (typeof seriesItem.color === "string" && seriesItem.color.length > 0) {
+        return seriesItem.color;
+    }
+    if (typeof seriesItem.tone === "string") {
+        return resolveToneColor(seriesItem.tone);
+    }
 
     const safeIndex = Math.max(0, Math.trunc(slotIndex));
 
@@ -309,6 +342,11 @@ export class ChartState<TDatum = ChartDatum> {
     stacked = $state<boolean>(false);
     stackedBar = $state<boolean | null>(null);
     stackedArea = $state<boolean | null>(null);
+    percent = $state<boolean>(false);
+    percentBar = $state<boolean | null>(null);
+    percentArea = $state<boolean | null>(null);
+    selectable = $state<boolean>(false);
+    directLabels = $state<boolean>(false);
     containerWidth = $state<number>(0);
     containerHeight = $state<number>(0);
     marginOverrides = $state<Partial<ChartMargins>>({});
@@ -319,9 +357,13 @@ export class ChartState<TDatum = ChartDatum> {
     plotClipId = $state<string>("");
     svgRect = $state.raw<ChartSvgRect | null>(null);
     pointerPosition = $state.raw<{ readonly x: number; readonly y: number } | null>(null);
+    externalYExtent = $state.raw<readonly [number, number] | null>(null);
+    activeYResolver = $state.raw<((index: number) => number | null) | null>(null);
+    liveAnnouncementFormatter = $state.raw<((index: number) => string) | null>(null);
     private axisOverrides = $state.raw<Partial<Record<ChartAxisPosition, ChartAxisConfig>>>({});
     private rawActiveIndex = $state<number | null>(null);
     private rawActiveSeriesId = $state<string | null>(null);
+    private rawSelectedIndex = $state<number | null>(null);
 
     readonly visibleSeries = $derived.by((): readonly ChartSeries<TDatum>[] => {
         if (this.hiddenSeriesIds.length === 0) return this.series;
@@ -337,8 +379,11 @@ export class ChartState<TDatum = ChartDatum> {
     );
 
     readonly hasY2Axis = $derived(this.rightSeries.length > 0 && this.y2Axis.show !== false);
+    readonly isPercent = $derived(
+        this.percent || this.percentBar === true || this.percentArea === true,
+    );
     readonly hasStackedMarks = $derived(
-        this.stacked || this.stackedBar === true || this.stackedArea === true,
+        this.stacked || this.stackedBar === true || this.stackedArea === true || this.isPercent,
     );
     readonly hasNamedStacks = $derived(
         this.visibleSeries.some((item) => item.stack !== undefined && item.stack.length > 0),
@@ -346,14 +391,19 @@ export class ChartState<TDatum = ChartDatum> {
     readonly isEmpty = $derived(this.data.length === 0);
     readonly allSeriesHidden = $derived(this.series.length > 0 && this.visibleSeries.length === 0);
     readonly scrubbing = $derived(this.activeIndex !== null);
+    readonly hasSelection = $derived(this.selectedIndex !== null);
 
     readonly xValues = $derived.by((): readonly ChartXValue[] =>
         this.data.map((datum, index) => this.extractX(datum, index)),
     );
 
-    private readonly leftValues = $derived.by((): readonly (number | null)[] =>
-        this.collectAxisValues(this.leftSeries, true),
-    );
+    private readonly leftValues = $derived.by((): readonly (number | null)[] => {
+        const base = this.collectAxisValues(this.leftSeries, true);
+        if (this.externalYExtent === null) return base;
+        return base.length === 0
+            ? [this.externalYExtent[0], this.externalYExtent[1]]
+            : [...base, this.externalYExtent[0], this.externalYExtent[1]];
+    });
 
     private readonly rightValues = $derived.by((): readonly (number | null)[] =>
         this.collectAxisValues(this.rightSeries, false),
@@ -366,7 +416,8 @@ export class ChartState<TDatum = ChartDatum> {
                 range: [1, 0],
                 includeZero: this.yAxis.includeZero ?? true,
                 domain: this.yAxis.domain,
-                tickCount: this.yAxis.tickCount ?? 5,
+                tickCount: this.yAxis.tickCount ?? (this.isPercent ? (this.size === "sm" ? 2 : 4) : 5),
+                percent: this.isPercent,
             }),
     );
 
@@ -381,6 +432,39 @@ export class ChartState<TDatum = ChartDatum> {
         });
     });
 
+    private readonly directLabelsRightWidth = $derived.by((): number | undefined => {
+        if (
+            !this.directLabels ||
+            this.orientation === "horizontal" ||
+            this.hasY2Axis ||
+            this.visibleSeries.length === 0 ||
+            this.data.length === 0
+        ) {
+            return undefined;
+        }
+
+        const labelFont = { fontSize: 11, fontWeight: 600 };
+        const valueFont = { fontSize: 11, fontWeight: 500 };
+        const leftConfig = this.getEffectiveAxisConfig("left");
+        const valueFmt = leftConfig.format ?? (this.isPercent ? formatPercentTick : formatDefaultTick);
+        let maxWidth = 0;
+
+        for (const seriesItem of this.visibleSeries) {
+            const latestText = this.findLatestSeriesValueText(seriesItem, valueFmt);
+            const nameW = measureTextWidth(seriesItem.label, labelFont);
+            const valW = latestText ? measureTextWidth(latestText, valueFont) + 5 : 0;
+            // 8px offset from plotRight + label + value + 8px trailing breathing room.
+            const total = 8 + nameW + valW + 8;
+            if (total > maxWidth) maxWidth = total;
+        }
+
+        const clamped = Math.max(88, Math.min(136, Math.ceil(maxWidth)));
+        if (this.containerWidth > 0) {
+            return Math.min(clamped, Math.max(64, Math.floor(this.containerWidth * 0.32)));
+        }
+        return clamped;
+    });
+
     private readonly axisMarginInputs = $derived.by(() => {
         const fontSize = this.size === "lg" ? 12 : 11;
         const isHorizontal = this.orientation === "horizontal";
@@ -388,8 +472,9 @@ export class ChartState<TDatum = ChartDatum> {
         const leftConfig = this.getEffectiveAxisConfig("left");
         const rightConfig = this.getEffectiveAxisConfig("right");
 
-        const formatBottom = bottomConfig.format ?? formatDefaultTick;
-        const formatLeft = leftConfig.format ?? formatDefaultTick;
+        const defaultValueFormat = this.isPercent ? formatPercentTick : formatDefaultTick;
+        const formatBottom = bottomConfig.format ?? (isHorizontal ? defaultValueFormat : formatDefaultTick);
+        const formatLeft = leftConfig.format ?? (isHorizontal ? formatDefaultTick : defaultValueFormat);
         const formatRight = rightConfig.format ?? formatDefaultTick;
 
         const bottomTickLabels = isHorizontal
@@ -433,6 +518,7 @@ export class ChartState<TDatum = ChartDatum> {
             yAxisLabel: leftConfig.label,
             y2AxisLabel: rightConfig.label,
             yMaxTickWidth: leftConfig.maxTickWidth ?? (isHorizontal ? 140 : undefined),
+            directLabelsWidth: this.directLabelsRightWidth,
             font: { fontSize },
             overrides: this.marginOverrides,
         });
@@ -504,6 +590,7 @@ export class ChartState<TDatum = ChartDatum> {
             xWrapTicks: bottomConfig.wrapTicks ?? false,
             xMaxTickWidth: bottomConfig.maxTickWidth,
             yMaxTickWidth: leftConfig.maxTickWidth ?? (isHorizontal ? 140 : undefined),
+            directLabelsWidth: this.directLabelsRightWidth,
             font: { fontSize },
             overrides: this.marginOverrides,
         });
@@ -542,7 +629,8 @@ export class ChartState<TDatum = ChartDatum> {
             range,
             includeZero: this.yAxis.includeZero ?? true,
             domain: this.yAxis.domain,
-            tickCount: this.yAxis.tickCount ?? 5,
+            tickCount: this.yAxis.tickCount ?? (this.isPercent ? (this.size === "sm" ? 2 : 4) : 5),
+            percent: this.isPercent,
         });
     });
 
@@ -583,13 +671,18 @@ export class ChartState<TDatum = ChartDatum> {
             plotX = coords.length > 0 ? Math.max(...coords) : this.plotWidth * 0.5;
         } else {
             plotX = this.xScale.center(xValue);
-            const coords = this.collectActiveValueCoords(index, datum, false);
-            if (coords.length > 0) {
-                let sum = 0;
-                for (const coord of coords) sum += coord;
-                plotY = Math.max(0, Math.min(this.plotHeight, sum / coords.length));
+            const resolvedY = this.activeYResolver ? this.activeYResolver(index) : null;
+            if (resolvedY !== null && Number.isFinite(resolvedY)) {
+                plotY = Math.max(0, Math.min(this.plotHeight, resolvedY));
             } else {
-                plotY = this.plotHeight * 0.35;
+                const coords = this.collectActiveValueCoords(index, datum, false);
+                if (coords.length > 0) {
+                    let sum = 0;
+                    for (const coord of coords) sum += coord;
+                    plotY = Math.max(0, Math.min(this.plotHeight, sum / coords.length));
+                } else {
+                    plotY = this.plotHeight * 0.35;
+                }
             }
         }
 
@@ -619,6 +712,9 @@ export class ChartState<TDatum = ChartDatum> {
         if (options.yAxis !== undefined) this.yAxis = options.yAxis;
         if (options.y2Axis !== undefined) this.y2Axis = options.y2Axis;
         if (options.stacked !== undefined) this.stacked = options.stacked;
+        if (options.percent !== undefined) this.percent = options.percent;
+        if (options.directLabels !== undefined) this.directLabels = options.directLabels;
+        if (options.selectable !== undefined) this.selectable = options.selectable;
         if (options.width !== undefined) this.containerWidth = options.width;
         if (options.height !== undefined) this.containerHeight = options.height;
         if (options.margin !== undefined) this.marginOverrides = options.margin;
@@ -642,6 +738,9 @@ export class ChartState<TDatum = ChartDatum> {
         if (options.activeIndex !== undefined) {
             this.setActiveIndex(options.activeIndex);
         }
+        if (options.selectedIndex !== undefined) {
+            this.setSelectedIndex(options.selectedIndex);
+        }
     }
 
     get activeIndex(): number | null {
@@ -651,6 +750,15 @@ export class ChartState<TDatum = ChartDatum> {
 
     set activeIndex(value: number | null) {
         this.setActiveIndex(value);
+    }
+
+    get selectedIndex(): number | null {
+        if (this.rawSelectedIndex === null || this.data.length === 0) return null;
+        return Math.max(0, Math.min(this.data.length - 1, this.rawSelectedIndex));
+    }
+
+    set selectedIndex(value: number | null) {
+        this.setSelectedIndex(value);
     }
 
     get activeSeriesId(): string | null {
@@ -673,6 +781,20 @@ export class ChartState<TDatum = ChartDatum> {
             return;
         }
         this.rawActiveIndex = Math.max(0, Math.min(this.data.length - 1, Math.trunc(index)));
+    }
+
+    setSelectedIndex(index: number | null): void {
+        if (index === null || !Number.isFinite(index) || this.data.length === 0) {
+            this.rawSelectedIndex = null;
+            return;
+        }
+        this.rawSelectedIndex = Math.max(0, Math.min(this.data.length - 1, Math.trunc(index)));
+    }
+
+    toggleSelectedIndex(index: number): void {
+        if (!Number.isFinite(index) || this.data.length === 0) return;
+        const clamped = Math.max(0, Math.min(this.data.length - 1, Math.trunc(index)));
+        this.rawSelectedIndex = this.selectedIndex === clamped ? null : clamped;
     }
 
     setActiveSeries(id: string | null): void {
@@ -738,7 +860,16 @@ export class ChartState<TDatum = ChartDatum> {
         this.pointerPosition = position;
     }
 
+    isMarkTypePercent(type: ChartSeriesType | undefined): boolean {
+        if (type === "line") return false;
+        if (type === "bar") return this.percentBar ?? this.percent;
+        if (type === "area") return this.percentArea ?? this.percent;
+        if (this.percentBar !== null || this.percentArea !== null) return false;
+        return this.percent;
+    }
+
     isMarkTypeStacked(type: ChartSeriesType | undefined): boolean {
+        if (this.isMarkTypePercent(type)) return true;
         if (type === "line") return false;
         if (type === "bar") return this.stackedBar ?? this.stacked;
         if (type === "area") return this.stackedArea ?? this.stacked;
@@ -777,6 +908,25 @@ export class ChartState<TDatum = ChartDatum> {
         return groups;
     }
 
+    private findLatestSeriesValueText(
+        seriesItem: ChartSeries<TDatum>,
+        valueFmt: (value: ChartXValue) => string,
+    ): string {
+        for (let index = this.data.length - 1; index >= 0; index--) {
+            const datum = this.data[index];
+            if (datum === undefined) continue;
+            const val = this.extractSeriesValue(seriesItem, datum, index);
+            if (val !== null) {
+                return seriesItem.format
+                    ? seriesItem.format(val, datum)
+                    : this.isPercent
+                      ? "100%"
+                      : valueFmt(val);
+            }
+        }
+        return "";
+    }
+
     private collectAxisValues(
         axisSeries: readonly ChartSeries<TDatum>[],
         allowStacking: boolean,
@@ -787,6 +937,7 @@ export class ChartState<TDatum = ChartDatum> {
         const collected: (number | null)[] = [];
 
         for (const group of groups) {
+            const normalized = allowStacking && this.isMarkTypePercent(group.markType);
             const stackUnstacked = allowStacking && this.isMarkTypeStacked(group.markType);
             const hasNamedStack = group.series.some(
                 (item) => item.stack !== undefined && item.stack.length > 0,
@@ -802,6 +953,7 @@ export class ChartState<TDatum = ChartDatum> {
                                 this.extractSeriesValue(item, datum, index),
                             ),
                         })),
+                        { normalized },
                     );
                     collected.push(extent[0], extent[1]);
                 }
@@ -842,6 +994,15 @@ export class ChartState<TDatum = ChartDatum> {
                 ? matchingGroup.filter((item) => item.stack === seriesItem.stack)
                 : matchingGroup.filter((item) => !item.stack);
 
+            const normalized = !isRightAxis && this.isMarkTypePercent(seriesItem.type);
+            let rowPositiveSum = 0;
+            if (normalized) {
+                for (const item of stackGroup) {
+                    const val = this.extractSeriesValue(item, datum, index);
+                    if (val !== null && val > 0) rowPositiveSum += val;
+                }
+            }
+
             let posSum = 0;
             let negSum = 0;
             for (const item of stackGroup) {
@@ -849,7 +1010,12 @@ export class ChartState<TDatum = ChartDatum> {
                 if (value === null) continue;
                 let y0: number;
                 let y1: number;
-                if (value >= 0) {
+                if (normalized) {
+                    const positive = Math.max(0, value);
+                    y0 = rowPositiveSum > 0 ? posSum / rowPositiveSum : 0;
+                    posSum += positive;
+                    y1 = rowPositiveSum > 0 ? posSum / rowPositiveSum : 0;
+                } else if (value >= 0) {
                     y0 = posSum;
                     y1 = posSum + value;
                     posSum = y1;
@@ -898,6 +1064,7 @@ export class ChartState<TDatum = ChartDatum> {
                 continue;
             }
 
+            const normalized = allowStacking && this.isMarkTypePercent(group.markType);
             const slots = partitionSeriesIntoStackSlots(group.series, stackUnstacked);
             for (const slot of slots) {
                 let positiveSum = 0;
@@ -910,14 +1077,18 @@ export class ChartState<TDatum = ChartDatum> {
                         if (value >= 0) {
                             positiveSum += value;
                             hasPositive = true;
-                        } else {
+                        } else if (!normalized) {
                             negativeSum += value;
                             hasNegative = true;
                         }
                     }
                 }
-                if (hasPositive) coords.push(scale.scale(positiveSum));
-                if (hasNegative) coords.push(scale.scale(negativeSum));
+                if (normalized) {
+                    if (hasPositive) coords.push(scale.scale(positiveSum > 0 ? 1 : 0));
+                } else {
+                    if (hasPositive) coords.push(scale.scale(positiveSum));
+                    if (hasNegative) coords.push(scale.scale(negativeSum));
+                }
             }
         }
     }
@@ -1027,6 +1198,56 @@ export class ChartState<TDatum = ChartDatum> {
         );
     }
 
+    resolveDatumColor(seriesId: string, datum: TDatum, index: number): string {
+        const registeredIndex = this.series.findIndex((item) => item.id === seriesId);
+        const seriesItem = registeredIndex === -1 ? undefined : this.series[registeredIndex];
+        if (!seriesItem) {
+            return resolveSeriesColor({}, 0, this.palette, this.monotone);
+        }
+
+        if (typeof seriesItem.color === "function") {
+            const dynamicColor = seriesItem.color(datum, index);
+            if (typeof dynamicColor === "string" && dynamicColor.length > 0) {
+                return dynamicColor;
+            }
+        } else if (typeof seriesItem.color === "string" && seriesItem.color.length > 0) {
+            return seriesItem.color;
+        }
+
+        if (typeof seriesItem.tone === "function") {
+            const dynamicTone = seriesItem.tone(datum, index);
+            if (dynamicTone !== undefined) {
+                return resolveToneColor(dynamicTone);
+            }
+        } else if (typeof seriesItem.tone === "string") {
+            return resolveToneColor(seriesItem.tone);
+        }
+
+        return resolveSeriesColor(
+            {},
+            registeredIndex === -1 ? 0 : registeredIndex,
+            this.palette,
+            this.monotone,
+        );
+    }
+
+    resolveSeriesPattern(seriesId: string): ChartBarPattern {
+        const seriesItem = this.series.find((item) => item.id === seriesId);
+        if (seriesItem && typeof seriesItem.pattern === "string") {
+            return seriesItem.pattern;
+        }
+        return "solid";
+    }
+
+    resolveDatumPattern(seriesId: string, datum: TDatum, index: number): ChartBarPattern {
+        const seriesItem = this.series.find((item) => item.id === seriesId);
+        if (!seriesItem || seriesItem.pattern === undefined) return "solid";
+        if (typeof seriesItem.pattern === "function") {
+            return seriesItem.pattern(datum, index) ?? "solid";
+        }
+        return seriesItem.pattern;
+    }
+
     extractX(datum: TDatum, index: number): ChartXValue {
         const accessor = this.xAccessor;
         if (typeof accessor === "function") {
@@ -1088,6 +1309,25 @@ export class ChartState<TDatum = ChartDatum> {
         let total = 0;
         let hasNumeric = false;
 
+        const normalizedSumBySeriesId: Record<string, number> = Object.create(null);
+        if (this.isPercent && this.leftSeries.length > 0) {
+            const groups = this.partitionAxisSeriesByMarkType(this.leftSeries);
+            for (const group of groups) {
+                if (!this.isMarkTypePercent(group.markType)) continue;
+                const slots = partitionSeriesIntoStackSlots(group.series, true);
+                for (const slot of slots) {
+                    let slotSum = 0;
+                    for (const item of slot.series) {
+                        const val = this.extractSeriesValue(item, datum, clamped);
+                        if (val !== null && val > 0) slotSum += val;
+                    }
+                    for (const item of slot.series) {
+                        normalizedSumBySeriesId[item.id] = slotSum;
+                    }
+                }
+            }
+        }
+
         const items = targetSeries.map((seriesItem) => {
             const value = this.extractSeriesValue(seriesItem, datum, clamped);
             const axisFormat = seriesItem.yAxis === "right" ? y2AxisFormat : yAxisFormat;
@@ -1105,11 +1345,25 @@ export class ChartState<TDatum = ChartDatum> {
                 hasNumeric = true;
             }
 
+            const isNormalizedItem =
+                seriesItem.yAxis !== "right" && this.isMarkTypePercent(seriesItem.type);
+            const slotSum = normalizedSumBySeriesId[seriesItem.id] ?? 0;
+            const share =
+                isNormalizedItem && value !== null
+                    ? slotSum > 0
+                        ? Math.max(0, value) / slotSum
+                        : 0
+                    : undefined;
+            const formattedShare = share !== undefined ? `${Math.round(share * 100)}%` : undefined;
+            const pattern = this.resolveDatumPattern(seriesItem.id, datum, clamped);
+
             return {
                 series: seriesItem,
                 value,
                 formatted,
-                color: this.getSeriesColor(seriesItem.id),
+                color: this.resolveDatumColor(seriesItem.id, datum, clamped),
+                ...(share !== undefined && { share, formattedShare }),
+                ...(pattern !== "solid" && { pattern }),
             };
         });
 

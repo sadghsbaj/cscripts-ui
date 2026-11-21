@@ -216,6 +216,9 @@
                         )}
                         <span
                             class="cs-chart-tooltip-swatch"
+                            data-pattern={item.pattern && item.pattern !== "solid"
+                                ? item.pattern
+                                : undefined}
                             style:--cs-chart-swatch-color={item.color}
                             aria-hidden="true"
                         ></span>
@@ -236,6 +239,9 @@
                                 />
                             {:else}
                                 {item.formatted}
+                            {/if}
+                            {#if item.value !== null && item.formattedShare !== undefined}
+                                <span class="cs-chart-tooltip-sep" aria-hidden="true"></span><span class="cs-chart-tooltip-share">{item.formattedShare}</span>
                             {/if}
                         </span>
                     {/each}
