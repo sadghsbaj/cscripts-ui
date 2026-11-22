@@ -185,6 +185,7 @@
     const canUndo = $derived(!disabled && historyIndex > 0);
     const canRedo = $derived(!disabled && historyIndex < history.length - 1);
     const hasLink = $derived(linkUrl.trim().length > 0);
+    const canApplyLink = $derived(!disabled && draftLinkUrl.trim() !== linkUrl.trim());
 
     function captureSnapshot(): ToolbarSnapshot {
         return {
@@ -269,7 +270,7 @@
 
     function handleApplyLink(event: SubmitEvent): void {
         event.preventDefault();
-        if (disabled) return;
+        if (!canApplyLink) return;
         const trimmed = draftLinkUrl.trim();
         if (trimmed === "") {
             const hadPreviousLink = linkUrl.length > 0;
@@ -804,9 +805,9 @@
                         variant="primary"
                         size="sm"
                         iconOnly
-                        {disabled}
+                        disabled={!canApplyLink}
                         aria-label="Apply link"
-                        {@attach tooltip({ text: "Apply", placement: "top", enabled: () => !disabled })}
+                        {@attach tooltip({ text: "Apply", placement: "top", enabled: () => canApplyLink })}
                     >
                         <ButtonIcon icon={Check} />
                         <HitArea size="md" />
