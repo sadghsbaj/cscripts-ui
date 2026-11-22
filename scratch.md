@@ -1,5 +1,6 @@
 ## UI & Polish
 
+- WorkApp View Animation manchaml noch verbuggt maybe lceaner machen erinach garn icht enrivg buggbar mehr ienfach faden clean shcnel, fadne das es nicht hart ist aber shcnell und clean
 - Previews extrem polishen
 - Mobile support optimieren
 - [x] Docs in App-Layout integrieren (als Gesamtbeispiel und in Work-Docs)
@@ -28,6 +29,7 @@
 
 ## Modules
 
+- [] Cleane normale Tabs
 - [x] Collapsible
 - [x] Accordion
 - [x] Data Table
@@ -39,7 +41,7 @@
 - [ ] Drawer
 - [ ] Pagination
 - [ ] Slider
-- [ ] Color Picker
+- [x] Color Picker
 - [x] ContextMenu
 - [ ] NLP Parser
 - [ ] Command Palette
