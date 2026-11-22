@@ -27,4 +27,4 @@ Inline comment composer pairing an external avatar, a unified elevated `<Card>` 
 - **Empty:** Placeholder visible, shortcut hint hidden, and `Send` button disabled.
 - **Draft:** Multi-line text expands the textarea via `autoResize`, reveals the `Ctrl + Enter` hint, and enables `Send`.
 - **Submitting:** Locks the textarea and toolbar buttons, sets `aria-busy`, and morphs the button label to `"Sending..."`.
-- **Disabled:** Applies `--cs-color-disabled-bg-elevated` and `--cs-color-disabled-border` to the outer `<Card>` and disables all controls.
+- **Disabled:** Applies `--cs-color-disabled-bg` with `box-shadow: none` to the outer `<Card>` and disables all controls.

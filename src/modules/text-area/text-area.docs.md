@@ -56,12 +56,12 @@ Overridable on `.cs-text-area`:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `--cs-text-area-bg` | `var(--cs-color-base-soft)` (`soft`) / `var(--cs-color-elevated)` (`elevated`) | Background color (`--cs-color-disabled-bg` / `--cs-color-disabled-bg-elevated` when disabled). |
+| `--cs-text-area-bg` | `var(--cs-color-base-soft)` (`soft`) / `var(--cs-color-elevated)` (`elevated`) | Background color (`--cs-color-disabled-bg` when disabled). |
 | `--cs-text-area-bg-hover` | `var(--cs-color-base-soft-hover)` (`soft`) / `var(--cs-color-elevated-hover)` (`elevated`) | Hover background color. |
 | `--cs-text-area-fg` | `var(--cs-color-text-strong)` | Text color (`var(--cs-color-disabled-fg)` when disabled). |
 | `--cs-text-area-placeholder-fg` | `var(--cs-color-text-weak)` | Placeholder text color (`var(--cs-color-disabled-fg)` when disabled). |
 | `--cs-text-area-caret` | `var(--cs-color-accent-solid)` | Caret color (`var(--cs-color-negative-solid)` when `[data-invalid]:not(:disabled)`). |
-| `--cs-text-area-shadow` | `0 0 #0000` (`soft`) / `var(--cs-shadow-elevated)` (`elevated`) | Elevation box-shadow (`0 0 0 1px var(--cs-color-disabled-border)` for disabled `elevated`). |
+| `--cs-text-area-shadow` | `0 0 #0000` (`soft`) / `var(--cs-shadow-elevated)` (`elevated`) | Elevation box-shadow (`none` when disabled). |
 | `--cs-text-area-shadow-hover` | `0 0 #0000` (`soft`) / `var(--cs-shadow-elevated-hover)` (`elevated`) | Hover elevation box-shadow. |
 | `--cs-text-area-ring-shadow` | `inset 0 0 0 0px transparent` | Inset ring shadow (`inset 0 0 0 2px var(--cs-color-accent-solid)` on focus; `inset 0 0 0 2px var(--cs-color-negative-solid)` on `[data-invalid]:not(:disabled)`). |
 | `--cs-text-area-ring-shadow-hover` | `var(--cs-text-area-ring-shadow)` | Hover inset ring shadow (tracks active focus/invalid ring). |

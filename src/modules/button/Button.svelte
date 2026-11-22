@@ -119,7 +119,8 @@
 
                 &[data-variant="primary"],
                 &[data-variant="secondary"],
-                &[data-variant="tertiary"] {
+                &[data-variant="tertiary"],
+                &[data-variant="elevated"] {
                     --cs-button-bg: var(--cs-color-disabled-bg);
                     --cs-button-bg-hover: var(--cs-color-disabled-bg);
                 }
@@ -127,14 +128,6 @@
                 &[data-variant="ghost"] {
                     --cs-button-bg: transparent;
                     --cs-button-bg-hover: transparent;
-                }
-
-                &[data-variant="elevated"] {
-                    --cs-button-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-button-bg-hover: var(--cs-color-disabled-bg-elevated);
-                    --cs-button-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                    --cs-button-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
-                    --cs-button-shadow-active: 0 0 0 1px var(--cs-color-disabled-border);
                 }
             }
         }

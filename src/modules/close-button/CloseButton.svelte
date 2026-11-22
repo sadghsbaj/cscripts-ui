@@ -191,17 +191,13 @@
                 --cs-close-button-fg: var(--cs-color-disabled-fg);
                 --cs-close-button-shadow: none;
 
-                &[data-variant="soft"] {
+                &[data-variant="soft"],
+                &[data-variant="elevated"] {
                     --cs-close-button-bg: var(--cs-color-disabled-bg);
                 }
 
                 &[data-variant="ghost"] {
                     --cs-close-button-bg: transparent;
-                }
-
-                &[data-variant="elevated"] {
-                    --cs-close-button-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-close-button-shadow: 0 0 0 1px var(--cs-color-disabled-border);
                 }
             }
         }

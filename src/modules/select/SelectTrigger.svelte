@@ -418,18 +418,12 @@
                 --cs-select-trigger-ring-shadow: inset 0 0 0 0px transparent;
                 cursor: default;
 
-                &[data-variant="soft"] {
+                &[data-variant="soft"],
+                &[data-variant="elevated"] {
                     --cs-select-trigger-bg: var(--cs-color-disabled-bg);
                     --cs-select-trigger-bg-hover: var(--cs-color-disabled-bg);
                     --cs-select-trigger-shadow: none;
                     --cs-select-trigger-shadow-hover: none;
-                }
-
-                &[data-variant="elevated"] {
-                    --cs-select-trigger-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-select-trigger-bg-hover: var(--cs-color-disabled-bg-elevated);
-                    --cs-select-trigger-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                    --cs-select-trigger-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
                 }
             }
 

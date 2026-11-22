@@ -95,5 +95,5 @@ Polymorphic over `as?: "button" | "a" | "label"` (defaults to `"button"`), forwa
 ## Behavior & Quirks
 - **No implicit defaults:** Both `variant` and `size` are required at every call site.
 - **Interaction modality split:** Pointer `:active` squashes only the `::before` surface layer (`--cs-squash-subtle`) while keeping text/icons steady; keyboard `:focus-visible:active` uniformly scales the whole control (`0.97`).
-- **Disabled states:** Uses colorless `--cs-color-disabled-*` tokens rather than opacity dimming (`elevated` switches to `--cs-color-disabled-bg-elevated` with a 1px `--cs-color-disabled-border` ring).
+- **Disabled states:** Uses colorless `--cs-color-disabled-*` tokens rather than opacity dimming (`elevated` switches to `--cs-color-disabled-bg` with `shadow: none`).
 - **Hit area:** Compact icon-only buttons (`xs` / `sm`) below `1936px²` should include `<HitArea size="md" />` when layout allows.

@@ -206,18 +206,12 @@
                 resize: none;
                 cursor: default;
 
-                &[data-variant="soft"] {
+                &[data-variant="soft"],
+                &[data-variant="elevated"] {
                     --cs-text-area-bg: var(--cs-color-disabled-bg);
                     --cs-text-area-bg-hover: var(--cs-color-disabled-bg);
                     --cs-text-area-shadow: 0 0 #0000;
                     --cs-text-area-shadow-hover: 0 0 #0000;
-                }
-
-                &[data-variant="elevated"] {
-                    --cs-text-area-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-text-area-bg-hover: var(--cs-color-disabled-bg-elevated);
-                    --cs-text-area-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                    --cs-text-area-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
                 }
             }
         }

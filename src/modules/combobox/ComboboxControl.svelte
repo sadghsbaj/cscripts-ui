@@ -244,18 +244,12 @@
                 --cs-combobox-ring-shadow-hover: inset 0 0 0 0px transparent;
                 cursor: default;
 
-                &[data-variant="soft"] {
+                &[data-variant="soft"],
+                &[data-variant="elevated"] {
                     --cs-combobox-bg: var(--cs-color-disabled-bg);
                     --cs-combobox-bg-hover: var(--cs-color-disabled-bg);
                     --cs-combobox-shadow: none;
                     --cs-combobox-shadow-hover: none;
-                }
-
-                &[data-variant="elevated"] {
-                    --cs-combobox-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-combobox-bg-hover: var(--cs-color-disabled-bg-elevated);
-                    --cs-combobox-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                    --cs-combobox-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
                 }
             }
         }

@@ -194,7 +194,7 @@ Generic over `T extends string = string`. Extends `Omit<HTMLAttributes<HTMLDivEl
 
 | Variable                         | Default                                                                                | Description                                                                                            |
 | :------------------------------- | :------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------- |
-| `--cs-combobox-bg`               | `--cs-color-base-soft` (`soft`) / `--cs-color-elevated` (`elevated`)                   | Control background at rest (`--cs-color-disabled-bg` / `--cs-color-disabled-bg-elevated` when disabled). |
+| `--cs-combobox-bg`               | `--cs-color-base-soft` (`soft`) / `--cs-color-elevated` (`elevated`)                   | Control background at rest (`--cs-color-disabled-bg` when disabled).                                   |
 | `--cs-combobox-bg-hover`         | `--cs-color-base-soft-hover` (`soft`) / `--cs-color-elevated-hover` (`elevated`)       | Control background on hover and `[data-open]`.                                                         |
 | `--cs-combobox-fg`               | `var(--cs-color-text-strong)`                                                          | Input text foreground color.                                                                           |
 | `--cs-combobox-placeholder-fg`   | `var(--cs-color-text-weak)`                                                            | Input `::placeholder` color.                                                                           |

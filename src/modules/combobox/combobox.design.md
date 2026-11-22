@@ -47,7 +47,7 @@ Unlike `SelectTrigger` (a single `<button>`), `ComboboxControl` is a composite `
 - **Focus Ring (`::after` overlay):** Rendered on `.cs-combobox-control::after` (`inset: 0`, `border-radius: inherit`, `corner-shape: inherit`, `pointer-events: none`).
   - `:focus-within:not([data-disabled])`: `inset 0 0 0 2px var(--cs-color-accent-solid)`.
   - `[data-invalid]:not([data-disabled])`: overrides ring to `inset 0 0 0 2px var(--cs-color-negative-solid)`, caret to `--cs-color-negative-solid`, and leading/chevron icons to `--cs-color-negative-soft-fg`.
-  - `[data-disabled]`: `--cs-disabled-opacity: 1`, colorless `--cs-color-disabled-fg` / `--cs-color-disabled-bg` (`--cs-color-disabled-bg-elevated` + `0 0 0 1px var(--cs-color-disabled-border)` for `elevated`), zero focus ring.
+  - `[data-disabled]`: `--cs-disabled-opacity: 1`, colorless `--cs-color-disabled-fg` / `--cs-color-disabled-bg`, `--cs-shadow: none` (including `elevated`, borderless), zero focus ring.
 - **Typography & Cursor:**
   - `.cs-combobox-input` uses `font-weight: 400` (matching `TextInputField`, preventing glyph-width reflow while editing), `caret-color: var(--cs-color-accent-solid)`, `cursor: text`, and `--cs-color-text-weak` for `::placeholder`.
   - Clicking empty shell padding (`onmousedown` on `ComboboxControl` when `event.target === ref`) calls `event.preventDefault()` and focuses `<input>` without ring flicker.

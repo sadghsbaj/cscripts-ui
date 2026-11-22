@@ -242,11 +242,6 @@
                 --cs-checkbox-bg: var(--cs-color-disabled-bg);
                 --cs-checkbox-shadow: none;
 
-                &[data-variant="elevated"] {
-                    --cs-checkbox-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-checkbox-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                }
-
                 &:is(:checked, :indeterminate) {
                     --cs-checkbox-bg: var(--cs-color-disabled-bg-strong);
                     --cs-checkbox-shadow: none;

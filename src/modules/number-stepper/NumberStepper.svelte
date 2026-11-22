@@ -283,20 +283,12 @@
                 --cs-number-stepper-fg-disabled: var(--cs-color-disabled-fg);
                 --cs-number-stepper-well-ring: inset 0 0 0 0px transparent;
 
-                &[data-variant="soft"] {
+                &[data-variant="soft"],
+                &[data-variant="elevated"] {
                     --cs-number-stepper-bg: var(--cs-color-disabled-bg);
                     --cs-number-stepper-shadow: none;
                     --cs-number-stepper-well-bg: var(--cs-color-disabled-bg-elevated);
                     --cs-number-stepper-well-bg-hover: var(--cs-color-disabled-bg-elevated);
-                    --cs-number-stepper-well-shadow: none;
-                    --cs-number-stepper-well-shadow-hover: none;
-                }
-
-                &[data-variant="elevated"] {
-                    --cs-number-stepper-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-number-stepper-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                    --cs-number-stepper-well-bg: var(--cs-color-disabled-bg);
-                    --cs-number-stepper-well-bg-hover: var(--cs-color-disabled-bg);
                     --cs-number-stepper-well-shadow: none;
                     --cs-number-stepper-well-shadow-hover: none;
                 }

@@ -92,13 +92,13 @@ Overridable on `.cs-text-input`:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `--cs-text-input-bg` | `var(--cs-color-base-soft)` (`soft`) / `var(--cs-color-elevated)` (`elevated`) | Shell background (`--cs-color-disabled-bg` / `--cs-color-disabled-bg-elevated` when `[data-disabled]`). |
+| `--cs-text-input-bg` | `var(--cs-color-base-soft)` (`soft`) / `var(--cs-color-elevated)` (`elevated`) | Shell background (`--cs-color-disabled-bg` when `[data-disabled]`). |
 | `--cs-text-input-bg-hover` | `var(--cs-color-base-soft-hover)` (`soft`) / `var(--cs-color-elevated-hover)` (`elevated`) | Shell hover background. |
 | `--cs-text-input-fg` | `var(--cs-color-text-strong)` | Input text color (`var(--cs-color-disabled-fg)` when `[data-disabled]`). |
 | `--cs-text-input-placeholder-fg` | `var(--cs-color-text-weak)` | Placeholder text color (`var(--cs-color-disabled-fg)` when `[data-disabled]`). |
 | `--cs-text-input-caret` | `var(--cs-color-accent-solid)` | Input caret color (`var(--cs-color-negative-solid)` when `[data-invalid]:not([data-disabled])`). |
 | `--cs-text-input-icon-fg` | `var(--cs-color-text-weak)` | `<TextInputIcon />` color (`var(--cs-color-negative-soft-fg)` when `[data-invalid]:not([data-disabled])`; `var(--cs-color-disabled-fg)` when `[data-disabled]`). |
-| `--cs-text-input-shadow` | `none` (`soft`) / `var(--cs-shadow-elevated)` (`elevated`) | Shell box-shadow (`0 0 0 1px var(--cs-color-disabled-border)` for disabled `elevated`). |
+| `--cs-text-input-shadow` | `none` (`soft`) / `var(--cs-shadow-elevated)` (`elevated`) | Shell box-shadow (`none` when `[data-disabled]`). |
 | `--cs-text-input-shadow-hover` | `var(--cs-text-input-shadow)` (`soft`) / `var(--cs-shadow-elevated-hover)` (`elevated`) | Hover shell box-shadow. |
 | `--cs-text-input-ring-shadow` | `inset 0 0 0 0px transparent` | Inset ring on `::after` (`inset 0 0 0 2px var(--cs-color-accent-solid)` on `:focus-within`; `inset 0 0 0 2px var(--cs-color-negative-solid)` on `[data-invalid]:not([data-disabled])`). |
 | `--cs-text-input-ring-shadow-hover` | `var(--cs-text-input-ring-shadow)` | Hover inset ring on `::after`. |

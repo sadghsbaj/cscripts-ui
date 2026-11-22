@@ -157,7 +157,7 @@
   - Focus (`:focus-visible`): `inset 0 0 0 2px var(--cs-color-accent-solid)` (relying on `box-shadow` compositing order so focus ring paints above elevation shadow, matching `TextArea`).
   - Dragging (`[data-dragging]`): `--cs-color-accent-soft` background tint + `inset 0 0 0 2px var(--cs-color-accent-solid)`.
   - Invalid (`[data-invalid]`): `inset 0 0 0 2px var(--cs-color-negative-solid)` + negative error text (`--cs-color-negative-soft-fg`).
-  - Disabled (`[data-disabled]`): colorless `--cs-color-disabled-bg` / `--cs-color-disabled-bg-elevated` and `--cs-color-disabled-fg` (`--cs-disabled-opacity: 1`).
+  - Disabled (`[data-disabled]`): colorless `--cs-color-disabled-bg` and `--cs-color-disabled-fg` (`--cs-disabled-opacity: 1`), `box-shadow: none` (including `elevated`, borderless).
 
 ### Proportional `size` Scale (`sm..lg`)
 Aligned with `TextArea` (`sm..lg`) and `Card` (`sm..lg`):

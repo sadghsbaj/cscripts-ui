@@ -230,18 +230,12 @@
                 --cs-text-input-ring-shadow-hover: inset 0 0 0 0px transparent;
                 cursor: default;
 
-                &[data-variant="soft"] {
+                &[data-variant="soft"],
+                &[data-variant="elevated"] {
                     --cs-text-input-bg: var(--cs-color-disabled-bg);
                     --cs-text-input-bg-hover: var(--cs-color-disabled-bg);
                     --cs-text-input-shadow: none;
                     --cs-text-input-shadow-hover: none;
-                }
-
-                &[data-variant="elevated"] {
-                    --cs-text-input-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-text-input-bg-hover: var(--cs-color-disabled-bg-elevated);
-                    --cs-text-input-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                    --cs-text-input-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
                 }
             }
         }

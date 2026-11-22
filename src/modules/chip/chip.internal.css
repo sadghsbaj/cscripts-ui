@@ -219,18 +219,10 @@
 
             &[data-variant="soft"],
             &[data-variant="accent"],
+            &[data-variant="elevated"],
             &[data-invalid] {
                 --cs-chip-bg: var(--cs-color-disabled-bg);
                 --cs-chip-bg-hover: var(--cs-color-disabled-bg);
-            }
-
-            &[data-variant="elevated"] {
-                --cs-chip-bg: var(--cs-color-disabled-bg-elevated);
-                --cs-chip-bg-hover: var(--cs-color-disabled-bg-elevated);
-                --cs-chip-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                --cs-chip-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
-                --cs-chip-shadow-active: 0 0 0 1px var(--cs-color-disabled-border);
-                --cs-chip-shadow-pressed: 0 0 0 1px var(--cs-color-disabled-border);
             }
 
             &:is([data-pressed], :has(> .cs-chip-trigger[aria-pressed="true"])) {
@@ -427,20 +419,9 @@
 
                 & > .cs-chip-fill {
                     background-color: var(--cs-color-disabled-bg-active);
+                    box-shadow: none;
                 }
             }
-        }
-    }
-
-    .cs-chip[data-variant="elevated"]:has(> .cs-chip-trigger):not(:has(> .cs-chip-remove))
-        > .cs-chip-trigger:is(:disabled, [aria-disabled="true"], [data-disabled]) {
-        &::before {
-            background-color: var(--cs-color-disabled-bg-elevated);
-            box-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-        }
-
-        &[aria-pressed="true"] > .cs-chip-fill {
-            box-shadow: 0 0 0 1px var(--cs-color-disabled-border);
         }
     }
 

@@ -108,8 +108,8 @@ Overridable on `.cs-number-stepper`:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `--cs-number-stepper-bg` | `var(--cs-color-base-soft)` (`soft`) / `var(--cs-color-elevated)` (`elevated`) | Outer track background (`--cs-color-disabled-bg` / `--cs-color-disabled-bg-elevated` when `[data-disabled]`). |
-| `--cs-number-stepper-shadow` | `none` (`soft`) / `var(--cs-shadow-elevated)` (`elevated`) | Outer track box-shadow (`0 0 0 1px var(--cs-color-disabled-border)` for disabled `elevated`). |
+| `--cs-number-stepper-bg` | `var(--cs-color-base-soft)` (`soft`) / `var(--cs-color-elevated)` (`elevated`) | Outer track background (`--cs-color-disabled-bg` when `[data-disabled]`). |
+| `--cs-number-stepper-shadow` | `none` (`soft`) / `var(--cs-shadow-elevated)` (`elevated`) | Outer track box-shadow (`none` when `[data-disabled]`). |
 | `--cs-number-stepper-fg` | `var(--cs-color-text-main)` | Base button/icon foreground color (`var(--cs-color-disabled-fg)` when `[data-disabled]`). |
 | `--cs-number-stepper-fg-strong` | `var(--cs-color-text-strong)` | Input/value text and button hover foreground (`var(--cs-color-disabled-fg)` when `[data-disabled]`). |
 | `--cs-number-stepper-fg-disabled` | `var(--cs-color-disabled-fg)` | Disabled button icon foreground. |

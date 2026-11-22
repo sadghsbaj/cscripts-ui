@@ -164,8 +164,8 @@
     }
 
     :global(.cs-composer-card[data-disabled]) {
-        --cs-card-bg: var(--cs-color-disabled-bg-elevated);
-        box-shadow: 0 0 0 1px var(--cs-color-disabled-border);
+        --cs-card-bg: var(--cs-color-disabled-bg);
+        box-shadow: none;
     }
 
     .cs-composer-hint {

@@ -638,18 +638,12 @@
                 pointer-events: none;
 
                 &[data-variant="soft"],
-                &[data-variant="sunken"] {
+                &[data-variant="sunken"],
+                &[data-variant="elevated"] {
                     --cs-upload-area-bg: var(--cs-color-disabled-bg);
                     --cs-upload-area-bg-hover: var(--cs-color-disabled-bg);
                     --cs-upload-area-shadow: 0 0 #0000;
                     --cs-upload-area-shadow-hover: 0 0 #0000;
-                }
-
-                &[data-variant="elevated"] {
-                    --cs-upload-area-bg: var(--cs-color-disabled-bg-elevated);
-                    --cs-upload-area-bg-hover: var(--cs-color-disabled-bg-elevated);
-                    --cs-upload-area-shadow: 0 0 0 1px var(--cs-color-disabled-border);
-                    --cs-upload-area-shadow-hover: 0 0 0 1px var(--cs-color-disabled-border);
                 }
             }
         }

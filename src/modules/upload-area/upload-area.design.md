@@ -124,7 +124,7 @@ Keep copy calm, monochrome, and scannable at a glance—with zero fake hyperlink
 | **Uploading (`[data-status="uploading"]`)** | Variant `--cs-upload-area-bg` | `none` | Filename (`min-w-0 truncate`), tabular `%` via `<TextMorph tabular />`, `<Progress color="accent" />`, `Cancel` ghost button |
 | **Done (`[data-status="done"]`)** | Variant `--cs-upload-area-bg` | `none` | Single-file: calm `Check` icon (`--cs-color-positive-soft-fg`), filename + size, `Remove` ghost button. Multi-file: dropzone stays ready; compact `divide-y` list below |
 | **Error (`[data-status="error"]` / `[data-invalid]`)** | Variant `--cs-upload-area-bg` | `inset 0 0 0 2px var(--cs-color-negative-solid)` | `--cs-color-negative-soft-fg` icon & short error message (`"File exceeds 10 MB"` / `"Upload failed"`), `Retry` (`tertiary` `xs`) or `Clear` button |
-| **Disabled (`[data-disabled]`)** | `--cs-color-disabled-bg` (`elevated`: `--cs-color-disabled-bg-elevated` + `1px` `--cs-color-disabled-border`) | `none` | `--cs-color-disabled-fg` (`--cs-disabled-opacity: 1`), `pointer-events: none` |
+| **Disabled (`[data-disabled]`)** | `--cs-color-disabled-bg` (`box-shadow: none`, borderless including `elevated`) | `none` | `--cs-color-disabled-fg` (`--cs-disabled-opacity: 1`), `pointer-events: none` |
 
 ### Motion Tokens & Physics
 
