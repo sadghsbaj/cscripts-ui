@@ -239,7 +239,6 @@ describe("ColorFormatSelect Svelte 5 Component", () => {
             expect(trigger.classList.contains("cs-select-trigger")).toBe(true);
             expect(trigger.classList.contains("cs-color-format-select-trigger")).toBe(true);
             expect(trigger.classList.contains("custom-format-class")).toBe(true);
-            expect(trigger.dataset.slot).toBe("color-format-select");
             expect(trigger.dataset.testid).toBe("format-trigger");
             expect(trigger.getAttribute("title")).toBe("Choose color format");
 

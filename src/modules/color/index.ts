@@ -8,6 +8,7 @@ import type { ColorAlphaFormat, ColorChannel, ColorFormat } from "./color.utils.
 export * from "./color.utils.ts";
 
 export { default as ColorArea } from "./ColorArea.svelte";
+export { default as ColorEyeDropper } from "./ColorEyeDropper.svelte";
 export { default as ColorFormatSelect } from "./ColorFormatSelect.svelte";
 export { default as ColorInput } from "./ColorInput.svelte";
 export { default as ColorSlider } from "./ColorSlider.svelte";
@@ -46,6 +47,7 @@ export const COLOR_FORMAT_SELECT_SIZES = SELECT_SIZES;
 export const COLOR_FORMAT_SELECT_DEFAULTS = ["hex", "rgb", "hsl", "oklch"] as const;
 export const COLOR_EYE_DROPPER_VARIANTS = ["primary", "secondary", "tertiary", "ghost", "elevated"] as const;
 export const COLOR_EYE_DROPPER_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
+export const COLOR_EYE_DROPPER_UNSUPPORTED_BEHAVIORS = ["hide", "disable"] as const;
 
 export type ColorAreaSize = (typeof COLOR_AREA_SIZES)[number];
 export type ColorSliderSize = (typeof COLOR_SLIDER_SIZES)[number];
@@ -57,6 +59,7 @@ export type ColorFormatSelectVariant = (typeof COLOR_FORMAT_SELECT_VARIANTS)[num
 export type ColorFormatSelectSize = (typeof COLOR_FORMAT_SELECT_SIZES)[number];
 export type ColorEyeDropperVariant = (typeof COLOR_EYE_DROPPER_VARIANTS)[number];
 export type ColorEyeDropperSize = (typeof COLOR_EYE_DROPPER_SIZES)[number];
+export type ColorEyeDropperUnsupportedBehavior = (typeof COLOR_EYE_DROPPER_UNSUPPORTED_BEHAVIORS)[number];
 
 export interface ColorSwatchProps extends HTMLAttributes<HTMLElement> {
     ref?: HTMLElement | null;
@@ -223,4 +226,24 @@ export interface ColorFormatSelectProps extends Omit<HTMLButtonAttributes, "type
     label?: string;
     name?: string;
     required?: boolean;
+}
+
+export interface ColorEyeDropperProps extends Omit<HTMLButtonAttributes, "type" | "color" | "size" | "value"> {
+    ref?: HTMLButtonElement | null;
+    /** Visual style forwarded 1:1 to `Button`. Required. */
+    variant: ColorEyeDropperVariant;
+    /** T-shirt scale forwarded 1:1 to `Button` (28-44px height). Required. */
+    size: ColorEyeDropperSize;
+    /** Optional bindable CSS color string for standalone usage; updated to `result.sRGBHex` on pick. */
+    value?: string;
+    /** Fires with the picked `sRGBHex` string when sampling succeeds. */
+    onPick?: (color: string) => void;
+    /** Optional handler for non-abort `EyeDropper.open()` failures. */
+    onError?: (error: unknown) => void;
+    /** Behavior when `EyeDropper` is unavailable. @default "hide" */
+    unsupportedBehavior?: ColorEyeDropperUnsupportedBehavior;
+    disabled?: boolean;
+    /** Accessible name (`aria-label`). */
+    label?: string;
+    children?: Snippet;
 }

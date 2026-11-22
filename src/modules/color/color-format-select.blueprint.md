@@ -112,7 +112,6 @@ Canonical short UI labels (constant map inside `ColorFormatSelect.svelte` or `co
     <SelectTrigger
         bind:ref
         class={["cs-color-format-select-trigger", className]}
-        data-slot="color-format-select"
         aria-label={resolvedAriaLabel}
         aria-labelledby={ariaLabelledByProp}
         {...rest}

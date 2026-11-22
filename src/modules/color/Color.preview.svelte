@@ -7,6 +7,8 @@
     import { CopyIcon, copyOnClick } from "cs/svelte/clipboard";
     import {
         COLOR_AREA_SIZES,
+        COLOR_EYE_DROPPER_SIZES,
+        COLOR_EYE_DROPPER_VARIANTS,
         COLOR_FORMAT_SELECT_SIZES,
         COLOR_FORMAT_SELECT_VARIANTS,
         COLOR_INPUT_SIZES,
@@ -15,6 +17,7 @@
         COLOR_SWATCH_PRESETS,
         COLOR_SWATCH_SIZES,
         ColorArea,
+        ColorEyeDropper,
         ColorFormatSelect,
         ColorInput,
         ColorSlider,
@@ -54,6 +57,7 @@
     let formatSelectMode = $state<ColorFormat>("hex");
     const formatSelectState = createColorState({ defaultValue: "#4F46E5", format: () => formatSelectMode });
     let variantFormat = $state<ColorFormat>("hex");
+    const eyeDropperState = createColorState({ defaultValue: "#3B82F6", format: () => "hex" });
 
     const closeScript = ["</", "script>"].join("");
 
@@ -267,6 +271,32 @@ ${closeScript}
     />
 </div>`;
 
+    const colorEyeDropperCode = `<script lang="ts">
+    import { ColorEyeDropper, ColorInput, ColorSwatch, createColorState } from "cs/svelte/color";
+
+    const colorState = createColorState({ defaultValue: "#3B82F6", format: () => "hex" });
+${closeScript}
+
+<div class="flex items-center gap-2">
+    <ColorEyeDropper
+        variant="secondary"
+        size="md"
+        unsupportedBehavior="disable"
+        onPick={(color) => colorState.setString(color, { commit: true })}
+    />
+    <ColorSwatch size="md" color={colorState.value} mode="preview" />
+    <ColorInput
+        variant="soft"
+        size="md"
+        format="hex"
+        alpha="never"
+        bind:value={
+            () => colorState.value,
+            (v) => colorState.setString(v, { commit: false })
+        }
+        onCommit={(v) => colorState.setString(v, { commit: true })}
+    />
+</div>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 </script>
 
@@ -700,6 +730,69 @@ ${closeScript}
             <div class="flex flex-wrap items-end justify-center gap-3">
                 {#each COLOR_FORMAT_SELECT_SIZES as size (size)}
                     <ColorFormatSelect variant="soft" {size} bind:value={variantFormat} />
+                {/each}
+            </div>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="ColorEyeDropper"
+        description="Screen color sampling button powered by the native EyeDropper API, with unsupportedBehavior='disable' fallback, variants, and xs–xl scales."
+        code={colorEyeDropperCode}
+    >
+        <div class="flex flex-col items-center gap-6 w-full">
+            <div class="flex-center flex-wrap gap-2">
+                <ColorEyeDropper
+                    variant="secondary"
+                    size="md"
+                    unsupportedBehavior="disable"
+                    onPick={(color) => eyeDropperState.setString(color, { commit: true })}
+                />
+                <ColorSwatch size="md" color={eyeDropperState.value} mode="preview" />
+                <ColorInput
+                    variant="soft"
+                    size="md"
+                    format="hex"
+                    alpha="never"
+                    style="--cs-color-input-width: 180px"
+                    bind:value={
+                        () => eyeDropperState.value,
+                        (v) => eyeDropperState.setString(v, { commit: false })
+                    }
+                    onCommit={(v: string) => eyeDropperState.setString(v, { commit: true })}
+                />
+            </div>
+
+            <div class="flex-center flex-wrap gap-3">
+                {#each COLOR_EYE_DROPPER_VARIANTS as variant (variant)}
+                    {#if variant === "elevated"}
+                        <SunkenWell>
+                            <ColorEyeDropper
+                                {variant}
+                                size="md"
+                                unsupportedBehavior="disable"
+                                onPick={(color) => eyeDropperState.setString(color, { commit: true })}
+                            />
+                        </SunkenWell>
+                    {:else}
+                        <ColorEyeDropper
+                            {variant}
+                            size="md"
+                            unsupportedBehavior="disable"
+                            onPick={(color) => eyeDropperState.setString(color, { commit: true })}
+                        />
+                    {/if}
+                {/each}
+            </div>
+
+            <div class="flex flex-wrap items-end justify-center gap-3">
+                {#each COLOR_EYE_DROPPER_SIZES as size (size)}
+                    <ColorEyeDropper
+                        variant="secondary"
+                        {size}
+                        unsupportedBehavior="disable"
+                        onPick={(color) => eyeDropperState.setString(color, { commit: true })}
+                    />
                 {/each}
             </div>
         </div>
