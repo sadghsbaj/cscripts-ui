@@ -367,6 +367,51 @@ describe("ColorSwatch Svelte 5 Component", () => {
         unmount(instance);
     });
 
+    test("scales svg.cs-color-swatch-check-icon width, height, and stroke-width across sizes xs-xl", () => {
+        const expectedCheckIconSizes: Record<ColorSwatchSize, number> = {
+            xs: 11,
+            sm: 13,
+            md: 15,
+            lg: 17,
+            xl: 20,
+        };
+        const expectedCheckStrokeWidths: Record<ColorSwatchSize, number> = {
+            xs: 3.4,
+            sm: 3.4,
+            md: 3.1,
+            lg: 2.8,
+            xl: 2.8,
+        };
+
+        let size = $state<ColorSwatchSize>("xs");
+
+        const instance = mount(ColorSwatch, {
+            target: container,
+            props: {
+                color: "#111827",
+                selected: true,
+                get size() {
+                    return size;
+                },
+            },
+        });
+        flushSync();
+
+        for (const nextSize of COLOR_SWATCH_SIZES) {
+            size = nextSize;
+            flushSync();
+
+            const svg = container.querySelector<SVGSVGElement>("svg.cs-color-swatch-check-icon");
+            expect(svg).not.toBeNull();
+            expect(svg?.querySelector("path")).not.toBeNull();
+            expect(svg?.getAttribute("width")).toBe(String(expectedCheckIconSizes[nextSize]));
+            expect(svg?.getAttribute("height")).toBe(String(expectedCheckIconSizes[nextSize]));
+            expect(svg?.getAttribute("stroke-width")).toBe(String(expectedCheckStrokeWidths[nextSize]));
+        }
+
+        unmount(instance);
+    });
+
     test("sets data-halo-tone and strips alpha for --cs-color-swatch-halo-raw on translucent colors", () => {
         let color = $state("#ffffff");
         let mode = $state<"button" | "preview">("button");

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 import * as colorBarrel from "./index.ts";
 import {
+    COLOR_SWATCH_PRESETS,
     clampToGamut,
     convertColor,
     formatColor,
@@ -560,6 +561,25 @@ describe("color.utils", () => {
         });
     });
 
+    describe("COLOR_SWATCH_PRESETS", () => {
+        test("contains 14 unique, parseable presets with non-empty labels and is re-exported from index.ts", () => {
+            expect(colorBarrel.COLOR_SWATCH_PRESETS).toBe(COLOR_SWATCH_PRESETS);
+            expect(COLOR_SWATCH_PRESETS).toHaveLength(14);
+
+            const uniqueColors = new Set<string>();
+            for (const preset of COLOR_SWATCH_PRESETS) {
+                expect(typeof preset.color).toBe("string");
+                expect(preset.color.trim().length).toBeGreaterThan(0);
+                expect(typeof preset.label).toBe("string");
+                expect(preset.label.trim().length).toBeGreaterThan(0);
+                expect(parseColor(preset.color)).not.toBeNull();
+                uniqueColors.add(preset.color);
+            }
+
+            expect(uniqueColors.size).toBe(COLOR_SWATCH_PRESETS.length);
+        });
+    });
+
     describe("public barrel boundary", () => {
         test("exports headless API and does not leak color-math.internal helpers", () => {
             const exportedKeys = new Set(Object.keys(colorBarrel));
@@ -586,6 +606,7 @@ describe("color.utils", () => {
                 "COLOR_SPACES",
                 "COLOR_GAMUTS",
                 "COLOR_CHANNELS",
+                "COLOR_SWATCH_PRESETS",
             ]) {
                 expect(exportedKeys.has(expectedPublic)).toBe(true);
             }

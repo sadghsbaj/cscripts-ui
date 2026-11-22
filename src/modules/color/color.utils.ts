@@ -1,3 +1,4 @@
+import { t } from "../../shared/lang.internal.ts";
 import {
     buildParsedColorFromSrgb,
     clamp01,
@@ -11,6 +12,28 @@ import {
     srgbToHsl,
     srgbToHsv,
 } from "./color-math.internal.ts";
+
+export interface ColorSwatchPreset {
+    readonly color: string;
+    readonly label: string;
+}
+
+export const COLOR_SWATCH_PRESETS: readonly ColorSwatchPreset[] = [
+    { color: "#EF4444", label: t({ de: "Rot", en: "Red" }) },
+    { color: "#F97316", label: t({ de: "Orange", en: "Orange" }) },
+    { color: "#FACC15", label: t({ de: "Gelb", en: "Yellow" }) },
+    { color: "#4ADE80", label: t({ de: "Grün", en: "Green" }) },
+    { color: "#2DD4BF", label: t({ de: "Türkis", en: "Teal" }) },
+    { color: "#3B82F6", label: t({ de: "Blau", en: "Blue" }) },
+    { color: "#6366F1", label: t({ de: "Indigo", en: "Indigo" }) },
+    { color: "#EC4899", label: t({ de: "Pink", en: "Pink" }) },
+    { color: "#F43F5E", label: t({ de: "Rosé", en: "Rose" }) },
+    { color: "#D946EF", label: t({ de: "Fuchsia", en: "Fuchsia" }) },
+    { color: "#8B5CF6", label: t({ de: "Violett", en: "Violet" }) },
+    { color: "#0EA5E9", label: t({ de: "Himmelblau", en: "Sky" }) },
+    { color: "#10B981", label: t({ de: "Smaragd", en: "Emerald" }) },
+    { color: "#84CC16", label: t({ de: "Limette", en: "Lime" }) },
+] as const;
 
 export const COLOR_FORMATS = ["auto", "hex", "hex8", "rgb", "hsl", "oklch", "p3"] as const;
 export const COLOR_ALPHA_FORMATS = ["auto", "always", "never"] as const;

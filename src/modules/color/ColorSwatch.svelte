@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { Check } from "@lucide/svelte";
-
     import { t } from "../../shared/lang.internal.ts";
     import { HitArea } from "../hit-area/index.ts";
     import {
@@ -24,11 +22,11 @@
     };
 
     const CHECK_STROKE_WIDTHS: Record<ColorSwatchSize, number> = {
-        xs: 3,
-        sm: 2.75,
-        md: 2.75,
-        lg: 2.5,
-        xl: 2.5,
+        xs: 3.4,
+        sm: 3.4,
+        md: 3.1,
+        lg: 2.8,
+        xl: 2.8,
     };
 
     let {
@@ -72,6 +70,7 @@
     );
 
     const parsed = $derived(parseColor(resolvedColor));
+    const hasAlpha = $derived(!parsed || parsed.alpha < 1);
     const checkContrast = $derived.by<CheckContrast>(() => {
         if (!parsed || parsed.alpha < 0.45) {
             return "checker";
@@ -114,7 +113,20 @@
     <span class="cs-color-swatch-fill" aria-hidden="true"></span>
     {#if renderCheck}
         <span class="cs-color-swatch-check" aria-hidden="true">
-            <Check size={checkSize} strokeWidth={checkStrokeWidth} aria-hidden="true" />
+            <svg
+                class="cs-color-swatch-check-icon"
+                width={checkSize}
+                height={checkSize}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width={checkStrokeWidth}
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="M5 12.5L9.5 17L19 7" pathLength="100" />
+            </svg>
         </span>
     {/if}
     {@render children?.()}
@@ -127,11 +139,7 @@
         type="button"
         role={resolvedMode === "radio" ? "radio" : undefined}
         aria-checked={resolvedMode === "radio" ? (isSelected ? "true" : "false") : undefined}
-        aria-pressed={resolvedMode === "button" && selected !== undefined
-            ? isSelected
-                ? "true"
-                : "false"
-            : undefined}
+        aria-pressed={resolvedMode === "button" && selected !== undefined ? (isSelected ? "true" : "false") : undefined}
         aria-label={resolvedAriaLabel}
         disabled={resolvedDisabled || undefined}
         onclick={handleClick}
@@ -142,6 +150,7 @@
         data-show-check={showCheck ? "" : undefined}
         data-check-contrast={checkContrast}
         data-halo-tone={haloTone}
+        data-translucent={hasAlpha ? "" : undefined}
         data-disabled={resolvedDisabled ? "" : undefined}
         style:--cs-color-swatch-bg={resolvedColor}
         style:--cs-color-swatch-halo-raw={haloRawColor}
@@ -163,6 +172,7 @@
         data-show-check={showCheck ? "" : undefined}
         data-check-contrast={checkContrast}
         data-halo-tone={haloTone}
+        data-translucent={hasAlpha ? "" : undefined}
         data-disabled={resolvedDisabled ? "" : undefined}
         style:--cs-color-swatch-bg={resolvedColor}
         style:--cs-color-swatch-halo-raw={haloRawColor}
@@ -176,11 +186,10 @@
         .cs-color-swatch {
             --cs-color-swatch-bg: transparent;
             --cs-color-swatch-radius: calc(var(--cs-color-swatch-size) / 2);
-            --cs-color-swatch-squircle: superellipse(1.4);
-            --cs-color-swatch-rim-outer: 0 0 0 1px rgb(0 0 0 / 0.09);
-            --cs-color-swatch-shadow: 0 1px 2px 0 light-dark(rgb(0 0 0 / 0.06), rgb(0 0 0 / 0.35));
-            --cs-color-swatch-ring: inset 0 0 0 1px rgb(255 255 255 / 0.18);
+            --cs-color-swatch-squircle: var(--cs-squircle-soft);
+            --cs-color-swatch-edge: transparent;
             --cs-color-swatch-halo: var(--cs-color-swatch-halo-raw, var(--cs-color-swatch-bg));
+            -webkit-tap-highlight-color: transparent;
 
             isolation: isolate;
             position: relative;
@@ -191,15 +200,14 @@
             inline-size: var(--cs-color-swatch-size);
             block-size: var(--cs-color-swatch-size);
             padding: 0;
-            border: 0;
-            background: transparent;
-            border-radius: var(--cs-color-swatch-radius);
-            corner-shape: var(--cs-color-swatch-squircle);
             overflow: visible;
             vertical-align: middle;
+            background: transparent;
+            border: 0;
+            border-radius: var(--cs-color-swatch-radius);
+            corner-shape: var(--cs-color-swatch-squircle);
             user-select: none;
             cursor: default;
-            -webkit-tap-highlight-color: transparent;
 
             &[data-size="xs"] {
                 --cs-color-swatch-size: 20px;
@@ -226,22 +234,35 @@
                 --cs-color-swatch-checker-size: 12px;
             }
 
+            &[data-check-contrast="checker"] {
+                --cs-color-swatch-edge: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.12));
+            }
+
             &[data-halo-tone="transparent"] {
                 --cs-color-swatch-halo: var(--cs-color-accent-solid);
+                --cs-color-swatch-edge: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.12));
             }
 
             &[data-halo-tone="near-white"] {
-                --cs-color-swatch-halo: light-dark(
-                    color-mix(in oklab, var(--cs-color-swatch-halo-raw, var(--cs-color-swatch-bg)) 68%, var(--cs-color-base-400)),
-                    var(--cs-color-swatch-halo-raw, var(--cs-color-swatch-bg))
-                );
+                --cs-color-swatch-halo: light-dark(var(--cs-color-base-400), rgb(255 255 255 / 0.85));
+                --cs-color-swatch-edge: rgb(0 0 0 / 0.1);
             }
 
             &[data-halo-tone="near-black"] {
-                --cs-color-swatch-halo: light-dark(
-                    var(--cs-color-swatch-halo-raw, var(--cs-color-swatch-bg)),
-                    color-mix(in oklab, var(--cs-color-swatch-halo-raw, var(--cs-color-swatch-bg)) 65%, var(--cs-color-base-400))
-                );
+                --cs-color-swatch-halo: light-dark(var(--cs-color-base-800), rgb(255 255 255 / 0.72));
+                --cs-color-swatch-edge: rgb(255 255 255 / 0.16);
+            }
+
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: 1;
+                box-sizing: border-box;
+                border: 1px solid var(--cs-color-swatch-edge);
+                border-radius: inherit;
+                corner-shape: inherit;
+                pointer-events: none;
             }
 
             &:not([data-show-check])::after {
@@ -249,15 +270,15 @@
                 position: absolute;
                 inset: -4px;
                 z-index: 0;
-                border: 2px solid var(--cs-color-swatch-halo);
+                border: 1.5px solid var(--cs-color-swatch-halo);
                 border-radius: calc(var(--cs-color-swatch-radius) + 4px);
                 corner-shape: inherit;
-                pointer-events: none;
                 opacity: 0;
-                scale: 0.84;
+                scale: 0.92;
                 transition:
                     opacity var(--cs-dur-exit-sm) var(--cs-ease-exit),
                     scale var(--cs-dur-exit-sm) var(--cs-ease-exit);
+                pointer-events: none;
             }
 
             &[data-selected]:not([data-show-check]) {
@@ -279,8 +300,7 @@
 
             &[data-disabled] {
                 --cs-disabled-opacity: 1;
-                --cs-color-swatch-shadow: none;
-                --cs-color-swatch-rim-outer: 0 0 0 1px var(--cs-color-disabled-border);
+                --cs-color-swatch-edge: var(--cs-color-disabled-border);
                 --cs-color-swatch-halo: var(--cs-color-disabled-fg);
                 background-color: var(--cs-color-disabled-bg);
 
@@ -290,43 +310,22 @@
 
                 & > .cs-color-swatch-check {
                     color: var(--cs-color-disabled-fg);
-                    filter: none;
                 }
             }
         }
 
         button.cs-color-swatch {
-            transition: scale var(--cs-dur-squash) var(--cs-ease-squash);
+            transition: scale var(--cs-dur-240) var(--cs-spring-snappy);
 
             @media (hover: hover) {
                 &:hover:not(:disabled) {
-                    --cs-color-swatch-shadow:
-                        0 1px 3px 0 light-dark(rgb(0 0 0 / 0.1), transparent),
-                        0 1px 2px -1px light-dark(rgb(0 0 0 / 0.1), transparent),
-                        0 2px 6px 0 light-dark(transparent, rgb(0 0 0 / 0.5));
-                    --cs-color-swatch-ring: inset 0 0 0 1px rgb(255 255 255 / 0.26);
+                    scale: 1.06;
+                    transition: scale var(--cs-dur-effect-fast) var(--cs-ease-effect);
                 }
             }
 
-            &:active:not(:disabled, :focus-visible) {
-                & > .cs-color-swatch-fill {
-                    scale: var(--cs-squash-default);
-                    transition:
-                        box-shadow var(--cs-dur-press) var(--cs-ease-press),
-                        filter var(--cs-dur-press) var(--cs-ease-press),
-                        scale var(--cs-dur-press) var(--cs-ease-press);
-                }
-
-                &[data-selected] > .cs-color-swatch-check {
-                    scale: 0.92;
-                    transition:
-                        opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
-                        scale var(--cs-dur-press) var(--cs-ease-press);
-                }
-            }
-
-            &:active:focus-visible:not(:disabled) {
-                scale: 0.95;
+            &:active:not(:disabled) {
+                scale: 0.9;
                 transition: scale var(--cs-dur-press) var(--cs-ease-press);
             }
 
@@ -338,55 +337,53 @@
         .cs-color-swatch-fill {
             position: absolute;
             inset: 0;
+            overflow: hidden;
+            background-color: var(--cs-color-swatch-bg);
             border-radius: inherit;
             corner-shape: inherit;
-            overflow: hidden;
+            box-shadow: none;
+            transition: filter var(--cs-dur-effect-fast) var(--cs-ease-effect);
             pointer-events: none;
-            box-shadow: var(--cs-color-swatch-rim-outer), var(--cs-color-swatch-shadow);
-            background-image: conic-gradient(
-                light-dark(var(--cs-color-base-50), var(--cs-color-base-800)) 90deg,
-                light-dark(var(--cs-color-base-200), var(--cs-color-base-700)) 90deg 180deg,
-                light-dark(var(--cs-color-base-50), var(--cs-color-base-800)) 180deg 270deg,
-                light-dark(var(--cs-color-base-200), var(--cs-color-base-700)) 270deg
-            );
-            background-size: var(--cs-color-swatch-checker-size) var(--cs-color-swatch-checker-size);
-            transition:
-                box-shadow var(--cs-dur-effect-fast) var(--cs-ease-effect),
-                filter var(--cs-dur-effect-fast) var(--cs-ease-effect),
-                scale var(--cs-dur-squash) var(--cs-ease-squash);
+        }
 
-            &::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background-color: var(--cs-color-swatch-bg);
-            }
-
-            /* Theme-agnostic inner light hairline separates dark swatches on dark surfaces */
-            &::after {
-                content: "";
-                position: absolute;
-                inset: 0;
-                border-radius: inherit;
-                corner-shape: inherit;
-                box-shadow: var(--cs-color-swatch-ring);
-                transition: box-shadow var(--cs-dur-effect-fast) var(--cs-ease-effect);
-            }
+        .cs-color-swatch[data-translucent] > .cs-color-swatch-fill {
+            background-color: transparent;
+            background-image:
+                linear-gradient(var(--cs-color-swatch-bg), var(--cs-color-swatch-bg)),
+                conic-gradient(
+                    light-dark(var(--cs-color-base-50), var(--cs-color-base-800)) 90deg,
+                    light-dark(var(--cs-color-base-100), var(--cs-color-base-900)) 90deg 180deg,
+                    light-dark(var(--cs-color-base-50), var(--cs-color-base-800)) 180deg 270deg,
+                    light-dark(var(--cs-color-base-100), var(--cs-color-base-900)) 270deg
+                );
+            background-size:
+                100% 100%,
+                var(--cs-color-swatch-checker-size) var(--cs-color-swatch-checker-size);
         }
 
         .cs-color-swatch-check {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            pointer-events: none;
             color: var(--cs-color-swatch-check-fg, var(--cs-color-text-strong));
             opacity: 0;
-            scale: 0.65;
+            scale: 0.88;
             transition:
                 opacity var(--cs-dur-80) var(--cs-ease-quad-in),
                 scale var(--cs-dur-80) var(--cs-ease-quad-in);
+            pointer-events: none;
+        }
+
+        .cs-color-swatch-check-icon {
+            display: block;
+
+            & path {
+                stroke-dasharray: 100;
+                stroke-dashoffset: 100;
+                transition: stroke-dashoffset 0s var(--cs-dur-80);
+            }
         }
 
         .cs-color-swatch[data-check-contrast="dark"] > .cs-color-swatch-check {
@@ -395,15 +392,27 @@
 
         .cs-color-swatch[data-check-contrast="light"] > .cs-color-swatch-check {
             color: var(--cs-color-swatch-check-fg, white);
-            filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.22));
+        }
+
+        .cs-color-swatch[data-check-contrast="checker"] > .cs-color-swatch-check {
+            padding: 2px;
+            color: var(--cs-color-swatch-check-fg, var(--cs-color-text-strong));
+            background: light-dark(rgb(255 255 255 / 0.78), rgb(0 0 0 / 0.6));
+            border-radius: var(--cs-radius-full);
+            backdrop-filter: blur(4px);
         }
 
         .cs-color-swatch[data-selected] > .cs-color-swatch-check {
             opacity: 1;
             scale: 1;
             transition:
-                opacity var(--cs-dur-effect-fast) var(--cs-ease-effect),
-                scale var(--cs-dur-effect-fast) var(--cs-ease-effect);
+                opacity var(--cs-dur-60) var(--cs-ease-quad-out),
+                scale var(--cs-dur-140) var(--cs-ease-quart-out);
+
+            & .cs-color-swatch-check-icon path {
+                stroke-dashoffset: 0;
+                transition: stroke-dashoffset var(--cs-dur-140) var(--cs-ease-quart-out);
+            }
         }
     }
 </style>

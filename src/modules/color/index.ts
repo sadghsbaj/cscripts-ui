@@ -46,7 +46,7 @@ export type ColorEyeDropperSize = (typeof COLOR_EYE_DROPPER_SIZES)[number];
 
 export interface ColorSwatchProps extends HTMLAttributes<HTMLElement> {
     ref?: HTMLElement | null;
-    /** T-shirt scale controlling swatch dimensions and squircle radius. Required. */
+    /** T-shirt scale controlling swatch dimensions and corner radius. Required. */
     size: ColorSwatchSize;
     /**
      * CSS color string displayed by this swatch.

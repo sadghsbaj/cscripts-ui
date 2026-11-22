@@ -4,7 +4,7 @@
 </script>
 
 <script lang="ts">
-    import { COLOR_SWATCH_SIZES, ColorSwatch } from "cs/svelte/color";
+    import { COLOR_SWATCH_PRESETS, COLOR_SWATCH_SIZES, ColorSwatch } from "cs/svelte/color";
 
     import { PreviewHeader, PreviewSection, SunkenWell } from "../../../playground/components/index.ts";
 
@@ -17,22 +17,14 @@
         { color: "transparent", label: "Transparent" },
     ] as const;
 
-    const interactivePalette = [
-        { color: "#fde047", label: "Bright yellow" },
-        { color: "#ffffff", label: "Pure white" },
-        { color: "#1e3a8a", label: "Dark navy" },
-        { color: "rebeccapurple", label: "Deep purple" },
-        { color: "rgba(99 102 241 / 0.25)", label: "Translucent indigo" },
-    ] as const;
-
     let selectedChecks = $state<Record<string, boolean>>({
-        "#fde047": true,
-        "#1e3a8a": true,
-        "rgba(99 102 241 / 0.25)": true,
+        "#FACC15": true,
+        "#3B82F6": true,
+        "#EC4899": true,
     });
 
-    let selectedHaloColor = $state<string | undefined>("#1e3a8a");
-    let circleSelected = $state(true);
+    let selectedHaloColor = $state<string | undefined>("#6366F1");
+    let squircleSelected = $state(true);
 
     function toggleCheck(color: string): void {
         selectedChecks[color] = !selectedChecks[color];
@@ -66,31 +58,52 @@ ${closeScript}
 <ColorSwatch size="lg" color="transparent" mode="preview" />`;
 
     const interactiveCode = `<script lang="ts">
-    import { ColorSwatch } from "cs/svelte/color";
+    import { COLOR_SWATCH_PRESETS, ColorSwatch } from "cs/svelte/color";
 
-    let selected = $state(true);
+    let selectedColor = $state("#3B82F6");
 ${closeScript}
 
-<!-- Luminance-adaptive checkmark (default) -->
-<ColorSwatch size="lg" color="#fde047" mode="button" {selected} onclick={() => (selected = !selected)} />
-<ColorSwatch size="lg" color="#1e3a8a" mode="button" {selected} onclick={() => (selected = !selected)} />
-<ColorSwatch size="lg" color="rgba(99 102 241 / 0.25)" mode="button" {selected} onclick={() => (selected = !selected)} />
+<!-- Luminance-adaptive vector checkmark (default) -->
+<div class="grid grid-cols-7 gap-3">
+    {#each COLOR_SWATCH_PRESETS as preset (preset.color)}
+        <ColorSwatch
+            size="lg"
+            color={preset.color}
+            label={preset.label}
+            mode="button"
+            selected={selectedColor === preset.color}
+            onclick={() => (selectedColor = preset.color)}
+        />
+    {/each}
+</div>
 
-<!-- Double-ring halo alternative -->
-<ColorSwatch size="lg" color="#1e3a8a" mode="button" {selected} showCheck={false} />`;
+<!-- Selection halo alternative (showCheck={false}) -->
+<div class="grid grid-cols-7 gap-3">
+    {#each COLOR_SWATCH_PRESETS as preset (preset.color)}
+        <ColorSwatch
+            size="lg"
+            color={preset.color}
+            label={preset.label}
+            mode="button"
+            selected={selectedColor === preset.color}
+            showCheck={false}
+            onclick={() => (selectedColor = preset.color)}
+        />
+    {/each}
+</div>`;
 
     const statesCode = `<!-- Disabled states -->
 <ColorSwatch size="lg" color="#3b82f6" mode="button" disabled />
 <ColorSwatch size="lg" color="#3b82f6" mode="button" selected disabled />
 <ColorSwatch size="lg" color="#3b82f6" mode="button" selected showCheck={false} disabled />
 
-<!-- Shape escape hatches (default: rounded-full squircle) -->
+<!-- Shape overrides (default: round circle) -->
 <ColorSwatch
     size="lg"
     color="#10b981"
     mode="button"
     selected
-    style="--cs-color-swatch-squircle: round"
+    style="--cs-color-swatch-squircle: superellipse(1.4)"
 />
 <ColorSwatch
     size="lg"
@@ -104,12 +117,12 @@ ${closeScript}
 <div class="flex flex-col gap-10">
     <PreviewHeader
         title="Color"
-        description="A ColorSwatch primitive with squircle geometry, alpha checkerboard, anti-bleed rim-lighting, and luminance-adaptive selection checkmark."
+        description="A ColorSwatch primitive with true circle geometry by default, alpha checkerboard, surgical edge-guards, and a calibrated vector checkmark."
     />
 
     <PreviewSection
         title="Sizes"
-        description="Five calibrated squircle steps from xs (20px) to xl (40px) across elevated and sunken surfaces."
+        description="Five calibrated circle steps from xs (20px) to xl (40px) across elevated and sunken surfaces."
         code={sizesCode}
     >
         <div class="flex-center flex-wrap gap-6">
@@ -128,8 +141,8 @@ ${closeScript}
     </PreviewSection>
 
     <PreviewSection
-        title="Formats & Rims"
-        description="Inset rim-lighting keeps pure white and black crisp on matching surfaces alongside wide-gamut and translucent colors."
+        title="Formats & Edge Guards"
+        description="Surgical edge-guards keep pure white, pure black, and translucent swatches crisp on matching surfaces without adding muddy rims to vibrant colors."
         code={formatsCode}
     >
         <div class="flex flex-col items-center gap-6">
@@ -158,33 +171,33 @@ ${closeScript}
 
     <PreviewSection
         title="Interactive Selection"
-        description="Click swatches to test tactile scale physics, luminance-adaptive checkmarks, and double-ring halo selection."
+        description="Click swatches from the calibrated 14-color palette to test tactile hover/press motion, vector checkmarks, and selection halos."
         code={interactiveCode}
     >
-        <div class="flex flex-col items-center gap-6">
-            <div class="flex-center flex-wrap gap-3">
-                {#each interactivePalette as swatch (swatch.color)}
+        <div class="flex flex-col items-center gap-8">
+            <div class="grid grid-cols-7 gap-3">
+                {#each COLOR_SWATCH_PRESETS as preset (preset.color)}
                     <ColorSwatch
                         size="lg"
-                        color={swatch.color}
-                        label={swatch.label}
+                        color={preset.color}
+                        label={preset.label}
                         mode="button"
-                        selected={Boolean(selectedChecks[swatch.color])}
-                        onclick={() => toggleCheck(swatch.color)}
+                        selected={Boolean(selectedChecks[preset.color])}
+                        onclick={() => toggleCheck(preset.color)}
                     />
                 {/each}
             </div>
 
-            <div class="flex-center flex-wrap gap-3">
-                {#each interactivePalette as swatch (swatch.color)}
+            <div class="grid grid-cols-7 gap-3">
+                {#each COLOR_SWATCH_PRESETS as preset (preset.color)}
                     <ColorSwatch
                         size="lg"
-                        color={swatch.color}
-                        label="{swatch.label} halo"
+                        color={preset.color}
+                        label="{preset.label} halo"
                         mode="button"
-                        selected={selectedHaloColor === swatch.color}
+                        selected={selectedHaloColor === preset.color}
                         showCheck={false}
-                        onclick={() => toggleHalo(swatch.color)}
+                        onclick={() => toggleHalo(preset.color)}
                     />
                 {/each}
             </div>
@@ -193,7 +206,7 @@ ${closeScript}
 
     <PreviewSection
         title="States & Shape Overrides"
-        description="Disabled interactive swatches mute fill vibrancy, while --cs-color-swatch-squircle and --cs-color-swatch-radius customize the rounded-full squircle."
+        description="Disabled interactive swatches mute fill vibrancy, while --cs-color-swatch-squircle and --cs-color-swatch-radius customize the default round circle."
         code={statesCode}
     >
         <div class="flex-center flex-wrap gap-6">
@@ -217,10 +230,10 @@ ${closeScript}
                     size="lg"
                     color="#10b981"
                     mode="button"
-                    selected={circleSelected}
-                    onclick={() => (circleSelected = !circleSelected)}
-                    style="--cs-color-swatch-squircle: round"
-                    label="True circle emerald swatch"
+                    selected={squircleSelected}
+                    onclick={() => (squircleSelected = !squircleSelected)}
+                    style="--cs-color-swatch-squircle: superellipse(1.4)"
+                    label="Squircle emerald swatch"
                 />
                 <ColorSwatch
                     size="lg"
