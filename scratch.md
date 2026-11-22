@@ -1,7 +1,7 @@
 ## UI & Polish
 
 - [x] `ToggleButton`: statt soft blau was anderes?
-- [ ] `WorkApp`: View-Animation manchmal noch verbuggt – cleaner machen (nicht mehr nervig buggbar, einfach schnelles, weiches und cleanes Faden statt harter Übergänge)
+- [x] `WorkApp`: View-Animation manchmal noch verbuggt – cleaner machen (nicht mehr nervig buggbar, einfach schnelles, weiches und cleanes Faden statt harter Übergänge)
 - [ ] Previews extrem polishen
 - [ ] Mobile Support optimieren
 - [x] `Collapsible` in Login-Form-Reference nutzen
