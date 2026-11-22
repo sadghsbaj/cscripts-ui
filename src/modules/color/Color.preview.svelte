@@ -4,7 +4,10 @@
 </script>
 
 <script lang="ts">
-    import { CopyIcon, copyOnClick } from "cs/svelte/clipboard";
+    import { Copy, Trash2 } from "@lucide/svelte";
+    import { Button, ButtonLabel } from "cs/svelte/button";
+    import { Card } from "cs/svelte/card";
+    import { CopyIcon, copyOnClick, copyToClipboard } from "cs/svelte/clipboard";
     import {
         COLOR_AREA_SIZES,
         COLOR_EYE_DROPPER_SIZES,
@@ -20,12 +23,22 @@
         ColorEyeDropper,
         ColorFormatSelect,
         ColorInput,
+        ColorPicker,
         ColorSlider,
         ColorSwatch,
         ColorSwatchGroup,
         createColorState,
         type ColorFormat,
     } from "cs/svelte/color";
+    import {
+        ContextMenu,
+        ContextMenuContent,
+        ContextMenuItem,
+        ContextMenuItemIcon,
+        ContextMenuItemText,
+        contextMenuTrigger,
+    } from "cs/svelte/context-menu";
+    import { Popover, popoverTrigger } from "cs/svelte/popover";
     import { TextInputAction } from "cs/svelte/text-input";
 
     import { PreviewHeader, PreviewSection, SunkenWell } from "../../../playground/components/index.ts";
@@ -38,6 +51,12 @@
         { color: "oklch(0.75 0.2 330 / 0.25)", label: "Translucent OKLCH magenta 25%" },
         { color: "transparent", label: "Transparent" },
     ] as const;
+
+    let studioColor = $state("#3B82F6");
+    let savedColors = $state<string[]>(COLOR_SWATCH_PRESETS.slice(0, 7).map((preset) => preset.color));
+    let contextSwatchColor = $state("");
+    let popoverColor = $state("#6366F1");
+    let oklchColor = $state("oklch(0.68 0.22 250)");
 
     let selectedCheckColor = $state("#3B82F6");
     let selectedHaloColor = $state("#6366F1");
@@ -62,6 +81,24 @@
     const closeScript = ["</", "script>"].join("");
 
     /* eslint-disable unicorn/no-incorrect-template-string-interpolation -- Svelte code snippets contain literal {Component} bindings */
+    const pickerCombinationsCode = `<script lang="ts">
+    import { ColorArea, ColorFormatSelect, ColorInput, ColorPicker, ColorSlider } from "cs/svelte/color";
+
+    let color = $state("#3B82F6");
+${closeScript}
+
+<ColorPicker bind:value={color}>
+    <ColorArea size="md" />
+    <div class="flex flex-col gap-2">
+        <ColorSlider size="md" channel="hue" />
+        <ColorSlider size="md" channel="alpha" />
+    </div>
+    <div class="flex items-center gap-1.5">
+        <ColorFormatSelect variant="soft" size="md" />
+        <ColorInput variant="soft" size="md" showSwatch class="flex-1 min-w-0" />
+    </div>
+</ColorPicker>`;
+
     const sizesCode = `<script lang="ts">
     import { COLOR_SWATCH_SIZES, ColorSwatch } from "cs/svelte/color";
 ${closeScript}
@@ -232,7 +269,7 @@ ${closeScript}
 </div>`;
 
     const colorFormatSelectCode = `<script lang="ts">
-    import { CopyIcon, copyOnClick } from "cs/svelte/clipboard";
+    import { CopyIcon, copyOnClick, copyToClipboard } from "cs/svelte/clipboard";
     import { ColorFormatSelect, ColorInput, createColorState, type ColorFormat } from "cs/svelte/color";
     import { TextInputAction } from "cs/svelte/text-input";
 
@@ -305,6 +342,179 @@ ${closeScript}
         title="Color"
         description="A ColorSwatch primitive with true circle geometry by default, alpha checkerboard, surgical edge-guards, and a calibrated vector checkmark."
     />
+
+    <PreviewSection
+        title="ColorPicker Combinations"
+        description="Compound ColorPicker orchestrating Studio, Compact Popover, and OKLCH Wide-Gamut Inspector compositions."
+        code={pickerCombinationsCode}
+    >
+        <div class="flex flex-col items-center gap-8 w-full">
+            <div class="flex flex-wrap items-start justify-center gap-6 w-full">
+                <!-- 1. Studio / Full Picker -->
+                <Card variant="elevated" size="md" class="w-[320px]">
+                    <ColorPicker bind:value={studioColor}>
+                        {#snippet children(ctx)}
+                            <ColorArea size="md" />
+
+                            <div class="flex flex-col gap-2">
+                                <ColorSlider size="md" channel="hue" />
+                                <ColorSlider size="md" channel="alpha" />
+                            </div>
+
+                            <div class="flex items-center gap-1.5">
+                                <ColorFormatSelect variant="soft" size="md" />
+                                <ColorInput variant="soft" size="md" showSwatch class="flex-1 min-w-0">
+                                    <TextInputAction
+                                        aria-label="Copy color"
+                                        {@attach copyOnClick({ text: () => ctx.value })}
+                                    >
+                                        <CopyIcon />
+                                    </TextInputAction>
+                                </ColorInput>
+                            </div>
+
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-500 text-weak">Saved colors</span>
+                                    <div class="flex items-center gap-1">
+                                        <ColorEyeDropper variant="ghost" size="xs" unsupportedBehavior="disable" />
+                                        <Button
+                                            variant="ghost"
+                                            size="xs"
+                                            onclick={() => {
+                                                if (!savedColors.includes(ctx.value)) {
+                                                    savedColors = [...savedColors.slice(0, 13), ctx.value];
+                                                }
+                                            }}
+                                        >
+                                            <ButtonLabel>+ Add</ButtonLabel>
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <ContextMenu size="sm">
+                                    <ColorSwatchGroup
+                                        columns={7}
+                                        style="--cs-color-swatch-group-gap: 6px"
+                                        aria-label="Saved colors"
+                                    >
+                                        {#each savedColors as swatch (swatch)}
+                                            <ColorSwatch
+                                                size="lg"
+                                                color={swatch}
+                                                {@attach contextMenuTrigger({ onOpen: () => (contextSwatchColor = swatch) })}
+                                            />
+                                        {/each}
+                                    </ColorSwatchGroup>
+                                    <ContextMenuContent>
+                                        <ContextMenuItem
+                                            onSelect={() => {
+                                                void copyToClipboard(contextSwatchColor);
+                                            }}
+                                        >
+                                            <ContextMenuItemIcon icon={Copy} />
+                                            <ContextMenuItemText>Copy color</ContextMenuItemText>
+                                        </ContextMenuItem>
+                                        <ContextMenuItem
+                                            negative
+                                            disabled={savedColors.length <= 1}
+                                            onSelect={() => {
+                                                if (savedColors.length <= 1) return;
+                                                savedColors = savedColors.filter((c) => c !== contextSwatchColor);
+                                            }}
+                                        >
+                                            <ContextMenuItemIcon icon={Trash2} />
+                                            <ContextMenuItemText>Remove</ContextMenuItemText>
+                                        </ContextMenuItem>
+                                    </ContextMenuContent>
+                                </ContextMenu>
+                            </div>
+                        {/snippet}
+                    </ColorPicker>
+                </Card>
+
+                <!-- 3. OKLCH Wide-Gamut Inspector -->
+                <Card variant="soft" size="sm" class="w-[320px]">
+                    <ColorPicker
+                        bind:value={oklchColor}
+                        space="oklch"
+                        defaultFormat="oklch"
+                        style="--cs-color-picker-gap: 10px"
+                    >
+                        {#snippet children(ctx)}
+                            <div class="flex items-stretch gap-2.5">
+                                <ColorArea size="sm" class="flex-1" />
+                                <ColorSlider
+                                    size="sm"
+                                    channel="oklch-hue"
+                                    orientation="vertical"
+                                    style="--cs-color-slider-track-length: 150px"
+                                />
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <ColorInput variant="elevated" size="xs" channel="oklch-lightness" />
+                                <ColorInput variant="elevated" size="xs" channel="chroma" />
+                                <ColorInput variant="elevated" size="xs" channel="oklch-hue" />
+                            </div>
+
+                            <ColorInput variant="elevated" size="md" showSwatch style="--cs-color-input-width: 100%">
+                                <TextInputAction
+                                    aria-label="Copy OKLCH color"
+                                    {@attach copyOnClick({ text: () => ctx.value })}
+                                >
+                                    <CopyIcon />
+                                </TextInputAction>
+                            </ColorInput>
+                        {/snippet}
+                    </ColorPicker>
+                </Card>
+            </div>
+
+            <div class="flex-center flex-wrap gap-6 w-full">
+                <!-- 2. Compact Popover Picker -->
+                <Button
+                    variant="elevated"
+                    size="sm"
+                    {@attach popoverTrigger({ target: "color-picker-popover-demo", triggerOn: "click" })}
+                >
+                    <ColorSwatch size="xs" color={popoverColor} decorative />
+                    <ButtonLabel class="font-mono">{popoverColor}</ButtonLabel>
+                </Button>
+
+                <Popover
+                    id="color-picker-popover-demo"
+                    placement="bottom-start"
+                    width="content"
+                    class="bg-elevated shadow-floating rounded-2xl squircle p-3"
+                >
+                    <ColorPicker
+                        bind:value={popoverColor}
+                        style="--cs-color-picker-width: 224px; --cs-color-picker-gap: 10px"
+                    >
+                        <ColorArea size="sm" />
+                        <div class="flex flex-col gap-1.5">
+                            <ColorSlider size="sm" channel="hue" />
+                            <ColorSlider size="sm" channel="alpha" />
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <ColorInput variant="soft" size="sm" class="flex-1 min-w-0" />
+                            <ColorEyeDropper variant="secondary" size="sm" unsupportedBehavior="disable" />
+                        </div>
+                        <ColorSwatchGroup
+                            columns={7}
+                            style="--cs-color-swatch-group-gap: 6px"
+                            aria-label="Compact presets"
+                        >
+                            {#each COLOR_SWATCH_PRESETS.slice(0, 7) as preset (preset.color)}
+                                <ColorSwatch size="sm" color={preset.color} label={preset.label} />
+                            {/each}
+                        </ColorSwatchGroup>
+                    </ColorPicker>
+                </Popover>
+            </div>
+        </div>
+    </PreviewSection>
 
     <PreviewSection
         title="Sizes"

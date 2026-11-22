@@ -2,8 +2,8 @@ import type { Snippet } from "svelte";
 import type { HTMLAttributes, HTMLButtonAttributes } from "svelte/elements";
 
 import { SELECT_SIZES, SELECT_VARIANTS } from "../select/index.ts";
-import type { ColorSwatchGroupOrientation } from "./color.context.ts";
-import type { ColorAlphaFormat, ColorChannel, ColorFormat } from "./color.utils.ts";
+import type { ColorPickerContext, ColorSwatchGroupOrientation } from "./color.context.ts";
+import type { ColorAlphaFormat, ColorChannel, ColorFormat, ColorGamut } from "./color.utils.ts";
 
 export * from "./color.utils.ts";
 
@@ -11,6 +11,7 @@ export { default as ColorArea } from "./ColorArea.svelte";
 export { default as ColorEyeDropper } from "./ColorEyeDropper.svelte";
 export { default as ColorFormatSelect } from "./ColorFormatSelect.svelte";
 export { default as ColorInput } from "./ColorInput.svelte";
+export { default as ColorPicker } from "./ColorPicker.svelte";
 export { default as ColorSlider } from "./ColorSlider.svelte";
 export { default as ColorSwatch } from "./ColorSwatch.svelte";
 export { default as ColorSwatchGroup } from "./ColorSwatchGroup.svelte";
@@ -36,6 +37,7 @@ export {
     type ColorSwatchGroupOrientation,
 } from "./color.context.ts";
 
+export const COLOR_PICKER_SPACES = ["hsv", "hsl", "oklch"] as const;
 export const COLOR_AREA_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
 export const COLOR_SLIDER_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
 export const COLOR_SLIDER_ORIENTATIONS = ["horizontal", "vertical"] as const;
@@ -49,6 +51,7 @@ export const COLOR_EYE_DROPPER_VARIANTS = ["primary", "secondary", "tertiary", "
 export const COLOR_EYE_DROPPER_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
 export const COLOR_EYE_DROPPER_UNSUPPORTED_BEHAVIORS = ["hide", "disable"] as const;
 
+export type ColorPickerSpace = (typeof COLOR_PICKER_SPACES)[number];
 export type ColorAreaSize = (typeof COLOR_AREA_SIZES)[number];
 export type ColorSliderSize = (typeof COLOR_SLIDER_SIZES)[number];
 export type ColorSliderOrientation = (typeof COLOR_SLIDER_ORIENTATIONS)[number];
@@ -60,6 +63,36 @@ export type ColorFormatSelectSize = (typeof COLOR_FORMAT_SELECT_SIZES)[number];
 export type ColorEyeDropperVariant = (typeof COLOR_EYE_DROPPER_VARIANTS)[number];
 export type ColorEyeDropperSize = (typeof COLOR_EYE_DROPPER_SIZES)[number];
 export type ColorEyeDropperUnsupportedBehavior = (typeof COLOR_EYE_DROPPER_UNSUPPORTED_BEHAVIORS)[number];
+
+export interface ColorPickerProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+    ref?: HTMLDivElement | null;
+    /** Controlled CSS color string. Supports `bind:value` and `bind:value={get, set}`. */
+    value?: string;
+    /** Initial CSS color string for uncontrolled usage. @default "#3b82f6" */
+    defaultValue?: string;
+    /** Fires on every color mutation (including live pointer drags and typing). */
+    onValueChange?: (value: string) => void;
+    /** Fires when an interaction commits. */
+    onCommit?: (value: string) => void;
+    /** Controlled output/editing format. Supports `bind:format`. */
+    format?: ColorFormat;
+    /** Initial format when `format` is uncontrolled. @default "auto" */
+    defaultFormat?: ColorFormat;
+    /** Fires when `setFormat` is called. */
+    onFormatChange?: (format: ColorFormat) => void;
+    /** Editing color space exposed via `ColorPickerContext.space`. @default "hsv" */
+    space?: ColorPickerSpace;
+    /** Controls alpha channel emission in `ColorState` formatted output strings. @default "auto" */
+    alphaFormat?: ColorAlphaFormat;
+    /** Optional target gamut clamping applied by `ColorState`. */
+    gamut?: ColorGamut;
+    disabled?: boolean;
+    readonly?: boolean;
+    invalid?: boolean;
+    /** Accessible group name (`aria-label`). */
+    label?: string;
+    children?: Snippet<[ColorPickerContext]>;
+}
 
 export interface ColorSwatchProps extends HTMLAttributes<HTMLElement> {
     ref?: HTMLElement | null;
