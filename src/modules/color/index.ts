@@ -2,10 +2,12 @@ import type { Snippet } from "svelte";
 import type { HTMLAttributes } from "svelte/elements";
 
 import type { ColorSwatchGroupOrientation } from "./color.context.ts";
-import type { ColorChannel } from "./color.utils.ts";
+import type { ColorAlphaFormat, ColorChannel, ColorFormat } from "./color.utils.ts";
 
 export * from "./color.utils.ts";
 
+export { default as ColorArea } from "./ColorArea.svelte";
+export { default as ColorInput } from "./ColorInput.svelte";
 export { default as ColorSlider } from "./ColorSlider.svelte";
 export { default as ColorSwatch } from "./ColorSwatch.svelte";
 export { default as ColorSwatchGroup } from "./ColorSwatchGroup.svelte";
@@ -95,6 +97,31 @@ export interface ColorSwatchGroupProps extends Omit<HTMLAttributes<HTMLDivElemen
     children?: Snippet;
 }
 
+export interface ColorAreaProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+    ref?: HTMLDivElement | null;
+    /** T-shirt scale controlling default area height, thumb diameter, corner radius, and checkerboard tile size. Required. */
+    size: ColorAreaSize;
+    /** Horizontal (inline) color channel. Defaults based on ColorPickerContext space. */
+    xChannel?: ColorChannel;
+    /** Vertical (block) color channel. Defaults based on ColorPickerContext space. */
+    yChannel?: ColorChannel;
+    /** Controlled/uncontrolled X-axis numeric value. */
+    xValue?: number;
+    /** Controlled/uncontrolled Y-axis numeric value. */
+    yValue?: number;
+    /** Fires on every coordinate change during pointer drag or keyboard stepping. */
+    onValueChange?: (x: number, y: number) => void;
+    /** Fires when an interaction commits (pointerup, pointercancel, lostpointercapture, or keyboard stepping). */
+    onCommit?: (x: number, y: number) => void;
+    /** Optional base CSS color string for standalone usage. */
+    color?: string;
+    /** Accessible name override for the role="slider" thumb. */
+    label?: string;
+    disabled?: boolean;
+    readonly?: boolean;
+    invalid?: boolean;
+}
+
 export interface ColorSliderProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
     ref?: HTMLDivElement | null;
     /** T-shirt scale controlling track thickness, thumb diameter, and hit-target padding. Required. */
@@ -119,3 +146,51 @@ export interface ColorSliderProps extends Omit<HTMLAttributes<HTMLDivElement>, "
     /** Reverses the visual/interaction axis (e.g. max on inline-start / bottom). */
     inverted?: boolean;
 }
+
+export interface ColorInputBaseProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+    /** Bindable reference to the root `TextInput` shell `<div>`. */
+    ref?: HTMLDivElement | null;
+    /** Bindable reference to the inner `TextInputField` `<input>`. */
+    inputRef?: HTMLInputElement | null;
+    /** Visual shell style forwarded to `TextInput`. Required. */
+    variant: ColorInputVariant;
+    /** T-shirt scale forwarded to `TextInput` (28-44px height). Required. */
+    size: ColorInputSize;
+    placeholder?: string;
+    /** Accessible name (`aria-label`) for the inner `<input>`. */
+    label?: string;
+    disabled?: boolean;
+    readonly?: boolean;
+    invalid?: boolean;
+}
+
+export interface ColorInputFullProps extends ColorInputBaseProps {
+    channel?: undefined;
+    /** CSS color string for standalone controlled/uncontrolled usage. */
+    value?: string;
+    onValueChange?: (value: string) => void;
+    onCommit?: (value: string) => void;
+    /** Output format ("auto" resolves to pickerCtx.format, parsed.sourceFormat, then "hex"). */
+    format?: ColorFormat;
+    /** Controls alpha emission in `formatColor`. @default "auto" */
+    alpha?: ColorAlphaFormat;
+    /** Renders a compact decorative `ColorSwatch` preview as a leading prefix. @default false */
+    showSwatch?: boolean;
+    /** Renders `#` as a muted leading prefix span in hex/hex8 modes. @default true */
+    showPrefix?: boolean;
+}
+
+export interface ColorInputChannelProps extends ColorInputBaseProps {
+    /** Selects Single-Channel Numeric Mode. Required. */
+    channel: ColorChannel;
+    /** Underlying numeric channel value (e.g. `0..1` for `alpha`, `0..360` for `hue`). */
+    value?: number;
+    onValueChange?: (value: number) => void;
+    onCommit?: (value: number) => void;
+    /** Optional base CSS color string for standalone usage when `value` and `pickerCtx` are absent. */
+    color?: string;
+    /** Appends channel unit (`%` or `°`) to the formatted display string. @default true */
+    showUnit?: boolean;
+}
+
+export type ColorInputProps = ColorInputFullProps | ColorInputChannelProps;

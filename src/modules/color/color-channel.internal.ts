@@ -220,7 +220,10 @@ export function extractChannelFromSnapshot(channel: ColorChannel, snapshot: Colo
     }
 }
 
-export function buildSnapshotFromColor(colorString?: string): ColorChannelSnapshot {
+export function buildSnapshotFromColor(
+    colorString?: string,
+    prev?: ColorChannelSnapshot
+): ColorChannelSnapshot {
     const parsed: ParsedColor =
         (colorString ? parseCssColor(colorString) : null) ??
         parseCssColor(DEFAULT_FALLBACK_COLOR) ??
@@ -237,10 +240,19 @@ export function buildSnapshotFromColor(colorString?: string): ColorChannelSnapsh
     const [hslH, hslS, hslL] = srgbToHsl(srgb01);
     const [oklchL, oklchC, oklchH] = oklabToOklch(parsed.oklab);
 
+    // Preserve previous stable hue when achromatic or near-black/white (8-bit hex quantization).
+    const isHsvUnstable = prev !== undefined && (hsvV <= 2 || hsvS <= 1);
+    const isHslUnstable = prev !== undefined && (hslL <= 2 || hslL >= 98 || hslS <= 1);
+    const isOklchUnstable = prev !== undefined && (oklchC <= 0.015 || oklchL <= 0.02 || oklchL >= 0.98);
+
     return {
-        hsv: { h: hsvH, s: hsvS, v: hsvV },
-        hsl: { h: hslH, s: hslS, l: hslL },
-        oklch: { l: clamp01(oklchL), c: Math.max(0, oklchC), h: oklchH },
+        hsv: { h: isHsvUnstable ? prev.hsv.h : hsvH, s: hsvS, v: hsvV },
+        hsl: { h: isHslUnstable ? prev.hsl.h : hslH, s: hslS, l: hslL },
+        oklch: {
+            l: clamp01(oklchL),
+            c: Math.max(0, oklchC),
+            h: isOklchUnstable ? prev.oklch.h : oklchH,
+        },
         rgb: {
             r: clamp(parsed.rgb[0] * 255, 0, 255),
             g: clamp(parsed.rgb[1] * 255, 0, 255),

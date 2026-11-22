@@ -5,9 +5,14 @@
 
 <script lang="ts">
     import {
+        COLOR_AREA_SIZES,
+        COLOR_INPUT_SIZES,
+        COLOR_INPUT_VARIANTS,
         COLOR_SLIDER_SIZES,
         COLOR_SWATCH_PRESETS,
         COLOR_SWATCH_SIZES,
+        ColorArea,
+        ColorInput,
         ColorSlider,
         ColorSwatch,
         ColorSwatchGroup,
@@ -29,6 +34,15 @@
     let selectedHaloColor = $state("#6366F1");
     let squircleSelected = $state(true);
     const sliderState = createColorState({ defaultValue: "#3b82f6", format: () => "rgb" });
+    const areaState = createColorState({ defaultValue: "#3b82f6", format: () => "rgb" });
+    const oklchAreaState = createColorState({ defaultValue: "oklch(0.65 0.2 250)", format: () => "oklch" });
+    const colorInputState = createColorState({ defaultValue: "#4F46E5", format: () => "hex" });
+    let previewVariantColor = $state("#10B981");
+    let previewVariantAlpha = $state(0.85);
+    let previewScaleColor = $state("#3B82F6");
+    let previewDisabledColor = $state("#6366F1");
+    let previewDisabledAlpha = $state(0.5);
+    let previewInvalidColor = $state("#EF4444");
     let verticalHue = $state(217);
     let verticalAlpha = $state(0.75);
 
@@ -126,6 +140,84 @@ ${closeScript}
         />
     </div>
 </div>`;
+
+    const colorAreaCode = `<script lang="ts">
+    import { ColorArea, ColorSlider, ColorSwatch, createColorState } from "cs/svelte/color";
+
+    const colorState = createColorState({ defaultValue: "#3b82f6", format: () => "rgb" });
+${closeScript}
+
+<div class="flex flex-col gap-3 w-72">
+    <ColorArea
+        size="md"
+        color={\`hsl(\${colorState.getChannel("hue")} 100% 50% / \${colorState.getChannel("alpha")})\`}
+        bind:xValue={
+            () => colorState.getChannel("saturation"),
+            (v) => colorState.setChannel("saturation", v, { commit: false })
+        }
+        bind:yValue={
+            () => colorState.getChannel("value"),
+            (v) => colorState.setChannel("value", v, { commit: false })
+        }
+        onCommit={(x, y) => colorState.setChannels({ saturation: x, value: y }, { commit: true })}
+    />
+    <div class="flex items-center gap-3">
+        <ColorSwatch size="lg" color={colorState.value} mode="preview" />
+        <div class="flex flex-col gap-2 flex-1">
+            <ColorSlider
+                size="sm"
+                channel="hue"
+                color={colorState.value}
+                bind:value={
+                    () => colorState.getChannel("hue"),
+                    (v) => colorState.setChannel("hue", v, { commit: false })
+                }
+                onCommit={(v) => colorState.setChannel("hue", v, { commit: true })}
+            />
+            <ColorSlider
+                size="sm"
+                channel="alpha"
+                color={colorState.value}
+                bind:value={
+                    () => colorState.getChannel("alpha"),
+                    (v) => colorState.setChannel("alpha", v, { commit: false })
+                }
+                onCommit={(v) => colorState.setChannel("alpha", v, { commit: true })}
+            />
+        </div>
+    </div>
+</div>`;
+    const colorInputCode = `<script lang="ts">
+    import { ColorInput, createColorState } from "cs/svelte/color";
+
+    const colorState = createColorState({ defaultValue: "#4F46E5", format: () => "hex" });
+${closeScript}
+
+<div class="flex items-center gap-2">
+    <ColorInput
+        variant="soft"
+        size="md"
+        showSwatch
+        format="hex"
+        alpha="never"
+        bind:value={
+            () => colorState.value,
+            (v) => colorState.setString(v, { commit: false })
+        }
+        onCommit={(v) => colorState.setString(v, { commit: true })}
+    />
+    <ColorInput
+        variant="soft"
+        size="md"
+        channel="alpha"
+        bind:value={
+            () => colorState.getChannel("alpha"),
+            (v) => colorState.setChannel("alpha", v, { commit: false })
+        }
+        onCommit={(v) => colorState.setChannel("alpha", v, { commit: true })}
+    />
+</div>`;
+
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 </script>
 
@@ -297,6 +389,187 @@ ${closeScript}
                 {#each COLOR_SLIDER_SIZES as size (size)}
                     <ColorSlider {size} channel="hue" color="#3b82f6" />
                 {/each}
+            </div>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="ColorArea"
+        description="2D color-plane selectors across xs–xl scales: HSV CSS fast-path coupled with Hue + Alpha sliders, plus gamut-clamped OKLCH canvas rendering."
+        code={colorAreaCode}
+    >
+        <div class="flex flex-col items-center gap-8 w-full">
+            <div class="flex-center flex-wrap gap-8 w-full">
+                <div class="flex flex-col gap-3 w-72">
+                    <ColorArea
+                        size="md"
+                        color={`hsl(${areaState.getChannel("hue")} 100% 50% / ${areaState.getChannel("alpha")})`}
+                        bind:xValue={
+                            () => areaState.getChannel("saturation"),
+                            (v) => areaState.setChannel("saturation", v, { commit: false })
+                        }
+                        bind:yValue={
+                            () => areaState.getChannel("value"),
+                            (v) => areaState.setChannel("value", v, { commit: false })
+                        }
+                        onCommit={(x, y) =>
+                            areaState.setChannels({ saturation: x, value: y }, { commit: true })}
+                    />
+                    <div class="flex items-center gap-3">
+                        <ColorSwatch size="lg" color={areaState.value} mode="preview" label="Live HSV area color" />
+                        <div class="flex flex-col gap-2 flex-1">
+                            <ColorSlider
+                                size="sm"
+                                channel="hue"
+                                color={areaState.value}
+                                bind:value={
+                                    () => areaState.getChannel("hue"),
+                                    (v) => areaState.setChannel("hue", v, { commit: false })
+                                }
+                                onCommit={(v) => areaState.setChannel("hue", v, { commit: true })}
+                            />
+                            <ColorSlider
+                                size="sm"
+                                channel="alpha"
+                                color={areaState.value}
+                                bind:value={
+                                    () => areaState.getChannel("alpha"),
+                                    (v) => areaState.setChannel("alpha", v, { commit: false })
+                                }
+                                onCommit={(v) => areaState.setChannel("alpha", v, { commit: true })}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 w-72">
+                    <ColorArea
+                        size="md"
+                        xChannel="chroma"
+                        yChannel="oklch-lightness"
+                        color={`oklch(0.7 0.2 ${oklchAreaState.getChannel("oklch-hue")})`}
+                        bind:xValue={
+                            () => oklchAreaState.getChannel("chroma"),
+                            (v) => oklchAreaState.setChannel("chroma", v, { commit: false })
+                        }
+                        bind:yValue={
+                            () => oklchAreaState.getChannel("oklch-lightness"),
+                            (v) => oklchAreaState.setChannel("oklch-lightness", v, { commit: false })
+                        }
+                        onCommit={(x, y) =>
+                            oklchAreaState.setChannels(
+                                { chroma: x, "oklch-lightness": y },
+                                { commit: true }
+                            )}
+                    />
+                    <div class="flex items-center gap-3">
+                        <ColorSwatch
+                            size="lg"
+                            color={oklchAreaState.value}
+                            mode="preview"
+                            label="Live OKLCH area color"
+                        />
+                        <div class="flex-1">
+                            <ColorSlider
+                                size="sm"
+                                channel="oklch-hue"
+                                color={oklchAreaState.value}
+                                bind:value={
+                                    () => oklchAreaState.getChannel("oklch-hue"),
+                                    (v) => oklchAreaState.setChannel("oklch-hue", v, { commit: false })
+                                }
+                                onCommit={(v) => oklchAreaState.setChannel("oklch-hue", v, { commit: true })}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-end justify-center flex-wrap gap-4 w-full">
+                {#each COLOR_AREA_SIZES as size (size)}
+                    <div class="w-40">
+                        <ColorArea {size} color="#3b82f6" />
+                    </div>
+                {/each}
+            </div>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="ColorInput"
+        description="Full-color CSS/hex input (with optional swatch & # prefix) and single-channel numeric input with ArrowUp/ArrowDown stepping."
+        code={colorInputCode}
+    >
+        <div class="flex flex-col items-center gap-6 w-full">
+            <div class="flex-center flex-wrap gap-3">
+                <ColorSwatch
+                    size="lg"
+                    color={colorInputState.value}
+                    mode="preview"
+                    label="Live ColorInput preview"
+                />
+                <ColorInput
+                    variant="soft"
+                    size="md"
+                    showSwatch
+                    format="hex"
+                    alpha="never"
+                    bind:value={
+                        () => colorInputState.value,
+                        (v) => colorInputState.setString(v, { commit: false })
+                    }
+                    onCommit={(v: string) => colorInputState.setString(v, { commit: true })}
+                />
+                <ColorInput
+                    variant="soft"
+                    size="md"
+                    channel="alpha"
+                    bind:value={
+                        () => colorInputState.getChannel("alpha"),
+                        (v) => colorInputState.setChannel("alpha", v, { commit: false })
+                    }
+                    onCommit={(v) => colorInputState.setChannel("alpha", v, { commit: true })}
+                />
+                <ColorInput
+                    variant="soft"
+                    size="md"
+                    channel="hue"
+                    bind:value={
+                        () => colorInputState.getChannel("hue"),
+                        (v) => colorInputState.setChannel("hue", v, { commit: false })
+                    }
+                    onCommit={(v) => colorInputState.setChannel("hue", v, { commit: true })}
+                />
+            </div>
+
+            <div class="flex-center flex-wrap gap-4">
+                {#each COLOR_INPUT_VARIANTS as variant (variant)}
+                    <div class="flex items-center gap-2">
+                        {#if variant === "elevated"}
+                            <SunkenWell>
+                                <div class="flex items-center gap-2">
+                                    <ColorInput {variant} size="md" showSwatch bind:value={previewVariantColor} />
+                                    <ColorInput {variant} size="md" channel="alpha" bind:value={previewVariantAlpha} />
+                                </div>
+                            </SunkenWell>
+                        {:else}
+                            <ColorInput {variant} size="md" showSwatch bind:value={previewVariantColor} />
+                            <ColorInput {variant} size="md" channel="alpha" bind:value={previewVariantAlpha} />
+                        {/if}
+                    </div>
+                {/each}
+            </div>
+
+            <div class="flex flex-wrap items-end justify-center gap-3">
+                {#each COLOR_INPUT_SIZES as size (size)}
+                    <ColorInput variant="soft" {size} showSwatch bind:value={previewScaleColor} />
+                {/each}
+            </div>
+
+            <div class="flex-center flex-wrap gap-3">
+                <ColorInput variant="soft" size="md" showSwatch bind:value={previewDisabledColor} disabled />
+                <ColorInput variant="soft" size="md" channel="alpha" bind:value={previewDisabledAlpha} disabled />
+                <ColorInput variant="soft" size="md" showSwatch bind:value={previewInvalidColor} invalid />
             </div>
         </div>
     </PreviewSection>
