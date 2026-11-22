@@ -27,6 +27,7 @@
     let isInstantReposition = $state(false);
 
     let restoreFocusTarget: HTMLElement | null = null;
+    let anchorRef: HTMLSpanElement | null = null;
     let lastSyncedOpen = false;
     let reconcilingToggle: boolean | null = null;
     let instantFrameId: number | null = null;
@@ -50,6 +51,19 @@
     function clampAnchorCoord(value: number, viewportSize: number): number {
         if (viewportSize <= 8) return Math.max(0, value);
         return Math.min(Math.max(4, value), viewportSize - 4);
+    }
+
+    // Measure the anchor's fixed-position containing block origin so transformed/contained ancestors don't shift it.
+    function getAnchorContainingBlockOrigin(el: HTMLElement | null): { x: number; y: number } {
+        if (!el) return { x: 0, y: 0 };
+        const prevLeft = el.style.left;
+        const prevTop = el.style.top;
+        el.style.left = "0px";
+        el.style.top = "0px";
+        const rect = el.getBoundingClientRect();
+        el.style.left = prevLeft;
+        el.style.top = prevTop;
+        return { x: rect.left, y: rect.top };
     }
 
     function cancelInstantFrame(): void {
@@ -184,8 +198,11 @@
             restoreFocusTarget = null;
         }
         activeTriggerRef = trigger;
-        anchorX = typeof window !== "undefined" ? clampAnchorCoord(clientX, window.innerWidth) : clientX;
-        anchorY = typeof window !== "undefined" ? clampAnchorCoord(clientY, window.innerHeight) : clientY;
+        const viewportX = typeof window !== "undefined" ? clampAnchorCoord(clientX, window.innerWidth) : clientX;
+        const viewportY = typeof window !== "undefined" ? clampAnchorCoord(clientY, window.innerHeight) : clientY;
+        const originOffset = getAnchorContainingBlockOrigin(anchorRef);
+        anchorX = viewportX - originOffset.x;
+        anchorY = viewportY - originOffset.y;
         openOrigin = origin;
         openSequence += 1;
 
@@ -297,6 +314,14 @@
             return () => {
                 if (contentRef === el) {
                     contentRef = null;
+                }
+            };
+        },
+        registerAnchor(el: HTMLSpanElement | null): () => void {
+            anchorRef = el;
+            return () => {
+                if (anchorRef === el) {
+                    anchorRef = null;
                 }
             };
         },

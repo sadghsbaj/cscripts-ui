@@ -42,6 +42,7 @@
         rest["aria-labelledby"] ? undefined : (rest["aria-label"] ?? t({ de: "Kontextmenü", en: "Context menu" }))
     );
 
+    let anchorRef = $state<HTMLSpanElement | null>(null);
     let listRef = $state<HTMLDivElement | null>(null);
     let isPopoverOpen = $state(false);
     let isArrowNav = $state(false);
@@ -192,6 +193,10 @@
     });
 
     $effect(() => {
+        return contextMenu.registerAnchor(anchorRef);
+    });
+
+    $effect(() => {
         return contextMenu.registerMenuId(id);
     });
 
@@ -205,6 +210,7 @@
 </script>
 
 <span
+    bind:this={anchorRef}
     class="cs-context-menu-anchor"
     aria-hidden="true"
     style:anchor-name={`--anchor-${resolvedId}`}

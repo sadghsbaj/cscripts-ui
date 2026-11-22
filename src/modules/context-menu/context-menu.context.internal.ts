@@ -21,6 +21,7 @@ export interface ContextMenuContext {
     readonly openSequence: number;
     readonly isInstantReposition: boolean;
     registerContent: (el: HTMLDivElement | null) => () => void;
+    registerAnchor: (el: HTMLSpanElement | null) => () => void;
     registerMenuId: (id: string | undefined) => () => void;
     unregisterTrigger: (el: HTMLElement) => void;
     openAt: (

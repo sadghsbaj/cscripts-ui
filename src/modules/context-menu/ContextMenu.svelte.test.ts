@@ -790,6 +790,58 @@ describe("ContextMenu Svelte 5 Component", () => {
 
             unmount(instance);
         });
+
+        test("compensates for non-zero fixed containing-block origin on anchor without affecting standalone { left: 0, top: 0 }", () => {
+            const state = $state({ open: false });
+
+            const instance = mount(ContextMenuTestHost, {
+                target: container,
+                props: {
+                    items: DEFAULT_ITEMS,
+                    get open() {
+                        return state.open;
+                    },
+                    set open(next: boolean) {
+                        state.open = next;
+                    },
+                },
+            });
+            flushSync();
+
+            const trigger = requireTrigger(container);
+            const anchor = requireAnchor(container);
+
+            let origin = { left: 120, top: 80 };
+            vi.spyOn(anchor, "getBoundingClientRect").mockImplementation(() => {
+                const isZeroed = anchor.style.left === "0px" && anchor.style.top === "0px";
+                const left = isZeroed ? origin.left : 0;
+                const top = isZeroed ? origin.top : 0;
+                return {
+                    left,
+                    top,
+                    right: left,
+                    bottom: top,
+                    width: 0,
+                    height: 0,
+                    x: left,
+                    y: top,
+                    toJSON: () => ({}),
+                } as DOMRect;
+            });
+
+            dispatchContextMenu(trigger, { clientX: 300, clientY: 200 });
+            flushSync();
+            expect(anchor.style.left).toBe("180px");
+            expect(anchor.style.top).toBe("120px");
+
+            origin = { left: 0, top: 0 };
+            dispatchContextMenu(trigger, { clientX: 300, clientY: 200 });
+            flushSync();
+            expect(anchor.style.left).toBe("300px");
+            expect(anchor.style.top).toBe("200px");
+
+            unmount(instance);
+        });
     });
 
     describe("OS Timing & Right-Button Drag-Release", () => {
