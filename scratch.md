@@ -1,5 +1,10 @@
 ## UI & Polish
 
+- Collapsaible in Login Form refernce nutzen x
+- togglebuttongroup elevated hinzufüpgen x
+- togglebutton stat soft blau was anderes?
+- border bei select disabnled entfenren und bei hönlchedn anderna uhc x
+- Toolbar Refernce bauen m it toggles, segmented, colorpicker, select x
 - WorkApp View Animation manchaml noch verbuggt maybe lceaner machen erinach garn icht enrivg buggbar mehr ienfach faden clean shcnel, fadne das es nicht hart ist aber shcnell und clean
 - Previews extrem polishen
 - Mobile support optimieren
