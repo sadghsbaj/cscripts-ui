@@ -33,7 +33,6 @@
 - [x] DND
 - [x] Avatar
 - [x] Splitter
-- [ ] TreeList
 - [x] Sidebar
 - [ ] Color Picker
 - [x] ContextMenu
