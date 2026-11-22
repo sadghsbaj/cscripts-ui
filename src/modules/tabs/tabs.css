@@ -176,15 +176,20 @@
         transition:
             --cs-tabs-mask-left var(--cs-dur-140) var(--cs-ease-quad-out),
             --cs-tabs-mask-right var(--cs-dur-140) var(--cs-ease-quad-out);
-        mask-image: linear-gradient(
-            to right,
-            transparent 0px,
-            transparent max(0px, calc(var(--cs-tabs-mask-left) - 20px)),
-            black var(--cs-tabs-mask-left),
-            black calc(100% - var(--cs-tabs-mask-right)),
-            transparent calc(100% - max(0px, calc(var(--cs-tabs-mask-right) - 20px))),
-            transparent 100%
-        );
+        mask-image: none;
+
+        &[data-scroll-prev],
+        &[data-scroll-next] {
+            mask-image: linear-gradient(
+                to right,
+                transparent 0px,
+                transparent max(0px, calc(var(--cs-tabs-mask-left) - 20px)),
+                black var(--cs-tabs-mask-left),
+                black calc(100% - var(--cs-tabs-mask-right)),
+                transparent calc(100% - max(0px, calc(var(--cs-tabs-mask-right) - 20px))),
+                transparent 100%
+            );
+        }
 
         &:dir(ltr) {
             &[data-scroll-prev] {

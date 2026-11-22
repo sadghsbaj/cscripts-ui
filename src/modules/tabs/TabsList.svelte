@@ -4,7 +4,6 @@
     import { t } from "../../shared/lang.internal.ts";
     import { rovingFocus } from "../focus/index.ts";
     import { HitArea } from "../hit-area/index.ts";
-    import { scrollFade } from "../scroll-fade/index.ts";
     import {
         buildPushPullKeyframes,
         computeClipOffsets,
@@ -266,12 +265,6 @@
         data-scroll-prev={canScrollPrev ? "" : undefined}
         data-scroll-next={canScrollNext ? "" : undefined}
         onscroll={syncOverflow}
-        {@attach scrollFade({
-            size: "md",
-            direction: "horizontal",
-            edges: "both",
-            enabled: () => tabs.orientation === "horizontal",
-        })}
     >
         <div
             bind:this={trackEl}
