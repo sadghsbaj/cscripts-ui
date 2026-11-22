@@ -32,10 +32,9 @@
 - [x] Charts
 - [x] DND
 - [x] Avatar
-- [ ] Resizable Container
+- [x] Splitter
 - [ ] TreeList
-- [ ] Tablist
-- [ ] Sidebar
+- [x] Sidebar
 - [ ] Color Picker
 - [x] ContextMenu
 - [ ] NLP Parser
