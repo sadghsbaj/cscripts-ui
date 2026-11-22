@@ -34,8 +34,8 @@
 
 ## Modules
 
-- [ ] Referenz Seiteneinstellung Editor
-- [ ] Cleane normale Tabs
+- [x] Referenz Seiteneinstellung Editor
+- [x] Cleane normale Tabs
 - [ ] Drawer
 - [ ] Pagination
 - [ ] Slider
