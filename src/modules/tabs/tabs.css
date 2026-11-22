@@ -1,0 +1,566 @@
+@property --cs-tabs-mask-left {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --cs-tabs-mask-right {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@layer components.composite {
+    .cs-tabs {
+        --cs-tabs-fg: var(--cs-color-text-weak);
+        --cs-tabs-fg-hover: var(--cs-color-text-strong);
+        --cs-tabs-fg-active: var(--cs-color-text-strong);
+        --cs-tabs-bg-hover: var(--cs-color-base-soft);
+        --cs-tabs-baseline-color: var(--cs-color-base-soft-hover);
+        --cs-tabs-indicator-color: var(--cs-color-text-strong);
+
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+
+        &[data-orientation="vertical"] {
+            flex-direction: row;
+            align-items: stretch;
+        }
+
+        /* =========================================================
+         * SIZES (xs - xl)
+         * ========================================================= */
+        &[data-size="xs"] {
+            --cs-tabs-height: 28px;
+            --cs-tabs-min-height: 28px;
+            --cs-tabs-px: 8px;
+            --cs-tabs-gap: 4px;
+            --cs-tabs-item-gap: 6px;
+            --cs-tabs-font-size: var(--cs-text-xs);
+            --cs-tabs-line-height: 16px;
+            --cs-tabs-icon-size: 14px;
+            --cs-tabs-indicator-thickness: 2px;
+            --cs-tabs-radius: var(--cs-radius-md);
+            --cs-tabs-squircle: var(--cs-squircle-soft);
+            --cs-tabs-fade-size: 44px;
+        }
+
+        &[data-size="sm"] {
+            --cs-tabs-height: 32px;
+            --cs-tabs-min-height: 30px;
+            --cs-tabs-px: 10px;
+            --cs-tabs-gap: 4px;
+            --cs-tabs-item-gap: 6px;
+            --cs-tabs-font-size: var(--cs-text-xs);
+            --cs-tabs-line-height: 16px;
+            --cs-tabs-icon-size: 14px;
+            --cs-tabs-indicator-thickness: 2px;
+            --cs-tabs-radius: var(--cs-radius-md);
+            --cs-tabs-squircle: var(--cs-squircle-soft);
+            --cs-tabs-fade-size: 48px;
+        }
+
+        &[data-size="md"] {
+            --cs-tabs-height: 36px;
+            --cs-tabs-min-height: 34px;
+            --cs-tabs-px: 12px;
+            --cs-tabs-gap: 6px;
+            --cs-tabs-item-gap: 8px;
+            --cs-tabs-font-size: var(--cs-text-sm);
+            --cs-tabs-line-height: 20px;
+            --cs-tabs-icon-size: 16px;
+            --cs-tabs-indicator-thickness: 2px;
+            --cs-tabs-radius: var(--cs-radius-lg);
+            --cs-tabs-squircle: var(--cs-squircle-smooth);
+            --cs-tabs-fade-size: 56px;
+        }
+
+        &[data-size="lg"] {
+            --cs-tabs-height: 40px;
+            --cs-tabs-min-height: 38px;
+            --cs-tabs-px: 14px;
+            --cs-tabs-gap: 6px;
+            --cs-tabs-item-gap: 8px;
+            --cs-tabs-font-size: var(--cs-text-sm);
+            --cs-tabs-line-height: 20px;
+            --cs-tabs-icon-size: 16px;
+            --cs-tabs-indicator-thickness: 2px;
+            --cs-tabs-radius: var(--cs-radius-lg);
+            --cs-tabs-squircle: var(--cs-squircle-smooth);
+            --cs-tabs-fade-size: 56px;
+        }
+
+        &[data-size="xl"] {
+            --cs-tabs-height: 44px;
+            --cs-tabs-min-height: 42px;
+            --cs-tabs-px: 16px;
+            --cs-tabs-gap: 8px;
+            --cs-tabs-item-gap: 8px;
+            --cs-tabs-font-size: var(--cs-text-base);
+            --cs-tabs-line-height: 22px;
+            --cs-tabs-icon-size: 18px;
+            --cs-tabs-indicator-thickness: 2.5px;
+            --cs-tabs-radius: var(--cs-radius-xl);
+            --cs-tabs-squircle: var(--cs-squircle-smooth);
+            --cs-tabs-fade-size: 56px;
+        }
+
+        &[data-disabled] {
+            --cs-disabled-opacity: 1;
+            --cs-tabs-indicator-color: var(--cs-color-disabled-fg);
+        }
+    }
+
+    /* =========================================================
+     * LIST SHELL, VIEWPORT & TRACK
+     * ========================================================= */
+    .cs-tabs > .cs-tabs-list-shell {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        user-select: none;
+    }
+
+    .cs-tabs[data-orientation="vertical"] > .cs-tabs-list-shell {
+        flex-direction: column;
+        align-items: stretch;
+        flex-shrink: 0;
+    }
+
+    /* Full-width 1px hairline baseline */
+    .cs-tabs[data-baseline="full"][data-orientation="horizontal"]
+        > .cs-tabs-list-shell::after {
+        content: "";
+        position: absolute;
+        inset-inline: 0;
+        inset-block-end: 0;
+        z-index: 0;
+        height: 1px;
+        background-color: var(--cs-tabs-baseline-color);
+        pointer-events: none;
+    }
+
+    .cs-tabs[data-baseline="full"][data-orientation="vertical"]
+        > .cs-tabs-list-shell::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        z-index: 0;
+        width: 1px;
+        background-color: var(--cs-tabs-baseline-color);
+        pointer-events: none;
+    }
+
+    .cs-tabs > .cs-tabs-list-shell > .cs-tabs-viewport {
+        --cs-scroll-fade-size: var(--cs-tabs-fade-size);
+        --cs-tabs-lane: calc(var(--cs-tabs-height) - 8px + 20px);
+
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .cs-tabs[data-orientation="horizontal"] > .cs-tabs-list-shell > .cs-tabs-viewport {
+        /* Expand vertical clip box by 4px so :focus-visible rings aren't clipped by overflow-y: hidden */
+        box-sizing: content-box;
+        height: var(--cs-tabs-height);
+        padding-block: 4px;
+        margin-block: -4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        transition:
+            --cs-tabs-mask-left var(--cs-dur-140) var(--cs-ease-quad-out),
+            --cs-tabs-mask-right var(--cs-dur-140) var(--cs-ease-quad-out);
+        mask-image: linear-gradient(
+            to right,
+            transparent 0px,
+            transparent max(0px, calc(var(--cs-tabs-mask-left) - 20px)),
+            black var(--cs-tabs-mask-left),
+            black calc(100% - var(--cs-tabs-mask-right)),
+            transparent calc(100% - max(0px, calc(var(--cs-tabs-mask-right) - 20px))),
+            transparent 100%
+        );
+
+        &:dir(ltr) {
+            &[data-scroll-prev] {
+                --cs-tabs-mask-left: var(--cs-tabs-lane);
+            }
+
+            &[data-scroll-next] {
+                --cs-tabs-mask-right: var(--cs-tabs-lane);
+            }
+        }
+
+        &:dir(rtl) {
+            &[data-scroll-prev] {
+                --cs-tabs-mask-right: var(--cs-tabs-lane);
+            }
+
+            &[data-scroll-next] {
+                --cs-tabs-mask-left: var(--cs-tabs-lane);
+            }
+        }
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    .cs-tabs > .cs-tabs-list-shell > .cs-tabs-viewport > .cs-tabs-list {
+        position: relative;
+        display: inline-flex;
+        align-items: stretch;
+        gap: var(--cs-tabs-gap);
+        height: 100%;
+    }
+
+    .cs-tabs[data-orientation="horizontal"][data-width="equal"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        min-width: 100%;
+    }
+
+    .cs-tabs[data-orientation="vertical"] > .cs-tabs-list-shell > .cs-tabs-viewport > .cs-tabs-list {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+    }
+
+    /* Content-width 1px hairline baseline */
+    .cs-tabs[data-baseline="content"][data-orientation="horizontal"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list::after {
+        content: "";
+        position: absolute;
+        inset-inline: 0;
+        inset-block-end: 0;
+        z-index: 0;
+        height: 1px;
+        background-color: var(--cs-tabs-baseline-color);
+        pointer-events: none;
+    }
+
+    .cs-tabs[data-baseline="content"][data-orientation="vertical"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        z-index: 0;
+        width: 1px;
+        background-color: var(--cs-tabs-baseline-color);
+        pointer-events: none;
+    }
+
+    /* Arrow navigation transfers visual focus feedback cleanly to the moving active indicator */
+    .cs-tabs > .cs-tabs-list-shell > .cs-tabs-viewport > .cs-tabs-list[data-arrow-nav] > .cs-tabs-trigger:focus-visible {
+        outline: none;
+    }
+
+    /* =========================================================
+     * PUSH-PULL ACTIVE INDICATOR
+     * ========================================================= */
+    .cs-tabs > .cs-tabs-list-shell > .cs-tabs-viewport > .cs-tabs-list > .cs-tabs-indicator {
+        position: absolute;
+        pointer-events: none;
+        background-color: var(--cs-tabs-indicator-color);
+        opacity: 0;
+        transition: opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+
+        &[data-active] {
+            opacity: 1;
+        }
+    }
+
+    .cs-tabs[data-orientation="horizontal"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-indicator {
+        inset-inline: 0;
+        inset-block-end: 0;
+        z-index: 2;
+        height: var(--cs-tabs-indicator-thickness);
+        clip-path: inset(0 var(--cs-tabs-clip-end) 0 var(--cs-tabs-clip-start) round 9999px);
+    }
+
+    .cs-tabs[data-orientation="vertical"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-indicator {
+        inset-block: 0;
+        inset-inline-start: 0;
+        z-index: 2;
+        width: var(--cs-tabs-indicator-thickness);
+        clip-path: inset(var(--cs-tabs-clip-start) 0 var(--cs-tabs-clip-end) 0 round 9999px);
+    }
+
+    /* =========================================================
+     * TRIGGERS (BUTTON & LINK)
+     * ========================================================= */
+    .cs-tabs > .cs-tabs-list-shell > .cs-tabs-viewport > .cs-tabs-list > .cs-tabs-trigger {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        height: 100%;
+        padding-inline: var(--cs-tabs-px);
+        color: var(--cs-tabs-fg);
+        font-size: var(--cs-tabs-font-size);
+        font-weight: 500;
+        line-height: var(--cs-tabs-line-height);
+        white-space: nowrap;
+        text-decoration: none;
+        background: transparent;
+        border: none;
+        border-radius: var(--cs-tabs-radius);
+        corner-shape: var(--cs-tabs-squircle);
+        cursor: default;
+        transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+
+        &:any-link {
+            cursor: pointer;
+        }
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background-color: transparent;
+            border-radius: var(--cs-tabs-radius);
+            corner-shape: var(--cs-tabs-squircle);
+            pointer-events: none;
+            transition: background-color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+        }
+
+        &[data-selected] {
+            color: var(--cs-tabs-fg-active);
+        }
+
+        @media (hover: hover) {
+            &:hover:not(:disabled, [aria-disabled="true"], [data-disabled]) {
+                color: var(--cs-tabs-fg-hover);
+            }
+
+            &:hover:not([data-selected], :disabled, [aria-disabled="true"], [data-disabled])::before {
+                background-color: var(--cs-tabs-bg-hover);
+            }
+        }
+
+        &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+            --cs-disabled-opacity: 1;
+            color: var(--cs-color-disabled-fg);
+
+            &[data-selected] {
+                color: var(--cs-color-disabled-fg-active);
+            }
+        }
+    }
+
+    /* Optical inset hover wash on horizontal tabs so it never touches the 1px baseline or 2px indicator */
+    .cs-tabs[data-orientation="horizontal"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-trigger::before {
+        inset-block: 4px 6px;
+        inset-inline: 2px;
+    }
+
+    /* Vertical tabs: start-aligned typography & connected-spine row tint */
+    .cs-tabs[data-orientation="vertical"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-trigger {
+        justify-content: flex-start;
+        text-align: start;
+        width: 100%;
+        height: auto;
+        min-height: var(--cs-tabs-min-height);
+        padding-block: 6px;
+        padding-inline: calc(var(--cs-tabs-px) + 2px) var(--cs-tabs-px);
+    }
+
+    .cs-tabs[data-orientation="vertical"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-trigger::before {
+        inset-block: 1px;
+        inset-inline: 0;
+        z-index: -1;
+        border-start-start-radius: 0;
+        border-end-start-radius: 0;
+        border-start-end-radius: var(--cs-tabs-radius);
+        border-end-end-radius: var(--cs-tabs-radius);
+        corner-shape: var(--cs-tabs-squircle);
+    }
+
+    .cs-tabs[data-orientation="vertical"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-trigger[data-selected]::before {
+        background-color: var(--cs-tabs-bg-hover);
+    }
+
+    /* Inner wrapper carries press scale so the indicator track never scales */
+    .cs-tabs-trigger-content {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--cs-tabs-item-gap);
+        min-width: 0;
+        scale: 1;
+        will-change: scale;
+        transition: scale var(--cs-dur-press) var(--cs-ease-press);
+    }
+
+    .cs-tabs[data-orientation="vertical"]
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-trigger
+        > .cs-tabs-trigger-content {
+        justify-content: flex-start;
+    }
+
+    .cs-tabs
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-trigger:not([data-selected], :disabled, [aria-disabled="true"], [data-disabled]):active
+        > .cs-tabs-trigger-content {
+        scale: 0.98;
+    }
+
+    /* =========================================================
+     * LABEL & ICON
+     * ========================================================= */
+    .cs-tabs-label {
+        min-width: 0;
+        overflow-x: clip;
+        overflow-y: visible;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-box: trim-both cap alphabetic;
+    }
+
+    .cs-tabs-icon {
+        flex-shrink: 0;
+        width: var(--cs-tabs-icon-size, calc(1em + 2px));
+        height: var(--cs-tabs-icon-size, calc(1em + 2px));
+        stroke-width: 2;
+        pointer-events: none;
+    }
+
+    .cs-tabs-trigger[data-selected] .cs-tabs-icon {
+        stroke-width: 2.25;
+    }
+
+    /* =========================================================
+     * OVERFLOW SCROLL CHEVRONS
+     * ========================================================= */
+    .cs-tabs > .cs-tabs-list-shell > .cs-tabs-scroll-btn {
+        isolation: isolate;
+        position: absolute;
+        inset-block: 4px;
+        z-index: 3;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 1;
+        padding: 0;
+        color: var(--cs-color-text-weak);
+        background: transparent;
+        border: none;
+        border-radius: 50%;
+        cursor: default;
+        opacity: 0;
+        scale: 0.8;
+        pointer-events: none;
+        transition:
+            opacity var(--cs-dur-140) var(--cs-ease-quad-out),
+            scale var(--cs-dur-140) var(--cs-ease-quad-out),
+            color var(--cs-dur-effect-fast) var(--cs-ease-effect);
+
+        &[data-direction="prev"] {
+            inset-inline-start: 2px;
+        }
+
+        &[data-direction="next"] {
+            inset-inline-end: 2px;
+        }
+
+        &[data-visible] {
+            opacity: 1;
+            scale: 1;
+            pointer-events: auto;
+        }
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background-color: var(--cs-color-base-soft);
+            transition:
+                background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
+                scale var(--cs-dur-press) var(--cs-ease-press);
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--cs-color-text-strong);
+
+                &::before {
+                    background-color: var(--cs-color-base-soft-hover);
+                }
+            }
+        }
+
+        &:active::before {
+            scale: 0.92;
+        }
+
+        > .cs-tabs-scroll-icon {
+            width: calc(1em + 2px);
+            height: calc(1em + 2px);
+            stroke-width: 2.5;
+            pointer-events: none;
+        }
+
+        &:dir(rtl) > .cs-tabs-scroll-icon {
+            scale: -1 1;
+        }
+    }
+
+    /* =========================================================
+     * PANELS
+     * ========================================================= */
+    .cs-tabs > .cs-tabs-panel {
+        min-width: 0;
+    }
+
+    .cs-tabs[data-orientation="vertical"] > .cs-tabs-panel {
+        flex: 1 1 0%;
+    }
+}
