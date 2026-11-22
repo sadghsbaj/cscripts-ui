@@ -99,6 +99,11 @@
     const checkSize = $derived(CHECK_ICON_SIZES[size]);
     const checkStrokeWidth = $derived(CHECK_STROKE_WIDTHS[size]);
 
+    $effect(() => {
+        if (resolvedMode !== "radio" || !groupCtx || !ref || resolvedDisabled) return;
+        return groupCtx.registerItem(ref, () => color);
+    });
+
     function handleClick(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }): void {
         onclick?.(event);
         if (event.defaultPrevented || resolvedDisabled) return;
@@ -141,6 +146,7 @@
         aria-checked={resolvedMode === "radio" ? (isSelected ? "true" : "false") : undefined}
         aria-pressed={resolvedMode === "button" && selected !== undefined ? (isSelected ? "true" : "false") : undefined}
         aria-label={resolvedAriaLabel}
+        tabindex={resolvedMode === "radio" ? (groupCtx?.tabStop === ref ? 0 : -1) : rest.tabindex}
         disabled={resolvedDisabled || undefined}
         onclick={handleClick}
         class={["cs-color-swatch", className]}

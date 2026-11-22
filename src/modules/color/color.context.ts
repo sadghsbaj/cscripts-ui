@@ -24,8 +24,10 @@ export interface ColorPickerContext {
 export interface ColorSwatchGroupContext {
     readonly orientation: ColorSwatchGroupOrientation;
     readonly disabled: boolean;
+    readonly tabStop: HTMLElement | null;
     isSelected: (swatchColor: string) => boolean;
     select: (swatchColor: string) => void;
+    registerItem: (element: HTMLElement, getColor: () => string | undefined) => () => void;
 }
 
 export const [getColorPickerContext, setColorPickerContext, hasColorPickerContext] =

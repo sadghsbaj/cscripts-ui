@@ -1,9 +1,14 @@
 import type { Snippet } from "svelte";
 import type { HTMLAttributes } from "svelte/elements";
 
+import type { ColorSwatchGroupOrientation } from "./color.context.ts";
+import type { ColorChannel } from "./color.utils.ts";
+
 export * from "./color.utils.ts";
 
+export { default as ColorSlider } from "./ColorSlider.svelte";
 export { default as ColorSwatch } from "./ColorSwatch.svelte";
+export { default as ColorSwatchGroup } from "./ColorSwatchGroup.svelte";
 
 export {
     ColorState,
@@ -73,4 +78,44 @@ export interface ColorSwatchProps extends HTMLAttributes<HTMLElement> {
     disabled?: boolean;
     onclick?: (event: MouseEvent & { currentTarget: EventTarget & HTMLElement }) => void;
     children?: Snippet;
+}
+
+export interface ColorSwatchGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+    ref?: HTMLDivElement | null;
+    /** Selected color string. Supports `bind:value` and `bind:value={get, set}`. */
+    value?: string;
+    /** Fires when a swatch is selected via pointer or keyboard. */
+    onValueChange?: (value: string) => void;
+    /** Controls arrow-key axes and default flex direction. @default "both" */
+    orientation?: ColorSwatchGroupOrientation;
+    /** Positive integer (>= 1). Switches layout from flex-wrap to a fixed-column CSS Grid. */
+    columns?: number;
+    /** Disables all child swatches and keyboard navigation. */
+    disabled?: boolean;
+    children?: Snippet;
+}
+
+export interface ColorSliderProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+    ref?: HTMLDivElement | null;
+    /** T-shirt scale controlling track thickness, thumb diameter, and hit-target padding. Required. */
+    size: ColorSliderSize;
+    /** Color channel axis controlled by this slider. Required. */
+    channel: ColorChannel;
+    /** Slider axis. @default "horizontal" */
+    orientation?: ColorSliderOrientation;
+    /** Numeric channel value for controlled/uncontrolled standalone usage. */
+    value?: number;
+    /** Fires on every value change during pointer drag or keyboard stepping. */
+    onValueChange?: (value: number) => void;
+    /** Fires when an interaction commits (pointerup, pointercancel, or keyboard stepping). */
+    onCommit?: (value: number) => void;
+    /** Optional base CSS color string for standalone contextual gradients. */
+    color?: string;
+    /** Accessible name override for the role="slider" thumb. */
+    label?: string;
+    disabled?: boolean;
+    readonly?: boolean;
+    invalid?: boolean;
+    /** Reverses the visual/interaction axis (e.g. max on inline-start / bottom). */
+    inverted?: boolean;
 }

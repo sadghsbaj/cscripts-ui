@@ -4,7 +4,15 @@
 </script>
 
 <script lang="ts">
-    import { COLOR_SWATCH_PRESETS, COLOR_SWATCH_SIZES, ColorSwatch } from "cs/svelte/color";
+    import {
+        COLOR_SLIDER_SIZES,
+        COLOR_SWATCH_PRESETS,
+        COLOR_SWATCH_SIZES,
+        ColorSlider,
+        ColorSwatch,
+        ColorSwatchGroup,
+        createColorState,
+    } from "cs/svelte/color";
 
     import { PreviewHeader, PreviewSection, SunkenWell } from "../../../playground/components/index.ts";
 
@@ -17,22 +25,12 @@
         { color: "transparent", label: "Transparent" },
     ] as const;
 
-    let selectedChecks = $state<Record<string, boolean>>({
-        "#FACC15": true,
-        "#3B82F6": true,
-        "#EC4899": true,
-    });
-
-    let selectedHaloColor = $state<string | undefined>("#6366F1");
+    let selectedCheckColor = $state("#3B82F6");
+    let selectedHaloColor = $state("#6366F1");
     let squircleSelected = $state(true);
-
-    function toggleCheck(color: string): void {
-        selectedChecks[color] = !selectedChecks[color];
-    }
-
-    function toggleHalo(color: string): void {
-        selectedHaloColor = selectedHaloColor === color ? undefined : color;
-    }
+    const sliderState = createColorState({ defaultValue: "#3b82f6", format: () => "rgb" });
+    let verticalHue = $state(217);
+    let verticalAlpha = $state(0.75);
 
     const closeScript = ["</", "script>"].join("");
 
@@ -58,39 +56,24 @@ ${closeScript}
 <ColorSwatch size="lg" color="transparent" mode="preview" />`;
 
     const interactiveCode = `<script lang="ts">
-    import { COLOR_SWATCH_PRESETS, ColorSwatch } from "cs/svelte/color";
+    import { COLOR_SWATCH_PRESETS, ColorSwatch, ColorSwatchGroup } from "cs/svelte/color";
 
     let selectedColor = $state("#3B82F6");
 ${closeScript}
 
 <!-- Luminance-adaptive vector checkmark (default) -->
-<div class="grid grid-cols-7 gap-3">
+<ColorSwatchGroup bind:value={selectedColor} columns={7} aria-label="Preset colors">
     {#each COLOR_SWATCH_PRESETS as preset (preset.color)}
-        <ColorSwatch
-            size="lg"
-            color={preset.color}
-            label={preset.label}
-            mode="button"
-            selected={selectedColor === preset.color}
-            onclick={() => (selectedColor = preset.color)}
-        />
+        <ColorSwatch size="lg" color={preset.color} label={preset.label} />
     {/each}
-</div>
+</ColorSwatchGroup>
 
 <!-- Selection halo alternative (showCheck={false}) -->
-<div class="grid grid-cols-7 gap-3">
+<ColorSwatchGroup bind:value={selectedColor} columns={7} aria-label="Preset colors (halo)">
     {#each COLOR_SWATCH_PRESETS as preset (preset.color)}
-        <ColorSwatch
-            size="lg"
-            color={preset.color}
-            label={preset.label}
-            mode="button"
-            selected={selectedColor === preset.color}
-            showCheck={false}
-            onclick={() => (selectedColor = preset.color)}
-        />
+        <ColorSwatch size="lg" color={preset.color} label={preset.label} showCheck={false} />
     {/each}
-</div>`;
+</ColorSwatchGroup>`;
 
     const statesCode = `<!-- Disabled states -->
 <ColorSwatch size="lg" color="#3b82f6" mode="button" disabled />
@@ -111,6 +94,38 @@ ${closeScript}
     mode="preview"
     style="--cs-color-swatch-radius: 8px; --cs-color-swatch-squircle: var(--cs-squircle-smooth)"
 />`;
+
+    const slidersCode = `<script lang="ts">
+    import { ColorSlider, ColorSwatch, createColorState } from "cs/svelte/color";
+
+    const colorState = createColorState({ defaultValue: "#3b82f6", format: () => "rgb" });
+${closeScript}
+
+<div class="flex items-center gap-4">
+    <ColorSwatch size="xl" color={colorState.value} mode="preview" />
+    <div class="flex flex-col gap-3 w-64">
+        <ColorSlider
+            size="md"
+            channel="hue"
+            color={colorState.value}
+            bind:value={
+                () => colorState.getChannel("hue"),
+                (v) => colorState.setChannel("hue", v, { commit: false })
+            }
+            onCommit={(v) => colorState.setChannel("hue", v, { commit: true })}
+        />
+        <ColorSlider
+            size="md"
+            channel="alpha"
+            color={colorState.value}
+            bind:value={
+                () => colorState.getChannel("alpha"),
+                (v) => colorState.setChannel("alpha", v, { commit: false })
+            }
+            onCommit={(v) => colorState.setChannel("alpha", v, { commit: true })}
+        />
+    </div>
+</div>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 </script>
 
@@ -170,37 +185,22 @@ ${closeScript}
     </PreviewSection>
 
     <PreviewSection
-        title="Interactive Selection"
-        description="Click swatches from the calibrated 14-color palette to test tactile hover/press motion, vector checkmarks, and selection halos."
+        title="Swatch Group & Interactive Selection"
+        description="ColorSwatchGroup coordinates single-select radiogroup state, 2D keyboard navigation, and roving tabindex across checkmark and selection-halo palettes."
         code={interactiveCode}
     >
         <div class="flex flex-col items-center gap-8">
-            <div class="grid grid-cols-7 gap-3">
+            <ColorSwatchGroup bind:value={selectedCheckColor} columns={7} aria-label="Preset colors with checkmark">
                 {#each COLOR_SWATCH_PRESETS as preset (preset.color)}
-                    <ColorSwatch
-                        size="lg"
-                        color={preset.color}
-                        label={preset.label}
-                        mode="button"
-                        selected={Boolean(selectedChecks[preset.color])}
-                        onclick={() => toggleCheck(preset.color)}
-                    />
+                    <ColorSwatch size="lg" color={preset.color} label={preset.label} />
                 {/each}
-            </div>
+            </ColorSwatchGroup>
 
-            <div class="grid grid-cols-7 gap-3">
+            <ColorSwatchGroup bind:value={selectedHaloColor} columns={7} aria-label="Preset colors with selection halo">
                 {#each COLOR_SWATCH_PRESETS as preset (preset.color)}
-                    <ColorSwatch
-                        size="lg"
-                        color={preset.color}
-                        label="{preset.label} halo"
-                        mode="button"
-                        selected={selectedHaloColor === preset.color}
-                        showCheck={false}
-                        onclick={() => toggleHalo(preset.color)}
-                    />
+                    <ColorSwatch size="lg" color={preset.color} label="{preset.label} halo" showCheck={false} />
                 {/each}
-            </div>
+            </ColorSwatchGroup>
         </div>
     </PreviewSection>
 
@@ -243,6 +243,61 @@ ${closeScript}
                     label="Tile squircle orange swatch"
                 />
             </SunkenWell>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="ColorSlider"
+        description="Accessible 1D color-channel sliders across xs–xl scales, coupled Hue + Alpha state with live ColorSwatch preview, and vertical orientation."
+        code={slidersCode}
+    >
+        <div class="flex flex-col items-center gap-8 w-full">
+            <div class="flex-center flex-wrap gap-6">
+                <div class="flex items-center gap-4">
+                    <ColorSwatch size="xl" color={sliderState.value} mode="preview" label="Live slider color" />
+                    <div class="flex flex-col gap-3 w-64">
+                        <ColorSlider
+                            size="md"
+                            channel="hue"
+                            color={sliderState.value}
+                            bind:value={
+                                () => sliderState.getChannel("hue"),
+                                (v) => sliderState.setChannel("hue", v, { commit: false })
+                            }
+                            onCommit={(v) => sliderState.setChannel("hue", v, { commit: true })}
+                        />
+                        <ColorSlider
+                            size="md"
+                            channel="alpha"
+                            color={sliderState.value}
+                            bind:value={
+                                () => sliderState.getChannel("alpha"),
+                                (v) => sliderState.setChannel("alpha", v, { commit: false })
+                            }
+                            onCommit={(v) => sliderState.setChannel("alpha", v, { commit: true })}
+                        />
+                    </div>
+                </div>
+
+                <SunkenWell>
+                    <div class="flex items-center gap-4 px-2 py-1" style="--cs-color-slider-track-length: 120px">
+                        <ColorSlider size="md" channel="hue" orientation="vertical" bind:value={verticalHue} />
+                        <ColorSlider
+                            size="md"
+                            channel="alpha"
+                            orientation="vertical"
+                            color={`hsl(${verticalHue} 90% 55%)`}
+                            bind:value={verticalAlpha}
+                        />
+                    </div>
+                </SunkenWell>
+            </div>
+
+            <div class="flex flex-col gap-2.5 w-full max-w-xs">
+                {#each COLOR_SLIDER_SIZES as size (size)}
+                    <ColorSlider {size} channel="hue" color="#3b82f6" />
+                {/each}
+            </div>
         </div>
     </PreviewSection>
 </div>

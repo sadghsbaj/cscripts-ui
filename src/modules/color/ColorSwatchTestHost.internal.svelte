@@ -92,17 +92,22 @@
         });
     }
 
+    const noopUnregister = (): void => {};
+    const noopRegisterItem = (): (() => void) => noopUnregister;
+
     if (untrack(() => withGroup)) {
         setColorSwatchGroupContext({
             orientation: "horizontal",
             get disabled() {
                 return groupDisabled;
             },
+            tabStop: null,
             isSelected: (swatchColor) => swatchColor.toLowerCase() === groupSelectedColor?.toLowerCase(),
             select: (swatchColor) => {
                 onGroupSelect?.(swatchColor);
                 groupSelectedColor = swatchColor;
             },
+            registerItem: noopRegisterItem,
         });
     }
 </script>
