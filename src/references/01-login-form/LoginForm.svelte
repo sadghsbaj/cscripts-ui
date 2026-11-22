@@ -3,6 +3,7 @@
     import { Button, ButtonIcon, ButtonLabel } from "cs/svelte/button";
     import { Card, CardBody, CardDescription, CardHeader, CardTitle } from "cs/svelte/card";
     import { Checkbox } from "cs/svelte/checkbox";
+    import { Collapsible } from "cs/svelte/collapsible";
     import { HitArea } from "cs/svelte/hit-area";
     import { TextInput, TextInputAction, TextInputField, TextInputIcon } from "cs/svelte/text-input";
 
@@ -159,69 +160,44 @@
                     <ButtonIcon icon={ChevronDown} class={["cs-login-disclosure-icon", altOpen && "is-open"]} />
                 </Button>
 
-                <div id={altPanelId} class={["cs-login-disclosure w-full", altOpen && "is-open"]} inert={!altOpen}>
-                    <div class="cs-login-disclosure-inner">
-                        <div class="flex flex-col gap-2 pt-3 pb-1">
-                            <Button
-                                variant="tertiary"
-                                size="md"
-                                class="w-full"
-                                disabled={isSubmitting}
-                                onclick={() => onaltmethod?.("passkey")}
-                            >
-                                <ButtonIcon icon={KeyRound} />
-                                <ButtonLabel>Continue with Passkey</ButtonLabel>
-                            </Button>
+                <Collapsible id={altPanelId} bind:open={altOpen} motion="swell" class="w-full">
+                    <div class="flex flex-col gap-2 pt-3 pb-1">
+                        <Button
+                            variant="tertiary"
+                            size="md"
+                            class="w-full"
+                            disabled={isSubmitting}
+                            onclick={() => onaltmethod?.("passkey")}
+                        >
+                            <ButtonIcon icon={KeyRound} />
+                            <ButtonLabel>Continue with Passkey</ButtonLabel>
+                        </Button>
 
-                            <Button
-                                variant="tertiary"
-                                size="md"
-                                class="w-full"
-                                disabled={isSubmitting}
-                                onclick={() => onaltmethod?.("sso")}
-                            >
-                                <ButtonIcon icon={ShieldCheck} />
-                                <ButtonLabel>Continue with SSO</ButtonLabel>
-                            </Button>
-                        </div>
+                        <Button
+                            variant="tertiary"
+                            size="md"
+                            class="w-full"
+                            disabled={isSubmitting}
+                            onclick={() => onaltmethod?.("sso")}
+                        >
+                            <ButtonIcon icon={ShieldCheck} />
+                            <ButtonLabel>Continue with SSO</ButtonLabel>
+                        </Button>
                     </div>
-                </div>
+                </Collapsible>
             </div>
         </form>
     </CardBody>
 </Card>
 
 <style>
-    .cs-login-disclosure {
-        display: grid;
-        grid-template-rows: 0fr;
-        opacity: 0;
-        transition:
-            grid-template-rows var(--cs-dur-exit-sm) var(--cs-ease-exit),
-            opacity var(--cs-dur-exit-sm) var(--cs-ease-exit);
-    }
-
-    .cs-login-disclosure.is-open {
-        grid-template-rows: 1fr;
-        opacity: 1;
-        transition:
-            grid-template-rows var(--cs-dur-enter-sm) var(--cs-ease-enter),
-            opacity var(--cs-dur-enter-sm) var(--cs-ease-enter);
-    }
-
-    .cs-login-disclosure-inner {
-        overflow-x: visible;
-        overflow-y: clip;
-        min-height: 0;
-    }
-
     /* ButtonIcon renders inside the child Button component, so scope opt-out is required. */
     :global(.cs-login-disclosure-icon) {
-        transition: transform var(--cs-dur-exit-sm) var(--cs-ease-exit);
+        transition: transform var(--cs-dur-160) var(--cs-ease-exit);
     }
 
     :global(.cs-login-disclosure-icon.is-open) {
         transform: rotate(180deg);
-        transition: transform var(--cs-dur-enter-sm) var(--cs-ease-enter);
+        transition: transform var(--cs-dur-240) var(--cs-ease-quart-out);
     }
 </style>

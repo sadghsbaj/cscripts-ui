@@ -11,6 +11,7 @@ Production-grade authentication card pairing an `elevated` surface container wit
 - `cs/svelte/checkbox` (`Checkbox`)
 - `cs/svelte/hit-area` (`HitArea`)
 - `cs/svelte/button` (`Button`, `ButtonIcon`, `ButtonLabel`)
+- `cs/svelte/collapsible` (`Collapsible`)
 
 ## Key Patterns
 
@@ -18,7 +19,7 @@ Production-grade authentication card pairing an `elevated` surface container wit
 - **Label & Error Binding:** Unique `$props.id()` identifiers wire `<label for={...}>`, `<TextInputField id={...} aria-describedby={...} />`, and inline error messages.
 - **Password Reveal:** `<TextInputAction>` toggles between `Eye` and `EyeOff` and stays hidden until `password.length > 0 || showPassword`.
 - **Hit Target Expansion:** `<HitArea size="md" />` expands the compact `Forgot?` button to a `44px` target without shifting text layout; both `Remember me` and `Forgot?` use `text-trim` for optical alignment.
-- **Progressive Disclosure:** `Other ways` animates a CSS Grid `0fr -> 1fr` container (`inert` when collapsed, `overflow-x: visible; overflow-y: clip` + `pb-1` so `:active` squash and `:focus-visible` rings are unclipped) using `--cs-dur-enter-sm` / `--cs-ease-enter` and `--cs-dur-exit-sm` / `--cs-ease-exit`.
+- **Progressive Disclosure:** `Other ways` uses `<Collapsible bind:open={altOpen} id={altPanelId} motion="swell" class="w-full">` with an inner `pt-3 pb-1` wrapper for spacing and shadow/ring breathing room, while the chevron rotation aligns to `--cs-dur-240` / `--cs-ease-quart-out` on enter and `--cs-dur-160` / `--cs-ease-exit` on exit.
 
 ## States
 
