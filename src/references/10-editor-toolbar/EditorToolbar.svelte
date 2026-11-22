@@ -42,6 +42,7 @@
         ContextMenuItemText,
         contextMenuTrigger,
     } from "cs/svelte/context-menu";
+    import { rovingFocus } from "cs/svelte/focus";
     import { Popover, popoverTrigger } from "cs/svelte/popover";
     import { HitArea } from "cs/svelte/hit-area";
     import { Select, SelectContent, SelectItem, SelectItemText, SelectTrigger, SelectValue } from "cs/svelte/select";
@@ -447,7 +448,7 @@
     role="toolbar"
     aria-label="Editor formatting"
     aria-disabled={disabled ? "true" : undefined}
-    class={["flex-center flex-wrap gap-2", className]}
+    class={["cs-editor-toolbar flex-center flex-wrap gap-2", className]}
 >
     <!-- History -->
     <div class="flex items-center gap-1.5">
@@ -505,6 +506,13 @@
         {disabled}
         onValueChange={() => recordHistory()}
         aria-label="Text formatting"
+        {@attach rovingFocus({
+            orientation: "horizontal",
+            items: ":scope > button:not(:disabled)",
+            homeEnd: true,
+            loop: true,
+            enabled: () => !disabled,
+        })}
     >
         <ToggleButton
             value="bold"
@@ -641,6 +649,14 @@
         {disabled}
         onValueChange={() => recordHistory()}
         aria-label="Text alignment"
+        {@attach rovingFocus({
+            orientation: "horizontal",
+            items: ":scope > button:not(:disabled)",
+            homeEnd: true,
+            loop: true,
+            enabled: () => !disabled,
+            initialActive: (items) => items.find((item) => item.getAttribute("aria-pressed") === "true") ?? items[0] ?? null,
+        })}
     >
         <ToggleButton
             value="left"
@@ -700,6 +716,14 @@
         {disabled}
         onValueChange={() => recordHistory()}
         aria-label="Lists"
+        {@attach rovingFocus({
+            orientation: "horizontal",
+            items: ":scope > button:not(:disabled)",
+            homeEnd: true,
+            loop: true,
+            enabled: () => !disabled,
+            initialActive: (items) => items.find((item) => item.getAttribute("aria-pressed") === "true") ?? items[0] ?? null,
+        })}
     >
         <ToggleButton
             value="bullet"
@@ -813,6 +837,11 @@
 </div>
 
 <style>
+    .cs-editor-toolbar :global(.cs-button-control[data-icon-only] > .cs-button-control-icon) {
+        width: 18px;
+        height: 18px;
+    }
+
     /* Match the 40px pill silhouette (20px radius + squircle) and stabilize width across font labels. */
     :global(.cs-editor-toolbar-select-trigger) {
         --cs-select-trigger-radius: 20px;
