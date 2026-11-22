@@ -164,11 +164,12 @@
     }
 
     .cs-tabs[data-orientation="horizontal"] > .cs-tabs-list-shell > .cs-tabs-viewport {
-        /* Expand vertical clip box by 4px so :focus-visible rings aren't clipped by overflow-y: hidden */
+        /* Expand clip box by 5px (2px outline + 2px offset + 1px AA) so :focus-visible rings aren't clipped */
         box-sizing: content-box;
+        width: 100%;
         height: var(--cs-tabs-height);
-        padding-block: 4px;
-        margin-block: -4px;
+        padding: 5px;
+        margin: -5px;
         overflow-x: auto;
         overflow-y: hidden;
         scrollbar-width: none;
