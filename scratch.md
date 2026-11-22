@@ -1,13 +1,13 @@
 ## UI & Polish
 
-- Collapsaible in Login Form refernce nutzen x
-- togglebuttongroup elevated hinzufüpgen x
-- togglebutton stat soft blau was anderes?
-- border bei select disabnled entfenren und bei hönlchedn anderna uhc x
-- Toolbar Refernce bauen m it toggles, segmented, colorpicker, select x
-- WorkApp View Animation manchaml noch verbuggt maybe lceaner machen erinach garn icht enrivg buggbar mehr ienfach faden clean shcnel, fadne das es nicht hart ist aber shcnell und clean
-- Previews extrem polishen
-- Mobile support optimieren
+- [ ] `ToggleButton`: statt soft blau was anderes?
+- [ ] `WorkApp`: View-Animation manchmal noch verbuggt – cleaner machen (nicht mehr nervig buggbar, einfach schnelles, weiches und cleanes Faden statt harter Übergänge)
+- [ ] Previews extrem polishen
+- [ ] Mobile Support optimieren
+- [x] `Collapsible` in Login-Form-Reference nutzen
+- [x] `ToggleButtonGroup`: `elevated` hinzufügen
+- [x] Border bei `Select` disabled entfernen (und bei ähnlichen anderen auch)
+- [x] Toolbar-Reference bauen mit Toggles, `SegmentedControl`, `ColorPicker`, `Select`
 - [x] Docs in App-Layout integrieren (als Gesamtbeispiel und in Work-Docs)
 - [x] Data Table: Basis reviewen, testen lassen (Preview und Co.)
 - [x] Data Table: Performance
@@ -34,7 +34,13 @@
 
 ## Modules
 
-- [] Cleane normale Tabs
+- [ ] Referenz Seiteneinstellung Editor
+- [ ] Cleane normale Tabs
+- [ ] Drawer
+- [ ] Pagination
+- [ ] Slider
+- [ ] NLP Parser
+- [ ] Command Palette
 - [x] Collapsible
 - [x] Accordion
 - [x] Data Table
@@ -43,13 +49,8 @@
 - [x] Avatar
 - [x] Splitter
 - [x] Sidebar
-- [ ] Drawer
-- [ ] Pagination
-- [ ] Slider
 - [x] Color Picker
 - [x] ContextMenu
-- [ ] NLP Parser
-- [ ] Command Palette
 - [x] KPI Cards
 - [x] Virtual Scrolling
 - [x] Dropdown
@@ -72,7 +73,6 @@
 
 ## Work
 
-- [x] Animation zwischen MainArea-Switches
 - [ ] KI-Integrationen clean dargestellt
 - [ ] ContentEditable-artiges Element für Platzhalter etc.
 - [ ] EML-Logik: Signaturen
@@ -80,6 +80,7 @@
 - [ ] Allgemeine EML-Logik (eigene Outlook-E-Mail-Logik für Work)
 - [ ] Diff-Component
 - [ ] PDF Viewer
+- [x] Animation zwischen MainArea-Switches
 - [x] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
 - [x] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
 - [x] Filesystem-Chooser / Verwalter-Element
