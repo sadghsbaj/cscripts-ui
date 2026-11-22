@@ -37,6 +37,7 @@
         readonly = false,
         invalid = false,
         class: className,
+        children,
         "aria-label": ariaLabelProp,
         "aria-labelledby": ariaLabelledByProp,
         ...rest
@@ -337,6 +338,7 @@
         onkeydown={handleKeyDown}
         onblur={handleBlur}
     />
+    {@render children?.()}
 </TextInput>
 
 <style>

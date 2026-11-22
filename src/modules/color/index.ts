@@ -1,12 +1,14 @@
 import type { Snippet } from "svelte";
-import type { HTMLAttributes } from "svelte/elements";
+import type { HTMLAttributes, HTMLButtonAttributes } from "svelte/elements";
 
+import { SELECT_SIZES, SELECT_VARIANTS } from "../select/index.ts";
 import type { ColorSwatchGroupOrientation } from "./color.context.ts";
 import type { ColorAlphaFormat, ColorChannel, ColorFormat } from "./color.utils.ts";
 
 export * from "./color.utils.ts";
 
 export { default as ColorArea } from "./ColorArea.svelte";
+export { default as ColorFormatSelect } from "./ColorFormatSelect.svelte";
 export { default as ColorInput } from "./ColorInput.svelte";
 export { default as ColorSlider } from "./ColorSlider.svelte";
 export { default as ColorSwatch } from "./ColorSwatch.svelte";
@@ -39,6 +41,9 @@ export const COLOR_SLIDER_ORIENTATIONS = ["horizontal", "vertical"] as const;
 export const COLOR_SWATCH_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
 export const COLOR_INPUT_VARIANTS = ["soft", "elevated"] as const;
 export const COLOR_INPUT_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
+export const COLOR_FORMAT_SELECT_VARIANTS = SELECT_VARIANTS;
+export const COLOR_FORMAT_SELECT_SIZES = SELECT_SIZES;
+export const COLOR_FORMAT_SELECT_DEFAULTS = ["hex", "rgb", "hsl", "oklch"] as const;
 export const COLOR_EYE_DROPPER_VARIANTS = ["primary", "secondary", "tertiary", "ghost", "elevated"] as const;
 export const COLOR_EYE_DROPPER_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
 
@@ -48,6 +53,8 @@ export type ColorSliderOrientation = (typeof COLOR_SLIDER_ORIENTATIONS)[number];
 export type ColorSwatchSize = (typeof COLOR_SWATCH_SIZES)[number];
 export type ColorInputVariant = (typeof COLOR_INPUT_VARIANTS)[number];
 export type ColorInputSize = (typeof COLOR_INPUT_SIZES)[number];
+export type ColorFormatSelectVariant = (typeof COLOR_FORMAT_SELECT_VARIANTS)[number];
+export type ColorFormatSelectSize = (typeof COLOR_FORMAT_SELECT_SIZES)[number];
 export type ColorEyeDropperVariant = (typeof COLOR_EYE_DROPPER_VARIANTS)[number];
 export type ColorEyeDropperSize = (typeof COLOR_EYE_DROPPER_SIZES)[number];
 
@@ -162,6 +169,7 @@ export interface ColorInputBaseProps extends Omit<HTMLAttributes<HTMLDivElement>
     disabled?: boolean;
     readonly?: boolean;
     invalid?: boolean;
+    children?: Snippet;
 }
 
 export interface ColorInputFullProps extends ColorInputBaseProps {
@@ -194,3 +202,25 @@ export interface ColorInputChannelProps extends ColorInputBaseProps {
 }
 
 export type ColorInputProps = ColorInputFullProps | ColorInputChannelProps;
+
+export interface ColorFormatSelectProps extends Omit<HTMLButtonAttributes, "type" | "value" | "children"> {
+    ref?: HTMLButtonElement | null;
+    /** Visual shell style forwarded to `Select` ("soft" | "elevated"). Required. */
+    variant: ColorFormatSelectVariant;
+    /** T-shirt scale forwarded to `Select` (28-44px height). Required. */
+    size: ColorFormatSelectSize;
+    /** Controlled/standalone selected format. Supports `bind:value`. */
+    value?: ColorFormat;
+    onValueChange?: (format: ColorFormat) => void;
+    /** Controlled/uncontrolled popover open state forwarded to `Select`. */
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    /** Ordered list of selectable formats. @default COLOR_FORMAT_SELECT_DEFAULTS */
+    formats?: readonly ColorFormat[];
+    disabled?: boolean;
+    invalid?: boolean;
+    /** Accessible name (`aria-label`) for `SelectTrigger`. */
+    label?: string;
+    name?: string;
+    required?: boolean;
+}

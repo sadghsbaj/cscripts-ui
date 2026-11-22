@@ -10,6 +10,7 @@ export interface ColorPickerContext {
     readonly state: ColorState;
     readonly value: string;
     readonly format: ColorFormat;
+    setFormat?: (format: ColorFormat) => void;
     readonly space: "hsv" | "hsl" | "oklch";
     readonly disabled: boolean;
     readonly readonly: boolean;

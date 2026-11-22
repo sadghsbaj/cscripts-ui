@@ -4,20 +4,26 @@
 </script>
 
 <script lang="ts">
+    import { CopyIcon, copyOnClick } from "cs/svelte/clipboard";
     import {
         COLOR_AREA_SIZES,
+        COLOR_FORMAT_SELECT_SIZES,
+        COLOR_FORMAT_SELECT_VARIANTS,
         COLOR_INPUT_SIZES,
         COLOR_INPUT_VARIANTS,
         COLOR_SLIDER_SIZES,
         COLOR_SWATCH_PRESETS,
         COLOR_SWATCH_SIZES,
         ColorArea,
+        ColorFormatSelect,
         ColorInput,
         ColorSlider,
         ColorSwatch,
         ColorSwatchGroup,
         createColorState,
+        type ColorFormat,
     } from "cs/svelte/color";
+    import { TextInputAction } from "cs/svelte/text-input";
 
     import { PreviewHeader, PreviewSection, SunkenWell } from "../../../playground/components/index.ts";
 
@@ -45,6 +51,9 @@
     let previewInvalidColor = $state("#EF4444");
     let verticalHue = $state(217);
     let verticalAlpha = $state(0.75);
+    let formatSelectMode = $state<ColorFormat>("hex");
+    const formatSelectState = createColorState({ defaultValue: "#4F46E5", format: () => formatSelectMode });
+    let variantFormat = $state<ColorFormat>("hex");
 
     const closeScript = ["</", "script>"].join("");
 
@@ -206,6 +215,46 @@ ${closeScript}
         }
         onCommit={(v) => colorState.setString(v, { commit: true })}
     />
+    <ColorInput
+        variant="soft"
+        size="md"
+        channel="alpha"
+        bind:value={
+            () => colorState.getChannel("alpha"),
+            (v) => colorState.setChannel("alpha", v, { commit: false })
+        }
+        onCommit={(v) => colorState.setChannel("alpha", v, { commit: true })}
+    />
+</div>`;
+
+    const colorFormatSelectCode = `<script lang="ts">
+    import { CopyIcon, copyOnClick } from "cs/svelte/clipboard";
+    import { ColorFormatSelect, ColorInput, createColorState, type ColorFormat } from "cs/svelte/color";
+    import { TextInputAction } from "cs/svelte/text-input";
+
+    let format = $state<ColorFormat>("hex");
+    const colorState = createColorState({ defaultValue: "#4F46E5", format: () => format });
+${closeScript}
+
+<div class="flex items-center gap-2">
+    <ColorFormatSelect variant="soft" size="md" bind:value={format} />
+    <ColorInput
+        variant="soft"
+        size="md"
+        showSwatch
+        {format}
+        alpha="never"
+        style="--cs-color-input-width: 216px"
+        bind:value={
+            () => colorState.value,
+            (v) => colorState.setString(v, { commit: false })
+        }
+        onCommit={(v) => colorState.setString(v, { commit: true })}
+    >
+        <TextInputAction aria-label="Copy color" {@attach copyOnClick({ text: () => colorState.value })}>
+            <CopyIcon />
+        </TextInputAction>
+    </ColorInput>
     <ColorInput
         variant="soft"
         size="md"
@@ -570,6 +619,88 @@ ${closeScript}
                 <ColorInput variant="soft" size="md" showSwatch bind:value={previewDisabledColor} disabled />
                 <ColorInput variant="soft" size="md" channel="alpha" bind:value={previewDisabledAlpha} disabled />
                 <ColorInput variant="soft" size="md" showSwatch bind:value={previewInvalidColor} invalid />
+            </div>
+        </div>
+    </PreviewSection>
+
+    <PreviewSection
+        title="ColorFormatSelect"
+        description="Compact color-format switcher paired with ColorInput and alpha channel input across soft and elevated variants and xs–xl scales."
+        code={colorFormatSelectCode}
+    >
+        <div class="flex flex-col items-center gap-6 w-full">
+            <div class="flex-center flex-wrap gap-2">
+                <ColorFormatSelect variant="soft" size="md" bind:value={formatSelectMode} />
+                <ColorInput
+                    variant="soft"
+                    size="md"
+                    showSwatch
+                    format={formatSelectMode}
+                    alpha="never"
+                    style="--cs-color-input-width: 216px"
+                    bind:value={
+                        () => formatSelectState.value,
+                        (v) => formatSelectState.setString(v, { commit: false })
+                    }
+                    onCommit={(v: string) => formatSelectState.setString(v, { commit: true })}
+                >
+                    <TextInputAction
+                        aria-label="Copy color"
+                        {@attach copyOnClick({ text: () => formatSelectState.value })}
+                    >
+                        <CopyIcon />
+                    </TextInputAction>
+                </ColorInput>
+                <ColorInput
+                    variant="soft"
+                    size="md"
+                    channel="alpha"
+                    bind:value={
+                        () => formatSelectState.getChannel("alpha"),
+                        (v) => formatSelectState.setChannel("alpha", v, { commit: false })
+                    }
+                    onCommit={(v) => formatSelectState.setChannel("alpha", v, { commit: true })}
+                />
+            </div>
+
+            <div class="flex-center flex-wrap gap-4">
+                {#each COLOR_FORMAT_SELECT_VARIANTS as variant (variant)}
+                    {#if variant === "elevated"}
+                        <SunkenWell>
+                            <div class="flex items-center gap-2">
+                                <ColorFormatSelect {variant} size="md" bind:value={variantFormat} />
+                                <ColorInput
+                                    {variant}
+                                    size="md"
+                                    showSwatch
+                                    format={variantFormat}
+                                    style="--cs-color-input-width: 200px"
+                                    bind:value={previewVariantColor}
+                                />
+                                <ColorInput {variant} size="md" channel="alpha" bind:value={previewVariantAlpha} />
+                            </div>
+                        </SunkenWell>
+                    {:else}
+                        <div class="flex items-center gap-2">
+                            <ColorFormatSelect {variant} size="md" bind:value={variantFormat} />
+                            <ColorInput
+                                {variant}
+                                size="md"
+                                showSwatch
+                                format={variantFormat}
+                                style="--cs-color-input-width: 200px"
+                                bind:value={previewVariantColor}
+                            />
+                            <ColorInput {variant} size="md" channel="alpha" bind:value={previewVariantAlpha} />
+                        </div>
+                    {/if}
+                {/each}
+            </div>
+
+            <div class="flex flex-wrap items-end justify-center gap-3">
+                {#each COLOR_FORMAT_SELECT_SIZES as size (size)}
+                    <ColorFormatSelect variant="soft" {size} bind:value={variantFormat} />
+                {/each}
             </div>
         </div>
     </PreviewSection>
