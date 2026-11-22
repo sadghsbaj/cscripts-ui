@@ -1,5 +1,7 @@
 ## UI & Polish
 
+- Previews extrem polishen
+- Mobile support optimieren
 - [x] Docs in App-Layout integrieren (als Gesamtbeispiel und in Work-Docs)
 - [x] Data Table: Basis reviewen, testen lassen (Preview und Co.)
 - [x] Data Table: Performance
@@ -34,6 +36,9 @@
 - [x] Avatar
 - [x] Splitter
 - [x] Sidebar
+- [ ] Drawer
+- [ ] Pagination
+- [ ] Slider
 - [ ] Color Picker
 - [x] ContextMenu
 - [ ] NLP Parser
