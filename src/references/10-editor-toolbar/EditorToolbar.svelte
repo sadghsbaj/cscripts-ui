@@ -322,6 +322,9 @@
 </script>
 
 {#snippet colorPickerPopover(config: ColorPickerPopoverConfig)}
+    {const hasCurrentSwatch = $derived(
+        config.getSwatches().some((s) => s.toLowerCase() === config.getValue().toLowerCase()),
+    )}
     <Popover
         bind:ref={config.getRef, config.setRef}
         id={config.id}
@@ -335,6 +338,13 @@
             label={config.label}
             style="--cs-color-picker-width: 244px; --cs-color-picker-gap: 12px"
         >
+            <div class="min-h-7 px-0.5 flex items-center justify-between gap-2 w-full">
+                <span class="text-sm font-600 leading-5 tracking-tight text-strong">{config.label}</span>
+                <Button variant="ghost" size="xs" {disabled} onclick={config.onReset}>
+                    <ButtonIcon icon={RotateCcw} />
+                    <ButtonLabel>Reset</ButtonLabel>
+                </Button>
+            </div>
             <ColorArea size="sm" />
             <ColorSlider size="sm" channel="hue" />
             <div class="flex items-center gap-1.5 w-full">
@@ -349,97 +359,81 @@
                 </ColorInput>
                 <ColorEyeDropper variant="ghost" size="sm" unsupportedBehavior="disable" />
                 <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     iconOnly
-                    {disabled}
-                    aria-label="Reset color"
-                    onclick={config.onReset}
-                    {@attach tooltip({ text: "Reset", placement: "top", enabled: () => !disabled })}
+                    disabled={disabled || hasCurrentSwatch}
+                    aria-label="Add swatch"
+                    onclick={() => {
+                        if (disabled || hasCurrentSwatch) return;
+                        config.setSwatches([...config.getSwatches(), config.getValue()]);
+                    }}
+                    {@attach tooltip({ text: "Add swatch", placement: "top", enabled: () => !disabled && !hasCurrentSwatch })}
                 >
-                    <ButtonIcon icon={RotateCcw} />
+                    <ButtonIcon icon={Plus} />
                     <HitArea size="md" />
                 </Button>
             </div>
-            <div class="flex flex-col gap-2 w-full">
-                <div class="flex items-center justify-end">
-                    <Button
-                        variant="ghost"
-                        size="xs"
-                        {disabled}
-                        onclick={() => {
-                            if (disabled) return;
-                            const current = config.getValue();
-                            const swatches = config.getSwatches();
-                            if (swatches.some((s) => s.toLowerCase() === current.toLowerCase())) return;
-                            config.setSwatches([...swatches, current]);
+
+            <ContextMenu size="sm">
+                <ColorSwatchGroup
+                    columns={7}
+                    style="--cs-color-swatch-group-gap: 8px"
+                    aria-label={config.swatchesLabel}
+                >
+                    {#each config.getSwatches() as swatch (swatch)}
+                        <ColorSwatch
+                            size="md"
+                            color={swatch}
+                            label={swatch}
+                            {@attach contextMenuTrigger({ onOpen: () => (contextSwatchColor = swatch) })}
+                        />
+                    {/each}
+                </ColorSwatchGroup>
+                <ContextMenuContent>
+                    <ContextMenuItem
+                        onSelect={() => {
+                            void copyToClipboard(contextSwatchColor);
                         }}
                     >
-                        <ButtonIcon icon={Plus} />
-                        <ButtonLabel>Add</ButtonLabel>
-                    </Button>
-                </div>
-
-                <ContextMenu size="sm">
-                    <ColorSwatchGroup
-                        columns={7}
-                        style="--cs-color-swatch-group-gap: 8px"
-                        aria-label={config.swatchesLabel}
-                    >
-                        {#each config.getSwatches() as swatch (swatch)}
-                            <ColorSwatch
-                                size="md"
-                                color={swatch}
-                                label={swatch}
-                                {@attach contextMenuTrigger({ onOpen: () => (contextSwatchColor = swatch) })}
-                            />
-                        {/each}
-                    </ColorSwatchGroup>
-                    <ContextMenuContent>
-                        <ContextMenuItem
-                            onSelect={() => {
-                                void copyToClipboard(contextSwatchColor);
-                            }}
-                        >
-                            <ContextMenuItemIcon icon={Copy} />
-                            <ContextMenuItemText>Copy color</ContextMenuItemText>
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                            disabled={config.getValue().toLowerCase() === contextSwatchColor.toLowerCase()}
-                            onSelect={() => {
-                                const current = config.getValue();
-                                const targetLower = contextSwatchColor.toLowerCase();
-                                const currentLower = current.toLowerCase();
-                                if (targetLower === currentLower) return;
-                                const swatches = config.getSwatches();
-                                const hasCurrentElsewhere = swatches.some((s) => s.toLowerCase() === currentLower);
-                                if (hasCurrentElsewhere) {
-                                    config.setSwatches(swatches.filter((s) => s !== contextSwatchColor));
-                                } else {
-                                    config.setSwatches(
-                                        swatches.map((s) => (s === contextSwatchColor ? current : s)),
-                                    );
-                                }
-                            }}
-                        >
-                            <ContextMenuItemIcon icon={RefreshCw} />
-                            <ContextMenuItemText>Replace with current</ContextMenuItemText>
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                            negative
-                            disabled={config.getSwatches().length <= 1}
-                            onSelect={() => {
-                                const swatches = config.getSwatches();
-                                if (swatches.length <= 1) return;
+                        <ContextMenuItemIcon icon={Copy} />
+                        <ContextMenuItemText>Copy color</ContextMenuItemText>
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        disabled={config.getValue().toLowerCase() === contextSwatchColor.toLowerCase()}
+                        onSelect={() => {
+                            const current = config.getValue();
+                            const targetLower = contextSwatchColor.toLowerCase();
+                            const currentLower = current.toLowerCase();
+                            if (targetLower === currentLower) return;
+                            const swatches = config.getSwatches();
+                            const hasCurrentElsewhere = swatches.some((s) => s.toLowerCase() === currentLower);
+                            if (hasCurrentElsewhere) {
                                 config.setSwatches(swatches.filter((s) => s !== contextSwatchColor));
-                            }}
-                        >
-                            <ContextMenuItemIcon icon={Trash2} />
-                            <ContextMenuItemText>Remove</ContextMenuItemText>
-                        </ContextMenuItem>
-                    </ContextMenuContent>
-                </ContextMenu>
-            </div>
+                            } else {
+                                config.setSwatches(
+                                    swatches.map((s) => (s === contextSwatchColor ? current : s)),
+                                );
+                            }
+                        }}
+                    >
+                        <ContextMenuItemIcon icon={RefreshCw} />
+                        <ContextMenuItemText>Replace with current</ContextMenuItemText>
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        negative
+                        disabled={config.getSwatches().length <= 1}
+                        onSelect={() => {
+                            const swatches = config.getSwatches();
+                            if (swatches.length <= 1) return;
+                            config.setSwatches(swatches.filter((s) => s !== contextSwatchColor));
+                        }}
+                    >
+                        <ContextMenuItemIcon icon={Trash2} />
+                        <ContextMenuItemText>Remove</ContextMenuItemText>
+                    </ContextMenuItem>
+                </ContextMenuContent>
+            </ContextMenu>
         </ColorPicker>
     </Popover>
 {/snippet}
