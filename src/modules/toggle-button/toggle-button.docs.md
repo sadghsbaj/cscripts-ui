@@ -31,7 +31,10 @@ exports:
 # ToggleButton
 
 ## Overview
-Two-state toggle button primitive (`<ToggleButton />`) supporting standalone `bind:pressed` / `onPressedChange` as well as coordinated `value` selection inside `<ToggleButtonGroup />`. Uses an animated `::after` pressed layer with spring pop-in and tactile squash physics.
+Two-state toggle button primitive (`<ToggleButton />`) supporting standalone `bind:pressed` / `onPressedChange` as well as coordinated `value` selection inside `<ToggleButtonGroup />`. Uses an animated `.cs-toggle-button-fill` (`<span>`) pressed layer with spring pop-in and tactile squash physics.
+
+## Usage Guidance
+- **`elevated`**: Use for toggle controls floating directly on `bg-canvas` (matching `Button variant="elevated"`). Inside `<ToggleButtonGroup />`, individual item shadows are automatically neutralized and consolidated onto the group capsule.
 
 ## API
 
@@ -40,7 +43,7 @@ Extends `Omit<HTMLButtonAttributes, "color" | "size" | "value">`. Always enforce
 
 | Prop | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `variant` | `ToggleButtonVariant` | Yes | — | Surface style: `"soft" \| "ghost"`. |
+| `variant` | `ToggleButtonVariant` | Yes | — | Surface style (`TOGGLE_BUTTON_VARIANTS`): `"soft" \| "ghost" \| "elevated"`. |
 | `color` | `ToggleButtonColor` | Yes | — | Pressed intent color: `"accent" \| "positive" \| "caution" \| "negative"`. |
 | `size` | `ToggleButtonSize` | Yes | — | T-shirt size: `"xs" \| "sm" \| "md" \| "lg" \| "xl"`. |
 | `iconOnly` | `boolean` | No | `undefined` | Locks square 1:1 proportions and scales direct icon children to 50%. |
@@ -79,9 +82,9 @@ Composite container (`<ToggleButtonGroup />`) that coordinates single- or multi-
 | `--cs-toggle-button-height` | Overrides the resolved button height. |
 | `--cs-toggle-button-fg` / `--cs-toggle-button-fg-hover` | Foreground color at rest and on hover. |
 | `--cs-toggle-button-bg` / `--cs-toggle-button-bg-hover` | Base surface fill at rest and on hover. |
-| `--cs-toggle-button-bg-pressed` / `--cs-toggle-button-bg-pressed-hover` | Pressed `::after` fill at rest and on hover. |
+| `--cs-toggle-button-bg-pressed` / `--cs-toggle-button-bg-pressed-hover` | Pressed `.cs-toggle-button-fill` layer fill at rest and on hover. |
 | `--cs-toggle-button-border` / `--cs-toggle-button-shadow` | Optional border/shadow hooks. |
-| `--cs-toggle-button-squash-active` | Pointer `:active` squash scale on `::after` (defaults to `--cs-squash-subtle`). |
+| `--cs-toggle-button-squash-active` | Pointer `:active` squash scale on `.cs-toggle-button-fill` (defaults to `--cs-squash-subtle`). |
 | `--cs-toggle-button-focus-scale-active` | Keyboard `:focus-visible:active` scale (defaults to `0.97`). |
 | `--cs-toggle-button-group-inner-radius` | Inner corner radius between adjacent grouped buttons (defaults to `var(--cs-radius-none)`). |
 | `--cs-toggle-button-group-separator-fg` | Separator line color (defaults to `var(--cs-color-base-soft-fg)`, or pressed item's soft fg when both neighbors are pressed). |
@@ -149,7 +152,8 @@ Composite container (`<ToggleButtonGroup />`) that coordinates single- or multi-
 ## Behavior & Quirks
 - **`$bindable()` pitfall (`pressed={fn()}` / `value={fn()}`):** Never pass a non-bound expression (e.g. `pressed={isSaved()}` or `value={getView()}`) to standalone `pressed` or group `value`. Because both are declared with `$bindable` and mutated internally on interaction, passing a non-bound expression passes `svelte-check` without warning but throws a Svelte 5 runtime error **even if `onPressedChange` / `onValueChange` is also passed**. When controlling state via a getter/setter or external store, you MUST use `bind:pressed={getter, setter}` / `bind:value={getter, setter}` (or `bind:value={() => current, () => {}}` paired with the change callback), or `bind:*={state}` for local `$state`. Neither component has a `defaultPressed` / `defaultValue` prop; for uncontrolled mode, omit the prop (optionally pairing with the change callback).
 - **Discriminated standalone vs group API:** TypeScript enforces `value` inside `<ToggleButtonGroup />` and `pressed` / `onPressedChange` standalone. In dev mode, mixing them logs a `console.warn`.
-- **Two-layer surface:** `::before` renders the unpressed `soft`/`ghost` plate while `::after` pops in (`scale(0.55)` → `scale(1)`) when `aria-pressed="true"`.
-- **Disabled active state:** Pressed disabled buttons use `--cs-color-disabled-fg-active` and `--cs-color-disabled-bg-active` so active selection remains legible without color saturation.
+- **Two-layer surface:** The button's base surface renders the unpressed `soft`/`ghost`/`elevated` plate while `<span class="cs-toggle-button-fill" aria-hidden="true"></span>` (`z-index: -1`) pops in (`scale(0.55)` → `scale(1)`) when `aria-pressed="true"`, leaving `::after` free for group seam separators.
+- **Disabled state:** Disabled `soft` and `elevated` buttons switch to `--cs-color-disabled-bg` with `shadow: none` (and `--cs-color-disabled-fg`), while disabled `ghost` buttons keep a transparent background. Pressed disabled buttons use `--cs-color-disabled-fg-active` and `--cs-color-disabled-bg-active` so active selection remains legible without color saturation.
+- **Elevated group capsule shadow:** When `<ToggleButtonGroup />` contains `variant="elevated"` items, individual item shadows are neutralized (`--cs-toggle-button-shadow: none`) and a single consolidated `--cs-shadow-elevated` is rendered over the group capsule via `::after` (cleared to `box-shadow: none` when `data-disabled`).
 - **Group press feedback:** Surface squash and focus scale (`--cs-toggle-button-squash-active: 1`, `--cs-toggle-button-focus-scale-active: 1`) are neutralized across all grouped items so adjacent edges stay flush, while inner content (`.cs-toggle-button-icon`, `.cs-toggle-button-label`) scales inward (`0.94`) on `:active:not(:disabled)`. Under `data-fixed-selection` (`type="single"` with `allowDeselect={false}`), clicking an already-selected item is a no-op and keeps inner-content `scale: 1` as well.
 - **Automatic hairline separators:** Hairline `::after` seam separators are rendered automatically between adjacent `<ToggleButton />` items (`.cs-toggle-button:not(:last-child)`). They fade out when either neighbor is pressed (`[aria-pressed="true"]`), active, or focused (`:focus-visible`)—and on `:hover` inside `@media (hover: hover)` so touch devices do not get sticky hover states—then re-emerge in the semantic soft foreground color (`--cs-color-<color>-soft-fg`) when *both* adjacent buttons are pressed in `type="multiple"`.

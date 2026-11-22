@@ -3,7 +3,7 @@
 
     import { ToggleButton, ToggleButtonLabel } from "./index.ts";
     import ToggleButtonGroup from "./ToggleButtonGroup.svelte";
-    import type { ToggleButtonGroupOrientation, ToggleButtonGroupType } from "./index.ts";
+    import type { ToggleButtonGroupOrientation, ToggleButtonGroupType, ToggleButtonVariant } from "./index.ts";
 
     interface TestToggleItem {
         value: string;
@@ -16,6 +16,7 @@
         value?: string | string[];
         allowDeselect?: boolean;
         orientation?: ToggleButtonGroupOrientation;
+        variant?: ToggleButtonVariant;
         disabled?: boolean;
         ref?: HTMLDivElement | null;
         onValueChange?: ((value: string) => void) | ((value: string | undefined) => void) | ((value: string[]) => void);
@@ -27,6 +28,7 @@
         value = $bindable(),
         allowDeselect = false,
         orientation = "horizontal",
+        variant = "soft",
         disabled = false,
         ref = $bindable(null),
         onValueChange,
@@ -38,7 +40,7 @@
     {#each items as item (item.value)}
         <ToggleButton
             value={item.value}
-            variant="soft"
+            {variant}
             color="accent"
             size="md"
             disabled={item.disabled}

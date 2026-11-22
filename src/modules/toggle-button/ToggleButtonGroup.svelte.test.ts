@@ -259,4 +259,146 @@ describe("ToggleButtonGroup Svelte 5 Component", () => {
 
         unmount(instance);
     });
+
+    test('variant="elevated" type="single" renders uniform data-variant="elevated" on children and supports selection', () => {
+        let value = $state<string | undefined>("left");
+        const onValueChange = vi.fn();
+
+        const instance = mount(ToggleButtonGroupTestHost, {
+            target: container,
+            props: {
+                type: "single",
+                variant: "elevated",
+                items: defaultItems,
+                get value() {
+                    return value;
+                },
+                set value(next: string | undefined) {
+                    value = next;
+                },
+                onValueChange,
+            },
+        });
+        flushSync();
+
+        const buttons = container.querySelectorAll<HTMLButtonElement>("button.cs-toggle-button");
+        expect(buttons.length).toBe(3);
+        for (const button of buttons) {
+            expect(button.dataset.variant).toBe("elevated");
+        }
+        expect(getButton("left")?.getAttribute("aria-pressed")).toBe("true");
+        expect(getButton("center")?.getAttribute("aria-pressed")).toBe("false");
+
+        getButton("center")?.click();
+        flushSync();
+        expect(value).toBe("center");
+        expect(getButton("left")?.getAttribute("aria-pressed")).toBe("false");
+        expect(getButton("center")?.getAttribute("aria-pressed")).toBe("true");
+        expect(onValueChange).toHaveBeenCalledTimes(1);
+        expect(onValueChange).toHaveBeenLastCalledWith("center");
+
+        unmount(instance);
+    });
+
+    test('variant="elevated" type="multiple" renders uniform data-variant="elevated" and toggles string[] selection', () => {
+        let value = $state<string[]>(["left"]);
+        const onValueChange = vi.fn();
+
+        const instance = mount(ToggleButtonGroupTestHost, {
+            target: container,
+            props: {
+                type: "multiple",
+                variant: "elevated",
+                items: defaultItems,
+                get value() {
+                    return value;
+                },
+                set value(next: string[]) {
+                    value = next;
+                },
+                onValueChange,
+            },
+        });
+        flushSync();
+
+        const buttons = container.querySelectorAll<HTMLButtonElement>("button.cs-toggle-button");
+        for (const button of buttons) {
+            expect(button.dataset.variant).toBe("elevated");
+        }
+        expect(getButton("left")?.getAttribute("aria-pressed")).toBe("true");
+        expect(getButton("right")?.getAttribute("aria-pressed")).toBe("false");
+
+        getButton("right")?.click();
+        flushSync();
+        expect(value).toEqual(["left", "right"]);
+        expect(getButton("right")?.getAttribute("aria-pressed")).toBe("true");
+        expect(onValueChange).toHaveBeenCalledTimes(1);
+        expect(onValueChange).toHaveBeenLastCalledWith(["left", "right"]);
+
+        getButton("left")?.click();
+        flushSync();
+        expect(value).toEqual(["right"]);
+        expect(getButton("left")?.getAttribute("aria-pressed")).toBe("false");
+        expect(onValueChange).toHaveBeenCalledTimes(2);
+        expect(onValueChange).toHaveBeenLastCalledWith(["right"]);
+
+        unmount(instance);
+    });
+
+    test('variant="elevated" disabled group sets data-disabled, disables children, and reacts to enabled transition', () => {
+        let value = $state<string | undefined>("left");
+        let disabled = $state(true);
+        const onValueChange = vi.fn();
+
+        const instance = mount(ToggleButtonGroupTestHost, {
+            target: container,
+            props: {
+                type: "single",
+                variant: "elevated",
+                items: defaultItems,
+                get disabled() {
+                    return disabled;
+                },
+                get value() {
+                    return value;
+                },
+                set value(next: string | undefined) {
+                    value = next;
+                },
+                onValueChange,
+            },
+        });
+        flushSync();
+
+        const group = getGroup();
+        expect(group?.getAttribute("aria-disabled")).toBe("true");
+        expect("disabled" in (group?.dataset ?? {})).toBe(true);
+
+        const buttons = container.querySelectorAll<HTMLButtonElement>("button.cs-toggle-button");
+        for (const button of buttons) {
+            expect(button.dataset.variant).toBe("elevated");
+            expect(button.hasAttribute("disabled")).toBe(true);
+        }
+
+        getButton("center")?.click();
+        flushSync();
+        expect(value).toBe("left");
+        expect(onValueChange).not.toHaveBeenCalled();
+
+        disabled = false;
+        flushSync();
+        expect(group?.getAttribute("aria-disabled")).toBeNull();
+        expect("disabled" in (group?.dataset ?? {})).toBe(false);
+        for (const button of buttons) {
+            expect(button.hasAttribute("disabled")).toBe(false);
+        }
+
+        getButton("center")?.click();
+        flushSync();
+        expect(value).toBe("center");
+        expect(onValueChange).toHaveBeenCalledTimes(1);
+        expect(onValueChange).toHaveBeenLastCalledWith("center");
+
+        unmount(instance);
+    });
 });

@@ -200,4 +200,96 @@ describe("ToggleButton Svelte 5 Component", () => {
 
         unmount(instance);
     });
+
+    test('variant="elevated" sets data-variant="elevated", toggles aria-pressed, and syncs bind:pressed', () => {
+        let pressed = $state(false);
+        const onPressedChange = vi.fn();
+
+        const instance = mount(ToggleButton, {
+            target: container,
+            props: {
+                variant: "elevated",
+                color: "accent",
+                size: "md",
+                get pressed() {
+                    return pressed;
+                },
+                set pressed(next: boolean) {
+                    pressed = next;
+                },
+                onPressedChange,
+            },
+        });
+        flushSync();
+
+        const button = container.querySelector<HTMLButtonElement>("button.cs-toggle-button");
+        expect(button?.dataset.variant).toBe("elevated");
+        expect(button?.getAttribute("aria-pressed")).toBe("false");
+
+        button?.click();
+        flushSync();
+        expect(pressed).toBe(true);
+        expect(button?.getAttribute("aria-pressed")).toBe("true");
+        expect(onPressedChange).toHaveBeenCalledTimes(1);
+        expect(onPressedChange).toHaveBeenLastCalledWith(true);
+
+        button?.click();
+        flushSync();
+        expect(pressed).toBe(false);
+        expect(button?.getAttribute("aria-pressed")).toBe("false");
+        expect(onPressedChange).toHaveBeenCalledTimes(2);
+        expect(onPressedChange).toHaveBeenLastCalledWith(false);
+
+        unmount(instance);
+    });
+
+    test('variant="elevated" respects disabled state and prevents toggling', () => {
+        let pressed = $state(false);
+        let disabled = $state(true);
+        const onPressedChange = vi.fn();
+
+        const instance = mount(ToggleButton, {
+            target: container,
+            props: {
+                variant: "elevated",
+                color: "accent",
+                size: "md",
+                get disabled() {
+                    return disabled;
+                },
+                get pressed() {
+                    return pressed;
+                },
+                set pressed(next: boolean) {
+                    pressed = next;
+                },
+                onPressedChange,
+            },
+        });
+        flushSync();
+
+        const button = container.querySelector<HTMLButtonElement>("button.cs-toggle-button");
+        expect(button?.dataset.variant).toBe("elevated");
+        expect(button?.disabled).toBe(true);
+        expect(button?.hasAttribute("disabled")).toBe(true);
+
+        button?.click();
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+        flushSync();
+        expect(pressed).toBe(false);
+        expect(button?.getAttribute("aria-pressed")).toBe("false");
+        expect(onPressedChange).not.toHaveBeenCalled();
+
+        disabled = false;
+        flushSync();
+        expect(button?.disabled).toBe(false);
+        button?.click();
+        flushSync();
+        expect(pressed).toBe(true);
+        expect(button?.getAttribute("aria-pressed")).toBe("true");
+        expect(onPressedChange).toHaveBeenCalledTimes(1);
+        expect(onPressedChange).toHaveBeenLastCalledWith(true);
+
+        unmount(instance);
+    });
 });

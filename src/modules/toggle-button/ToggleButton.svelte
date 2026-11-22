@@ -179,6 +179,19 @@
                 }
             }
 
+            &[data-variant="elevated"] {
+                --cs-toggle-button-bg: var(--cs-color-elevated);
+                --cs-toggle-button-bg-hover: var(--cs-color-elevated-hover);
+                --cs-toggle-button-shadow: var(--cs-shadow-elevated);
+                --cs-toggle-button-shadow-hover: var(--cs-shadow-elevated-hover);
+                --cs-toggle-button-shadow-active: var(--cs-shadow-elevated);
+
+                &[aria-pressed="false"]:not(:disabled, [aria-disabled="true"], [data-disabled]) {
+                    --cs-toggle-button-fg: var(--cs-color-text-strong);
+                    --cs-toggle-button-fg-hover: var(--cs-color-text-strong);
+                }
+            }
+
             &[aria-pressed="false"] {
                 --cs-toggle-button-fg: var(--cs-color-base-soft-fg);
                 --cs-toggle-button-fg-hover: var(--cs-color-base-soft-fg-hover);
@@ -198,18 +211,27 @@
 
             &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
                 --cs-toggle-button-fg: var(--cs-color-disabled-fg);
+                --cs-toggle-button-fg-hover: var(--cs-color-disabled-fg);
 
-                &[data-variant="soft"] {
+                &[data-variant="soft"],
+                &[data-variant="elevated"] {
                     --cs-toggle-button-bg: var(--cs-color-disabled-bg);
+                    --cs-toggle-button-bg-hover: var(--cs-color-disabled-bg);
+                    --cs-toggle-button-shadow: none;
+                    --cs-toggle-button-shadow-hover: none;
+                    --cs-toggle-button-shadow-active: none;
                 }
 
                 &[data-variant="ghost"] {
                     --cs-toggle-button-bg: transparent;
+                    --cs-toggle-button-bg-hover: transparent;
                 }
 
                 &[aria-pressed="true"] {
                     --cs-toggle-button-fg: var(--cs-color-disabled-fg-active);
+                    --cs-toggle-button-fg-hover: var(--cs-color-disabled-fg-active);
                     --cs-toggle-button-bg-pressed: var(--cs-color-disabled-bg-active);
+                    --cs-toggle-button-bg-pressed-hover: var(--cs-color-disabled-bg-active);
                 }
             }
         }

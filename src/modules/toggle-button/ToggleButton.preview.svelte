@@ -20,6 +20,7 @@
     let basicPressed = $state(false);
     let softVariantPressed = $state(true);
     let ghostVariantPressed = $state(true);
+    let elevatedVariantPressed = $state(true);
     let accentPressed = $state(true);
     let positivePressed = $state(true);
     let cautionPressed = $state(true);
@@ -27,6 +28,7 @@
     let iconPressed = $state(true);
     let groupSingleValue = $state<string | undefined>("day");
     let groupGhostValue = $state("list");
+    let groupElevatedValue = $state("list");
     let groupToolbarValues = $state<string[]>(["bold"]);
 
     const closeScript = ["</", "script>"].join("");
@@ -47,7 +49,12 @@ ${closeScript}
 </ToggleButton>
 <ToggleButton variant="ghost" color="accent" size="md" bind:pressed={ghostPressed}>
     <ToggleButtonLabel>Ghost</ToggleButtonLabel>
-</ToggleButton>`;
+</ToggleButton>
+<div class="rounded-2xl squircle-soft bg-canvas p-4">
+    <ToggleButton variant="elevated" color="accent" size="md" bind:pressed={elevatedPressed}>
+        <ToggleButtonLabel>Elevated</ToggleButtonLabel>
+    </ToggleButton>
+</div>`;
 
     const colorsCode = `<ToggleButton variant="soft" color="accent" size="md" bind:pressed>
     <ToggleButtonLabel>Accent</ToggleButtonLabel>
@@ -96,6 +103,12 @@ ${closeScript}
 </ToggleButton>
 <ToggleButton variant="ghost" color="accent" size="md" pressed disabled>
     <ToggleButtonLabel>Ghost (Pressed)</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="elevated" color="accent" size="md" disabled>
+    <ToggleButtonLabel>Elevated</ToggleButtonLabel>
+</ToggleButton>
+<ToggleButton variant="elevated" color="accent" size="md" pressed disabled>
+    <ToggleButtonLabel>Elevated (Pressed)</ToggleButtonLabel>
 </ToggleButton>`;
 
     const groupSingleCode = `<script lang="ts">
@@ -155,7 +168,7 @@ ${closeScript}
     </ToggleButton>
 </ToggleButtonGroup>`;
 
-    const groupGhostCode = `<ToggleButtonGroup type="single" bind:value orientation="horizontal">
+    const groupGhostCode = `<ToggleButtonGroup type="single" bind:value={groupGhostValue} orientation="horizontal">
     <ToggleButton value="list" size="md" variant="ghost" color="accent">
         <ToggleButtonLabel>List</ToggleButtonLabel>
     </ToggleButton>
@@ -163,6 +176,17 @@ ${closeScript}
         <ToggleButtonLabel>Grid</ToggleButtonLabel>
     </ToggleButton>
 </ToggleButtonGroup>`;
+
+    const groupElevatedCode = `<div class="rounded-2xl squircle-soft bg-canvas p-4">
+    <ToggleButtonGroup type="single" bind:value={groupElevatedValue} orientation="horizontal">
+        <ToggleButton value="list" size="md" variant="elevated" color="accent">
+            <ToggleButtonLabel>List</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton value="grid" size="md" variant="elevated" color="accent">
+            <ToggleButtonLabel>Grid</ToggleButtonLabel>
+        </ToggleButton>
+    </ToggleButtonGroup>
+</div>`;
     /* eslint-enable unicorn/no-incorrect-template-string-interpolation */
 
     const sizeLabels: Record<(typeof TOGGLE_BUTTON_SIZES)[number], string> = {
@@ -184,7 +208,7 @@ ${closeScript}
 <div class="flex flex-col gap-10">
     <PreviewHeader
         title="ToggleButton"
-        description="A pressable two-state button supporting soft and ghost variants with semantic colors."
+        description="A pressable two-state button supporting soft, ghost, and elevated variants with semantic colors."
     />
 
     <PreviewSection title="Basic" code={basicCode}>
@@ -195,7 +219,7 @@ ${closeScript}
 
     <PreviewSection
         title="Variants"
-        description="Compare soft and ghost toggle surfaces interactively."
+        description="Compare soft, ghost, and elevated toggle surfaces interactively."
         code={variantsCode}
     >
         <ToggleButton variant="soft" color="accent" size="md" bind:pressed={softVariantPressed}>
@@ -204,6 +228,11 @@ ${closeScript}
         <ToggleButton variant="ghost" color="accent" size="md" bind:pressed={ghostVariantPressed}>
             <ToggleButtonLabel>Ghost</ToggleButtonLabel>
         </ToggleButton>
+        <div class="rounded-2xl squircle-soft bg-canvas p-4">
+            <ToggleButton variant="elevated" color="accent" size="md" bind:pressed={elevatedVariantPressed}>
+                <ToggleButtonLabel>Elevated</ToggleButtonLabel>
+            </ToggleButton>
+        </div>
     </PreviewSection>
 
     <PreviewSection
@@ -269,6 +298,12 @@ ${closeScript}
         </ToggleButton>
         <ToggleButton variant="ghost" color="accent" size="md" pressed disabled>
             <ToggleButtonLabel>Ghost (Pressed)</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="elevated" color="accent" size="md" disabled>
+            <ToggleButtonLabel>Elevated</ToggleButtonLabel>
+        </ToggleButton>
+        <ToggleButton variant="elevated" color="accent" size="md" pressed disabled>
+            <ToggleButtonLabel>Elevated (Pressed)</ToggleButtonLabel>
         </ToggleButton>
     </PreviewSection>
 
@@ -344,5 +379,18 @@ ${closeScript}
                 <ToggleButtonLabel>Grid</ToggleButtonLabel>
             </ToggleButton>
         </ToggleButtonGroup>
+    </PreviewSection>
+
+    <PreviewSection title="Group (Elevated Variant)" code={groupElevatedCode}>
+        <div class="rounded-2xl squircle-soft bg-canvas p-4">
+            <ToggleButtonGroup type="single" bind:value={groupElevatedValue} orientation="horizontal">
+                <ToggleButton value="list" size="md" variant="elevated" color="accent">
+                    <ToggleButtonLabel>List</ToggleButtonLabel>
+                </ToggleButton>
+                <ToggleButton value="grid" size="md" variant="elevated" color="accent">
+                    <ToggleButtonLabel>Grid</ToggleButtonLabel>
+                </ToggleButton>
+            </ToggleButtonGroup>
+        </div>
     </PreviewSection>
 </div>

@@ -8,7 +8,7 @@ export { default as ToggleButtonIcon } from "./ToggleButtonIcon.svelte";
 
 export const TOGGLE_BUTTON_COLORS = ["accent", "positive", "caution", "negative"] as const;
 export const TOGGLE_BUTTON_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
-export const TOGGLE_BUTTON_VARIANTS = ["soft", "ghost"] as const;
+export const TOGGLE_BUTTON_VARIANTS = ["soft", "ghost", "elevated"] as const;
 
 export type ToggleButtonColor = (typeof TOGGLE_BUTTON_COLORS)[number];
 export type ToggleButtonSize = (typeof TOGGLE_BUTTON_SIZES)[number];

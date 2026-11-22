@@ -193,6 +193,35 @@
                     translate: 0 50%;
                 }
             }
+
+            &:has(> :global(.cs-toggle-button[data-variant="elevated"])) {
+                position: relative;
+
+                &::after {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    border-radius: inherit;
+                    corner-shape: inherit;
+                    pointer-events: none;
+                    z-index: 2;
+                    box-shadow: var(--cs-shadow-elevated);
+                }
+
+                &[data-disabled]::after {
+                    box-shadow: none;
+                }
+
+                & > :global(.cs-toggle-button:focus-visible) {
+                    z-index: 3;
+                }
+            }
+
+            & > :global(.cs-toggle-button[data-variant="elevated"]) {
+                --cs-toggle-button-shadow: none;
+                --cs-toggle-button-shadow-hover: none;
+                --cs-toggle-button-shadow-active: none;
+            }
         }
     }
 </style>
