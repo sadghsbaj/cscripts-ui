@@ -8,6 +8,7 @@ import {
     getElementName,
     getImportedIconNames,
     getLiteralStringValue,
+    getRelativeFilename,
     hasAccessibleLabel,
     hasDescendantElement,
     hasTooltipAttachment,
@@ -27,9 +28,46 @@ function parseSnippet(code: string): {
 }
 
 describe("utils AST helpers", () => {
+    describe("getRelativeFilename", () => {
+        it("normalizes absolute, relative, and Windows paths against cwd", () => {
+            expect(
+                getRelativeFilename({
+                    filename: "/repo/src/modules/button/Button.svelte",
+                    cwd: "/repo",
+                } as Rule.RuleContext)
+            ).toBe("src/modules/button/Button.svelte");
+
+            expect(
+                getRelativeFilename({
+                    filename: String.raw`C:\repo\src\modules\button\Button.svelte`,
+                    cwd: String.raw`C:\repo`,
+                } as Rule.RuleContext)
+            ).toBe("src/modules/button/Button.svelte");
+
+            expect(
+                getRelativeFilename({
+                    filename: "./src/Component.svelte",
+                    cwd: "/repo",
+                } as Rule.RuleContext)
+            ).toBe("src/Component.svelte");
+
+            expect(
+                getRelativeFilename({
+                    filename: undefined,
+                } as unknown as Rule.RuleContext)
+            ).toBe("");
+        });
+    });
+
     describe("shouldSkipFile", () => {
         it("identifies files that should be skipped", () => {
             expect(shouldSkipFile({ filename: "src/eslint/rules/button.ts" } as Rule.RuleContext)).toBe(true);
+            expect(
+                shouldSkipFile({
+                    filename: "/repo/src/eslint/rules/button.ts",
+                    cwd: "/repo",
+                } as Rule.RuleContext)
+            ).toBe(true);
             expect(shouldSkipFile({ filename: "src/button.test.ts" } as Rule.RuleContext)).toBe(true);
             expect(shouldSkipFile({ filename: "src/button.spec.ts" } as Rule.RuleContext)).toBe(true);
             expect(shouldSkipFile({ filename: "src/svelte/Button.svelte" } as Rule.RuleContext)).toBe(false);

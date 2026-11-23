@@ -45,11 +45,6 @@ export const selectStructureRule: Rule.RuleModule = {
     create(context: Rule.RuleContext): Rule.RuleListener {
         if (shouldSkipFile(context)) return {};
 
-        const normalizedFilename = (context.filename ?? "").replaceAll("\\", "/");
-        if (normalizedFilename.endsWith("modules/select/SelectTrigger.svelte")) {
-            return {};
-        }
-
         return {
             SvelteElement(rawNode: Rule.Node): void {
                 const node = rawNode as unknown as AST.SvelteElement;
@@ -73,11 +68,6 @@ export const selectItemTextRule: Rule.RuleModule = {
     },
     create(context: Rule.RuleContext): Rule.RuleListener {
         if (shouldSkipFile(context)) return {};
-
-        const normalizedFilename = (context.filename ?? "").replaceAll("\\", "/");
-        if (normalizedFilename.endsWith("modules/select/SelectTrigger.svelte")) {
-            return {};
-        }
 
         return {
             SvelteElement(rawNode: Rule.Node): void {

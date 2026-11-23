@@ -4,6 +4,8 @@
 
 import type { Linter, Rule } from "eslint";
 
+import { getRelativeFilename } from "./utils.ts";
+
 export const attachmentCssParser = {
     meta: {
         name: "attachment-css-parser",
@@ -44,8 +46,8 @@ export const attachmentLayerRule: Rule.RuleModule = {
     },
 
     create(context: Rule.RuleContext): Rule.RuleListener {
-        const filename = context.filename ?? "";
-        if (!filename.includes(".attach.css") || !filename.includes("modules/")) return {};
+        const rel = getRelativeFilename(context);
+        if (!rel.startsWith("src/modules/") || !rel.endsWith(".attach.css")) return {};
 
         return {
             Program(node: unknown): void {
@@ -62,7 +64,7 @@ export const attachmentLayerRule: Rule.RuleModule = {
 };
 
 export const attachmentLayersConfig: Linter.Config = {
-    files: ["**/*.attach.css"],
+    files: ["src/modules/**/*.attach.css"],
     languageOptions: {
         parser: attachmentCssParser,
     },

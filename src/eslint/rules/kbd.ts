@@ -172,11 +172,6 @@ export const kbdNoRawKbdRule: Rule.RuleModule = {
     create(context: Rule.RuleContext): Rule.RuleListener {
         if (shouldSkipFile(context)) return {};
 
-        const normalizedFilename = (context.filename ?? "").replaceAll("\\", "/");
-        if (normalizedFilename.endsWith("modules/kbd/Kbd.svelte")) {
-            return {};
-        }
-
         return {
             SvelteElement(rawNode: Rule.Node): void {
                 const node = rawNode as unknown as AST.SvelteElement;

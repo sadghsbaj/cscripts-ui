@@ -17,7 +17,7 @@ import ts from "typescript-eslint";
 
 import { baseRulesConfig } from "./base-rules.ts";
 import { ignoresConfig } from "./ignores.ts";
-import { customRulesConfigs } from "./rules/index.ts";
+import { libraryRulesConfigs, sharedRulesConfigs } from "./rules/index.ts";
 import { shortcutsConfig } from "./shortcuts.ts";
 import { svelteConfig } from "./svelte.ts";
 import { unicornConfig } from "./unicorn.ts";
@@ -39,7 +39,7 @@ export const csEslint = defineConfig([
 
     ...baseRulesConfig,
     shortcutsConfig,
-    ...customRulesConfigs,
+    ...sharedRulesConfigs,
     ...unicornConfig,
     ...unocssConfig,
 
@@ -56,6 +56,55 @@ export const csEslint = defineConfig([
 
     // Must stay last: disables rules that conflict with Prettier.
     prettier,
+]);
+
+export const csLibraryEslint = defineConfig([
+    ...csEslint,
+    ...libraryRulesConfigs,
+    {
+        files: ["src/uno/shortcuts/**"],
+        rules: {
+            "shortcuts/enforce-shortcuts": "off",
+        },
+    },
+    {
+        files: ["src/uno/dots/**"],
+        rules: {
+            "unicode-dots/no-unicode-dots": "off",
+        },
+    },
+    {
+        files: ["src/modules/browser-storage/**"],
+        rules: {
+            "browser-storage/no-native-storage": "off",
+            "browser-storage/require-storage-prefix": "off",
+        },
+    },
+    {
+        files: ["template/src/main.ts"],
+        rules: {
+            "browser-storage/require-storage-prefix": "off",
+        },
+    },
+    {
+        files: ["src/modules/clipboard/clipboard.utils.ts"],
+        rules: {
+            "clipboard/no-native-clipboard": "off",
+        },
+    },
+    {
+        files: ["src/modules/select/SelectTrigger.svelte"],
+        rules: {
+            "select/require-structure": "off",
+            "select/require-item-text": "off",
+        },
+    },
+    {
+        files: ["src/modules/kbd/Kbd.svelte"],
+        rules: {
+            "kbd/no-raw-kbd": "off",
+        },
+    },
 ]);
 
 export default csEslint;

@@ -1,6 +1,6 @@
 import * as svelteParser from "svelte-eslint-parser";
-import { describe, it } from "vitest";
-import { RuleTester } from "eslint";
+import { describe, expect, it } from "vitest";
+import { Linter, RuleTester } from "eslint";
 
 import { componentLayersRule } from "../component-layers.ts";
 
@@ -93,6 +93,49 @@ describe("component-layers ESLint rules", () => {
                     },
                 ],
             });
+        });
+
+        it("does not report when parent directory above cwd contains 'work'", () => {
+            const ruleConfig = {
+                files: ["**/*.svelte"],
+                languageOptions: { parser: svelteParser },
+                plugins: {
+                    "component-layers": {
+                        rules: {
+                            "valid-style-layer": componentLayersRule,
+                        },
+                    },
+                },
+                rules: {
+                    "component-layers/valid-style-layer": "error" as const,
+                },
+            };
+
+            const posixLinter = new Linter({ cwd: "/home/user/work/my-app" });
+            const posixMessages = posixLinter.verify(
+                `
+<div></div>
+<style>
+    div { color: red; }
+</style>
+`,
+                [ruleConfig],
+                "/home/user/work/my-app/src/App.svelte"
+            );
+            expect(posixMessages).toEqual([]);
+
+            const windowsLinter = new Linter({ cwd: String.raw`C:\work\my-app` });
+            const windowsMessages = windowsLinter.verify(
+                `
+<div></div>
+<style>
+    div { color: red; }
+</style>
+`,
+                [ruleConfig],
+                String.raw`C:\work\my-app\src\App.svelte`
+            );
+            expect(windowsMessages).toEqual([]);
         });
     });
 });

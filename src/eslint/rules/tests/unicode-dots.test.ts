@@ -1,8 +1,8 @@
 import * as svelteParser from "svelte-eslint-parser";
-import { describe, it } from "vitest";
-import { RuleTester } from "eslint";
+import { describe, expect, it } from "vitest";
+import { Linter, RuleTester } from "eslint";
 
-import { unicodeDotsRule } from "../unicode-dots.ts";
+import { unicodeDotsConfig, unicodeDotsRule } from "../unicode-dots.ts";
 
 const ruleTester = new RuleTester({
     languageOptions: {
@@ -60,6 +60,22 @@ describe("unicode-dots ESLint rules", () => {
                     },
                 ],
             });
+        });
+
+        it("still reports forbidden dots when parent directory above cwd contains 'eslint'", () => {
+            const linter = new Linter({ cwd: "/home/user/eslint/my-app" });
+            const messages = linter.verify(
+                "<span>Item 1 · Item 2</span>",
+                [
+                    {
+                        languageOptions: { parser: svelteParser },
+                    },
+                    unicodeDotsConfig,
+                ],
+                "/home/user/eslint/my-app/src/App.svelte"
+            );
+            expect(messages).toHaveLength(1);
+            expect(messages[0]?.ruleId).toBe("unicode-dots/no-unicode-dots");
         });
     });
 });

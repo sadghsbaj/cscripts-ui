@@ -15,11 +15,6 @@ const CLIPBOARD_EXEC_COMMANDS = new Set(["copy", "cut", "paste"]);
 const RAW_COPY_ICON_NAMES = new Set(["Copy", "ClipboardCopy", "ClipboardCheck"]);
 const RAW_PASTE_ICON_NAMES = new Set(["Clipboard", "ClipboardPaste"]);
 
-function isClipboardUtilsFile(context: Rule.RuleContext): boolean {
-    const filename = (context.filename ?? "").replaceAll("\\", "/");
-    return filename.endsWith("/clipboard/clipboard.utils.ts") || filename === "clipboard.utils.ts";
-}
-
 export const noNativeClipboardRule: Rule.RuleModule = {
     meta: {
         type: "problem",
@@ -37,7 +32,7 @@ export const noNativeClipboardRule: Rule.RuleModule = {
     },
 
     create(context: Rule.RuleContext): Rule.RuleListener {
-        if (shouldSkipFile(context) || isClipboardUtilsFile(context)) return {};
+        if (shouldSkipFile(context)) return {};
 
         return {
             MemberExpression(node: Rule.Node): void {

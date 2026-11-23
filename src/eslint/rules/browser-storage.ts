@@ -9,24 +9,10 @@
 
 import type { Linter, Rule } from "eslint";
 
-import { shouldSkipFile } from "./utils.ts";
-
-function isBrowserStorageInternalFile(context: Rule.RuleContext): boolean {
-    const filename = (context.filename ?? "").replaceAll("\\", "/");
-    return (
-        filename.includes("/modules/browser-storage/") ||
-        filename.startsWith("src/modules/browser-storage/")
-    );
-}
-
-function isTemplateMainFile(context: Rule.RuleContext): boolean {
-    const filename = (context.filename ?? "").replaceAll("\\", "/");
-    return filename.endsWith("/template/src/main.ts") || filename === "template/src/main.ts";
-}
+import { getRelativeFilename, shouldSkipFile } from "./utils.ts";
 
 function isMainEntryFile(context: Rule.RuleContext): boolean {
-    const filename = (context.filename ?? "").replaceAll("\\", "/");
-    return filename.endsWith("/main.ts") || filename === "main.ts";
+    return getRelativeFilename(context) === "src/main.ts";
 }
 
 export const noNativeStorageRule: Rule.RuleModule = {
@@ -46,7 +32,7 @@ export const noNativeStorageRule: Rule.RuleModule = {
     },
 
     create(context: Rule.RuleContext): Rule.RuleListener {
-        if (shouldSkipFile(context) || isBrowserStorageInternalFile(context)) return {};
+        if (shouldSkipFile(context)) return {};
 
         return {
             MemberExpression(node: Rule.Node): void {
@@ -119,9 +105,7 @@ export const requireStoragePrefixRule: Rule.RuleModule = {
     },
 
     create(context: Rule.RuleContext): Rule.RuleListener {
-        if (shouldSkipFile(context) || isBrowserStorageInternalFile(context) || isTemplateMainFile(context)) {
-            return {};
-        }
+        if (shouldSkipFile(context)) return {};
 
         const isMain = isMainEntryFile(context);
         let hasConfigureCall = false;

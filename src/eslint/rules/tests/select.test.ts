@@ -60,11 +60,6 @@ describe("select ESLint rules", () => {
                         ].join("\n"),
                         filename: "src/Component.svelte",
                     },
-                    {
-                        // Skips SelectTrigger.svelte internal implementation
-                        code: "<SelectValue />",
-                        filename: "src/modules/select/SelectTrigger.svelte",
-                    },
                 ],
                 invalid: [
                     {

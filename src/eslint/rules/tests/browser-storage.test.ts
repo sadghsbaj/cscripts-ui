@@ -29,11 +29,6 @@ describe("browser-storage ESLint rules", () => {
                         code: 'import { getLocalStorage, setLocalStorage } from "cs/svelte/browser-storage"; setLocalStorage("filter", "all"); const v = getLocalStorage("filter");',
                         filename: "src/feature.ts",
                     },
-                    {
-                        // Allowed inside browser-storage primitive implementation itself
-                        code: 'window.localStorage.setItem("k", "v"); window.sessionStorage.getItem("k");',
-                        filename: "src/modules/browser-storage/storage-core.internal.ts",
-                    },
                 ],
                 invalid: [
                     {
@@ -89,11 +84,6 @@ describe("browser-storage ESLint rules", () => {
                     {
                         code: 'import { configureStoragePrefix } from "cs/svelte/browser-storage"; configureStoragePrefix("holzanalysen");',
                         filename: "src/main.ts",
-                    },
-                    {
-                        // Allowed in template/src/main.ts inside cscripts-ui before being scaffolded into a project
-                        code: 'import { configureStoragePrefix } from "cs/svelte/browser-storage"; configureStoragePrefix("");',
-                        filename: "template/src/main.ts",
                     },
                     {
                         // Regular modules do not need to call configureStoragePrefix

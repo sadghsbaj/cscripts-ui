@@ -4,6 +4,8 @@
 
 import type { Linter, Rule } from "eslint";
 
+import { shouldSkipFile } from "./utils.ts";
+
 export const FORBIDDEN_DOTS_REGEX = /[\u{B7}\u{2022}\u{2027}\u{2219}\u{22C5}]/u;
 
 export const unicodeDotsRule: Rule.RuleModule = {
@@ -19,17 +21,7 @@ export const unicodeDotsRule: Rule.RuleModule = {
         schema: [],
     },
     create(context: Rule.RuleContext): Rule.RuleListener {
-        const filename = context.filename ?? "";
-
-        // Skip rule definition, dot definition, and test files
-        if (
-            filename.includes("uno/dots") ||
-            filename.includes("eslint/") ||
-            filename.endsWith(".test.ts") ||
-            filename.endsWith(".spec.ts")
-        ) {
-            return {};
-        }
+        if (shouldSkipFile(context)) return {};
 
         function checkNode(node: Rule.Node, text: string | null | undefined): void {
             if (!text) return;

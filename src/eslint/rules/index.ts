@@ -82,7 +82,7 @@ export {
 export { FORBIDDEN_DOTS_REGEX, unicodeDotsConfig, unicodeDotsRule } from "./unicode-dots.ts";
 export * from "./utils.ts";
 
-export const customRulesConfigs: Linter.Config[] = [
+export const sharedRulesConfigs: Linter.Config[] = [
     unicodeDotsConfig,
     browserStorageConfig,
     badgeConfig,
@@ -100,13 +100,15 @@ export const customRulesConfigs: Linter.Config[] = [
     scrollAreaConfig,
     segmentedControlConfig,
     selectConfig,
-    componentLayersConfig,
     ...cssSafetyConfigs,
     ...kbdConfigs,
     kpiCardConfig,
     numberMorphConfig,
     numberStepperConfig,
-    attachmentLayersConfig,
     overlayConfig,
     titleAttributeConfig,
 ];
+
+export const libraryRulesConfigs: Linter.Config[] = [componentLayersConfig, attachmentLayersConfig];
+
+export const customRulesConfigs: Linter.Config[] = [...sharedRulesConfigs, ...libraryRulesConfigs];

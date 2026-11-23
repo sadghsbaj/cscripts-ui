@@ -1,5 +1,5 @@
-import { describe, it } from "vitest";
-import { RuleTester } from "eslint";
+import { describe, expect, it } from "vitest";
+import { Linter, RuleTester } from "eslint";
 
 import { attachmentCssParser, attachmentLayerRule } from "../attachment-layers.ts";
 
@@ -57,6 +57,35 @@ describe("attachment-layers ESLint rules", () => {
                     },
                 ],
             });
+        });
+
+        it("does not report when parent directory above cwd contains 'modules'", () => {
+            const linter = new Linter({ cwd: "/home/user/modules/my-app" });
+            const messages = linter.verify(
+                `
+.cs-fade-mask {
+    mask-repeat: no-repeat;
+}
+`,
+                [
+                    {
+                        files: ["**/*.attach.css"],
+                        languageOptions: { parser: attachmentCssParser },
+                        plugins: {
+                            "attachment-layers": {
+                                rules: {
+                                    "require-attachment-layer": attachmentLayerRule,
+                                },
+                            },
+                        },
+                        rules: {
+                            "attachment-layers/require-attachment-layer": "error",
+                        },
+                    },
+                ],
+                "/home/user/modules/my-app/src/foo.attach.css"
+            );
+            expect(messages).toEqual([]);
         });
     });
 });

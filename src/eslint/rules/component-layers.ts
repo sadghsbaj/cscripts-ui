@@ -7,7 +7,7 @@
 import type { AST } from "svelte-eslint-parser";
 import type { Linter, Rule } from "eslint";
 
-import { shouldSkipFile } from "./utils.ts";
+import { getRelativeFilename, shouldSkipFile } from "./utils.ts";
 
 export const componentLayersRule: Rule.RuleModule = {
     meta: {
@@ -28,15 +28,12 @@ export const componentLayersRule: Rule.RuleModule = {
     },
 
     create(context: Rule.RuleContext): Rule.RuleListener {
-        const filename = context.filename ?? "";
-        if (
-            (!filename.includes("modules/") && !filename.includes("work/")) ||
-            filename.endsWith(".preview.svelte")
-        ) {
+        if (shouldSkipFile(context)) return {};
+
+        const rel = getRelativeFilename(context);
+        if ((!rel.startsWith("src/modules/") && !rel.startsWith("src/work/")) || rel.endsWith(".preview.svelte")) {
             return {};
         }
-
-        if (shouldSkipFile(context)) return {};
 
         return {
             SvelteStyleElement(rawNode: Rule.Node): void {
@@ -78,7 +75,8 @@ export const componentLayersRule: Rule.RuleModule = {
 };
 
 export const componentLayersConfig: Linter.Config = {
-    files: ["**/*.svelte"],
+    files: ["src/modules/**/*.svelte", "src/work/**/*.svelte"],
+    ignores: ["**/*.preview.svelte", "**/*.test.svelte"],
     plugins: {
         "component-layers": {
             rules: {

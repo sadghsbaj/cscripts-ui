@@ -2,15 +2,33 @@
  * Shared AST helpers for custom Svelte component ESLint rules.
  */
 
+import path from "node:path";
 import type { AST } from "svelte-eslint-parser";
 import type { Rule } from "eslint";
+
+/**
+ * Returns the file path normalized with forward slashes and relative to `context.cwd` when possible.
+ */
+export function getRelativeFilename(context: Rule.RuleContext): string {
+    const normalizedFilename = (context.filename ?? "").replaceAll("\\", "/");
+    if (!normalizedFilename) return "";
+
+    if (normalizedFilename.startsWith("/") || /^[A-Za-z]:\//.test(normalizedFilename)) {
+        const normalizedCwd = (context.cwd ?? "").replaceAll("\\", "/");
+        if (normalizedCwd) {
+            return path.posix.relative(normalizedCwd, normalizedFilename);
+        }
+    }
+
+    return normalizedFilename.replace(/^\.\//, "");
+}
 
 /**
  * Determines whether a file should be ignored by custom component rules (tests, lint internals).
  */
 export function shouldSkipFile(context: Rule.RuleContext): boolean {
-    const filename = context.filename ?? "";
-    return filename.includes("eslint/") || filename.endsWith(".test.ts") || filename.endsWith(".spec.ts");
+    const rel = getRelativeFilename(context);
+    return rel.startsWith("src/eslint/") || rel.endsWith(".test.ts") || rel.endsWith(".spec.ts");
 }
 
 /**

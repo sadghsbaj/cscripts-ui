@@ -77,11 +77,6 @@ export const enforceShortcutsRule: Rule.RuleModule = {
         schema: [],
     },
     create(context: Rule.RuleContext): Rule.RuleListener {
-        const filename = context.filename ?? "";
-        if (filename.replaceAll("\\", "/").includes("uno/shortcuts/")) {
-            return {};
-        }
-
         return {
             SvelteLiteral(node: Rule.Node & { value?: string }): void {
                 checkAndReport(node.value, node, context);

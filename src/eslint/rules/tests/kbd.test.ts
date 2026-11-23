@@ -322,10 +322,6 @@ describe("kbd ESLint rules", () => {
                     },
                     {
                         code: "<kbd>K</kbd>",
-                        filename: "src/modules/kbd/Kbd.svelte",
-                    },
-                    {
-                        code: "<kbd>K</kbd>",
                         filename: "src/eslint/Example.svelte",
                     },
                 ],
