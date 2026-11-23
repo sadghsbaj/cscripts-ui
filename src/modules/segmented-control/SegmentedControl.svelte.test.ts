@@ -590,6 +590,171 @@ describe("SegmentedControl Svelte 5 Component", () => {
             unmount(instance);
         });
 
+        function mockRaf() {
+            let nextId = 1;
+            const callbacks = new Map<number, FrameRequestCallback>();
+            vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+                const id = nextId++;
+                callbacks.set(id, cb);
+                return id;
+            });
+            vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+                callbacks.delete(id);
+            });
+            return {
+                flushNext(timestamp = 16) {
+                    const first = callbacks.entries().next();
+                    if (first.done) throw new Error("Expected a pending requestAnimationFrame callback");
+                    const [id, cb] = first.value;
+                    callbacks.delete(id);
+                    cb(timestamp);
+                    flushSync();
+                },
+            };
+        }
+
+        test("initial mount with value sets data-active immediately, and enables data-ready and data-slide only after requestAnimationFrame", () => {
+            const raf = mockRaf();
+
+            const instance = mount(SegmentedControlTestHost, {
+                target: container,
+                props: {
+                    value: "week",
+                    items: defaultItems,
+                },
+            });
+            flushSync();
+
+            const indicator = getIndicator();
+            expect("active" in indicator.dataset).toBe(true);
+            expect("ready" in indicator.dataset).toBe(false);
+            expect("slide" in indicator.dataset).toBe(false);
+
+            raf.flushNext();
+            expect("active" in indicator.dataset).toBe(true);
+            expect("ready" in indicator.dataset).toBe(true);
+            expect("slide" in indicator.dataset).toBe(true);
+
+            unmount(instance);
+        });
+
+        test("initial unselected state (undefined and null) leaves indicator without data-active or data-slide", () => {
+            for (const initialValue of [undefined, null as unknown as string | undefined]) {
+                const raf = mockRaf();
+                const instance = mount(SegmentedControlTestHost, {
+                    target: container,
+                    props: {
+                        value: initialValue,
+                        items: defaultItems,
+                    },
+                });
+                flushSync();
+
+                const indicator = getIndicator();
+                expect("active" in indicator.dataset).toBe(false);
+                expect("slide" in indicator.dataset).toBe(false);
+                expect("ready" in indicator.dataset).toBe(false);
+
+                raf.flushNext();
+                expect("ready" in indicator.dataset).toBe(true);
+                expect("active" in indicator.dataset).toBe(false);
+                expect("slide" in indicator.dataset).toBe(false);
+
+                unmount(instance);
+                vi.restoreAllMocks();
+            }
+        });
+
+        test("unselected -> selected snaps data-active without data-slide in the same frame, then enables data-slide after requestAnimationFrame for A -> B", () => {
+            const raf = mockRaf();
+
+            let value = $state<string | undefined>(undefined);
+            const instance = mount(SegmentedControlTestHost, {
+                target: container,
+                props: {
+                    get value() {
+                        return value;
+                    },
+                    set value(next) {
+                        value = next;
+                    },
+                    items: defaultItems,
+                },
+            });
+            flushSync();
+            raf.flushNext();
+
+            const indicator = getIndicator();
+            expect("ready" in indicator.dataset).toBe(true);
+            expect("active" in indicator.dataset).toBe(false);
+            expect("slide" in indicator.dataset).toBe(false);
+
+            // unselected -> selected: data-active is immediate, data-slide is deferred until next frame
+            requireItem("week").click();
+            flushSync();
+            expect(value).toBe("week");
+            expect("active" in indicator.dataset).toBe(true);
+            expect("slide" in indicator.dataset).toBe(false);
+
+            raf.flushNext();
+            expect("active" in indicator.dataset).toBe(true);
+            expect("slide" in indicator.dataset).toBe(true);
+
+            // Subsequent A -> B transition keeps data-slide active immediately
+            requireItem("month").click();
+            flushSync();
+            expect(value).toBe("month");
+            expect("active" in indicator.dataset).toBe(true);
+            expect("slide" in indicator.dataset).toBe(true);
+
+            unmount(instance);
+        });
+
+        test("resetting selected -> null clears data-active and data-slide so the next selection enters without sliding", () => {
+            const raf = mockRaf();
+
+            let value = $state<string | undefined>("day");
+            const instance = mount(SegmentedControlTestHost, {
+                target: container,
+                props: {
+                    get value() {
+                        return value;
+                    },
+                    set value(next) {
+                        value = next;
+                    },
+                    items: defaultItems,
+                },
+            });
+            flushSync();
+            raf.flushNext();
+
+            const indicator = getIndicator();
+            expect("ready" in indicator.dataset).toBe(true);
+            expect("active" in indicator.dataset).toBe(true);
+            expect("slide" in indicator.dataset).toBe(true);
+
+            // Reset selected -> null
+            value = null as unknown as string | undefined;
+            flushSync();
+            expect("ready" in indicator.dataset).toBe(true);
+            expect("active" in indicator.dataset).toBe(false);
+            expect("slide" in indicator.dataset).toBe(false);
+
+            // Next selection starts without data-slide in the same frame
+            requireItem("month").click();
+            flushSync();
+            expect(value).toBe("month");
+            expect("active" in indicator.dataset).toBe(true);
+            expect("slide" in indicator.dataset).toBe(false);
+
+            raf.flushNext();
+            expect("active" in indicator.dataset).toBe(true);
+            expect("slide" in indicator.dataset).toBe(true);
+
+            unmount(instance);
+        });
+
         test("scroll chevrons and viewport data-scroll-* attributes reflect overflow state and step on prev/next click", () => {
             const instance = mount(SegmentedControlTestHost, {
                 target: container,

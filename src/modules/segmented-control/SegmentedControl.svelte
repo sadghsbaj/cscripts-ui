@@ -37,6 +37,7 @@
     let indicatorW = $state(0);
     let hasActiveIndicator = $state(false);
     let hasInitialized = $state(false);
+    let canSlide = $state(false);
     let canScrollPrev = $state(false);
     let canScrollNext = $state(false);
     let isArrowNav = $state(false);
@@ -69,13 +70,15 @@
     });
 
     function syncIndicator(): void {
-        if (value === undefined) {
+        if (value == null) {
             hasActiveIndicator = false;
+            canSlide = false;
             return;
         }
         const activeEl = itemElements.get(value);
         if (!activeEl) {
             hasActiveIndicator = false;
+            canSlide = false;
             return;
         }
         indicatorX = activeEl.offsetLeft;
@@ -132,9 +135,22 @@
         void itemElements.size;
         syncIndicator();
 
-        if (!hasInitialized && typeof requestAnimationFrame === "function") {
+        if (typeof requestAnimationFrame !== "function") return;
+
+        if (!hasInitialized) {
             const frame = requestAnimationFrame(() => {
                 hasInitialized = true;
+                if (hasActiveIndicator) {
+                    canSlide = true;
+                }
+            });
+            return () => cancelAnimationFrame(frame);
+        }
+
+        // Delay sliding until the next frame so unselected -> selected snaps into place and scales/fades in.
+        if (hasActiveIndicator && !canSlide) {
+            const frame = requestAnimationFrame(() => {
+                canSlide = true;
             });
             return () => cancelAnimationFrame(frame);
         }
@@ -146,7 +162,7 @@
         syncOverflow();
 
         if (typeof ResizeObserver !== "function") return;
-        const activeEl = value !== undefined ? itemElements.get(value) : undefined;
+        const activeEl = value != null ? itemElements.get(value) : undefined;
         const observer = new ResizeObserver(() => {
             syncIndicator();
             syncOverflow();
@@ -209,6 +225,7 @@
                 class="cs-segmented-control-indicator"
                 data-active={hasActiveIndicator ? "" : undefined}
                 data-ready={hasInitialized ? "" : undefined}
+                data-slide={canSlide ? "" : undefined}
                 style:--cs-segmented-control-indicator-x={`${indicatorX}px`}
                 style:--cs-segmented-control-indicator-w={`${indicatorW}px`}
             ></div>
@@ -427,21 +444,31 @@
             z-index: 0;
             width: var(--cs-segmented-control-indicator-w, 0px);
             translate: var(--cs-segmented-control-indicator-x, 0px) 0;
+            transform-origin: center;
             background-color: var(--cs-segmented-control-indicator-bg);
             border-radius: calc((var(--cs-segmented-control-height) - var(--cs-segmented-control-pad) * 2) / 2);
             corner-shape: var(--cs-squircle-soft);
             box-shadow: var(--cs-segmented-control-indicator-shadow);
             pointer-events: none;
             opacity: 0;
+            scale: 0.9;
 
             &[data-active] {
                 opacity: 1;
+                scale: 1;
             }
 
             &[data-ready] {
                 transition:
+                    scale var(--cs-dur-180) var(--cs-ease-quart-out),
+                    opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
+            }
+
+            &[data-ready][data-slide] {
+                transition:
                     translate var(--cs-dur-180) var(--cs-ease-quart-out),
                     width var(--cs-dur-180) var(--cs-ease-quart-out),
+                    scale var(--cs-dur-180) var(--cs-ease-quart-out),
                     opacity var(--cs-dur-effect-fast) var(--cs-ease-effect);
             }
         }
