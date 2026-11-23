@@ -301,7 +301,7 @@
             scale: 1;
             translate: 0 0;
             /* Keep compositor layer promoted while open so Button::before does not snap at transitionend. */
-            will-change: opacity, translate;
+            will-change: opacity, scale, translate;
             transition:
                 opacity var(--cs-modal-dur-fade-in) var(--cs-ease-effect),
                 scale var(--cs-modal-dur-in) var(--cs-modal-ease-in),
