@@ -934,8 +934,12 @@ describe("Tabs Svelte 5 Component", () => {
                     Keyframe[],
                     KeyframeAnimationOptions,
                 ];
-                expect(keyframes.length).toBe(17);
-                expect(options).toMatchObject({ easing: "linear", fill: "none" });
+                expect(keyframes.length).toBe(2);
+                expect(options).toMatchObject({
+                    duration: 200,
+                    easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+                    fill: "none",
+                });
                 expect(indicator.style.getPropertyValue("--cs-tabs-clip-start")).toBe("90px");
                 expect(indicator.style.getPropertyValue("--cs-tabs-clip-end")).toBe("120px");
 

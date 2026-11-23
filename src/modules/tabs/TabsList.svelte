@@ -5,10 +5,13 @@
     import { rovingFocus } from "../focus/index.ts";
     import { HitArea } from "../hit-area/index.ts";
     import {
-        buildPushPullKeyframes,
+        buildSlideKeyframes,
         computeClipOffsets,
+        INDICATOR_SLIDE_DURATION_MS,
+        INDICATOR_SLIDE_EASING,
         measureIndicatorMetrics,
         parseComputedClipPath,
+        type ClipOffsets,
         type IndicatorMetrics,
     } from "./tabs-indicator.internal.ts";
     import {
@@ -116,31 +119,26 @@
             clipStart = offsets.start;
             clipEnd = offsets.end;
         } else {
-            let effectivePrevMetrics: IndicatorMetrics;
+            let fromOffsets: ClipOffsets;
 
             if (activeAnimation) {
-                const currentOffsets = parseComputedClipPath(
+                fromOffsets = parseComputedClipPath(
                     getComputedStyle(indicatorEl).clipPath,
                     tabs.orientation
                 ) ?? { start: clipStart, end: clipEnd };
                 cancelActiveAnimation();
-                effectivePrevMetrics = {
-                    start: currentOffsets.start,
-                    size: Math.max(0, nextMetrics.trackSize - currentOffsets.start - currentOffsets.end),
-                    trackSize: nextMetrics.trackSize,
-                };
             } else {
-                effectivePrevMetrics = prevMetrics;
+                fromOffsets = computeClipOffsets(prevMetrics);
             }
 
-            const animParams = buildPushPullKeyframes(effectivePrevMetrics, nextMetrics, tabs.orientation);
+            const keyframes = buildSlideKeyframes(fromOffsets, offsets, tabs.orientation);
             clipStart = offsets.start;
             clipEnd = offsets.end;
 
-            if (animParams) {
-                const anim = indicatorEl.animate(animParams.keyframes, {
-                    duration: animParams.durationMs,
-                    easing: "linear",
+            if (keyframes) {
+                const anim = indicatorEl.animate(keyframes, {
+                    duration: INDICATOR_SLIDE_DURATION_MS,
+                    easing: INDICATOR_SLIDE_EASING,
                     fill: "none",
                 });
                 activeAnimation = anim;

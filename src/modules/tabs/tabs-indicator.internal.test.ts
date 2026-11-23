@@ -1,12 +1,14 @@
 import { describe, expect, test } from "vitest";
 
 import {
-    buildPushPullKeyframes,
+    INDICATOR_SLIDE_DURATION_MS,
+    INDICATOR_SLIDE_EASING,
+    buildSlideKeyframes,
     computeClipOffsets,
     formatClipPathInset,
     measureIndicatorMetrics,
     parseComputedClipPath,
-    type IndicatorMetrics,
+    type ClipOffsets,
 } from "./tabs-indicator.internal.ts";
 
 function createMockMeasureElements(opts: {
@@ -133,119 +135,65 @@ describe("tabs-indicator.internal", () => {
         });
     });
 
-    describe("buildPushPullKeyframes", () => {
-        test("returns null when position and size are effectively identical (< 1px)", () => {
-            const prev: IndicatorMetrics = { start: 40, size: 80, trackSize: 300 };
-            expect(buildPushPullKeyframes(prev, { start: 40, size: 80, trackSize: 300 }, "horizontal")).toBeNull();
-            expect(buildPushPullKeyframes(prev, { start: 40.4, size: 80.3, trackSize: 300 }, "horizontal")).toBeNull();
+    describe("slide constants", () => {
+        test("exports expected duration and easing tokens", () => {
+            expect(INDICATOR_SLIDE_DURATION_MS).toBe(200);
+            expect(INDICATOR_SLIDE_EASING).toBe("cubic-bezier(0.25, 1, 0.5, 1)");
+        });
+    });
+
+    describe("buildSlideKeyframes", () => {
+        test("returns null when both start and end deltas are below 0.5px", () => {
+            const from: ClipOffsets = { start: 40, end: 180 };
+            expect(buildSlideKeyframes(from, { start: 40, end: 180 }, "horizontal")).toBeNull();
+            expect(buildSlideKeyframes(from, { start: 40.49, end: 179.51 }, "horizontal")).toBeNull();
+            expect(buildSlideKeyframes(from, { start: 39.6, end: 180.4 }, "vertical")).toBeNull();
         });
 
-        test("generates keyframes for size-only changes when center delta < 1px", () => {
-            const prev: IndicatorMetrics = { start: 40, size: 80, trackSize: 300 };
-            const next: IndicatorMetrics = { start: 30, size: 100, trackSize: 300 }; // center is 80 for both
-            const result = buildPushPullKeyframes(prev, next, "horizontal");
-            expect(result).not.toBeNull();
-            expect(result?.keyframes[0]?.clipPath).toBe("inset(0px 180px 0px 40px round 9999px)");
-            expect(result?.keyframes.at(-1)?.clipPath).toBe("inset(0px 170px 0px 30px round 9999px)");
+        test("returns 2 keyframes when either start or end delta is >= 0.5px", () => {
+            const from: ClipOffsets = { start: 40, end: 180 };
+
+            const startOnly = buildSlideKeyframes(from, { start: 40.5, end: 180 }, "horizontal");
+            expect(startOnly).toHaveLength(2);
+
+            const endOnly = buildSlideKeyframes(from, { start: 40, end: 180.5 }, "vertical");
+            expect(endOnly).toHaveLength(2);
         });
 
-        test("clamps durationMs between 280ms and 400ms based on jump distance", () => {
-            const short = buildPushPullKeyframes(
-                { start: 0, size: 60, trackSize: 500 },
-                { start: 20, size: 60, trackSize: 500 },
-                "horizontal"
-            );
-            expect(short?.durationMs).toBe(280);
+        test("generates 2 direct from -> to keyframes for horizontal forward and backward slides without stretch", () => {
+            const from: ClipOffsets = { start: 20, end: 300 };
+            const to: ClipOffsets = { start: 180, end: 120 };
 
-            const medium = buildPushPullKeyframes(
-                { start: 0, size: 60, trackSize: 500 },
-                { start: 200, size: 60, trackSize: 500 },
-                "horizontal"
-            );
-            expect(medium?.durationMs).toBe(Math.round(260 + 0.17 * 200));
+            const forward = buildSlideKeyframes(from, to, "horizontal");
+            expect(forward).toEqual([
+                { clipPath: "inset(0px 300px 0px 20px round 9999px)" },
+                { clipPath: "inset(0px 120px 0px 180px round 9999px)" },
+            ]);
 
-            const long = buildPushPullKeyframes(
-                { start: 0, size: 60, trackSize: 1500 },
-                { start: 1000, size: 60, trackSize: 1500 },
-                "horizontal"
-            );
-            expect(long?.durationMs).toBe(400);
+            const backward = buildSlideKeyframes(to, from, "horizontal");
+            expect(backward).toEqual([
+                { clipPath: "inset(0px 120px 0px 180px round 9999px)" },
+                { clipPath: "inset(0px 300px 0px 20px round 9999px)" },
+            ]);
         });
 
-        test("forward and backward keyframes start and end at exact offsets with start-inertia", () => {
-            const prev: IndicatorMetrics = { start: 20, size: 80, trackSize: 400 };
-            const next: IndicatorMetrics = { start: 180, size: 100, trackSize: 400 };
+        test("generates 2 direct from -> to keyframes for vertical slides with symmetric endpoints", () => {
+            const from: ClipOffsets = { start: 16, end: 140 };
+            const to: ClipOffsets = { start: 96, end: 48 };
 
-            // Forward
-            const forward = buildPushPullKeyframes(prev, next, "horizontal");
-            expect(forward).not.toBeNull();
-            if (!forward) return;
-            expect(forward.keyframes).toHaveLength(17);
-            expect(forward.keyframes[0]).toEqual({
-                clipPath: formatClipPathInset(computeClipOffsets(prev), "horizontal"),
-                offset: 0,
-            });
-            expect(forward.keyframes.at(-1)).toEqual({
-                clipPath: formatClipPathInset(computeClipOffsets(next), "horizontal"),
-                offset: 1,
-            });
+            const forward = buildSlideKeyframes(from, to, "vertical");
+            expect(forward).toEqual([
+                { clipPath: formatClipPathInset(from, "vertical") },
+                { clipPath: formatClipPathInset(to, "vertical") },
+            ]);
+            expect(forward?.[0]?.clipPath).toBe("inset(16px 0px 140px 0px round 9999px)");
+            expect(forward?.[1]?.clipPath).toBe("inset(96px 0px 48px 0px round 9999px)");
 
-            // At t = 1/16 (0.0625 <= 0.12), trailing edge stays anchored at prev.start while lead edge moves forward
-            const earlyForwardFrame = forward.keyframes[1];
-            expect(earlyForwardFrame).toBeDefined();
-            const earlyForward = parseComputedClipPath(String(earlyForwardFrame?.clipPath), "horizontal");
-            expect(earlyForward).not.toBeNull();
-            if (!earlyForward) return;
-            expect(earlyForward.start).toBe(20);
-            expect(earlyForward.end).toBeLessThan(computeClipOffsets(prev).end);
-
-            // Backward (vertical)
-            const backward = buildPushPullKeyframes(next, prev, "vertical");
-            expect(backward).not.toBeNull();
-            if (!backward) return;
-            expect(backward.keyframes).toHaveLength(17);
-            expect(backward.keyframes[0]).toEqual({
-                clipPath: formatClipPathInset(computeClipOffsets(next), "vertical"),
-                offset: 0,
-            });
-            expect(backward.keyframes.at(-1)).toEqual({
-                clipPath: formatClipPathInset(computeClipOffsets(prev), "vertical"),
-                offset: 1,
-            });
-
-            // At t = 1/16, trailing edge (end) stays anchored at next's end offset while start moves backward
-            const earlyBackwardFrame = backward.keyframes[1];
-            expect(earlyBackwardFrame).toBeDefined();
-            const earlyBackward = parseComputedClipPath(String(earlyBackwardFrame?.clipPath), "vertical");
-            expect(earlyBackward).not.toBeNull();
-            if (!earlyBackward) return;
-            expect(earlyBackward.end).toBe(computeClipOffsets(next).end);
-            expect(earlyBackward.start).toBeLessThan(next.start);
-        });
-
-        test("caps stretch to maxExtra <= 115px on an 800px jump (no full-width overshoot)", () => {
-            const trackSize = 1000;
-            const prev: IndicatorMetrics = { start: 0, size: 80, trackSize };
-            const next: IndicatorMetrics = { start: 800, size: 80, trackSize };
-
-            for (const [from, to] of [
-                [prev, next],
-                [next, prev],
-            ] as const) {
-                const result = buildPushPullKeyframes(from, to, "horizontal");
-                expect(result).not.toBeNull();
-                if (!result) continue;
-
-                for (const frame of result.keyframes) {
-                    const parsed = parseComputedClipPath(String(frame.clipPath), "horizontal");
-                    expect(parsed).not.toBeNull();
-                    if (parsed) {
-                        const visibleWidth = trackSize - parsed.start - parsed.end;
-                        expect(visibleWidth).toBeLessThanOrEqual(80 + 115 + 0.001);
-                        expect(visibleWidth).toBeGreaterThanOrEqual(80 - 0.001);
-                    }
-                }
-            }
+            const backward = buildSlideKeyframes(to, from, "vertical");
+            expect(backward).toEqual([
+                { clipPath: formatClipPathInset(to, "vertical") },
+                { clipPath: formatClipPathInset(from, "vertical") },
+            ]);
         });
     });
 });

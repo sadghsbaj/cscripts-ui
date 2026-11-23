@@ -16,7 +16,7 @@ Four core principles govern `Tabs`:
 1. **Typographic Authority Without Chrome:** Strong, scannable labels (`font-weight: 500`) separated by clean rhythm and a single `1px` hairline—never heavy boxes or 3-sided folder borders.
 2. **Monochrome Restraint:** Active state uses `--cs-color-text-strong` and a neutral strong indicator (`--cs-color-text-strong`) by default, keeping `--cs-color-accent-*` free for `:focus-visible` rings and primary CTAs.
 3. **Zero Layout Shift:** Tabs maintain identical horizontal metrics between rest and active states—never shifting adjacent tabs when selected.
-4. **Physical Push-Pull Indicator:** The active indicator moves with asymmetric leading/trailing edge timing calibrated to jump distance, creating a crisp, tactile glide without rubbery wobble.
+4. **Direct WAAPI Slide Indicator:** The active indicator glides cleanly between tabs in `200ms` (`--cs-dur-200`, `--cs-ease-quart-out`) via GPU-composited `clip-path: inset(...)` without rubbery overshoot or layout shift.
 
 ---
 
@@ -82,7 +82,7 @@ All tab states use native pseudo-classes and `data-*` attributes without JS hove
 - **Hover (`:hover` on inactive tab):**
   - Label & icon brighten to `--cs-color-text-strong` over `--cs-dur-effect-fast` (`100ms`) `--cs-ease-effect`.
   - **Inset Hover Wash (`:not([data-selected])` only):** An inner `::before` pseudo-layer fades in `--cs-color-base-soft` with `border-radius: var(--cs-tabs-radius); corner-shape: var(--cs-tabs-squircle);`.
-  - *Optical inset detail (horizontal):* The hover wash is inset vertically (`inset-block: 4px 6px; inset-inline: 2px;`) so the hover pill never touches or muddies the `1px` baseline or `2px` active indicator bar.
+  - *Optical inset detail (horizontal):* The hover wash is inset vertically (`inset-block: 4px; inset-inline: 2px;`) so the hover pill never touches or muddies the `1px` baseline or `2px` active indicator bar.
 - **Active Tab (`[data-selected]` / `aria-selected="true"`):**
   - Label & icon: `--cs-color-text-strong`.
   - **Horizontal hover:** Hovering an already-active horizontal tab keeps the label strong without showing a background box. Because desktop button tabs activate on `pointerdown`, the `:not([data-selected])` hover wash disappears cleanly the instant the tab is pressed, leaving only the `2px` indicator bar.
@@ -115,82 +115,32 @@ Does a `2px` line work vertically as cleanly as horizontally? **Yes, with three 
 
 ---
 
-## 6. Push-Pull Active Indicator Motion (Core Specification)
+## 6. Direct WAAPI Slide Indicator Motion (Core Specification)
 
-Instead of a rigid `translateX` + `width` slide, the active indicator uses a **Push-Pull** choreography: the **leading edge** (facing the destination tab) launches immediately to stretch toward the target, while the **trailing edge** (leaving the previous tab) follows after a short, distance-calibrated delay and catches up cleanly.
+Instead of animating `transform`/`width` (which distorts border radii on `scaleX` or triggers layout) or using multi-step Push-Pull curves, the active indicator glides directly between tabs with a single, crisp deceleration curve.
 
-### Technical CSS Architecture (GPU-Composited, Zero Distortion)
+### Technical Architecture (WAAPI + `clip-path: inset(...)`)
 
-To avoid `scaleX` border-radius distortion and layout thrash, `.cs-tabs-indicator` spans the full `TabList` track (`position: absolute; inset-inline: 0; inset-block-end: 0; height: var(--cs-tabs-indicator-thickness);`) and animates via **`clip-path: inset(...)` driven by two registered `@property` custom properties**:
-
-```css
-@property --cs-tabs-clip-start {
-    syntax: "<length>";
-    inherits: false;
-    initial-value: 0px;
-}
-
-@property --cs-tabs-clip-end {
-    syntax: "<length>";
-    inherits: false;
-    initial-value: 0px;
-}
-```
+`.cs-tabs-indicator` spans the full `.cs-tabs-list` track (`position: absolute`) and rests at a `clip-path: inset(...)` driven by two inline custom properties (`--cs-tabs-clip-start` and `--cs-tabs-clip-end`):
 
 - **Horizontal:** `clip-path: inset(0 var(--cs-tabs-clip-end) 0 var(--cs-tabs-clip-start) round 9999px);`
 - **Vertical:** `clip-path: inset(var(--cs-tabs-clip-start) 0 var(--cs-tabs-clip-end) 0 round 9999px);`
 - **Why this works:**
   1. **100% GPU-composited:** `clip-path` animates on the compositor without triggering layout.
-  2. **Crisp caps at every frame:** `round 9999px` maintains perfectly rounded ends regardless of stretch length.
-  3. **Independent edge physics:** `--cs-tabs-clip-start` and `--cs-tabs-clip-end` each receive their own `duration`, `delay`, and `easing`.
+  2. **Crisp caps at every frame:** `round 9999px` maintains perfectly rounded ends regardless of tab width or height.
+  3. **Scroll- & Transform-Immune Measurement:** `measureIndicatorMetrics` reads `activeEl.offsetLeft` / `offsetWidth` (horizontal) and `activeEl.offsetTop` / `offsetHeight` (vertical) against `trackEl.scrollWidth` / `scrollHeight`, staying immune to horizontal scroll offsets and `:active` `scale()` transforms.
 
-### Direction-Aware Edge Assignment & Bounded Push-Pull Curves
+### Direct 2-Keyframe Slide & Interruptibility
 
-Why previous asymmetric curves (`expo-out` + `95ms` delay on `quart-in-out`) broke on long jumps: when the trailing edge waits `95ms` while `expo-out` rockets to `~90%` of `800px` (`~720px`), the bar inflates to nearly full-width before collapsing.
+When `tabs.value` changes after initial mount:
 
-To achieve a **physically believable, bounded Push-Pull**—where the indicator stretches organically by `~24px–43px` regardless of whether the jump is 1 tab (`80px`) or 10 tabs (`800px`), and **never** balloons to full-width:
-1. **Shared Deceleration Curve (`--cs-ease-quint-out`):** Both edges use `--cs-ease-quint-out` (`cubic-bezier(0.22, 1, 0.36, 1)`). Because both edges share the same monotonically increasing curve and `T_trail > T_lead` (with `D_trail >= 0`), the trailing edge is **mathematically guaranteed** never to overtake the leading edge (`extra_stretch >= 0` at every frame, zero edge inversion or wobble).
-2. **Inverse-Calibrated Timing Spread:** Instead of scaling delay *up* with distance (which causes linear stretch explosion $\propto \Delta$), the trailing edge's delay and duration offset scale **down** as $\Delta$ increases. Both edges launch together (`0ms` delay) on long jumps with a tight duration offset (`36ms`), capping peak extra stretch at `~43px` even across an `800px` span—while short `80px` jumps keep a subtle `12ms` delay + `60ms` duration offset for a crisp `~24.5px` stretch.
-3. **Pure CSS `@property` Interruptibility:** Keeping everything in native CSS transitions on `@property` ensures rapid mid-flight clicks (e.g., Tab 1 → Tab 5 → Tab 2) reverse seamlessly from the exact current interpolated pixel values on the compositor, with zero WAAPI state-sync jumps.
-
-Track movement direction (`data-dir="forward" | "backward"`) by comparing the previous and next indicator offsets:
-
-- **Moving Forward (`next > prev`):**
-  - **Leading edge (`--cs-tabs-clip-end`):** `delay: 0ms`, `duration: var(--cs-tabs-dur-lead)`, `easing: var(--cs-ease-quint-out)`
-  - **Trailing edge (`--cs-tabs-clip-start`):** `delay: var(--cs-tabs-delay-trail)`, `duration: var(--cs-tabs-dur-trail)`, `easing: var(--cs-ease-quint-out)`
-- **Moving Backward (`next < prev`):**
-  - **Leading edge (`--cs-tabs-clip-start`):** `delay: 0ms`, `duration: var(--cs-tabs-dur-lead)`, `easing: var(--cs-ease-quint-out)`
-  - **Trailing edge (`--cs-tabs-clip-end`):** `delay: var(--cs-tabs-delay-trail)`, `duration: var(--cs-tabs-dur-trail)`, `easing: var(--cs-ease-quint-out)`
-
-> **Anti-Wobble & Anti-Balloon Rule:** Using `--cs-ease-quint-out` on both edges guarantees monotonic progression with zero overshoot (`--cs-spring-squash` / `back-out` are excluded), and inverse-calibrated trailing offsets cap peak stretch to `~24px–43px` across all container widths.
-
-### Inverse-Calibrated Distance Formula & Mathematical Verification
-
-Compute the start-to-start pixel delta $\Delta = |x_{\text{next}} - x_{\text{prev}}|$ on selection and clamp all three timings:
-
-$$\begin{aligned}
-T_{\text{lead}} &= \text{clamp}(170\text{ms},\ 160\text{ms} + 0.13 \cdot \Delta,\ 265\text{ms}) \\
-D_{\text{trail}} &= \text{clamp}(0\text{ms},\ 16\text{ms} - 0.05 \cdot \Delta,\ 12\text{ms}) \\
-\Delta T_{\text{trail}} &= \text{clamp}(36\text{ms},\ 64\text{ms} - 0.035 \cdot \Delta,\ 60\text{ms}) \\
-T_{\text{trail}} &= T_{\text{lead}} + \Delta T_{\text{trail}}
-\end{aligned}$$
-
-| Jump Distance ($\Delta$) | Lead ($T_{\text{lead}}$) | Trail Delay ($D_{\text{trail}}$) | Trail ($T_{\text{trail}}$) | Total Settle | Peak Extra Stretch |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Short (`80px`, 1 tab)** | `170ms` *(clamped)* | `12ms` *(clamped)* | `230ms` | `242ms` | `24.5px` *(`@ 21ms`)* |
-| **Medium (`240px`, 3 tabs)** | `191ms` | `4ms` | `247ms` | `251ms` | `37.1px` *(`@ 32ms`)* |
-| **Long (`800px`, 10 tabs)** | `264ms` | `0ms` *(clamped)* | `300ms` | `300ms` | `42.9px` *(`@ 52ms`)* |
-
-**Frame-by-Frame Verification (`t = 25%, 50%, 75%` of Total Settle):**
-
-| Jump Distance | `t = 25%` (`lead` / `trail` / stretch) | `t = 50%` (`lead` / `trail` / stretch) | `t = 75%` (`lead` / `trail` / stretch) |
-| :--- | :--- | :--- | :--- |
-| **Short (`80px`, `242ms`)** | `70.9px` / `55.7px` / **`+15.2px`** | `79.6px` / `76.2px` / **`+3.4px`** | `80.0px` / `79.7px` / **`+0.3px`** |
-| **Long (`800px`, `300ms`)** | `650.4px` / `611.9px` / **`+38.5px`** | `782.6px` / `769.1px` / **`+13.5px`** | `799.6px` / `797.5px` / **`+2.0px`** |
-
-- **Initial Mount (`[data-ready]`):** Suppress indicator transitions on first paint (enable only after `requestAnimationFrame`) so the bar never animates in from `0px` on load.
-- **Rapid Interruption:** Clicking another tab mid-flight updates `--cs-tabs-clip-start` / `--cs-tabs-clip-end` seamlessly from their current interpolated values.
-- **`prefers-reduced-motion: reduce`:** Suppresses all indicator `transition-duration` and `transition-delay` (`0ms`) so the indicator updates instantaneously.
+1. **2-Keyframe WAAPI Animation:** `TabsList` calls `indicatorEl.animate([{ clipPath: fromClip }, { clipPath: toClip }], { duration: 200, easing: "cubic-bezier(0.25, 1, 0.5, 1)", fill: "none" })`.
+   - `200ms` aligns with `--cs-dur-200` and `"cubic-bezier(0.25, 1, 0.5, 1)"` aligns with `--cs-ease-quart-out` in `src/css/foundation/motion.css`.
+   - Using `fill: "none"` ensures the indicator falls back cleanly to its updated resting `--cs-tabs-clip-start` / `--cs-tabs-clip-end` inline styles once the animation finishes or is cancelled.
+2. **Mid-Flight Interruptibility:** If a new tab is selected while an animation is already running, `syncIndicator` reads the live interpolated `getComputedStyle(indicatorEl).clipPath` via `parseComputedClipPath`, cancels the active `Animation` (`anim.cancel()`), and launches the next 2-keyframe slide from that exact mid-flight position.
+3. **Initial Mount (`prevMetrics === null`):** Suppresses animation on first paint so the indicator snaps directly to the initial active tab without sliding in from `0px`.
+4. **Layout & Resize (`ResizeObserver`):** Calls `syncIndicator(false)` to update resting clip offsets immediately without triggering a slide animation.
+5. **`prefers-reduced-motion: reduce`:** Skips WAAPI animation and updates `--cs-tabs-clip-start` / `--cs-tabs-clip-end` instantaneously.
 
 ---
 
@@ -226,6 +176,5 @@ T_{\text{trail}} &= T_{\text{lead}} + \Delta T_{\text{trail}}
 | `--cs-tabs-indicator-thickness` | `2px` (`sm`/`md`) / `2.5px` (`lg`) | Active indicator thickness |
 | `--cs-tabs-radius` | Size-scaled (`md` / `lg` / `xl`) | Hover wash & vertical active tint radius |
 | `--cs-tabs-squircle` | Size-scaled (`--cs-squircle-soft` / `--cs-squircle-smooth`) | Superellipse `corner-shape` |
-| `--cs-tabs-dur-lead` | Distance-clamped (`170ms`–`265ms`) | Leading edge transition duration |
-| `--cs-tabs-dur-trail` | Distance-clamped (`230ms`–`301ms`) | Trailing edge transition duration |
-| `--cs-tabs-delay-trail` | Inverse-clamped (`12ms`–`0ms`) | Trailing edge catch-up delay |
+| `--cs-tabs-clip-start` | Computed inline (`0px`+) | Resting start/top `clip-path` inset for `.cs-tabs-indicator` |
+| `--cs-tabs-clip-end` | Computed inline (`0px`+) | Resting end/bottom `clip-path` inset for `.cs-tabs-indicator` |

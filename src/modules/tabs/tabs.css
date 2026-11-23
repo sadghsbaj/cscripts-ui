@@ -385,7 +385,7 @@
         > .cs-tabs-viewport
         > .cs-tabs-list
         > .cs-tabs-trigger::before {
-        inset-block: 4px 6px;
+        inset-block: 4px;
         inset-inline: 2px;
     }
 

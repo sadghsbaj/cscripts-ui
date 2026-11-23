@@ -11,14 +11,10 @@ export interface ClipOffsets {
     end: number;
 }
 
-export interface PushPullKeyframes {
-    keyframes: Keyframe[];
-    durationMs: number;
-}
-
-function clamp(min: number, value: number, max: number): number {
-    return Math.min(max, Math.max(min, value));
-}
+/** Matches `--cs-dur-200` in `src/css/foundation/motion.css`. */
+export const INDICATOR_SLIDE_DURATION_MS = 200;
+/** Matches `--cs-ease-quart-out` in `src/css/foundation/motion.css`. */
+export const INDICATOR_SLIDE_EASING = "cubic-bezier(0.25, 1, 0.5, 1)";
 
 export function measureIndicatorMetrics(
     activeEl: HTMLElement,
@@ -46,71 +42,22 @@ export function computeClipOffsets(metrics: IndicatorMetrics): ClipOffsets {
     return { start, end };
 }
 
-const PUSH_PULL_STEPS = 16;
-
-export function buildPushPullKeyframes(
-    prev: IndicatorMetrics,
-    next: IndicatorMetrics,
+export function buildSlideKeyframes(
+    fromOffsets: ClipOffsets,
+    toOffsets: ClipOffsets,
     orientation: TabsOrientation
-): PushPullKeyframes | null {
-    const c1 = prev.start + prev.size / 2;
-    const c2 = next.start + next.size / 2;
-    const delta = Math.abs(c2 - c1);
-
-    if (delta < 1 && Math.abs(prev.size - next.size) < 1) {
+): Keyframe[] | null {
+    if (
+        Math.abs(fromOffsets.start - toOffsets.start) < 0.5 &&
+        Math.abs(fromOffsets.end - toOffsets.end) < 0.5
+    ) {
         return null;
     }
 
-    const durationMs = Math.round(clamp(280, 260 + 0.17 * delta, 400));
-    const maxExtra = Math.min(delta * 0.85, 115);
-    const end1 = prev.start + prev.size;
-    const end2 = next.start + next.size;
-    const isForward = c2 >= c1;
-
-    const keyframes: Keyframe[] = [];
-
-    for (let i = 0; i <= PUSH_PULL_STEPS; i++) {
-        const t = i / PUSH_PULL_STEPS;
-        const leadT = 1 - Math.pow(1 - t, 3);
-        const tt = clamp(0, (t - 0.12) / 0.88, 1);
-        const trailT = tt * tt * (3 - 2 * tt);
-        const baseSize = prev.size + (next.size - prev.size) * leadT;
-
-        let frameOffsets: ClipOffsets;
-
-        if (isForward) {
-            const leadEdge = end1 + (end2 - end1) * leadT;
-            let trailEdge = prev.start + (next.start - prev.start) * trailT;
-            // Rope constraint prevents full-width ballooning on long jumps while preserving short-jump inertia.
-            trailEdge = Math.max(trailEdge, leadEdge - (baseSize + maxExtra));
-            trailEdge = clamp(Math.min(prev.start, next.start), trailEdge, Math.max(prev.start, next.start));
-            frameOffsets = computeClipOffsets({
-                start: trailEdge,
-                size: Math.max(0, leadEdge - trailEdge),
-                trackSize: next.trackSize,
-            });
-        } else {
-            const leadEdge = prev.start + (next.start - prev.start) * leadT;
-            let trailEdge = end1 + (end2 - end1) * trailT;
-            trailEdge = Math.min(trailEdge, leadEdge + (baseSize + maxExtra));
-            trailEdge = clamp(Math.min(end2, end1), trailEdge, Math.max(end2, end1));
-            frameOffsets = computeClipOffsets({
-                start: leadEdge,
-                size: Math.max(0, trailEdge - leadEdge),
-                trackSize: next.trackSize,
-            });
-        }
-
-        keyframes.push({
-            clipPath: formatClipPathInset(frameOffsets, orientation),
-            offset: t,
-        });
-    }
-
-    return {
-        keyframes,
-        durationMs,
-    };
+    return [
+        { clipPath: formatClipPathInset(fromOffsets, orientation) },
+        { clipPath: formatClipPathInset(toOffsets, orientation) },
+    ];
 }
 
 function parsePxValue(token: string): number | null {
