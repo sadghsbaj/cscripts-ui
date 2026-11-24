@@ -12,6 +12,7 @@ import { closeButtonConfig } from "./close-button.ts";
 import { comboboxConfig } from "./combobox.ts";
 import { componentLayersConfig } from "./component-layers.ts";
 import { cssSafetyConfigs } from "./css-safety.ts";
+import { dotsConfig } from "./dots.ts";
 import { dropdownConfig } from "./dropdown.ts";
 import { kbdConfigs } from "./kbd.ts";
 import { kpiCardConfig } from "./kpi-card.ts";
@@ -25,6 +26,7 @@ import { selectConfig } from "./select.ts";
 import { titleAttributeConfig } from "./title-attribute.ts";
 import { toggleButtonGroupConfig } from "./toggle-button-group.ts";
 import { toggleButtonConfig } from "./toggle-button.ts";
+import { unicodeArrowsConfig } from "./unicode-arrows.ts";
 import { unicodeDotsConfig } from "./unicode-dots.ts";
 
 export { attachmentCssParser, attachmentLayerRule, attachmentLayersConfig } from "./attachment-layers.ts";
@@ -43,6 +45,7 @@ export { closeButtonConfig, closeButtonHitAreaRule } from "./close-button.ts";
 export { comboboxConfig, comboboxItemTextRule, comboboxStructureRule } from "./combobox.ts";
 export { componentLayersConfig, componentLayersRule } from "./component-layers.ts";
 export { cssSafetyConfigs, noOklchNeutralMixRule, vendorPrefixOrderRule } from "./css-safety.ts";
+export { DOT_UTILITY_REGEX, dotsConfig, dotUtilityWarnRule } from "./dots.ts";
 export { dropdownConfig, dropdownStructureRule } from "./dropdown.ts";
 export {
     FORBIDDEN_UNICODE_KEYS_REGEX,
@@ -79,11 +82,14 @@ export {
     toggleButtonStructureRule,
     toggleButtonTooltipRule,
 } from "./toggle-button.ts";
+export { FORBIDDEN_ARROWS_REGEX, unicodeArrowsConfig, unicodeArrowsRule } from "./unicode-arrows.ts";
 export { FORBIDDEN_DOTS_REGEX, unicodeDotsConfig, unicodeDotsRule } from "./unicode-dots.ts";
 export * from "./utils.ts";
 
 export const sharedRulesConfigs: Linter.Config[] = [
     unicodeDotsConfig,
+    unicodeArrowsConfig,
+    dotsConfig,
     browserStorageConfig,
     badgeConfig,
     buttonConfig,

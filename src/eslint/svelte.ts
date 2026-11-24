@@ -54,7 +54,13 @@ export const svelteConfig: Linter.Config[] = [
                 {
                     selector: "SvelteConstTag",
                     message:
-                        "The legacy '{@const}' tag is deprecated. Use Svelte 5 '{const x = $derived(...)}' (for reactive values), '{let x = $state(...)}' (for mutable state), or plain '{const x = ...}' (for static values evaluated once on mount).",
+                        "The legacy '{@const}' tag is deprecated. Use Svelte 5.57+ declaration tags: '{let x = $derived(...)}' / '{let x = $state(...)}' for reactive or mutable values, or '{const x = ...}' for static values evaluated once.",
+                },
+                {
+                    selector:
+                        String.raw`:matches(Program > VariableDeclaration[kind='const'], Program > :not(SvelteScriptElement) VariableDeclaration[kind='const']):has(CallExpression[callee.name=/^\$(derived|state)$/], CallExpression[callee.object.name=/^\$(derived|state)$/])`,
+                    message:
+                        "Svelte 5.57+ inline template '{const}' must not be used with '$derived' or '$state' (values may fail to update in the UI). Use '{let x = $derived(...)}' or '{let x = $state(...)}' instead, and reserve '{const ...}' for static values.",
                 },
             ],
         },

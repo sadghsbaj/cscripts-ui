@@ -105,6 +105,12 @@ export const csLibraryEslint = defineConfig([
             "kbd/no-raw-kbd": "off",
         },
     },
+    {
+        files: ["src/modules/kbd/keys.ts"],
+        rules: {
+            "unicode-arrows/no-unicode-arrows": "off",
+        },
+    },
 ]);
 
 export default csEslint;
