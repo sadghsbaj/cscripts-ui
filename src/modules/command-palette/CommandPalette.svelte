@@ -192,9 +192,7 @@
     }
 
     function scrollItemIntoView(item: CommandPaletteRegisteredItem | undefined): void {
-        const viewport =
-            item?.element?.closest<HTMLElement>(".cs-scroll-area-viewport") ??
-            listRef?.closest<HTMLElement>(".cs-scroll-area-viewport");
+        const viewport = listRef ?? item?.element?.closest<HTMLElement>(".cs-scroll-area-content");
 
         if (item && visibleEnabledItems[0]?.value === item.value && viewport) {
             viewport.scrollTop = 0;

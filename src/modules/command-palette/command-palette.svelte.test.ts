@@ -376,7 +376,7 @@ describe("CommandPalette Svelte 5 Component", () => {
             flushSync();
 
             const input = mustQuery<HTMLInputElement>(document.body, '[role="combobox"]');
-            const viewport = mustQuery<HTMLElement>(document.body, ".cs-scroll-area-viewport");
+            const viewport = mustQuery<HTMLElement>(document.body, ".cs-scroll-area-content");
             const middleEl = mustQuery<HTMLElement>(document.body, '[data-value="middle"]');
             const middleScrollIntoView = vi.spyOn(middleEl, "scrollIntoView");
 
