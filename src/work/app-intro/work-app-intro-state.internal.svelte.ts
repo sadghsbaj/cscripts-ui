@@ -1,11 +1,9 @@
-import { getLocalStorage, getSessionStorage, setLocalStorage, setSessionStorage } from "cs/svelte/browser-storage";
+import { getSessionStorage, setSessionStorage } from "cs/svelte/browser-storage";
 
 import type { WorkLocationId } from "../locations";
 import type { WorkAppIntroPhase } from "./index.ts";
 
 const SESSION_STORAGE_KEY = "cs-pfleiderer-boot-session";
-const LOCAL_STORAGE_KEY = "cs-pfleiderer-boot-last-ts";
-const FAST_BOOT_WINDOW_MS = 30 * 60 * 1000;
 
 /**
  * Ordered sequence in which the five plant locations draw and lock in.
@@ -79,25 +77,16 @@ class WorkAppIntroManager {
         }, 2770);
 
         setSessionStorage(SESSION_STORAGE_KEY, "1", { prefix: false });
-        setLocalStorage(LOCAL_STORAGE_KEY, String(Date.now()), { prefix: false });
     }
 
     /**
-     * Skips the intro when an active tab session exists or the last cold boot
-     * occurred within `FAST_BOOT_WINDOW_MS` (30 minutes).
+     * Skips the intro when an active tab session exists in `sessionStorage`;
+     * otherwise runs a cold boot.
      */
     triggerSmartBoot(): void {
         const hasSession = getSessionStorage(SESSION_STORAGE_KEY, { prefix: false }) === "1";
 
         if (hasSession) {
-            this.startBoot("instant");
-            return;
-        }
-
-        const lastTimestamp = Number(getLocalStorage(LOCAL_STORAGE_KEY, { prefix: false }) ?? "0");
-        const elapsed = Date.now() - lastTimestamp;
-
-        if (lastTimestamp > 0 && elapsed < FAST_BOOT_WINDOW_MS) {
             this.startBoot("instant");
             return;
         }

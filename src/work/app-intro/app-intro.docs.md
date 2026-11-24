@@ -25,7 +25,7 @@ Extends `HTMLAttributes<HTMLDivElement>` (spread onto the `.cs-work-app-intro` o
 | :--- | :--- | :--- | :--- | :--- |
 | `toolCategory` | `string` | Yes | — | Department or domain label displayed above the tool title. |
 | `toolName` | `string` | Yes | — | Primary application title displayed in the intro stage and exposed via context. |
-| `persist` | `boolean` | No | `true` | Persists the boot timestamp in storage so reloads within 30 minutes skip the full intro animation. Set to `false` in previews or tests to force a cold boot. |
+| `persist` | `boolean` | No | `true` | Persists the boot state in `sessionStorage` so direct reloads within the same tab session skip the full intro animation (fresh tab/app opens always play it). Set to `false` in previews or tests to force a cold boot. |
 | `settled` | `boolean` (`$bindable`) | No | `false` | Output flag that becomes `true` once the intro reaches `"curtain"` or resolves as an instant boot. |
 | `phase` | `WorkAppIntroPhase` (`$bindable`) | No | `"idle"` | Current boot phase of the intro choreography. |
 
@@ -55,6 +55,6 @@ Extends `HTMLAttributes<HTMLDivElement>` (spread onto the `.cs-work-app-intro` o
 ```
 
 ## Behavior & Quirks
-- **`settled` lifecycle:** `settled` is `false` before `onMount` and throughout `"cad"`, `"lock"`, and `"brand"`. It becomes `true` when the sequence reaches `"curtain"` (or is skipped) on cold boot, or immediately on instant boot when a recent session/timestamp is present.
+- **`settled` lifecycle:** `settled` is `false` before `onMount` and throughout `"cad"`, `"lock"`, and `"brand"`. It becomes `true` when the sequence reaches `"curtain"` (or is skipped) on cold boot, or immediately on instant boot when an active `sessionStorage` boot session is present.
 - **Skip interaction:** Clicking the intro overlay or pressing a key (handled via `<svelte:window onkeydown={...} />`) skips the remaining boot sequence.
 - **No internal exports:** `work-app-intro-state.internal.svelte.ts` is internal and not part of the `cs/svelte/work` public API.

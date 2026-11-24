@@ -11,8 +11,9 @@ export interface WorkAppIntroProps extends HTMLAttributes<HTMLDivElement> {
     /** Primary application title displayed at the top of the intro stage. */
     toolName: string;
     /**
-     * Whether to persist the boot timestamp in `sessionStorage` / `localStorage`
-     * so reloads within the 30-minute window skip the full intro animation.
+     * Whether to persist the boot state in `sessionStorage` so direct reloads
+     * within the same tab session skip the full intro animation (fresh tab/app
+     * opens always play it).
      * Set to `false` in previews or tests to always force a cold boot.
      * @default true
      */
