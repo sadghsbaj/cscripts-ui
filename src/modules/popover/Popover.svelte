@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { type PopoverProps } from ".";
+    import { type PopoverPlacement, type PopoverProps } from ".";
+    import { findAnchorElement, resolvePopoverPlacement } from "./placement-flip.internal";
 
     let {
         ref = $bindable(null),
@@ -13,6 +14,85 @@
         children,
         ...rest
     }: PopoverProps = $props();
+
+    let resolvedPlacement = $state<PopoverPlacement | undefined>();
+    let ready = $state(false);
+
+    function isPopoverOpen(element: HTMLElement | null): boolean {
+        if (!element) return false;
+        try {
+            return element.matches(":popover-open");
+        } catch {
+            return false;
+        }
+    }
+
+    function measurePlacement(el: HTMLElement, source?: Element | null): void {
+        const anchorEl = findAnchorElement(el, id, source);
+        if (!anchorEl) return;
+        resolvedPlacement = resolvePopoverPlacement(
+            placement,
+            anchorEl.getBoundingClientRect(),
+            el.getBoundingClientRect(),
+        );
+    }
+
+    $effect(() => {
+        if (animate && isPopoverOpen(ref)) {
+            ready = true;
+        }
+    });
+
+    $effect(() => {
+        if (!ref) return;
+        const el: HTMLDivElement = ref;
+
+        function onBeforeToggle(event: Event): void {
+            const toggleEvent = event as ToggleEvent;
+            if (toggleEvent.newState === "open") {
+                // Safety net: never start a fresh open with stale placement from an interrupted exit.
+                resolvedPlacement = undefined;
+                return;
+            }
+            if (!animate || toggleEvent.newState !== "closed") return;
+            // Re-measure while :popover-open is still active so exit transitions follow scroll/resize flips.
+            measurePlacement(el, toggleEvent.source);
+        }
+
+        function onToggle(event: Event): void {
+            const toggleEvent = event as ToggleEvent;
+            if (toggleEvent.newState === "open") {
+                if (!animate) return;
+                measurePlacement(el, toggleEvent.source);
+                ready = true;
+                return;
+            }
+            if (toggleEvent.newState === "closed") {
+                ready = false;
+                if (!animate || "instant" in el.dataset || "warm" in el.dataset) {
+                    resolvedPlacement = undefined;
+                }
+            }
+        }
+
+        function onTransitionDone(event: Event): void {
+            if (event.target !== el) return;
+            if (!isPopoverOpen(el)) {
+                resolvedPlacement = undefined;
+            }
+        }
+
+        el.addEventListener("beforetoggle", onBeforeToggle);
+        el.addEventListener("toggle", onToggle);
+        el.addEventListener("transitionend", onTransitionDone);
+        el.addEventListener("transitioncancel", onTransitionDone);
+        return () => {
+            el.removeEventListener("beforetoggle", onBeforeToggle);
+            el.removeEventListener("toggle", onToggle);
+            el.removeEventListener("transitionend", onTransitionDone);
+            el.removeEventListener("transitioncancel", onTransitionDone);
+        };
+    });
 </script>
 
 <div
@@ -23,6 +103,8 @@
     class={["cs-popover", className]}
     data-width={width}
     data-placement={placement}
+    data-resolved-placement={resolvedPlacement}
+    data-ready={ready ? "" : undefined}
     data-animate={animate ? "" : undefined}
     style:--cs-popover-anchor={`--anchor-${id}`}
     style:--cs-popover-offset={offset}
@@ -76,19 +158,24 @@
 
         /* TOP */
         .cs-popover[data-placement^="top"] {
-            --cs-popover-dir-x: 0;
-            --cs-popover-dir-y: 1;
             margin-block-end: var(--cs-popover-offset);
         }
 
+        .cs-popover:is([data-resolved-placement^="top"], [data-placement^="top"]:not([data-resolved-placement])) {
+            --cs-popover-dir-x: 0;
+            --cs-popover-dir-y: 1;
+        }
+
         .cs-popover[data-placement="top"] {
-            --cs-popover-origin: bottom center;
             position-area: block-start;
             position-try-fallbacks: flip-block;
         }
 
+        .cs-popover:is([data-resolved-placement="top"], [data-placement="top"]:not([data-resolved-placement])) {
+            --cs-popover-origin: bottom center;
+        }
+
         .cs-popover[data-placement="top-start"] {
-            --cs-popover-origin: bottom left;
             position-area: block-start span-inline-end;
             position-try-fallbacks:
                 flip-block,
@@ -96,8 +183,14 @@
                 flip-block flip-inline;
         }
 
+        .cs-popover:is(
+            [data-resolved-placement="top-start"],
+            [data-placement="top-start"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-origin: bottom left;
+        }
+
         .cs-popover[data-placement="top-end"] {
-            --cs-popover-origin: bottom right;
             position-area: block-start span-inline-start;
             position-try-fallbacks:
                 flip-block,
@@ -105,21 +198,36 @@
                 flip-block flip-inline;
         }
 
+        .cs-popover:is(
+            [data-resolved-placement="top-end"],
+            [data-placement="top-end"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-origin: bottom right;
+        }
+
         /* BOTTOM */
         .cs-popover[data-placement^="bottom"] {
-            --cs-popover-dir-x: 0;
-            --cs-popover-dir-y: -1;
             margin-block-start: var(--cs-popover-offset);
         }
 
+        .cs-popover:is(
+            [data-resolved-placement^="bottom"],
+            [data-placement^="bottom"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-dir-x: 0;
+            --cs-popover-dir-y: -1;
+        }
+
         .cs-popover[data-placement="bottom"] {
-            --cs-popover-origin: top center;
             position-area: block-end;
             position-try-fallbacks: flip-block;
         }
 
+        .cs-popover:is([data-resolved-placement="bottom"], [data-placement="bottom"]:not([data-resolved-placement])) {
+            --cs-popover-origin: top center;
+        }
+
         .cs-popover[data-placement="bottom-start"] {
-            --cs-popover-origin: top left;
             position-area: block-end span-inline-end;
             position-try-fallbacks:
                 flip-block,
@@ -127,8 +235,14 @@
                 flip-block flip-inline;
         }
 
+        .cs-popover:is(
+            [data-resolved-placement="bottom-start"],
+            [data-placement="bottom-start"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-origin: top left;
+        }
+
         .cs-popover[data-placement="bottom-end"] {
-            --cs-popover-origin: top right;
             position-area: block-end span-inline-start;
             position-try-fallbacks:
                 flip-block,
@@ -136,21 +250,33 @@
                 flip-block flip-inline;
         }
 
+        .cs-popover:is(
+            [data-resolved-placement="bottom-end"],
+            [data-placement="bottom-end"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-origin: top right;
+        }
+
         /* LEFT */
         .cs-popover[data-placement^="left"] {
-            --cs-popover-dir-x: 1;
-            --cs-popover-dir-y: 0;
             margin-inline-end: var(--cs-popover-offset);
         }
 
+        .cs-popover:is([data-resolved-placement^="left"], [data-placement^="left"]:not([data-resolved-placement])) {
+            --cs-popover-dir-x: 1;
+            --cs-popover-dir-y: 0;
+        }
+
         .cs-popover[data-placement="left"] {
-            --cs-popover-origin: center right;
             position-area: inline-start;
             position-try-fallbacks: flip-inline;
         }
 
+        .cs-popover:is([data-resolved-placement="left"], [data-placement="left"]:not([data-resolved-placement])) {
+            --cs-popover-origin: center right;
+        }
+
         .cs-popover[data-placement="left-start"] {
-            --cs-popover-origin: top right;
             position-area: inline-start span-block-end;
             position-try-fallbacks:
                 flip-inline,
@@ -158,8 +284,14 @@
                 flip-inline flip-block;
         }
 
+        .cs-popover:is(
+            [data-resolved-placement="left-start"],
+            [data-placement="left-start"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-origin: top right;
+        }
+
         .cs-popover[data-placement="left-end"] {
-            --cs-popover-origin: bottom right;
             position-area: inline-start span-block-start;
             position-try-fallbacks:
                 flip-inline,
@@ -167,21 +299,33 @@
                 flip-inline flip-block;
         }
 
+        .cs-popover:is(
+            [data-resolved-placement="left-end"],
+            [data-placement="left-end"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-origin: bottom right;
+        }
+
         /* RIGHT */
         .cs-popover[data-placement^="right"] {
-            --cs-popover-dir-x: -1;
-            --cs-popover-dir-y: 0;
             margin-inline-start: var(--cs-popover-offset);
         }
 
+        .cs-popover:is([data-resolved-placement^="right"], [data-placement^="right"]:not([data-resolved-placement])) {
+            --cs-popover-dir-x: -1;
+            --cs-popover-dir-y: 0;
+        }
+
         .cs-popover[data-placement="right"] {
-            --cs-popover-origin: center left;
             position-area: inline-end;
             position-try-fallbacks: flip-inline;
         }
 
+        .cs-popover:is([data-resolved-placement="right"], [data-placement="right"]:not([data-resolved-placement])) {
+            --cs-popover-origin: center left;
+        }
+
         .cs-popover[data-placement="right-start"] {
-            --cs-popover-origin: top left;
             position-area: inline-end span-block-end;
             position-try-fallbacks:
                 flip-inline,
@@ -189,13 +333,26 @@
                 flip-inline flip-block;
         }
 
+        .cs-popover:is(
+            [data-resolved-placement="right-start"],
+            [data-placement="right-start"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-origin: top left;
+        }
+
         .cs-popover[data-placement="right-end"] {
-            --cs-popover-origin: bottom left;
             position-area: inline-end span-block-start;
             position-try-fallbacks:
                 flip-inline,
                 flip-block,
                 flip-inline flip-block;
+        }
+
+        .cs-popover:is(
+            [data-resolved-placement="right-end"],
+            [data-placement="right-end"]:not([data-resolved-placement])
+        ) {
+            --cs-popover-origin: bottom left;
         }
 
         /* =========================================================
@@ -235,16 +392,22 @@
             filter: blur(0px);
             translate: 0 0;
             scale: 1;
-
-            transition:
-                opacity var(--cs-popover-dur-fade-in) var(--cs-ease-effect),
-                filter var(--cs-popover-dur-blur-in) var(--cs-ease-effect),
-                scale var(--cs-popover-dur-in) var(--cs-ease-enter),
-                translate var(--cs-popover-dur-in) var(--cs-ease-enter),
-                display var(--cs-popover-dur-in) allow-discrete,
-                overlay var(--cs-popover-dur-in) allow-discrete;
             /* Keep compositor layer active at scale: 1 while open so fractional anchor-center subpixels don't snap at transitionend. */
             will-change: scale;
+        }
+
+        /* Hide on the initial top-layer frame until toggle measures resolvedPlacement and sets data-ready. */
+        .cs-popover[data-animate]:popover-open:not([data-ready]):not([data-warm]):not([data-instant]) {
+            opacity: 0;
+            pointer-events: none;
+            transition: none;
+        }
+
+        .cs-popover[data-animate][data-ready]:popover-open:not([data-warm]):not([data-instant]) {
+            animation:
+                cs-popover-enter var(--cs-popover-dur-in) var(--cs-ease-enter) both,
+                cs-popover-fade-in var(--cs-popover-dur-fade-in) var(--cs-ease-effect) both,
+                cs-popover-blur-in var(--cs-popover-dur-blur-in) var(--cs-ease-effect) both;
         }
 
         .cs-popover[data-animate][data-warm]:popover-open,
@@ -253,16 +416,37 @@
             --cs-popover-dur-fade-in: 0s;
             --cs-popover-dur-blur-in: 0s;
             --cs-popover-dur-out: 0s;
+            animation: none !important;
             transition: none !important;
         }
 
-        @starting-style {
-            .cs-popover[data-animate]:popover-open {
-                opacity: 0;
-                filter: blur(var(--cs-popover-blur-start));
+        @keyframes cs-popover-enter {
+            from {
                 translate: calc(var(--cs-popover-dir-x) * var(--cs-popover-distance))
                     calc(var(--cs-popover-dir-y) * var(--cs-popover-distance));
                 scale: var(--cs-popover-scale-start);
+            }
+            to {
+                translate: 0 0;
+                scale: 1;
+            }
+        }
+
+        @keyframes cs-popover-fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes cs-popover-blur-in {
+            from {
+                filter: blur(var(--cs-popover-blur-start));
+            }
+            to {
+                filter: blur(0px);
             }
         }
     }
