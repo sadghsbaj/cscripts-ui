@@ -1,9 +1,10 @@
 Popover wen nFallback kommt iwie transform origin auch anpassen x
-soft danger schöner machen bzw ersetzen
+soft danger schöner machen bzw ersetzen x
 Bei Segmented Contrl Chevorn erhscien bug x
 Charts mache ndas man Legende mit filter rendern kan ndasn ur bestimmte legendeinträge scihtbar x
 intro nur bei session speichern aber sonst imer öffnen x
 bei singefile<> gabs iwie nen problem mit buauen x
+Problem dots
 
 ## UI & Polish
 
