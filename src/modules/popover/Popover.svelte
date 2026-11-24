@@ -122,7 +122,7 @@
             --cs-popover-origin: bottom center;
 
             position-anchor: var(--cs-popover-anchor);
-            position-visibility: anchors-visible;
+            position-visibility: anchor-visible;
             position: fixed;
             inset: auto;
             margin: 0;
