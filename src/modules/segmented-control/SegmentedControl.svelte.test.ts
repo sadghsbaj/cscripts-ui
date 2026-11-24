@@ -37,6 +37,29 @@ async function flushMicrotasks(): Promise<void> {
     await Promise.resolve();
 }
 
+function mockRaf(): { flushNext: (timestamp?: number) => void } {
+    let nextId = 1;
+    const callbacks = new Map<number, FrameRequestCallback>();
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+        const id = nextId++;
+        callbacks.set(id, cb);
+        return id;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+        callbacks.delete(id);
+    });
+    return {
+        flushNext(timestamp = 16): void {
+            const first = callbacks.entries().next();
+            if (first.done) throw new Error("Expected a pending requestAnimationFrame callback");
+            const [id, cb] = first.value;
+            callbacks.delete(id);
+            cb(timestamp);
+            flushSync();
+        },
+    };
+}
+
 describe("SegmentedControl Svelte 5 Component", () => {
     let container: HTMLDivElement;
 
@@ -589,29 +612,6 @@ describe("SegmentedControl Svelte 5 Component", () => {
 
             unmount(instance);
         });
-
-        function mockRaf() {
-            let nextId = 1;
-            const callbacks = new Map<number, FrameRequestCallback>();
-            vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
-                const id = nextId++;
-                callbacks.set(id, cb);
-                return id;
-            });
-            vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
-                callbacks.delete(id);
-            });
-            return {
-                flushNext(timestamp = 16) {
-                    const first = callbacks.entries().next();
-                    if (first.done) throw new Error("Expected a pending requestAnimationFrame callback");
-                    const [id, cb] = first.value;
-                    callbacks.delete(id);
-                    cb(timestamp);
-                    flushSync();
-                },
-            };
-        }
 
         test("initial mount with value sets data-active immediately, and enables data-ready and data-slide only after requestAnimationFrame", () => {
             const raf = mockRaf();

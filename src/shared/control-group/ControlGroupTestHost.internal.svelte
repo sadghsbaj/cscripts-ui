@@ -15,6 +15,7 @@
 </script>
 
 <script lang="ts">
+    import { untrack } from "svelte";
     import Self from "./ControlGroupTestHost.internal.svelte";
 
     interface Props {
@@ -39,28 +40,28 @@
         children,
     }: Props = $props();
 
-    if (mode === "provider") {
-        if (providePrimary) {
-            setPrimaryGroup(providePrimary);
+    untrack(() => {
+        if (mode === "provider") {
+            if (providePrimary) {
+                setPrimaryGroup(providePrimary);
+            }
+            if (provideSecondary) {
+                setSecondaryGroup(provideSecondary);
+            }
+        } else if (mode === "probe") {
+            const hasPrimary = hasPrimaryGroup();
+            const primaryGroup = hasPrimary ? getPrimaryGroup() : undefined;
+            const hasSecondary = hasSecondaryGroup();
+            const secondaryGroup = hasSecondary ? getSecondaryGroup() : undefined;
+            onProbe?.({
+                id,
+                hasPrimary,
+                primaryGroup,
+                hasSecondary,
+                secondaryGroup,
+            });
         }
-        if (provideSecondary) {
-            setSecondaryGroup(provideSecondary);
-        }
-    }
-
-    if (mode === "probe") {
-        const hasPrimary = hasPrimaryGroup();
-        const primaryGroup = hasPrimary ? getPrimaryGroup() : undefined;
-        const hasSecondary = hasSecondaryGroup();
-        const secondaryGroup = hasSecondary ? getSecondaryGroup() : undefined;
-        onProbe?.({
-            id,
-            hasPrimary,
-            primaryGroup,
-            hasSecondary,
-            secondaryGroup,
-        });
-    }
+    });
 </script>
 
 {#if mode === "provider"}

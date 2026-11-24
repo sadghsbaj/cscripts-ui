@@ -957,7 +957,8 @@ describe("Accordion Svelte 5 Component", () => {
 
             let triggers = getAllTriggers(container);
             expect(triggers.map((t) => t.textContent?.trim())).toEqual(["Three", "One", "Two"]);
-            let [t0, t1, t2] = triggers;
+            let [t0, t1] = triggers;
+            const t2 = triggers[2];
             if (!t0 || !t1 || !t2) throw new Error("Expected 3 triggers");
 
             t0.focus();
