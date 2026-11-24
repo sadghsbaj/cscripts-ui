@@ -9,6 +9,7 @@
     import { ToggleButton, ToggleButtonIcon } from "cs/svelte/toggle-button";
     import { tooltip } from "cs/svelte/tooltip";
     import NumberStepperLab from "./NumberStepperLab.svelte";
+    import SegmentedControlOverflowLab from "./SegmentedControlOverflowLab.svelte";
     import WorkAppDocsSidebarLab from "./WorkAppDocsSidebarLab.svelte";
 
     let selectMode = $state(false);
@@ -79,6 +80,7 @@
     <ScrollArea size="lg" direction="vertical" class="size-full">
         <ScrollAreaContent class="p-8 lg:p-16">
             <div class="min-h-full w-full flex-center flex-col gap-12">
+                <SegmentedControlOverflowLab />
                 <WorkAppDocsSidebarLab />
                 <NumberStepperLab {selectMode} {rejectedIds} onToggleReject={toggleReject} />
             </div>
