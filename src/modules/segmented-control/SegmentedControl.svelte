@@ -228,6 +228,8 @@
                 data-slide={canSlide ? "" : undefined}
                 style:--cs-segmented-control-indicator-x={`${indicatorX}px`}
                 style:--cs-segmented-control-indicator-w={`${indicatorW}px`}
+                ontransitionend={syncOverflow}
+                ontransitioncancel={syncOverflow}
             ></div>
             {@render children?.()}
         </div>
@@ -428,6 +430,9 @@
             align-items: stretch;
             height: 100%;
             padding: var(--cs-segmented-control-pad);
+            /* Clip horizontal indicator transitions without clipping vertical focus rings. */
+            overflow-x: clip;
+            overflow-y: visible;
 
             .cs-segmented-control[data-width="equal"] & {
                 display: grid;
