@@ -22,8 +22,8 @@ export default defineConfig({
             minify: {
                 collapseWhitespace: true,
                 removeComments: true,
-                minifyCSS: true,
-                minifyJS: true,
+                minifyCSS: false,
+                minifyJS: false,
                 useShortDoctype: true,
                 removeEmptyAttributes: true,
                 removeAttributeQuotes: true,

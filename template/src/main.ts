@@ -4,6 +4,7 @@ import "cs/svelte/theme";
 
 import { mount } from "svelte";
 import { configureStoragePrefix } from "cs/svelte/browser-storage";
+import App from "./App.svelte";
 
 import "virtual:uno.css";
 
@@ -15,8 +16,8 @@ const target = document.getElementById("app");
 if (!target) throw new Error("Missing #app mount target");
 
 const isLab = import.meta.env.DEV && window.location.pathname.startsWith("/lab");
-const rootModule = isLab ? await import("./lab/LabView.svelte") : await import("./App.svelte");
-const Root = rootModule.default;
+const rootModule = isLab ? await import("./lab/LabView.svelte") : null;
+const Root = rootModule ? rootModule.default : App;
 
 const app = mount(Root, { target });
 
