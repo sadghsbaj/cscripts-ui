@@ -1,3 +1,11 @@
+Todo Cscripts Lib
+Popover wen nFallback kommt iwie transform origin auch anpassen
+soft danger schöner machen bzw ersetzen
+Bei Segmented Contrl Chevorn erhscien bug
+Charts mache ndas man Legende mit filter rendern kan ndasn ur bestimmte legendeinträge scihtbar
+intro nur bei session speichern aber sonst imer öffnen
+bei singefile<> gabs iwie nen problem mit buauen
+
 ## UI & Polish
 
 - [x] `ToggleButton`: statt soft blau was anderes?
