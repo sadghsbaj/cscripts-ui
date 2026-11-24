@@ -192,7 +192,17 @@
     }
 
     function scrollItemIntoView(item: CommandPaletteRegisteredItem | undefined): void {
-        item?.element?.scrollIntoView({ block: "nearest" });
+        const viewport =
+            item?.element?.closest<HTMLElement>(".cs-scroll-area-viewport") ??
+            listRef?.closest<HTMLElement>(".cs-scroll-area-viewport");
+
+        if (item && visibleEnabledItems[0]?.value === item.value && viewport) {
+            viewport.scrollTop = 0;
+        } else if (item && visibleEnabledItems.at(-1)?.value === item.value && viewport) {
+            viewport.scrollTop = viewport.scrollHeight - viewport.clientHeight;
+        } else {
+            item?.element?.scrollIntoView({ block: "nearest" });
+        }
     }
 
     function moveHighlight(direction: 1 | -1): void {

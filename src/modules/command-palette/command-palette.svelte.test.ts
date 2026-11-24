@@ -353,6 +353,60 @@ describe("CommandPalette Svelte 5 Component", () => {
 
             unmount(host);
         });
+
+        test("snaps viewport.scrollTop to 0 for first item and bottom for last item on keyboard navigation", () => {
+            const host = mount(CommandPaletteTestHost, {
+                target: container,
+                props: {
+                    open: true,
+                    focusTrap: false,
+                    groups: [
+                        {
+                            key: "g1",
+                            label: "Primary",
+                            items: [
+                                { value: "first", label: "First" },
+                                { value: "middle", label: "Middle" },
+                                { value: "last", label: "Last" },
+                            ],
+                        },
+                    ],
+                },
+            });
+            flushSync();
+
+            const input = mustQuery<HTMLInputElement>(document.body, '[role="combobox"]');
+            const viewport = mustQuery<HTMLElement>(document.body, ".cs-scroll-area-viewport");
+            const middleEl = mustQuery<HTMLElement>(document.body, '[data-value="middle"]');
+            const middleScrollIntoView = vi.spyOn(middleEl, "scrollIntoView");
+
+            Object.defineProperties(viewport, {
+                scrollHeight: { configurable: true, value: 500 },
+                clientHeight: { configurable: true, value: 200 },
+            });
+
+            // Moving to a middle item delegates to scrollIntoView({ block: "nearest" }).
+            dispatchKeyDown(input, "ArrowDown");
+            flushSync();
+            expect(host.getHighlightedValue()).toBe("middle");
+            expect(middleScrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
+
+            // Moving to the last item snaps viewport to the bottom (scrollHeight - clientHeight).
+            viewport.scrollTop = 40;
+            dispatchKeyDown(input, "ArrowDown");
+            flushSync();
+            expect(host.getHighlightedValue()).toBe("last");
+            expect(viewport.scrollTop).toBe(300);
+
+            // Moving back to the first item via PageUp (or ArrowUp/Home) snaps viewport.scrollTop to 0.
+            viewport.scrollTop = 120;
+            dispatchKeyDown(input, "PageUp");
+            flushSync();
+            expect(host.getHighlightedValue()).toBe("first");
+            expect(viewport.scrollTop).toBe(0);
+
+            unmount(host);
+        });
     });
 
     describe("Multi-page scope stack", () => {
