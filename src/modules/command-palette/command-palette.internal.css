@@ -1,0 +1,818 @@
+@layer components.composite {
+    /* =========================================================
+     * OVERLAY (Upper-viewport anchor & synced 120ms exit)
+     * ========================================================= */
+    .cs-overlay.cs-command-palette-overlay {
+        --cs-command-palette-offset-top: min(15dvh, 128px);
+        --cs-command-palette-dur-out: var(--cs-dur-exit-md);
+        --cs-command-palette-ease-out: var(--cs-ease-exit);
+
+        align-items: flex-start;
+        justify-content: center;
+        padding-block-start: calc(var(--cs-command-palette-offset-top) + var(--cs-overlay-inset-top, 0px));
+        padding-block-end: calc(var(--cs-overlay-padding) + var(--cs-overlay-inset-bottom, 0px));
+        transition:
+            opacity var(--cs-command-palette-dur-out) var(--cs-command-palette-ease-out),
+            backdrop-filter var(--cs-command-palette-dur-out) var(--cs-command-palette-ease-out),
+            -webkit-backdrop-filter var(--cs-command-palette-dur-out) var(--cs-command-palette-ease-out),
+            padding-block-start var(--cs-command-palette-dur-out) var(--cs-command-palette-ease-out),
+            padding-block-end var(--cs-command-palette-dur-out) var(--cs-command-palette-ease-out),
+            display var(--cs-command-palette-dur-out) allow-discrete,
+            overlay var(--cs-command-palette-dur-out) allow-discrete;
+
+        &:popover-open {
+            transition:
+                opacity var(--cs-dur-enter-sm) var(--cs-ease-effect),
+                backdrop-filter var(--cs-dur-enter-sm) var(--cs-ease-effect),
+                -webkit-backdrop-filter var(--cs-dur-enter-sm) var(--cs-ease-effect),
+                padding-block-start var(--cs-dur-280) var(--cs-ease-quart-out),
+                padding-block-end var(--cs-dur-280) var(--cs-ease-quart-out),
+                display var(--cs-dur-enter-sm) allow-discrete,
+                overlay var(--cs-dur-enter-sm) allow-discrete;
+        }
+    }
+
+    /* =========================================================
+     * SHELL (Transparent flex-column wrapper for 2-Region Machined Pair)
+     * ========================================================= */
+    .cs-command-palette {
+        --cs-command-palette-bg: var(--cs-color-elevated);
+        --cs-command-palette-fg: var(--cs-color-text-main);
+        --cs-command-palette-shadow: var(--cs-shadow-floating);
+        --cs-command-palette-squircle: var(--cs-squircle);
+        --cs-command-palette-divider-bg: color-mix(in oklab, var(--cs-color-text-main) 9%, transparent);
+        --cs-command-palette-max-height: 100%;
+
+        /* Shell Motion */
+        --cs-command-palette-dur-in: var(--cs-dur-enter-sm);
+        --cs-command-palette-dur-fade-in: var(--cs-dur-effect);
+        --cs-command-palette-dur-out: var(--cs-dur-exit-md);
+        --cs-command-palette-ease-in: var(--cs-ease-enter);
+        --cs-command-palette-ease-out: var(--cs-ease-exit);
+        --cs-command-palette-scale-start: 0.97;
+        --cs-command-palette-scale-exit: 0.98;
+        --cs-command-palette-translate-y: -6px;
+
+        /* Command Bar & Scope */
+        --cs-command-palette-input-fg: var(--cs-color-text-strong);
+        --cs-command-palette-placeholder-fg: var(--cs-color-text-weaker);
+        --cs-command-palette-caret: var(--cs-color-accent-solid);
+        --cs-command-palette-icon-fg: var(--cs-color-text-weak);
+        --cs-command-palette-scope-bg: var(--cs-color-base-soft);
+        --cs-command-palette-scope-bg-hover: var(--cs-color-base-soft-hover);
+        --cs-command-palette-scope-fg: var(--cs-color-text-main);
+
+        /* List, Items, Widget, Preview & Footer */
+        --cs-command-palette-list-max-height: min(360px, 52dvh);
+        --cs-command-palette-item-bg: transparent;
+        --cs-command-palette-item-bg-highlighted: var(--cs-color-base-soft);
+        --cs-command-palette-item-bg-active: var(--cs-color-base-soft-hover);
+        --cs-command-palette-item-fg: var(--cs-color-text-strong);
+        --cs-command-palette-item-description-fg: var(--cs-color-text-weak);
+        --cs-command-palette-item-icon-fg: var(--cs-color-text-weak);
+        --cs-command-palette-shortcut-fg: var(--cs-color-text-weaker);
+        --cs-command-palette-item-negative-fg: var(--cs-color-negative-soft-fg);
+        --cs-command-palette-item-negative-bg-highlighted: var(--cs-color-negative-soft);
+        --cs-command-palette-item-negative-bg-active: var(--cs-color-negative-soft-hover);
+        --cs-command-palette-widget-bg: var(--cs-color-base-soft);
+        --cs-command-palette-preview-width: 44%;
+        --cs-command-palette-footer-bg: color-mix(in oklab, var(--cs-color-text-main) 3%, transparent);
+        --cs-command-palette-footer-fg: var(--cs-color-text-weak);
+
+        /* Bridge into shared listbox.css tokens */
+        --cs-listbox-content-radius: var(--cs-command-palette-radius);
+        --cs-listbox-list-gap: 2px;
+        --cs-listbox-item-bg: var(--cs-command-palette-item-bg);
+        --cs-listbox-item-bg-hover: var(--cs-command-palette-item-bg-highlighted);
+        --cs-listbox-item-bg-highlighted: var(--cs-command-palette-item-bg-highlighted);
+        --cs-listbox-item-bg-active: var(--cs-command-palette-item-bg-active);
+        --cs-listbox-item-fg: var(--cs-command-palette-item-fg);
+        --cs-listbox-item-fg-hover: var(--cs-command-palette-item-fg);
+        --cs-listbox-item-description-fg: var(--cs-command-palette-item-description-fg);
+        --cs-listbox-item-icon-fg: var(--cs-command-palette-item-icon-fg);
+        --cs-listbox-group-label-fg: var(--cs-color-text-weak);
+        --cs-listbox-separator-bg: var(--cs-command-palette-divider-bg);
+        --cs-listbox-empty-fg: var(--cs-color-text-weak);
+        --cs-listbox-item-radius: max(
+            var(--cs-radius-lg),
+            calc(var(--cs-command-palette-radius) - var(--cs-listbox-content-padding))
+        );
+
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: var(--cs-command-palette-gap);
+        inline-size: 100%;
+        max-inline-size: var(--cs-command-palette-max-width);
+        max-block-size: var(--cs-command-palette-max-height);
+        overflow: visible;
+        color: var(--cs-command-palette-fg);
+        font-family: var(--cs-font-sans);
+        background-color: transparent;
+        border-radius: 0;
+        corner-shape: initial;
+        box-shadow: none;
+
+        /* Exit state when Overlay loses :popover-open */
+        opacity: 0;
+        translate: 0 -4px;
+        scale: var(--cs-command-palette-scale-exit);
+        transform-origin: top center;
+        transition:
+            opacity var(--cs-command-palette-dur-out) var(--cs-command-palette-ease-out),
+            scale var(--cs-command-palette-dur-out) var(--cs-command-palette-ease-out),
+            translate var(--cs-command-palette-dur-out) var(--cs-command-palette-ease-out);
+
+        /* =========================================================
+         * SIZES (sm | md | lg)
+         * ========================================================= */
+        &[data-size="sm"] {
+            --cs-command-palette-max-width: 480px;
+            --cs-command-palette-list-max-height: min(360px, 52dvh);
+            --cs-command-palette-gap: 8px;
+            --cs-command-palette-radius: 18px;
+            --cs-command-palette-bar-height: 46px;
+            --cs-command-palette-bar-px: 16px;
+            --cs-command-palette-bar-gap: 8px;
+            --cs-command-palette-icon-size: 17px;
+            --cs-command-palette-input-font-size: var(--cs-text-sm);
+            --cs-command-palette-scope-height: 24px;
+            --cs-command-palette-scope-px: 9px;
+            --cs-command-palette-scope-radius: 8px;
+            --cs-command-palette-scope-font-size: var(--cs-text-xs);
+            --cs-command-palette-clear-size: 26px;
+            --cs-command-palette-clear-icon-size: 14px;
+            --cs-command-palette-clear-inset: 10px;
+            --cs-command-palette-footer-height: 36px;
+            --cs-command-palette-footer-px: 16px;
+            --cs-command-palette-footer-py: 8px;
+            --cs-command-palette-footer-font-size: var(--cs-text-xs);
+            --cs-command-palette-widget-px: 12px;
+            --cs-command-palette-widget-py: 10px;
+            --cs-command-palette-preview-px: 16px;
+            --cs-command-palette-preview-py: 14px;
+            --cs-command-palette-first-group-pt: 6px;
+
+            --cs-listbox-content-padding: 8px;
+            --cs-listbox-item-min-height: 34px;
+            --cs-listbox-item-px: 8px;
+            --cs-listbox-item-py: 7px;
+            --cs-listbox-item-gap: 8px;
+            --cs-listbox-item-font-size: 13px;
+            --cs-listbox-item-title-lh: 19px;
+            --cs-listbox-icon-size: 15px;
+            --cs-listbox-check-size: 14px;
+            --cs-listbox-group-gap: 8px;
+            --cs-listbox-group-label-font-size: var(--cs-text-xs);
+        }
+
+        &[data-size="md"] {
+            --cs-command-palette-max-width: 600px;
+            --cs-command-palette-list-max-height: min(400px, 54dvh);
+            --cs-command-palette-gap: 8px;
+            --cs-command-palette-radius: 20px;
+            --cs-command-palette-bar-height: 52px;
+            --cs-command-palette-bar-px: 18px;
+            --cs-command-palette-bar-gap: 10px;
+            --cs-command-palette-icon-size: 19px;
+            --cs-command-palette-input-font-size: var(--cs-text-base);
+            --cs-command-palette-scope-height: 26px;
+            --cs-command-palette-scope-px: 10px;
+            --cs-command-palette-scope-radius: 9px;
+            --cs-command-palette-scope-font-size: var(--cs-text-xs);
+            --cs-command-palette-clear-size: 28px;
+            --cs-command-palette-clear-icon-size: 16px;
+            --cs-command-palette-clear-inset: 12px;
+            --cs-command-palette-footer-height: 40px;
+            --cs-command-palette-footer-px: 18px;
+            --cs-command-palette-footer-py: 8px;
+            --cs-command-palette-footer-font-size: 13px;
+            --cs-command-palette-widget-px: 14px;
+            --cs-command-palette-widget-py: 12px;
+            --cs-command-palette-preview-px: 18px;
+            --cs-command-palette-preview-py: 16px;
+            --cs-command-palette-first-group-pt: 6px;
+
+            --cs-listbox-content-padding: 8px;
+            --cs-listbox-item-min-height: 38px;
+            --cs-listbox-item-px: 10px;
+            --cs-listbox-item-py: 8px;
+            --cs-listbox-item-gap: 8px;
+            --cs-listbox-item-font-size: var(--cs-text-sm);
+            --cs-listbox-item-title-lh: 20px;
+            --cs-listbox-icon-size: 16px;
+            --cs-listbox-check-size: 16px;
+            --cs-listbox-group-gap: 10px;
+            --cs-listbox-group-label-font-size: var(--cs-text-xs);
+        }
+
+        &[data-size="lg"] {
+            --cs-command-palette-max-width: 704px;
+            --cs-command-palette-list-max-height: min(440px, 56dvh);
+            --cs-command-palette-gap: 10px;
+            --cs-command-palette-radius: 22px;
+            --cs-command-palette-bar-height: 58px;
+            --cs-command-palette-bar-px: 22px;
+            --cs-command-palette-bar-gap: 12px;
+            --cs-command-palette-icon-size: 20px;
+            --cs-command-palette-input-font-size: var(--cs-text-base);
+            --cs-command-palette-scope-height: 28px;
+            --cs-command-palette-scope-px: 10px;
+            --cs-command-palette-scope-radius: 10px;
+            --cs-command-palette-scope-font-size: var(--cs-text-xs);
+            --cs-command-palette-clear-size: 32px;
+            --cs-command-palette-clear-icon-size: 16px;
+            --cs-command-palette-clear-inset: 13px;
+            --cs-command-palette-footer-height: 44px;
+            --cs-command-palette-footer-px: 22px;
+            --cs-command-palette-footer-py: 8px;
+            --cs-command-palette-footer-font-size: 13px;
+            --cs-command-palette-widget-px: 16px;
+            --cs-command-palette-widget-py: 14px;
+            --cs-command-palette-preview-px: 20px;
+            --cs-command-palette-preview-py: 18px;
+            --cs-command-palette-first-group-pt: 8px;
+
+            --cs-listbox-content-padding: 10px;
+            --cs-listbox-item-min-height: 42px;
+            --cs-listbox-item-px: 12px;
+            --cs-listbox-item-py: 9px;
+            --cs-listbox-item-gap: 10px;
+            --cs-listbox-item-font-size: 15px;
+            --cs-listbox-item-title-lh: 22px;
+            --cs-listbox-icon-size: 17px;
+            --cs-listbox-check-size: 16px;
+            --cs-listbox-group-gap: 10px;
+            --cs-listbox-group-label-font-size: var(--cs-text-xs);
+        }
+    }
+
+    @media (width >= 1536px) {
+        .cs-overlay.cs-command-palette-overlay {
+            --cs-command-palette-offset-top: min(16dvh, 160px);
+        }
+
+        .cs-command-palette[data-size="sm"] {
+            --cs-command-palette-max-width: 512px;
+            --cs-command-palette-list-max-height: min(400px, 54dvh);
+        }
+
+        .cs-command-palette[data-size="md"] {
+            --cs-command-palette-max-width: 656px;
+            --cs-command-palette-list-max-height: min(460px, 56dvh);
+        }
+
+        .cs-command-palette[data-size="lg"] {
+            --cs-command-palette-max-width: 768px;
+            --cs-command-palette-list-max-height: min(520px, 58dvh);
+        }
+    }
+
+    .cs-overlay.cs-command-palette-overlay:popover-open .cs-command-palette {
+        opacity: 1;
+        translate: 0 0;
+        scale: 1;
+        transition:
+            opacity var(--cs-command-palette-dur-fade-in) var(--cs-ease-effect),
+            scale var(--cs-command-palette-dur-in) var(--cs-command-palette-ease-in),
+            translate var(--cs-command-palette-dur-in) var(--cs-command-palette-ease-in);
+        will-change: opacity, scale, translate;
+    }
+
+    @starting-style {
+        .cs-overlay.cs-command-palette-overlay:popover-open .cs-command-palette {
+            opacity: 0;
+            translate: 0 var(--cs-command-palette-translate-y);
+            scale: var(--cs-command-palette-scale-start);
+        }
+    }
+
+    /* =========================================================
+     * COMMAND BAR, ICON, SCOPE, INPUT & CLEAR
+     * ========================================================= */
+    .cs-command-palette-bar {
+        display: flex;
+        flex-shrink: 0;
+        gap: var(--cs-command-palette-bar-gap);
+        align-items: center;
+        min-block-size: var(--cs-command-palette-bar-height);
+        padding-inline: var(--cs-command-palette-bar-px);
+        background-color: var(--cs-command-palette-bg);
+        border: none;
+        border-radius: var(--cs-command-palette-radius);
+        corner-shape: var(--cs-command-palette-squircle);
+        box-shadow: var(--cs-command-palette-shadow);
+        cursor: text;
+
+        /* Plumb-line compensation for Lucide's 2px internal SVG viewBox padding */
+        &:has(> .cs-command-palette-icon:first-child) {
+            padding-inline-start: calc(var(--cs-command-palette-bar-px) - 2px);
+        }
+
+        /* Concentric trailing inset when clear button is visible */
+        &:has(> .cs-command-palette-clear[data-visible]) {
+            padding-inline-end: var(--cs-command-palette-clear-inset);
+        }
+    }
+
+    .cs-command-palette-icon {
+        flex-shrink: 0;
+        order: -2;
+        width: var(--cs-command-palette-icon-size);
+        height: var(--cs-command-palette-icon-size);
+        color: var(--cs-command-palette-icon-fg);
+        stroke-width: 2.25;
+        pointer-events: none;
+    }
+
+    .cs-command-palette-scope {
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+        gap: 4px;
+        align-items: center;
+        max-inline-size: 160px;
+        block-size: var(--cs-command-palette-scope-height);
+        padding-inline: var(--cs-command-palette-scope-px);
+        color: var(--cs-command-palette-scope-fg);
+        font-size: var(--cs-command-palette-scope-font-size);
+        font-weight: 500;
+        background-color: var(--cs-command-palette-scope-bg);
+        border: none;
+        border-radius: var(--cs-command-palette-scope-radius);
+        corner-shape: var(--cs-squircle-soft);
+        user-select: none;
+        cursor: default;
+
+        &[data-auto-scope] {
+            order: -1;
+            margin-inline-end: -2px;
+        }
+
+        /* Tether blinking caret visually closer to the active scope chip */
+        &:has(+ .cs-command-palette-input) {
+            margin-inline-end: -2px;
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                color: var(--cs-color-text-strong);
+                background-color: var(--cs-command-palette-scope-bg-hover);
+            }
+        }
+
+        &:active {
+            color: var(--cs-color-text-strong);
+            background-color: var(--cs-command-palette-scope-bg-hover);
+        }
+    }
+
+    .cs-command-palette-scope-label {
+        overflow-x: clip;
+        overflow-y: visible;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-box: trim-both cap alphabetic;
+    }
+
+    .cs-command-palette-input {
+        flex: 1 1 auto;
+        margin: 0;
+        min-inline-size: 0;
+        block-size: 100%;
+        padding: 0;
+        color: var(--cs-command-palette-input-fg);
+        font-family: inherit;
+        font-size: var(--cs-command-palette-input-font-size);
+        font-weight: 400;
+        line-height: round(up, calc(var(--cs-command-palette-input-font-size) * var(--cs-leading-snug)), 1px);
+        appearance: none;
+        background-color: transparent;
+        border: none;
+        outline: none;
+        box-shadow: none;
+        caret-color: var(--cs-command-palette-caret);
+
+        &::placeholder {
+            color: var(--cs-command-palette-placeholder-fg);
+            opacity: 1;
+        }
+
+        &:focus,
+        &:focus-visible {
+            outline: none;
+            box-shadow: none;
+        }
+
+        &:disabled {
+            color: var(--cs-color-disabled-fg);
+            cursor: default;
+        }
+    }
+
+    .cs-command-palette-clear {
+        position: relative;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        inline-size: var(--cs-command-palette-clear-size);
+        block-size: var(--cs-command-palette-clear-size);
+        padding: 0;
+        color: var(--cs-color-text-weak);
+        background-color: transparent;
+        border: none;
+        border-radius: var(--cs-radius-full);
+        cursor: default;
+
+        &:not([data-visible]) {
+            display: none;
+        }
+
+        @media (hover: hover) {
+            &:hover:not(:disabled) {
+                color: var(--cs-color-text-strong);
+                background-color: var(--cs-color-base-soft);
+            }
+        }
+
+        &:active:not(:disabled) {
+            color: var(--cs-color-text-strong);
+            background-color: var(--cs-color-base-soft-hover);
+        }
+
+        & > .cs-command-palette-clear-icon {
+            width: var(--cs-command-palette-clear-icon-size);
+            height: var(--cs-command-palette-clear-icon-size);
+            stroke-width: 2.25;
+            pointer-events: none;
+        }
+    }
+
+    /* =========================================================
+     * REGION 2: UNIFIED CONTENT TRAY (BODY, LIST, PREVIEW, PAGE, WIDGET & FOOTER)
+     * ========================================================= */
+    .cs-command-palette-body {
+        display: grid;
+        flex: 1 1 auto;
+        grid-template-rows: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
+        min-block-size: 0;
+        overflow: hidden;
+        background-color: var(--cs-command-palette-bg);
+        border-radius: var(--cs-command-palette-radius);
+        corner-shape: var(--cs-command-palette-squircle);
+        box-shadow: var(--cs-command-palette-shadow);
+
+        &:has(> .cs-command-palette-preview) {
+            grid-template-columns: minmax(0, 1fr) var(--cs-command-palette-preview-width, 44%);
+        }
+
+        &:not(
+            :has(
+                .cs-command-palette-item:not([data-hidden]):not([hidden]),
+                .cs-command-palette-empty,
+                .cs-command-palette-widget,
+                .cs-command-palette-page,
+                .cs-command-palette-preview,
+                .cs-command-palette-footer
+            )
+        ),
+        &:has(> .cs-command-palette-list-scroll[hidden]):not(
+                :has(> .cs-command-palette-preview, > .cs-command-palette-page, > .cs-command-palette-footer)
+            ) {
+            display: none;
+        }
+    }
+
+    .cs-command-palette-list-scroll {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+        min-block-size: 0;
+        max-block-size: var(--cs-command-palette-list-max-height);
+        overflow: hidden;
+
+        /* Direct-child fallback when consumer omits CommandPaletteBody. */
+        .cs-command-palette > & {
+            background-color: var(--cs-command-palette-bg);
+            border-radius: var(--cs-command-palette-radius);
+            corner-shape: var(--cs-command-palette-squircle);
+            box-shadow: var(--cs-command-palette-shadow);
+        }
+
+        /* Inside Region 2 tray: transparent so the parent body owns the surface and shadow. */
+        .cs-command-palette-body > & {
+            grid-row: 1;
+            grid-column: 1;
+            background-color: transparent;
+            border-radius: 0;
+            corner-shape: initial;
+            box-shadow: none;
+        }
+
+        /* Collapse the list when nothing is visible and no empty state is rendered. */
+        &:not(
+            :has(
+                .cs-command-palette-item:not([data-hidden]):not([hidden]),
+                .cs-command-palette-empty,
+                .cs-command-palette-widget,
+                .cs-command-palette-page
+            )
+        ) {
+            display: none;
+        }
+    }
+
+    /* Suppress ScrollArea hover-mode scrollbar flash during pure keyboard navigation. */
+    .cs-command-palette[data-nav="keyboard"]
+        .cs-scroll-area.cs-command-palette-list-scroll[data-scrollbar="hover"]:not(:hover, [data-dragging])
+        > .cs-scroll-area-track {
+        opacity: 0;
+        translate: var(--cs-scroll-area-track-hide-translate);
+        pointer-events: none;
+    }
+
+    .cs-command-palette-list {
+        min-inline-size: 0;
+    }
+
+    .cs-command-palette-preview {
+        min-inline-size: 0;
+        max-block-size: var(--cs-command-palette-list-max-height);
+        padding-block: var(--cs-command-palette-preview-py);
+        padding-inline: var(--cs-command-palette-preview-px);
+        overflow-y: auto;
+        background-color: var(--cs-color-base-soft);
+        border: none;
+        border-radius: var(--cs-listbox-item-radius);
+        corner-shape: var(--cs-squircle-smooth);
+        box-shadow: none;
+        overscroll-behavior: contain;
+
+        .cs-command-palette-body > & {
+            grid-row: 1;
+            grid-column: 2;
+            margin-block: var(--cs-listbox-content-padding);
+            margin-inline-start: 0;
+            margin-inline-end: var(--cs-listbox-content-padding);
+            max-block-size: calc(var(--cs-command-palette-list-max-height) - var(--cs-listbox-content-padding) * 2);
+        }
+    }
+
+    @media (width < 560px) {
+        .cs-command-palette-body:has(> .cs-command-palette-preview) {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .cs-command-palette-preview {
+            display: none;
+        }
+    }
+
+    .cs-command-palette-page {
+        display: flex;
+        flex-direction: column;
+        gap: var(--cs-listbox-list-gap);
+        min-inline-size: 0;
+        min-block-size: 0;
+
+        /* Inside Region 2 tray: transparent surface spanning the top row. */
+        .cs-command-palette-body > & {
+            grid-row: 1;
+            grid-column: 1 / -1;
+            max-block-size: var(--cs-command-palette-list-max-height);
+            padding: var(--cs-listbox-content-padding);
+            overflow-x: hidden;
+            overflow-y: auto;
+            background-color: transparent;
+            border-radius: 0;
+            corner-shape: initial;
+            box-shadow: none;
+            overscroll-behavior: contain;
+        }
+
+        .cs-command-palette-body:has(> .cs-command-palette-preview) > & {
+            grid-column: 1;
+        }
+
+        /* Standalone page mounted directly under CommandPalette keeps the Region-2 tray surface. */
+        .cs-command-palette > & {
+            flex: 1 1 auto;
+            max-block-size: var(--cs-command-palette-list-max-height);
+            padding: var(--cs-listbox-content-padding);
+            overflow-x: hidden;
+            overflow-y: auto;
+            background-color: var(--cs-command-palette-bg);
+            border-radius: var(--cs-command-palette-radius);
+            corner-shape: var(--cs-command-palette-squircle);
+            box-shadow: var(--cs-command-palette-shadow);
+            overscroll-behavior: contain;
+        }
+    }
+
+    .cs-command-palette-widget {
+        padding-block: var(--cs-command-palette-widget-py);
+        padding-inline: var(--cs-command-palette-widget-px);
+        background-color: var(--cs-command-palette-widget-bg);
+        border: none;
+        border-radius: var(--cs-listbox-item-radius);
+        corner-shape: var(--cs-squircle-smooth);
+        box-shadow: none;
+        cursor: default;
+
+        &:has(+ .cs-command-palette-group, + .cs-command-palette-item) {
+            margin-block-end: 4px;
+        }
+    }
+
+    /* =========================================================
+     * FOOTER
+     * ========================================================= */
+    .cs-command-palette-footer {
+        display: flex;
+        flex-shrink: 0;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        min-block-size: var(--cs-command-palette-footer-height);
+        padding-block: var(--cs-command-palette-footer-py);
+        padding-inline: var(--cs-command-palette-footer-px);
+        color: var(--cs-command-palette-footer-fg);
+        font-size: var(--cs-command-palette-footer-font-size);
+        line-height: round(up, calc(var(--cs-command-palette-footer-font-size) * var(--cs-leading-snug)), 1px);
+        border: none;
+        user-select: none;
+
+        /* Docked inside Region 2 tray. */
+        .cs-command-palette-body > & {
+            grid-row: 2;
+            grid-column: 1 / -1;
+            background-color: var(--cs-command-palette-footer-bg);
+            border-radius: 0;
+            corner-shape: initial;
+            box-shadow: none;
+        }
+
+        /* Fallback when placed directly under CommandPalette outside CommandPaletteBody. */
+        .cs-command-palette > & {
+            background-color: var(--cs-command-palette-bg);
+            border-radius: var(--cs-command-palette-radius);
+            corner-shape: var(--cs-command-palette-squircle);
+            box-shadow: var(--cs-command-palette-shadow);
+        }
+    }
+
+    /* =========================================================
+     * GROUPS, SEPARATORS, EMPTY & ITEMS (STRICT 0ms INNER MOTION)
+     * ========================================================= */
+    .cs-command-palette-group {
+        &:has(.cs-command-palette-item):not(:has(.cs-command-palette-item:not([data-hidden]))) {
+            display: none;
+        }
+    }
+
+    .cs-command-palette-group-label {
+        padding-block: 6px 4px;
+        line-height: round(up, calc(var(--cs-listbox-group-label-font-size) * var(--cs-leading-tight)), 1px);
+    }
+
+    .cs-command-palette-list .cs-command-palette-group:first-of-type > .cs-command-palette-group-label:first-child {
+        padding-block-start: var(--cs-command-palette-first-group-pt);
+    }
+
+    /* Hide leading, trailing, and duplicate separators when filtering hides adjacent groups/items. */
+    .cs-command-palette-separator {
+        display: none;
+    }
+
+    :where(
+            .cs-command-palette-group:has(.cs-command-palette-item:not([data-hidden])),
+            .cs-command-palette-item:not([data-hidden]),
+            .cs-command-palette-widget
+        )
+        ~ .cs-command-palette-separator:where(
+            :has(
+                ~ .cs-command-palette-group .cs-command-palette-item:not([data-hidden]),
+                ~ .cs-command-palette-item:not([data-hidden]),
+                ~ .cs-command-palette-widget
+            )
+        ) {
+        display: block;
+    }
+
+    .cs-command-palette-separator + .cs-command-palette-separator,
+    .cs-command-palette-separator
+        + :is(
+            .cs-command-palette-group:has(.cs-command-palette-item):not(
+                    :has(.cs-command-palette-item:not([data-hidden]))
+                ),
+            .cs-command-palette-item[data-hidden]
+        )
+        + .cs-command-palette-separator {
+        display: none;
+    }
+
+    /* Strictly instant (0ms) empty-state swap — neutralizes cs-listbox-empty-in */
+    .cs-command-palette-empty {
+        line-height: round(up, calc(var(--cs-text-xs) * var(--cs-leading-snug)), 1px);
+        animation: none;
+    }
+
+    .cs-command-palette-item.cs-listbox-item {
+        /* Strictly instant (0ms) highlight, press, icon, and shortcut updates */
+        scale: 1;
+        transition: none;
+        will-change: auto;
+
+        @media (hover: hover) {
+            .cs-command-palette:not([data-nav="keyboard"]) &:hover:not([data-disabled]) {
+                --cs-listbox-item-icon-fg: var(--cs-color-text-main);
+                --cs-command-palette-shortcut-fg: var(--cs-color-text-main);
+                color: var(--cs-command-palette-item-fg);
+                background-color: var(--cs-command-palette-item-bg-highlighted);
+            }
+        }
+
+        &[data-highlighted]:not([data-disabled]) {
+            --cs-listbox-item-icon-fg: var(--cs-color-text-main);
+            --cs-command-palette-shortcut-fg: var(--cs-color-text-main);
+            color: var(--cs-command-palette-item-fg);
+            background-color: var(--cs-command-palette-item-bg-highlighted);
+        }
+
+        &:not([data-disabled]):active {
+            --cs-listbox-item-icon-fg: var(--cs-color-text-main);
+            --cs-command-palette-shortcut-fg: var(--cs-color-text-main);
+            color: var(--cs-command-palette-item-fg);
+            background-color: var(--cs-command-palette-item-bg-active);
+            scale: 1;
+        }
+
+        &[data-negative] {
+            @media (hover: hover) {
+                .cs-command-palette:not([data-nav="keyboard"]) &:hover:not([data-disabled]) {
+                    --cs-listbox-item-icon-fg: var(--cs-command-palette-item-negative-fg);
+                    --cs-command-palette-shortcut-fg: color-mix(
+                        in oklab,
+                        var(--cs-command-palette-item-negative-fg) 75%,
+                        transparent
+                    );
+                    color: var(--cs-command-palette-item-negative-fg);
+                    background-color: var(--cs-command-palette-item-negative-bg-highlighted);
+                }
+            }
+
+            &[data-highlighted]:not([data-disabled]) {
+                --cs-listbox-item-icon-fg: var(--cs-command-palette-item-negative-fg);
+                --cs-command-palette-shortcut-fg: color-mix(
+                    in oklab,
+                    var(--cs-command-palette-item-negative-fg) 75%,
+                    transparent
+                );
+                color: var(--cs-command-palette-item-negative-fg);
+                background-color: var(--cs-command-palette-item-negative-bg-highlighted);
+            }
+
+            &:not([data-disabled]):active {
+                --cs-listbox-item-icon-fg: var(--cs-command-palette-item-negative-fg);
+                --cs-command-palette-shortcut-fg: color-mix(
+                    in oklab,
+                    var(--cs-command-palette-item-negative-fg) 75%,
+                    transparent
+                );
+                color: var(--cs-command-palette-item-negative-fg);
+                background-color: var(--cs-command-palette-item-negative-bg-active);
+                scale: 1;
+            }
+        }
+
+        &[data-disabled] {
+            --cs-command-palette-shortcut-fg: var(--cs-color-disabled-fg);
+        }
+
+        & .cs-listbox-item-icon,
+        & .cs-command-palette-item-shortcut {
+            transition: none;
+        }
+    }
+
+    .cs-command-palette-item-description {
+        line-height: round(up, calc(var(--cs-text-xs) * var(--cs-leading-snug)), 1px);
+    }
+
+    .cs-command-palette-item-shortcut {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        padding-inline-start: 12px;
+        color: var(--cs-command-palette-shortcut-fg);
+        font-size: var(--cs-text-xs);
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+
+        & .cs-kbd[data-variant="ghost"] {
+            --cs-kbd-fg: var(--cs-command-palette-shortcut-fg);
+        }
+    }
+}
