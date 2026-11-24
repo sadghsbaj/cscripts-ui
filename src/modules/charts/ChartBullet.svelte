@@ -550,7 +550,7 @@
         </defs>
 
         {#each preparedRows as prepared (prepared.row.index)}
-            {const g = $derived(prepared.geometry)}
+            {let g = $derived(prepared.geometry)}
             <g
                 class="cs-chart-bullet-row"
                 data-index={prepared.row.index}
@@ -691,7 +691,7 @@
         {#if sharedScale && layout.sharedTicks.length > 0}
             <g class="cs-chart-bullet-axis" aria-hidden="true">
                 {#each layout.sharedTicks as tick, tickIdx (tick.value)}
-                    {const anchor = $derived(
+                    {let anchor = $derived(
                         tickIdx === 0
                             ? "start"
                             : tickIdx === layout.sharedTicks.length - 1

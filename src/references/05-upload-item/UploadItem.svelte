@@ -32,14 +32,13 @@
         <CardBody>
             <div class="divide-y divide-base-soft">
                 {#each items as item (item.id)}
-                    {const isOpen = $derived(item.status !== "done")}
-                    {const metaText = $derived(
+                    {let isOpen = item.status !== "done"}
+                    {let metaText =
                         item.status === "error"
                             ? "Upload failed"
                             : item.status === "done"
                               ? `${item.sizeLabel}, Complete`
-                              : `${item.sizeLabel}, ${Math.round(item.progress)}%`,
-                    )}
+                              : `${item.sizeLabel}, ${Math.round(item.progress)}%`}
 
                     <div class="py-3.5 first:pt-0 last:pb-0 flex flex-col">
                         <div class="min-h-6 flex items-center justify-between gap-4">

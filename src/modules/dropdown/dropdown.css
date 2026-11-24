@@ -7,8 +7,6 @@
         --cs-dropdown-footer-py: 8px;
         --cs-dropdown-shortcut-fg: var(--cs-color-text-weaker);
         --cs-dropdown-item-negative-fg: var(--cs-color-negative-soft-fg);
-        --cs-dropdown-item-negative-bg-hover: var(--cs-color-negative-soft);
-        --cs-dropdown-item-negative-bg-active: var(--cs-color-negative-soft-hover);
 
         min-inline-size: var(--cs-dropdown-content-min-width, 180px);
     }
@@ -65,7 +63,6 @@
                     --cs-listbox-item-icon-fg: var(--cs-dropdown-item-negative-fg);
                     --cs-dropdown-shortcut-fg: color-mix(in oklab, var(--cs-dropdown-item-negative-fg) 70%, transparent);
                     color: var(--cs-dropdown-item-negative-fg);
-                    background-color: var(--cs-dropdown-item-negative-bg-hover);
                 }
             }
 
@@ -75,14 +72,12 @@
                 --cs-listbox-item-icon-fg: var(--cs-dropdown-item-negative-fg);
                 --cs-dropdown-shortcut-fg: color-mix(in oklab, var(--cs-dropdown-item-negative-fg) 70%, transparent);
                 color: var(--cs-dropdown-item-negative-fg);
-                background-color: var(--cs-dropdown-item-negative-bg-hover);
             }
 
             &:not([data-disabled]):active {
                 --cs-listbox-item-icon-fg: var(--cs-dropdown-item-negative-fg);
                 --cs-dropdown-shortcut-fg: color-mix(in oklab, var(--cs-dropdown-item-negative-fg) 70%, transparent);
                 color: var(--cs-dropdown-item-negative-fg);
-                background-color: var(--cs-dropdown-item-negative-bg-active);
                 scale: 0.97;
             }
         }

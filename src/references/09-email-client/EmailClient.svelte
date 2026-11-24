@@ -370,7 +370,7 @@
         <nav aria-label="Mailboxes" class="mt-3 flex flex-col gap-0.5">
             {#each EMAIL_FOLDERS as folder (folder.id)}
                 {const Icon = FOLDER_ICONS[folder.id]}
-                {const isActive = $derived(activeFolder === folder.id)}
+                {let isActive = activeFolder === folder.id}
                 <button
                     type="button"
                     aria-current={isActive ? "page" : undefined}
@@ -438,7 +438,7 @@
                         </p>
                     {:else}
                         {#each filteredMessages as msg (msg.id)}
-                            {const isSelected = $derived(selectedMessage?.id === msg.id)}
+                            {let isSelected = selectedMessage?.id === msg.id}
                             <button
                                 type="button"
                                 aria-current={isSelected ? "true" : undefined}
@@ -662,7 +662,7 @@
                     >
                         <article class="max-w-[65ch] flex flex-col gap-4 text-sm leading-relaxed text-main">
                             {#if selectedMessage.earlierMessages && selectedMessage.earlierMessages.length > 0}
-                                {const earlierCount = $derived(selectedMessage.earlierMessages.length)}
+                                {let earlierCount = selectedMessage.earlierMessages.length}
                                 <div class="flex flex-col">
                                     <Button
                                         variant="ghost"

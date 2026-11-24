@@ -282,7 +282,7 @@
                     <button
                         type="button"
                         class="cs-work-workspace-menu-item"
-                        data-destructive=""
+                        data-negative=""
                         disabled={renderedBusy}
                         onclick={() => handleAction(ondisconnect)}
                         onpointerup={(event) => handleItemPointerUp(event, ondisconnect)}
@@ -329,7 +329,7 @@
                     <button
                         type="button"
                         class="cs-work-workspace-menu-item"
-                        data-destructive=""
+                        data-negative=""
                         disabled={renderedBusy}
                         onclick={() => handleAction(ondisconnect)}
                         onpointerup={(event) => handleItemPointerUp(event, ondisconnect)}
@@ -539,10 +539,10 @@
                 }
             }
 
-            &[data-destructive]:hover:not(:disabled),
-            &[data-destructive]:focus-visible {
+            &[data-negative]:hover:not(:disabled),
+            &[data-negative]:focus-visible,
+            &[data-negative]:active:not(:disabled) {
                 color: var(--cs-color-negative-soft-fg);
-                background-color: var(--cs-color-negative-soft);
             }
 
             & > :global(.cs-work-workspace-menu-item-icon) {
@@ -551,8 +551,9 @@
                 transition: color var(--cs-dur-effect-fast) var(--cs-ease-effect);
             }
 
-            &[data-destructive]:hover:not(:disabled) > :global(.cs-work-workspace-menu-item-icon),
-            &[data-destructive]:focus-visible > :global(.cs-work-workspace-menu-item-icon) {
+            &[data-negative]:hover:not(:disabled) > :global(.cs-work-workspace-menu-item-icon),
+            &[data-negative]:focus-visible > :global(.cs-work-workspace-menu-item-icon),
+            &[data-negative]:active:not(:disabled) > :global(.cs-work-workspace-menu-item-icon) {
                 color: var(--cs-color-negative-soft-fg);
             }
         }

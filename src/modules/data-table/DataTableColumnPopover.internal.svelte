@@ -695,9 +695,9 @@
                         >
                             <div class="cs-listbox-list" {@attach checklistVirtual.attachList}>
                                 {#each checklistVirtual.items as vItem (vItem.key)}
-                                    {const item = $derived(filteredFacets[vItem.index])}
+                                    {let item = filteredFacets[vItem.index]}
                                     {#if item}
-                                        {const isChecked = $derived(selectedValueSet.has(item.key))}
+                                        {let isChecked = selectedValueSet.has(item.key)}
                                         <label
                                             class="cs-data-table-popover-option cs-listbox-item"
                                             data-checked={isChecked ? "" : undefined}
@@ -752,7 +752,7 @@
                             {:else}
                                 <div class="cs-listbox-list">
                                     {#each filteredFacets as item (item.key)}
-                                        {const isChecked = $derived(selectedValueSet.has(item.key))}
+                                        {let isChecked = selectedValueSet.has(item.key)}
                                         <label
                                             class="cs-data-table-popover-option cs-listbox-item"
                                             data-checked={isChecked ? "" : undefined}

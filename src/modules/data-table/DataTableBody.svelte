@@ -143,16 +143,14 @@
         {#if rowSnippet}
             {@render rowSnippet(buildRowRenderContext(view))}
         {:else}
-            {const rowAria = $derived(
+            {let rowAria =
                 virtual
                     ? virtual.getItemAriaProps(view.rowIndex, { role: "row", headerRowCount: 1 })
-                    : { "aria-rowindex": view.rowIndex + 2 },
-            )}
-            {const attachRow = $derived(
-                virtual && !table.isVirtualFixed ? virtual.attachItem(view.rowIndex) : noopAttachment,
-            )}
-            {const rowTone = $derived(table.resolveRowTone(view.row, view.sourceIndex))}
-            {const rowStyle = $derived(table.resolveRowStyle(view.row, view.sourceIndex))}
+                    : { "aria-rowindex": view.rowIndex + 2 }}
+            {let attachRow =
+                virtual && !table.isVirtualFixed ? virtual.attachItem(view.rowIndex) : noopAttachment}
+            {let rowTone = table.resolveRowTone(view.row, view.sourceIndex)}
+            {let rowStyle = table.resolveRowStyle(view.row, view.sourceIndex)}
             <DataTableRow
                 {...rowAria}
                 {@attach attachRow}
@@ -187,21 +185,19 @@
                 {/if}
 
                 {#each table.columns as column, colIdx (column.id)}
-                    {const cellCtx = $derived(buildCellRenderContext(view, column))}
-                    {const cellTone = $derived(
-                        typeof column.tone === "function" ? column.tone(cellCtx.value, view.row) : undefined,
-                    )}
-                    {const colTone = $derived(typeof column.tone === "string" ? column.tone : undefined)}
-                    {const cellStyle = $derived(
+                    {let cellCtx = buildCellRenderContext(view, column)}
+                    {let cellTone =
+                        typeof column.tone === "function" ? column.tone(cellCtx.value, view.row) : undefined}
+                    {let colTone = typeof column.tone === "string" ? column.tone : undefined}
+                    {let cellStyle =
                         typeof column.cellStyle === "function"
                             ? column.cellStyle(cellCtx.value, view.row, view.sourceIndex)
-                            : column.cellStyle,
-                    )}
-                    {const align = $derived(cellStyle?.align ?? resolveColumnAlign(column))}
-                    {const wrapCell = $derived(cellStyle?.wrap ?? column.wrap)}
-                    {const emphasis = $derived(cellStyle?.emphasis ?? column.emphasis)}
-                    {const numeric = $derived(isNumericColumnType(column.type))}
-                    {const colIndex = $derived((table.selectable ? 2 : 1) + colIdx)}
+                            : column.cellStyle}
+                    {let align = cellStyle?.align ?? resolveColumnAlign(column)}
+                    {let wrapCell = cellStyle?.wrap ?? column.wrap}
+                    {let emphasis = cellStyle?.emphasis ?? column.emphasis}
+                    {let numeric = isNumericColumnType(column.type)}
+                    {let colIndex = (table.selectable ? 2 : 1) + colIdx}
                     <DataTableCell
                         {align}
                         {numeric}
@@ -239,7 +235,7 @@
         {@render children()}
     {:else if table && virtual}
         {#each virtual.items as vItem (vItem.key)}
-            {const view = $derived(table.getRowAt(vItem.index))}
+            {let view = table.getRowAt(vItem.index)}
             {#if view}
                 {@render renderControllerRow(view)}
             {/if}

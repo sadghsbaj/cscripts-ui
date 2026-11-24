@@ -355,7 +355,7 @@
 </script>
 
 {#snippet calculatorWidget(ctx: CommandPalettePluginRenderContext)}
-    {const answer = $derived(evaluateExpression(ctx.query, false))}
+    {let answer = $derived(evaluateExpression(ctx.query, false))}
     <div class="flex items-center justify-between gap-4">
         <div class="flex flex-col gap-0.5 min-w-0">
             <span class="text-xs text-weak truncate">
@@ -795,7 +795,7 @@
 
         <CommandPalettePreview>
             {#if activeCatalogItem}
-                {const ActiveIcon = $derived(activeCatalogItem.icon)}
+                {let ActiveIcon = $derived(activeCatalogItem.icon)}
                 <div class="flex flex-col gap-4">
                     <div class="flex items-start justify-between gap-2">
                         <div class="flex items-center gap-2 min-w-0">

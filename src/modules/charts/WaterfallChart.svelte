@@ -583,7 +583,7 @@
     {#if showTooltip}
         <ChartTooltip {numberFormat} {locales}>
             {#snippet children(ctx)}
-                {const wfCtx = $derived(buildTooltipContext(ctx.index))}
+                {let wfCtx = $derived(buildTooltipContext(ctx.index))}
                 {#if wfCtx}
                     {#if customTooltip}
                         {@render customTooltip(wfCtx)}

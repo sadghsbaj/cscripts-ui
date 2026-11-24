@@ -808,10 +808,10 @@
         data-align={position === "end" ? "start" : "center"}
     >
         {#each positiveSlices as slice (slice.id)}
-            {const isHidden = $derived(hiddenSliceIds.includes(slice.id))}
-            {const isHighlighted = $derived(!isHidden && highlightedSliceId === slice.id)}
-            {const isSelected = $derived(!isHidden && selectedArc?.id === slice.id)}
-            {const shareText = $derived(
+            {let isHidden = $derived(hiddenSliceIds.includes(slice.id))}
+            {let isHighlighted = $derived(!isHidden && highlightedSliceId === slice.id)}
+            {let isSelected = $derived(!isHidden && selectedArc?.id === slice.id)}
+            {let shareText = $derived(
                 isHidden || total <= 0 ? "—" : formatShare(slice.value / total),
             )}
 

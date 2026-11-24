@@ -4,6 +4,7 @@
 </script>
 
 <script lang="ts">
+    import { ArrowRight } from "@lucide/svelte";
     import { Checkbox, CHECKBOX_SIZES } from "cs/svelte/checkbox";
     import { PreviewHeader, PreviewSection, SunkenWell } from "../../../playground/components/index.ts";
 
@@ -178,7 +179,7 @@ ${closeScript}
                     onchange={handleCycleAChange}
                     aria-label="Unchecked to Indeterminate to Checked"
                 />
-                <span>Unchecked → Indeterminate → Checked</span>
+                <span class="inline-flex items-center gap-1">Unchecked <ArrowRight class="size-3.5 text-weak" aria-hidden="true" /> Indeterminate <ArrowRight class="size-3.5 text-weak" aria-hidden="true" /> Checked</span>
             </label>
 
             <label class="flex items-center gap-2.5 text-sm text-main select-none">
@@ -190,7 +191,7 @@ ${closeScript}
                     onchange={handleCycleBChange}
                     aria-label="Unchecked to Checked to Indeterminate"
                 />
-                <span>Unchecked → Checked → Indeterminate</span>
+                <span class="inline-flex items-center gap-1">Unchecked <ArrowRight class="size-3.5 text-weak" aria-hidden="true" /> Checked <ArrowRight class="size-3.5 text-weak" aria-hidden="true" /> Indeterminate</span>
             </label>
         </div>
     </PreviewSection>

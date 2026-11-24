@@ -269,6 +269,7 @@ ${closeScript}
                     <div class="truncate text-sm font-medium text-strong">Q4 Product Roadmap.fig</div>
                     <div class="flex items-center gap-1.5 text-xs text-weak">
                         <span>Figma</span>
+                        <!-- eslint-disable-next-line dots/prefer-sparingly -->
                         <span class="dot-sm"></span>
                         <span>4.2 MB</span>
                     </div>

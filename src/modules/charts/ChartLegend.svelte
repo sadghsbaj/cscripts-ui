@@ -74,11 +74,11 @@
             {@render children()}
         {:else}
             {#each filteredSeries as item (item.id)}
-                {@const isHidden = chart.isSeriesHidden(item.id)}
-                {@const isActive = interactive && chart.hoveredSeriesId === item.id}
-                {@const color = chart.getSeriesColor(item.id)}
-                {@const swatchKind = resolveSwatchKind(item, marker)}
-                {@const pattern = chart.resolveSeriesPattern(item.id)}
+                {let isHidden = $derived(chart.isSeriesHidden(item.id))}
+                {let isActive = $derived(interactive && chart.hoveredSeriesId === item.id)}
+                {let color = $derived(chart.getSeriesColor(item.id))}
+                {let swatchKind = $derived(resolveSwatchKind(item, marker))}
+                {let pattern = $derived(chart.resolveSeriesPattern(item.id))}
 
                 <ChartLegendItem
                     label={item.label}

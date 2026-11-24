@@ -206,7 +206,7 @@
             {#if tooltipContext.items.length > 0}
                 <div class="cs-chart-tooltip-list">
                     {#each tooltipContext.items as item (item.series.id)}
-                        {const hasCustomFormat = $derived(
+                        {let hasCustomFormat = $derived(
                             Boolean(
                                 item.series.format ??
                                     (item.series.yAxis === "right"

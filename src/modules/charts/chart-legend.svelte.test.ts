@@ -16,6 +16,7 @@ import {
     type ChartDatum,
     type ChartLegendConfig,
     type ChartLegendItemMarker,
+    type ChartLegendItemProps,
     type ChartLegendOption,
     type ChartSeries,
     type ComposedChartProps,
@@ -55,6 +56,10 @@ function stubCanvasRect(width = 640, height = 260): void {
             toJSON: () => ({}),
         }),
     );
+}
+
+function getButtons(root: ParentNode): HTMLButtonElement[] {
+    return [...root.querySelectorAll<HTMLButtonElement>("button.cs-chart-legend-item")];
 }
 
 describe("chart-legend.internal", () => {
@@ -167,8 +172,9 @@ describe("ChartLegend & ChartLegendItem", () => {
     function trackMount<
         TProps extends Record<string, unknown>,
         TExports extends Record<string, unknown> = Record<string, unknown>,
+        TBindings extends keyof TProps | "" = keyof TProps | "",
     >(
-        component: Component<TProps, TExports, keyof TProps | "">,
+        component: Component<TProps, TExports, TBindings>,
         props: TProps,
     ): TExports {
         const instance = mount(component, { target: container, props });
@@ -198,9 +204,9 @@ describe("ChartLegend & ChartLegendItem", () => {
             series: SAMPLE_SERIES,
         });
 
-        const labels = Array.from(
-            container.querySelectorAll<HTMLElement>(".cs-chart-legend-label"),
-        ).map((el) => el.textContent);
+        const labels = [
+            ...container.querySelectorAll<HTMLElement>(".cs-chart-legend-label"),
+        ].map((el) => el.textContent);
         expect(labels).toEqual(["Revenue", "Margin", "Forecast"]);
 
         unmount(unfiltered);
@@ -213,9 +219,9 @@ describe("ChartLegend & ChartLegendItem", () => {
             extraText: "Tail Note",
         });
 
-        const customLabels = Array.from(
-            container.querySelectorAll<HTMLElement>(".cs-chart-legend-label"),
-        ).map((el) => el.textContent);
+        const customLabels = [
+            ...container.querySelectorAll<HTMLElement>(".cs-chart-legend-label"),
+        ].map((el) => el.textContent);
         expect(customLabels).toEqual(["Custom Entry"]);
         expect(container.querySelector(".cs-test-legend-extra")?.textContent).toBe("Tail Note");
     });
@@ -248,7 +254,7 @@ describe("ChartLegend & ChartLegendItem", () => {
     it("handles interactive button, HitArea, bind:pressed toggle, strict controlled mode, and onclick override", () => {
         const state = $state({ pressed: true });
 
-        const interactiveInstance = trackMount(ChartLegendItem, {
+        const interactiveInstance = trackMount<ChartLegendItemProps>(ChartLegendItem, {
             label: "Revenue",
             get pressed(): boolean {
                 return state.pressed;
@@ -281,7 +287,7 @@ describe("ChartLegend & ChartLegendItem", () => {
 
         // Strict controlled mode: setter ignores internal writes
         const controlled = $state({ pressed: true });
-        const controlledInstance = trackMount(ChartLegendItem, {
+        const controlledInstance = trackMount<ChartLegendItemProps>(ChartLegendItem, {
             label: "Controlled",
             get pressed(): boolean {
                 return controlled.pressed;
@@ -310,7 +316,7 @@ describe("ChartLegend & ChartLegendItem", () => {
         // onclick override does not mutate pressed
         const overrideState = $state({ pressed: true });
         const onclick = vi.fn();
-        trackMount(ChartLegendItem, {
+        trackMount<ChartLegendItemProps>(ChartLegendItem, {
             label: "Override",
             onclick,
             get pressed(): boolean {
@@ -335,7 +341,7 @@ describe("ChartLegend & ChartLegendItem", () => {
     it("renders static span with data-static when interactive={false}, plus highlighted, marker, pattern, and color/tone", () => {
         const markers: readonly ChartLegendItemMarker[] = ["line", "dashed", "bar", "dot"];
         for (const marker of markers) {
-            const inst = trackMount(ChartLegendItem, {
+            const inst = trackMount<ChartLegendItemProps>(ChartLegendItem, {
                 label: `Marker ${marker}`,
                 interactive: false,
                 highlighted: marker === "bar",
@@ -403,16 +409,14 @@ describe("ChartLegend & ChartLegendItem", () => {
             },
         };
 
-        trackMount(LineChart, lineProps);
+        trackMount<LineChartProps<SampleDatum>>(
+            LineChart as Component<LineChartProps<SampleDatum>, Record<string, unknown>, "">,
+            lineProps,
+        );
 
-        const getButtons = (): HTMLButtonElement[] =>
-            Array.from(
-                container.querySelectorAll<HTMLButtonElement>("button.cs-chart-legend-item"),
-            );
-
-        expect(getButtons()).toHaveLength(2);
-        const itemA = getButtons()[0];
-        const itemB = getButtons()[1];
+        expect(getButtons(container)).toHaveLength(2);
+        const itemA = getButtons(container)[0];
+        const itemB = getButtons(container)[1];
         expect(itemA?.textContent).toContain("Revenue");
         expect(itemB?.textContent).toContain("Margin");
 
@@ -503,7 +507,10 @@ describe("Chart presets — ChartLegendConfig", () => {
                     series: SAMPLE_SERIES,
                     legend,
                 };
-                return mount(BarChart, { target, props });
+                return mount(
+                    BarChart as Component<BarChartProps<SampleDatum>>,
+                    { target, props },
+                );
             },
         },
         {
@@ -517,7 +524,10 @@ describe("Chart presets — ChartLegendConfig", () => {
                     series: SAMPLE_SERIES,
                     legend,
                 };
-                return mount(LineChart, { target, props });
+                return mount(
+                    LineChart as Component<LineChartProps<SampleDatum>, Record<string, unknown>, "">,
+                    { target, props },
+                );
             },
         },
         {
@@ -531,7 +541,10 @@ describe("Chart presets — ChartLegendConfig", () => {
                     series: SAMPLE_SERIES,
                     legend,
                 };
-                return mount(AreaChart, { target, props });
+                return mount(
+                    AreaChart as Component<AreaChartProps<SampleDatum>>,
+                    { target, props },
+                );
             },
         },
         {
@@ -545,7 +558,10 @@ describe("Chart presets — ChartLegendConfig", () => {
                     series: SAMPLE_SERIES,
                     legend,
                 };
-                return mount(ComposedChart, { target, props });
+                return mount(
+                    ComposedChart as Component<ComposedChartProps<SampleDatum>>,
+                    { target, props },
+                );
             },
         },
     ];
@@ -569,9 +585,9 @@ describe("Chart presets — ChartLegendConfig", () => {
             expect(legendEl).not.toBeNull();
             expect(legendEl?.dataset.position).toBe("bottom");
 
-            const legendLabels = Array.from(
-                legendEl?.querySelectorAll<HTMLElement>(".cs-chart-legend-label") ?? [],
-            ).map((el) => el.textContent);
+            const legendLabels = [
+                ...(legendEl?.querySelectorAll<HTMLElement>(".cs-chart-legend-label") ?? []),
+            ].map((el) => el.textContent);
             expect(legendLabels).toEqual(["Revenue", "Forecast"]);
             expect(legendLabels).not.toContain("Margin");
             expect(legendEl?.querySelector(".cs-preset-extra")?.textContent).toBe("FY26");
@@ -593,7 +609,10 @@ describe("Chart presets — ChartLegendConfig", () => {
             series: SAMPLE_SERIES,
             legend: { include: [] },
         };
-        const instance = mount(LineChart, { target: container, props });
+        const instance = mount(
+            LineChart as Component<LineChartProps<SampleDatum>, Record<string, unknown>, "">,
+            { target: container, props },
+        );
         flushSync();
         mounted.push(instance);
 
@@ -617,7 +636,10 @@ describe("Chart presets — ChartLegendConfig", () => {
             series: SAMPLE_SERIES,
             legend: { position: "none", extra },
         };
-        const instance = mount(LineChart, { target: container, props });
+        const instance = mount(
+            LineChart as Component<LineChartProps<SampleDatum>, Record<string, unknown>, "">,
+            { target: container, props },
+        );
         flushSync();
         mounted.push(instance);
 
@@ -634,7 +656,10 @@ describe("Chart presets — ChartLegendConfig", () => {
             series: SAMPLE_SERIES,
             legend: { interactive: false, marker: "dot" },
         };
-        const instance = mount(BarChart, { target: container, props });
+        const instance = mount(
+            BarChart as Component<BarChartProps<SampleDatum>>,
+            { target: container, props },
+        );
         flushSync();
         mounted.push(instance);
 
@@ -660,7 +685,10 @@ describe("Chart presets — ChartLegendConfig", () => {
             series: SAMPLE_SERIES,
             legend: { position: "end", align: "center" },
         };
-        const instance = mount(BarChart, { target: container, props });
+        const instance = mount(
+            BarChart as Component<BarChartProps<SampleDatum>>,
+            { target: container, props },
+        );
         flushSync();
         mounted.push(instance);
 

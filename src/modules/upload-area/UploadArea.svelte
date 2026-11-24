@@ -247,9 +247,9 @@
 
     <div class="cs-upload-area-surface">
         {#if isSinglePopulated && singleItem}
-            {const singleStatus = $derived(singleItem.status ?? "idle")}
-            {const singleMeta = $derived(formatItemMeta(singleItem))}
-            {const showSingleProgress = $derived(singleStatus === "uploading" || singleStatus === "error")}
+            {let singleStatus = singleItem.status ?? "idle"}
+            {let singleMeta = formatItemMeta(singleItem)}
+            {let showSingleProgress = singleStatus === "uploading" || singleStatus === "error"}
             <div class="cs-upload-area-single" data-item-status={singleStatus}>
                 {#if itemSnippet}
                     {@render itemSnippet(singleItem, 0)}
@@ -400,9 +400,9 @@
     {#if multiple && displayItems.length > 0}
         <ul class="cs-upload-area-list">
             {#each displayItems as entry, index (entry.id)}
-                {const entryStatus = $derived(entry.status ?? "idle")}
-                {const entryMeta = $derived(formatItemMeta(entry))}
-                {const showProgress = $derived(entryStatus === "uploading" || entryStatus === "error")}
+                {let entryStatus = entry.status ?? "idle"}
+                {let entryMeta = formatItemMeta(entry)}
+                {let showProgress = entryStatus === "uploading" || entryStatus === "error"}
 
                 <li class="cs-upload-area-item" data-item-status={entryStatus}>
                     {#if itemSnippet}

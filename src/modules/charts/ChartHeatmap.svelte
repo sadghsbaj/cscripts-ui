@@ -350,7 +350,7 @@
         {#if highlightedCells.length > 0}
             <g class="cs-chart-heatmap-focus" pointer-events="none">
                 {#each highlightedCells as highlight (highlight.key)}
-                    {const geom = $derived(highlight.cell.geometry)}
+                    {let geom = $derived(highlight.cell.geometry)}
                     <rect
                         class="cs-chart-heatmap-ring-inner"
                         data-kind={highlight.kind}

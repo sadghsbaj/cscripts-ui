@@ -266,9 +266,9 @@
     >
         <g class="cs-chart-arc-group">
             {#each arcs as arc (arc.id)}
-                {const active = $derived(isSliceActive(arc))}
-                {const selected = $derived(isSliceSelected(arc))}
-                {const dimmed = $derived(hasFocus && !active && !selected)}
+                {let active = $derived(isSliceActive(arc))}
+                {let selected = $derived(isSliceSelected(arc))}
+                {let dimmed = $derived(hasFocus && !active && !selected)}
                 <!-- Keyboard navigation lives on the parent polar stage (role="application"). -->
                 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
                 <path
@@ -296,9 +296,9 @@
             {#if valueLabels}
                 {#each arcs as arc (arc.id)}
                     {#if canFitValueLabel(arc)}
-                        {const active = $derived(isSliceActive(arc))}
-                        {const selected = $derived(isSliceSelected(arc))}
-                        {const dimmed = $derived(hasFocus && !active && !selected)}
+                        {let active = $derived(isSliceActive(arc))}
+                        {let selected = $derived(isSliceSelected(arc))}
+                        {let dimmed = $derived(hasFocus && !active && !selected)}
                         <text
                             class="cs-chart-arc-label"
                             x={snapInt(arc.centroid[0])}

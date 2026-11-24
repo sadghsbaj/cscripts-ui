@@ -323,9 +323,8 @@
 </script>
 
 {#snippet colorPickerPopover(config: ColorPickerPopoverConfig)}
-    {const hasCurrentSwatch = $derived(
-        config.getSwatches().some((s) => s.toLowerCase() === config.getValue().toLowerCase()),
-    )}
+    {let hasCurrentSwatch =
+        config.getSwatches().some((s) => s.toLowerCase() === config.getValue().toLowerCase())}
     <Popover
         bind:ref={config.getRef, config.setRef}
         id={config.id}

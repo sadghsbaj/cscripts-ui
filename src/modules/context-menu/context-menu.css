@@ -18,8 +18,6 @@
         --cs-context-menu-footer-py: 8px;
         --cs-context-menu-shortcut-fg: var(--cs-color-text-weaker);
         --cs-context-menu-item-negative-fg: var(--cs-color-negative-soft-fg);
-        --cs-context-menu-item-negative-bg-hover: var(--cs-color-negative-soft);
-        --cs-context-menu-item-negative-bg-active: var(--cs-color-negative-soft-hover);
 
         /* Cursor-origin motion overrides (snappier than Dropdown's button-anchored defaults). */
         --cs-popover-anim-distance: 4px;
@@ -92,7 +90,6 @@
                         transparent
                     );
                     color: var(--cs-context-menu-item-negative-fg);
-                    background-color: var(--cs-context-menu-item-negative-bg-hover);
                 }
             }
 
@@ -106,7 +103,6 @@
                     transparent
                 );
                 color: var(--cs-context-menu-item-negative-fg);
-                background-color: var(--cs-context-menu-item-negative-bg-hover);
             }
 
             &:not([data-disabled]):active {
@@ -117,7 +113,6 @@
                     transparent
                 );
                 color: var(--cs-context-menu-item-negative-fg);
-                background-color: var(--cs-context-menu-item-negative-bg-active);
                 scale: 0.97;
             }
         }

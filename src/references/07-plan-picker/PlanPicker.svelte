@@ -88,8 +88,8 @@
     <NumberMorphGroup class="w-full">
         <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
             {#each plans as plan (plan.id)}
-                {const price = $derived(billing === "yearly" ? plan.yearlyPrice : plan.monthlyPrice)}
-                {const isCurrent = $derived(selectedPlan === plan.id)}
+                {let price = billing === "yearly" ? plan.yearlyPrice : plan.monthlyPrice}
+                {let isCurrent = selectedPlan === plan.id}
 
                 <Card variant="elevated" size="lg" class="h-full grid-rows-[auto_1fr_auto]">
                     <CardHeader>

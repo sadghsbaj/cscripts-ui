@@ -444,12 +444,12 @@
         onfocusout={handleFocusOut}
     >
         {#each toastState.toasts as item (item.id)}
-            {const pos = $derived(getStackPosition(item.id, item.removed))}
-            {const isSwiping = $derived(swipingId === item.id)}
-            {const isSwipedOut = $derived(swipedOutIds.has(item.id))}
-            {const isFront = $derived(!item.removed && pos.index === 0)}
-            {const isVisible = $derived(!item.removed && pos.index < maxVisible)}
-            {const initialHeight = $derived(toastState.heights[item.id])}
+            {let pos = $derived(getStackPosition(item.id, item.removed))}
+            {let isSwiping = $derived(swipingId === item.id)}
+            {let isSwipedOut = $derived(swipedOutIds.has(item.id))}
+            {let isFront = $derived(!item.removed && pos.index === 0)}
+            {let isVisible = $derived(!item.removed && pos.index < maxVisible)}
+            {let initialHeight = $derived(toastState.heights[item.id])}
             <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
             <li
                 class="cs-toast-item"

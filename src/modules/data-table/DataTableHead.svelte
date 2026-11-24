@@ -60,9 +60,9 @@
             {/if}
 
             {#each table.columns as column, idx (column.id)}
-                {const sortInfo = $derived(table.getColumnSort(column.id))}
-                {const isFiltered = $derived(isFilterActive(table.filters[column.id]))}
-                {const colIndex = $derived((table.selectable ? 2 : 1) + idx)}
+                {let sortInfo = table.getColumnSort(column.id)}
+                {let isFiltered = isFilterActive(table.filters[column.id])}
+                {let colIndex = (table.selectable ? 2 : 1) + idx}
                 <DataTableHeaderCell
                     columnId={column.id}
                     align={resolveColumnAlign(column)}
