@@ -57,9 +57,17 @@ function inlinePublicAssets(html: string, publicDir: string, baseUrl: string): s
 
     // Inline <link ... href="/favicon.png"> or similar public directory references
     return html.replaceAll(
-        /(<link\b[^>]*?\bhref=["'])([^"']+)(["'][^>]*>)/gi,
-        (fullMatch, prefix: string, href: string, suffix: string) => {
-            if (href.startsWith("data:") || href.startsWith("http://") || href.startsWith("https://")) {
+        /(<link\b[^>]*?\bhref=)(?:(["'])([^"']+)\2|([^\s"'=<>`]+))([^>]*>)/gi,
+        (
+            fullMatch,
+            prefix: string,
+            quote: string | undefined,
+            quotedHref: string | undefined,
+            unquotedHref: string | undefined,
+            suffix: string
+        ) => {
+            const href = quotedHref ?? unquotedHref;
+            if (!href || href.startsWith("data:") || href.startsWith("http://") || href.startsWith("https://")) {
                 return fullMatch;
             }
 
@@ -78,8 +86,9 @@ function inlinePublicAssets(html: string, publicDir: string, baseUrl: string): s
             const buffer = readFileSync(diskPath);
             const mime = getMimeType(diskPath);
             const dataUri = `data:${mime};base64,${buffer.toString("base64")}`;
+            const attrQuote = quote ?? '"';
 
-            return `${prefix}${dataUri}${suffix}`;
+            return `${prefix}${attrQuote}${dataUri}${attrQuote}${suffix}`;
         }
     );
 }
@@ -115,6 +124,7 @@ export function csSingleFile(options: CSSingleFileOptions): Plugin {
                     assetsInlineLimit: Number.MAX_SAFE_INTEGER,
                     cssCodeSplit: false,
                     copyPublicDir: false,
+                    modulePreload: false,
                     rollupOptions: {
                         output: {
                             codeSplitting: false,
@@ -140,8 +150,11 @@ export function csSingleFile(options: CSSingleFileOptions): Plugin {
 
                 // 1. Inline emitted JS entry chunks (<script type="module" ... src="...">)
                 result = result.replaceAll(
-                    /<script\b[^>]*?\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi,
-                    (fullMatch, src: string) => {
+                    /<script\b[^>]*?\bsrc=(?:["']([^"']+)["']|([^\s"'=<>`]+))[^>]*>\s*<\/script>/gi,
+                    (fullMatch, srcQuoted?: string, srcUnquoted?: string) => {
+                        const src = srcQuoted ?? srcUnquoted;
+                        if (!src) return fullMatch;
+
                         const key = resolveBundleKey(src, baseUrl, bundle);
                         const item = key ? bundle[key] : undefined;
 
@@ -150,19 +163,28 @@ export function csSingleFile(options: CSSingleFileOptions): Plugin {
                         }
 
                         consumedFiles.add(key);
-                        const safeCode = (item as Rollup.OutputChunk).code.replaceAll(
+                        let safeCode = (item as Rollup.OutputChunk).code.replaceAll(
                             /<\/script/gi,
                             String.raw`<\/script`
                         );
+                        if (safeCode.includes("__VITE_PRELOAD__")) {
+                            safeCode = `var __VITE_PRELOAD__;${safeCode}`;
+                        }
                         return `<script type="module">${safeCode}</script>`;
                     }
                 );
 
                 // 2. Inline emitted CSS assets (<link rel="stylesheet" ... href="...">)
                 result = result.replaceAll(
-                    /<link\b[^>]*?\brel=["']stylesheet["'][^>]*?\bhref=["']([^"']+)["'][^>]*>|<link\b[^>]*?\bhref=["']([^"']+)["'][^>]*?\brel=["']stylesheet["'][^>]*>/gi,
-                    (fullMatch, hrefA?: string, hrefB?: string) => {
-                        const href = hrefA ?? hrefB;
+                    /<link\b[^>]*?\brel=(?:["']stylesheet["']|stylesheet(?=[\s/>]))[^>]*?\bhref=(?:["']([^"']+)["']|([^\s"'=<>`]+))[^>]*>|<link\b[^>]*?\bhref=(?:["']([^"']+)["']|([^\s"'=<>`]+))[^>]*?\brel=(?:["']stylesheet["']|stylesheet(?=[\s/>]))[^>]*>/gi,
+                    (
+                        fullMatch,
+                        hrefAQuoted?: string,
+                        hrefAUnquoted?: string,
+                        hrefBQuoted?: string,
+                        hrefBUnquoted?: string
+                    ) => {
+                        const href = hrefAQuoted ?? hrefAUnquoted ?? hrefBQuoted ?? hrefBUnquoted;
                         if (!href) return fullMatch;
 
                         const key = resolveBundleKey(href, baseUrl, bundle);
@@ -182,7 +204,7 @@ export function csSingleFile(options: CSSingleFileOptions): Plugin {
                 for (const fileKey of consumedFiles) {
                     const escapedKey = escapeRegex(fileKey);
                     const preloadRegex = new RegExp(
-                        String.raw`<link\b[^>]*?\brel=["']modulepreload["'][^>]*?\bhref=["'][^"']*${escapedKey}["'][^>]*>\s*`,
+                        String.raw`<link\b[^>]*?\brel=(?:["']modulepreload["']|modulepreload(?=[\s/>]))[^>]*?\bhref=(?:["'][^"']*${escapedKey}["']|[^\s"'=<>\x60]*${escapedKey}(?=[\s/>]))[^>]*>\s*`,
                         "gi"
                     );
                     result = result.replaceAll(preloadRegex, "");
