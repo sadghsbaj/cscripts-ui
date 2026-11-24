@@ -1,7 +1,7 @@
 Popover wen nFallback kommt iwie transform origin auch anpassen x
 soft danger schöner machen bzw ersetzen
 Bei Segmented Contrl Chevorn erhscien bug x
-Charts mache ndas man Legende mit filter rendern kan ndasn ur bestimmte legendeinträge scihtbar
+Charts mache ndas man Legende mit filter rendern kan ndasn ur bestimmte legendeinträge scihtbar x
 intro nur bei session speichern aber sonst imer öffnen x
 bei singefile<> gabs iwie nen problem mit buauen x
 
@@ -47,7 +47,8 @@ bei singefile<> gabs iwie nen problem mit buauen x
 - [ ] Pagination
 - [ ] Slider
 - [ ] NLP Parser
-- [ ] Command Palette
+- [ ] Fuzzy Search
+- [x] Command Palette
 - [x] Collapsible
 - [x] Accordion
 - [x] Data Table
