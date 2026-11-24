@@ -1,10 +1,9 @@
-<script lang="ts">
-    import { HitArea } from "../hit-area/index.ts";
-    import type { ChartLegendMarker, ChartSeries } from "./chart-state.svelte.ts";
+<script lang="ts" generics="TDatum = ChartDatum">
+    import ChartLegendItem from "./ChartLegendItem.svelte";
+    import { filterLegendSeries } from "./chart-legend.internal.ts";
+    import type { ChartDatum, ChartLegendMarker, ChartSeries } from "./chart-state.svelte.ts";
     import { getChartContext } from "./chart.context.ts";
-    import type { ChartLegendProps } from "./index.ts";
-
-    type ResolvedSwatchKind = Exclude<ChartLegendMarker, "auto">;
+    import type { ChartLegendItemMarker, ChartLegendProps } from "./index.ts";
 
     let {
         ref = $bindable(null),
@@ -12,17 +11,28 @@
         align = "start",
         interactive = true,
         marker = "auto",
+        include,
+        exclude,
+        filter,
+        extra,
         class: className,
         children,
         ...rest
-    }: ChartLegendProps = $props();
+    }: ChartLegendProps<TDatum> = $props();
 
-    const chart = getChartContext();
+    const chart = getChartContext<TDatum>();
+
+    const filteredSeries = $derived(
+        filterLegendSeries(chart.series, { include, exclude, filter }),
+    );
+    const hasContent = $derived(
+        Boolean(children) || filteredSeries.length > 0 || Boolean(extra),
+    );
 
     function resolveSwatchKind(
-        seriesItem: ChartSeries,
+        seriesItem: ChartSeries<TDatum>,
         requested: ChartLegendMarker,
-    ): ResolvedSwatchKind {
+    ): ChartLegendItemMarker {
         if (requested !== "auto") return requested;
         if (seriesItem.dashed) return "dashed";
         if (seriesItem.type === "bar") return "bar";
@@ -31,6 +41,7 @@
     }
 
     function handleToggle(seriesId: string): void {
+        if (!interactive) return;
         chart.toggleSeries(seriesId);
         if (chart.isSeriesHidden(seriesId) && chart.hoveredSeriesId === seriesId) {
             chart.setHoveredSeries(null);
@@ -38,76 +49,53 @@
     }
 
     function handleHighlightStart(seriesId: string, isHidden: boolean): void {
-        if (isHidden) return;
+        if (!interactive || isHidden) return;
         chart.setHoveredSeries(seriesId);
     }
 
     function handleHighlightEnd(seriesId: string): void {
+        if (!interactive) return;
         if (chart.hoveredSeriesId === seriesId) {
             chart.setHoveredSeries(null);
         }
     }
 </script>
 
-<div
-    bind:this={ref}
-    {...rest}
-    class={["cs-chart-legend", className]}
-    role={rest.role ?? "list"}
-    data-position={position}
-    data-align={align}
->
-    {#if children}
-        {@render children()}
-    {:else}
-        {#each chart.series as item (item.id)}
-            {const isHidden = $derived(chart.isSeriesHidden(item.id))}
-            {const isActive = $derived(chart.hoveredSeriesId === item.id)}
-            {const color = $derived(chart.getSeriesColor(item.id))}
-            {const swatchKind = $derived(resolveSwatchKind(item, marker))}
-            {const pattern = $derived(chart.resolveSeriesPattern(item.id))}
+{#if hasContent}
+    <div
+        bind:this={ref}
+        {...rest}
+        class={["cs-chart-legend", className]}
+        role={rest.role ?? "list"}
+        data-position={position}
+        data-align={align}
+    >
+        {#if children}
+            {@render children()}
+        {:else}
+            {#each filteredSeries as item (item.id)}
+                {@const isHidden = chart.isSeriesHidden(item.id)}
+                {@const isActive = interactive && chart.hoveredSeriesId === item.id}
+                {@const color = chart.getSeriesColor(item.id)}
+                {@const swatchKind = resolveSwatchKind(item, marker)}
+                {@const pattern = chart.resolveSeriesPattern(item.id)}
 
-            <div class="cs-chart-legend-entry" role="listitem">
-                {#if interactive}
-                    <button
-                        class="cs-chart-legend-item"
-                        aria-pressed={!isHidden}
-                        data-hidden={isHidden ? "" : undefined}
-                        data-active={isActive ? "" : undefined}
-                        onclick={() => handleToggle(item.id)}
-                        onpointerenter={() => handleHighlightStart(item.id, isHidden)}
-                        onpointerleave={() => handleHighlightEnd(item.id)}
-                        onfocus={() => handleHighlightStart(item.id, isHidden)}
-                        onblur={() => handleHighlightEnd(item.id)}
-                        type="button"
-                    >
-                        <HitArea size="sm" />
-                        <span
-                            class="cs-chart-legend-swatch"
-                            data-kind={swatchKind}
-                            data-pattern={pattern !== "solid" ? pattern : undefined}
-                            style:--cs-chart-swatch-color={color}
-                            aria-hidden="true"
-                        ></span>
-                        <span class="cs-chart-legend-label">{item.label}</span>
-                    </button>
-                {:else}
-                    <span
-                        class="cs-chart-legend-item"
-                        data-static=""
-                        data-hidden={isHidden ? "" : undefined}
-                    >
-                        <span
-                            class="cs-chart-legend-swatch"
-                            data-kind={swatchKind}
-                            data-pattern={pattern !== "solid" ? pattern : undefined}
-                            style:--cs-chart-swatch-color={color}
-                            aria-hidden="true"
-                        ></span>
-                        <span class="cs-chart-legend-label">{item.label}</span>
-                    </span>
-                {/if}
-            </div>
-        {/each}
-    {/if}
-</div>
+                <ChartLegendItem
+                    label={item.label}
+                    {color}
+                    marker={swatchKind}
+                    {pattern}
+                    {interactive}
+                    pressed={!isHidden}
+                    highlighted={isActive}
+                    onclick={() => handleToggle(item.id)}
+                    onpointerenter={() => handleHighlightStart(item.id, isHidden)}
+                    onpointerleave={() => handleHighlightEnd(item.id)}
+                    onfocus={() => handleHighlightStart(item.id, isHidden)}
+                    onblur={() => handleHighlightEnd(item.id)}
+                />
+            {/each}
+        {/if}
+        {@render extra?.()}
+    </div>
+{/if}

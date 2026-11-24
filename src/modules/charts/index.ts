@@ -49,6 +49,7 @@ export { default as ChartTitle } from "./ChartTitle.svelte";
 export { default as ChartDescription } from "./ChartDescription.svelte";
 export { default as ChartActions } from "./ChartActions.svelte";
 export { default as ChartLegend } from "./ChartLegend.svelte";
+export { default as ChartLegendItem } from "./ChartLegendItem.svelte";
 export { default as ChartCanvas } from "./ChartCanvas.svelte";
 export { default as ChartGrid } from "./ChartGrid.svelte";
 export { default as ChartAxis } from "./ChartAxis.svelte";
@@ -232,12 +233,48 @@ export type ChartCanvasProps<TDatum = ChartDatum> = Omit<
     overlay?: Snippet;
 };
 
-export type ChartLegendProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
+export type ChartLegendItemMarker = Exclude<ChartLegendMarker, "auto">;
+
+export type ChartLegendItemProps = Omit<HTMLAttributes<HTMLElement>, "children" | "color"> & {
+    ref?: HTMLButtonElement | HTMLSpanElement | null;
+    label: string;
+    color?: string;
+    tone?: ChartTone;
+    marker?: ChartLegendItemMarker;
+    pattern?: ChartBarPattern;
+    interactive?: boolean;
+    pressed?: boolean;
+    highlighted?: boolean;
+};
+
+export interface ChartLegendConfig<TDatum = ChartDatum> {
+    position?: ChartLegendPosition;
+    align?: "start" | "center" | "end";
+    interactive?: boolean;
+    marker?: ChartLegendMarker;
+    include?: readonly string[];
+    exclude?: readonly string[];
+    filter?: (series: ChartSeries<TDatum>) => boolean;
+    extra?: Snippet;
+}
+
+export type ChartLegendOption<TDatum = ChartDatum> =
+    | ChartLegendPosition
+    | ChartLegendConfig<TDatum>;
+
+export type ChartLegendProps<TDatum = ChartDatum> = Omit<
+    HTMLAttributes<HTMLDivElement>,
+    "children"
+> & {
     ref?: HTMLDivElement | null;
     position?: ChartLegendPlacement;
     align?: "start" | "center" | "end";
     interactive?: boolean;
     marker?: ChartLegendMarker;
+    include?: readonly string[];
+    exclude?: readonly string[];
+    filter?: (series: ChartSeries<TDatum>) => boolean;
+    extra?: Snippet;
     children?: Snippet;
 };
 
@@ -436,7 +473,7 @@ export type LineChartProps<TDatum = ChartDatum> = Omit<
     xAxis?: ChartAxisConfig;
     yAxis?: ChartAxisConfig;
     y2Axis?: ChartAxisConfig;
-    legend?: ChartLegendPosition;
+    legend?: ChartLegendOption<TDatum>;
     tooltip?: boolean | Snippet<[ChartTooltipContext<TDatum>]>;
     tooltipMode?: ChartTooltipMode;
     showTotal?: boolean;
@@ -492,7 +529,7 @@ export type AreaChartProps<TDatum = ChartDatum> = Omit<
     xAxis?: ChartAxisConfig;
     yAxis?: ChartAxisConfig;
     y2Axis?: ChartAxisConfig;
-    legend?: ChartLegendPosition;
+    legend?: ChartLegendOption<TDatum>;
     tooltip?: boolean | Snippet<[ChartTooltipContext<TDatum>]>;
     tooltipMode?: ChartTooltipMode;
     showTotal?: boolean;
@@ -551,7 +588,7 @@ export type BarChartProps<TDatum = ChartDatum> = Omit<
     xAxis?: ChartAxisConfig;
     yAxis?: ChartAxisConfig;
     y2Axis?: ChartAxisConfig;
-    legend?: ChartLegendPosition;
+    legend?: ChartLegendOption<TDatum>;
     tooltip?: boolean | Snippet<[ChartTooltipContext<TDatum>]>;
     tooltipMode?: ChartTooltipMode;
     showTotal?: boolean;
@@ -613,7 +650,7 @@ export type ComposedChartProps<TDatum = ChartDatum> = Omit<
     xAxis?: ChartAxisConfig;
     yAxis?: ChartAxisConfig;
     y2Axis?: ChartAxisConfig;
-    legend?: ChartLegendPosition;
+    legend?: ChartLegendOption<TDatum>;
     tooltip?: boolean | Snippet<[ChartTooltipContext<TDatum>]>;
     tooltipMode?: ChartTooltipMode;
     showTotal?: boolean;

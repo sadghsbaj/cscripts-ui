@@ -18,6 +18,7 @@
     import ChartReferenceLine from "./ChartReferenceLine.svelte";
     import ChartTitle from "./ChartTitle.svelte";
     import ChartTooltip from "./ChartTooltip.svelte";
+    import { resolveLegendConfig } from "./chart-legend.internal.ts";
     import { ChartState, type ChartDatum } from "./chart-state.svelte.ts";
     import type { ComposedChartProps } from "./index.ts";
 
@@ -129,8 +130,12 @@
     );
     const resolvedHeight = $derived(typeof height === "number" ? `${height}px` : height);
     const isEmptyState = $derived(empty ?? (chartState.isEmpty || chartState.allSeriesHidden));
+    const legendConfig = $derived(resolveLegendConfig(legend));
     const showLegend = $derived(
-        legend !== "none" && series.length > 0 && !loading && !chartState.isEmpty,
+        legendConfig.position !== "none" &&
+            (series.length > 0 || legendConfig.extra !== undefined) &&
+            !loading &&
+            !chartState.isEmpty,
     );
     const showGrid = $derived(grid !== false);
     const gridHorizontal = $derived(typeof grid === "object" ? (grid.horizontal ?? true) : true);
@@ -349,21 +354,48 @@
         </ChartHeader>
     {/if}
 
-    {#if showLegend && legend === "top"}
-        <ChartLegend position="top" marker="auto" {interactive} />
+    {#if showLegend && legendConfig.position === "top"}
+        <ChartLegend
+            position="top"
+            align={legendConfig.align}
+            interactive={legendConfig.interactive ?? interactive}
+            marker={legendConfig.marker ?? "auto"}
+            include={legendConfig.include}
+            exclude={legendConfig.exclude}
+            filter={legendConfig.filter}
+            extra={legendConfig.extra}
+        />
     {/if}
 
-    {#if showLegend && legend === "end"}
+    {#if showLegend && legendConfig.position === "end"}
         <div class="cs-chart-body">
             {@render plotStage()}
-            <ChartLegend position="end" marker="auto" {interactive} />
+            <ChartLegend
+                position="end"
+                align={legendConfig.align}
+                interactive={legendConfig.interactive ?? interactive}
+                marker={legendConfig.marker ?? "auto"}
+                include={legendConfig.include}
+                exclude={legendConfig.exclude}
+                filter={legendConfig.filter}
+                extra={legendConfig.extra}
+            />
         </div>
     {:else}
         {@render plotStage()}
     {/if}
 
-    {#if showLegend && legend === "bottom"}
-        <ChartLegend position="bottom" marker="auto" {interactive} />
+    {#if showLegend && legendConfig.position === "bottom"}
+        <ChartLegend
+            position="bottom"
+            align={legendConfig.align}
+            interactive={legendConfig.interactive ?? interactive}
+            marker={legendConfig.marker ?? "auto"}
+            include={legendConfig.include}
+            exclude={legendConfig.exclude}
+            filter={legendConfig.filter}
+            extra={legendConfig.extra}
+        />
     {/if}
 
     {#if showTooltip}
