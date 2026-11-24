@@ -5,6 +5,7 @@
     import { focusTrap as attachFocusTrap } from "../../modules/focus/index.ts";
     import { HitArea } from "../../modules/hit-area/index.ts";
     import { Popover, popoverTrigger } from "../../modules/popover/index.ts";
+    import { tooltip } from "../../modules/tooltip/index.ts";
     import { t } from "../../shared/lang.internal.ts";
     import { getWorkAppIdentity } from "../app-intro/index.ts";
     import type { WorkWorkspaceGateProps } from "./index.ts";
@@ -328,6 +329,7 @@
             iconOnly
             class="cs-work-workspace-gate-info-trigger"
             aria-label={t({ de: "Warum ist das nötig?", en: "Why is this needed?" })}
+            {@attach tooltip({ text: t({ de: "Warum ist das nötig?", en: "Why is this needed?" }) })}
             {@attach popoverTrigger({ target: infoPopoverId, triggerOn: "click" })}
         >
             <ButtonIcon icon={CircleHelp} />
