@@ -190,6 +190,8 @@
     <!-- Floating Top-Right Controls -->
     <div
         class="cs-playground-controls fixed right-6 top-6 z-100 flex items-center gap-2.5"
+        role="group"
+        aria-label="Preview controls"
         data-visible={controlsVisible ? "" : undefined}
         onpointerenter={() => (isHoveringControls = true)}
         onpointerleave={() => (isHoveringControls = false)}
