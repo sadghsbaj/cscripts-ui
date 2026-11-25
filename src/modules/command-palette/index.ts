@@ -31,6 +31,7 @@ export { default as CommandPaletteItem } from "./CommandPaletteItem.svelte";
 export { default as CommandPaletteItemIcon } from "./CommandPaletteItemIcon.svelte";
 export { default as CommandPaletteItemText } from "./CommandPaletteItemText.svelte";
 export { default as CommandPaletteItemDescription } from "./CommandPaletteItemDescription.svelte";
+export { default as CommandPaletteItemTrailing } from "./CommandPaletteItemTrailing.svelte";
 export { default as CommandPaletteItemShortcut } from "./CommandPaletteItemShortcut.svelte";
 
 export { commandPaletteShortcut } from "./command-palette-shortcut.attach.ts";
@@ -107,14 +108,16 @@ export interface CommandPaletteCommand {
     keywords?: readonly string[];
     group?: string;
     icon?: Component<CommandPaletteIconComponentProps>;
+    trailing?: string;
     shortcut?: readonly string[] | string;
+    checked?: boolean;
     href?: string;
     target?: string;
     rel?: string;
     negative?: boolean;
     disabled?: boolean;
     closeOnSelect?: boolean;
-    onSelect?: (event: MouseEvent | KeyboardEvent) => void;
+    onSelect?: (event: MouseEvent | KeyboardEvent, palette: CommandPaletteContext) => void;
 }
 
 export interface CommandPalettePlugin {
@@ -291,7 +294,8 @@ export interface CommandPaletteItemProps
     negative?: boolean;
     disabled?: boolean;
     closeOnSelect?: boolean;
-    onSelect?: (event: MouseEvent | KeyboardEvent) => void;
+    checked?: boolean;
+    onSelect?: (event: MouseEvent | KeyboardEvent, palette: CommandPaletteContext) => void;
     children?: Snippet;
 }
 
@@ -311,6 +315,11 @@ export interface CommandPaletteItemDescriptionProps extends HTMLAttributes<HTMLP
 }
 
 export interface CommandPaletteItemShortcutProps extends HTMLAttributes<HTMLSpanElement> {
+    ref?: HTMLSpanElement | null;
+    children?: Snippet;
+}
+
+export interface CommandPaletteItemTrailingProps extends HTMLAttributes<HTMLSpanElement> {
     ref?: HTMLSpanElement | null;
     children?: Snippet;
 }

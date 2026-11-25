@@ -15,8 +15,6 @@
         Folder,
         GitBranch,
         Layers,
-        Monitor,
-        Moon,
         Palette,
         PanelRight,
         Plus,
@@ -25,7 +23,6 @@
         Shield,
         SlidersHorizontal,
         Sparkles,
-        Sun,
         Terminal,
         Trash2,
         UserPlus,
@@ -50,8 +47,8 @@
         CommandPaletteItemIcon,
         CommandPaletteItemShortcut,
         CommandPaletteItemText,
+        CommandPaletteItemTrailing,
         CommandPaletteList,
-        CommandPalettePage,
         CommandPalettePreview,
         CommandPaletteWidget,
         createCommandPaletteRegistry,
@@ -59,6 +56,7 @@
         type CommandPalettePluginRenderContext,
         type CommandPaletteSize,
     } from "cs/svelte/command-palette";
+    import { createCommandPaletteThemePlugin } from "cs/svelte/command-palette-theme";
     import { Kbd, KbdGroup } from "cs/svelte/kbd";
     import type { OverlayVariant } from "cs/svelte/overlay";
     import {
@@ -68,26 +66,22 @@
     } from "cs/svelte/segmented-control";
     import { Switch } from "cs/svelte/switch";
     import { TextMorph } from "cs/svelte/text-morph";
-    import { theme, type ThemeMode } from "cs/svelte/theme";
 
     import { PreviewHeader, PreviewSection } from "../../../playground/components/index.ts";
+
+    const themePlugin = createCommandPaletteThemePlugin();
 
     // --- 1. Workspace Launcher state ---
     let launcherOpen = $state(false);
     let launcherSize = $state<CommandPaletteSize>("md");
     let launcherOverlay = $state<Extract<OverlayVariant, "dim" | "blur">>("dim");
     let launcherPages = $state<string[]>([]);
-    let launcherPalette = $state<CommandPalette | undefined>();
+    let sidebarVisible = $state(true);
     let lastAction = $state("Ready");
     const launcherKbdSize = $derived(launcherSize === "lg" ? "md" : "sm");
 
     function recordAction(message: string): void {
         lastAction = message;
-    }
-
-    function applyTheme(mode: ThemeMode, labelText: string): void {
-        theme.set(mode);
-        lastAction = `Theme set to ${labelText}`;
     }
 
     // --- 2. Plugins, Prefix Modes & Inline Widgets state ---
@@ -470,11 +464,11 @@
 
 <!-- 1. Workspace Launcher Palette (owns global Mod+K shortcut) -->
 <CommandPalette
-    bind:this={launcherPalette}
     bind:open={launcherOpen}
     bind:pages={launcherPages}
     size={launcherSize}
     overlayVariant={launcherOverlay}
+    plugins={[themePlugin]}
     shortcut
 >
     <CommandPaletteBar>
@@ -529,18 +523,30 @@
                 </CommandPaletteItem>
 
                 <CommandPaletteItem
-                    value="theme"
-                    keywords={["appearance", "dark", "light", "color"]}
-                    onSelect={() => launcherPalette?.pushPage("theme", { label: "Theme" })}
+                    value="switch-workspace"
+                    keywords={["team", "account"]}
+                    onSelect={(_event, palette) => {
+                        recordAction("Switched workspace");
+                        palette.close("select");
+                    }}
                 >
-                    <CommandPaletteItemIcon icon={Palette} />
-                    <CommandPaletteItemText>Change theme</CommandPaletteItemText>
-                    <CommandPaletteItemShortcut>
-                        <KbdGroup variant="ghost" size={launcherKbdSize}>
-                            <Kbd symbol="ctrl" />
-                            <Kbd>T</Kbd>
-                        </KbdGroup>
-                    </CommandPaletteItemShortcut>
+                    <CommandPaletteItemIcon icon={Layers} />
+                    <CommandPaletteItemText>Switch workspace</CommandPaletteItemText>
+                    <CommandPaletteItemTrailing>Acme Inc.</CommandPaletteItemTrailing>
+                </CommandPaletteItem>
+
+                <CommandPaletteItem
+                    value="toggle-sidebar"
+                    keywords={["panel", "layout"]}
+                    checked={sidebarVisible}
+                    closeOnSelect={false}
+                    onSelect={() => {
+                        sidebarVisible = !sidebarVisible;
+                        recordAction(sidebarVisible ? "Sidebar shown" : "Sidebar hidden");
+                    }}
+                >
+                    <CommandPaletteItemIcon icon={PanelRight} />
+                    <CommandPaletteItemText>Show sidebar</CommandPaletteItemText>
                 </CommandPaletteItem>
             </CommandPaletteGroup>
 
@@ -603,24 +609,6 @@
                     <CommandPaletteItemText>Clear local cache</CommandPaletteItemText>
                 </CommandPaletteItem>
             </CommandPaletteGroup>
-
-            <CommandPalettePage value="theme" label="Theme">
-                <CommandPaletteGroup>
-                    <CommandPaletteGroupLabel>Appearance</CommandPaletteGroupLabel>
-                    <CommandPaletteItem value="theme-light" onSelect={() => applyTheme("light", "Light")}>
-                        <CommandPaletteItemIcon icon={Sun} />
-                        <CommandPaletteItemText>Light</CommandPaletteItemText>
-                    </CommandPaletteItem>
-                    <CommandPaletteItem value="theme-dark" onSelect={() => applyTheme("dark", "Dark")}>
-                        <CommandPaletteItemIcon icon={Moon} />
-                        <CommandPaletteItemText>Dark</CommandPaletteItemText>
-                    </CommandPaletteItem>
-                    <CommandPaletteItem value="theme-system" onSelect={() => applyTheme("system", "System")}>
-                        <CommandPaletteItemIcon icon={Monitor} />
-                        <CommandPaletteItemText>System</CommandPaletteItemText>
-                    </CommandPaletteItem>
-                </CommandPaletteGroup>
-            </CommandPalettePage>
         </CommandPaletteList>
 
         <CommandPaletteFooter>

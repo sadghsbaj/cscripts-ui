@@ -61,6 +61,7 @@ trigger: always_on
 | Validation error | `invalid` | `error`, `hasError`, `isInvalid` | `invalid?: boolean`, `data-invalid` |
 | Toggle / check state | `checked`, `pressed`, `open` | `isChecked`, `active`, `isPressed`, `isOpen`, `visible` | `pressed = $bindable()` |
 | DOM element binding | `ref` | `el`, `element`, `node` | `ref = $bindable()` |
+| Secondary right-aligned text | `trailing` | `detail`, `meta`, `value` | `CommandPaletteItemTrailing`, `--cs-command-palette-trailing-fg` |
 </dictionary>
 
 <constraints>

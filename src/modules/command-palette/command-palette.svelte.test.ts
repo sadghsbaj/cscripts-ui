@@ -6,8 +6,10 @@ import CommandPaletteTestHost, {
     type TestPalettePage,
 } from "./CommandPaletteTestHost.internal.svelte";
 import {
+    CommandPaletteItemTrailing,
     commandPaletteShortcut,
     createCommandPaletteRegistry,
+    type CommandPaletteContext,
     type CommandPalettePlugin,
 } from "./index.ts";
 
@@ -1388,6 +1390,253 @@ describe("CommandPalette Svelte 5 Component", () => {
             flushSync();
             expect(host.getOpen()).toBe(false);
             expect(onClose).toHaveBeenCalledWith("escape");
+
+            unmount(host);
+        });
+    });
+
+    describe("CommandPaletteItemTrailing, checked state, and onSelect(event, palette)", () => {
+        test("renders CommandPaletteItemTrailing / cmd.trailing alongside shortcut without dropping either", () => {
+            const trailingSnippet = createRawSnippet(() => ({
+                render: () => "<span>System</span>",
+            }));
+            const standaloneTrailing = mount(CommandPaletteItemTrailing, {
+                target: container,
+                props: {
+                    class: "custom-trailing",
+                    "data-testid": "standalone-trailing",
+                    children: trailingSnippet,
+                },
+            });
+            flushSync();
+
+            const standaloneEl = mustQuery<HTMLElement>(container, '[data-testid="standalone-trailing"]');
+            expect(standaloneEl.classList.contains("cs-command-palette-item-trailing")).toBe(true);
+            expect(standaloneEl.classList.contains("custom-trailing")).toBe(true);
+            expect(standaloneEl.textContent?.trim()).toBe("System");
+            unmount(standaloneTrailing);
+
+            const plugin: CommandPalettePlugin = {
+                id: "trailing-plugin",
+                items: [
+                    {
+                        value: "with-both-kbd",
+                        label: "Change Theme",
+                        trailing: "Dark",
+                        shortcut: ["Mod", "T"],
+                    },
+                    {
+                        value: "with-both-str",
+                        label: "Quick Switch",
+                        trailing: "Light",
+                        shortcut: "Alt+T",
+                    },
+                    {
+                        value: "without-trailing",
+                        label: "Plain Action",
+                        shortcut: ["Mod", "P"],
+                    },
+                ],
+            };
+
+            const host = mount(CommandPaletteTestHost, {
+                target: container,
+                props: {
+                    open: true,
+                    plugins: [plugin],
+                    focusTrap: false,
+                },
+            });
+            flushSync();
+
+            const kbdOption = mustQuery<HTMLElement>(document.body, '[role="option"][data-value="with-both-kbd"]');
+            const kbdTrailing = mustQuery<HTMLElement>(kbdOption, ".cs-command-palette-item-trailing");
+            const kbdShortcut = mustQuery<HTMLElement>(kbdOption, ".cs-command-palette-item-shortcut");
+            expect(kbdTrailing.textContent?.trim()).toBe("Dark");
+            expect(kbdShortcut.textContent).toContain("Mod");
+            expect(kbdShortcut.textContent).toContain("T");
+
+            const strOption = mustQuery<HTMLElement>(document.body, '[role="option"][data-value="with-both-str"]');
+            expect(mustQuery<HTMLElement>(strOption, ".cs-command-palette-item-trailing").textContent?.trim()).toBe(
+                "Light"
+            );
+            expect(mustQuery<HTMLElement>(strOption, ".cs-command-palette-item-shortcut").textContent?.trim()).toBe(
+                "Alt+T"
+            );
+
+            const plainOption = mustQuery<HTMLElement>(document.body, '[role="option"][data-value="without-trailing"]');
+            expect(plainOption.querySelector(".cs-command-palette-item-trailing")).toBeNull();
+            expect(plainOption.querySelector(".cs-command-palette-item-shortcut")).not.toBeNull();
+
+            unmount(host);
+        });
+
+        test("handles checked=true, checked=false, and checked=undefined with CheckboxMark and reactive updates", () => {
+            let activeMode = $state<"light" | "dark">("light");
+
+            const plugin: CommandPalettePlugin = {
+                id: "checked-plugin",
+                items: () => [
+                    {
+                        value: "mode-light",
+                        label: "Light",
+                        checked: activeMode === "light",
+                        closeOnSelect: false,
+                        onSelect() {
+                            activeMode = "light";
+                        },
+                    },
+                    {
+                        value: "mode-dark",
+                        label: "Dark",
+                        checked: activeMode === "dark",
+                        closeOnSelect: false,
+                        onSelect() {
+                            activeMode = "dark";
+                        },
+                    },
+                    {
+                        value: "unchecked-action",
+                        label: "Regular Action",
+                    },
+                ],
+            };
+
+            const host = mount(CommandPaletteTestHost, {
+                target: container,
+                props: {
+                    open: true,
+                    plugins: [plugin],
+                    focusTrap: false,
+                },
+            });
+            flushSync();
+
+            const lightOption = mustQuery<HTMLElement>(document.body, '[role="option"][data-value="mode-light"]');
+            const darkOption = mustQuery<HTMLElement>(document.body, '[role="option"][data-value="mode-dark"]');
+            const regularOption = mustQuery<HTMLElement>(
+                document.body,
+                '[role="option"][data-value="unchecked-action"]'
+            );
+
+            // checked=true -> aria-checked="true", data-checked="", .cs-listbox-item-check with CheckboxMark (no box)
+            expect(lightOption.getAttribute("aria-checked")).toBe("true");
+            expect(lightOption.dataset.checked).toBe("");
+            const lightCheck = mustQuery<HTMLElement>(lightOption, ".cs-listbox-item-check");
+            expect(lightCheck.getAttribute("aria-hidden")).toBe("true");
+            expect(lightCheck.querySelector("svg.cs-checkbox-mark")).not.toBeNull();
+            expect(lightCheck.querySelector(".cs-checkbox-box")).toBeNull();
+
+            // checked=false -> aria-checked="false", no data-checked, check wrapper still present
+            expect(darkOption.getAttribute("aria-checked")).toBe("false");
+            expect(darkOption.dataset.checked).toBeUndefined();
+            const darkCheck = mustQuery<HTMLElement>(darkOption, ".cs-listbox-item-check");
+            expect(darkCheck.querySelector("svg.cs-checkbox-mark")).not.toBeNull();
+
+            // checked=undefined -> no aria-checked, no data-checked, no check markup
+            expect(regularOption.getAttribute("aria-checked")).toBeNull();
+            expect(regularOption.dataset.checked).toBeUndefined();
+            expect(regularOption.querySelector(".cs-listbox-item-check")).toBeNull();
+
+            // Clicking darkOption toggles reactive checked state cleanly
+            darkOption.click();
+            flushSync();
+
+            expect(lightOption.getAttribute("aria-checked")).toBe("false");
+            expect(lightOption.dataset.checked).toBeUndefined();
+            expect(darkOption.getAttribute("aria-checked")).toBe("true");
+            expect(darkOption.dataset.checked).toBe("");
+
+            unmount(host);
+        });
+
+        test("passes CommandPaletteContext to onSelect(event, palette) for pushPage and close without external bind:this", () => {
+            const onClose = vi.fn();
+            const receivedContexts: CommandPaletteContext[] = [];
+
+            const plugin: CommandPalettePlugin = {
+                id: "ctx-plugin",
+                page: "*",
+                items(ctx) {
+                    if (ctx.activePage === undefined) {
+                        return [
+                            {
+                                value: "go-sub",
+                                label: "Open Subpage",
+                                onSelect(event, palette) {
+                                    expect(event).toBeInstanceOf(Event);
+                                    receivedContexts.push(palette);
+                                    palette.pushPage("subpage", { label: "Subpage" });
+                                },
+                            },
+                            {
+                                value: "force-close",
+                                label: "Force Close",
+                                closeOnSelect: false,
+                                onSelect(_event, palette) {
+                                    receivedContexts.push(palette);
+                                    palette.close("select");
+                                },
+                            },
+                        ];
+                    }
+                    if (ctx.activePage === "subpage") {
+                        return [
+                            {
+                                value: "sub-close",
+                                label: "Close From Subpage",
+                                closeOnSelect: false,
+                                onSelect(_event, palette) {
+                                    receivedContexts.push(palette);
+                                    palette.close("select");
+                                },
+                            },
+                        ];
+                    }
+                    return [];
+                },
+            };
+
+            const host = mount(CommandPaletteTestHost, {
+                target: container,
+                props: {
+                    open: true,
+                    plugins: [plugin],
+                    onClose,
+                    focusTrap: false,
+                },
+            });
+            flushSync();
+
+            const input = mustQuery<HTMLInputElement>(document.body, '[role="combobox"]');
+
+            // Enter on "go-sub" calls palette.pushPage("subpage") and keeps palette open.
+            dispatchKeyDown(input, "Enter");
+            flushSync();
+
+            expect(host.getOpen()).toBe(true);
+            expect(host.getPages()).toEqual(["subpage"]);
+            expect(receivedContexts).toHaveLength(1);
+            expect(receivedContexts[0]?.activePage).toBe("subpage");
+
+            // Click on "sub-close" (even with closeOnSelect=false) calls palette.close("select").
+            const subCloseOption = mustQuery<HTMLElement>(document.body, '[role="option"][data-value="sub-close"]');
+            subCloseOption.click();
+            flushSync();
+
+            expect(host.getOpen()).toBe(false);
+            expect(onClose).toHaveBeenCalledWith("select");
+
+            // Re-open and test "force-close" from root via Enter.
+            host.setOpen(true);
+            flushSync();
+            dispatchKeyDown(mustQuery<HTMLInputElement>(document.body, '[role="combobox"]'), "ArrowDown");
+            flushSync();
+            dispatchKeyDown(mustQuery<HTMLInputElement>(document.body, '[role="combobox"]'), "Enter");
+            flushSync();
+
+            expect(host.getOpen()).toBe(false);
+            expect(onClose).toHaveBeenCalledTimes(2);
 
             unmount(host);
         });

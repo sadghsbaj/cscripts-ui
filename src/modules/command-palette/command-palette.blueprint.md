@@ -36,10 +36,11 @@
 - `CommandPaletteEmpty` — Empty-state block rendered when `visibleItemCount === 0 && visibleWidgetCount === 0`.
 - `CommandPaletteGroup` — Semantic option group (`role="group"`), auto-hidden when all child items are filtered out.
 - `CommandPaletteGroupLabel` — Accessible group heading wired via `aria-labelledby`.
-- `CommandPaletteItem` — Action/command option (`role="option"`, supports `value`, `keywords`, `negative`, `href`, `closeOnSelect`, `onSelect`).
+- `CommandPaletteItem` — Action/command option (`role="option"`, supports `value`, `keywords`, `negative`, `href`, `closeOnSelect`, `checked`, `onSelect(event, palette)`).
 - `CommandPaletteItemIcon` — Leading decorative `<svg>` icon inside an item.
 - `CommandPaletteItemText` — Primary single-line item label (`text-trim` when standalone).
 - `CommandPaletteItemDescription` — Secondary muted subtitle/metadata.
+- `CommandPaletteItemTrailing` — Trailing text slot (current value) before the shortcut.
 - `CommandPaletteItemShortcut` — Trailing shortcut container (`aria-hidden="true"`, designed for `<KbdGroup variant="ghost" | "soft" size="sm" | "md">` or plain text).
 - `CommandPaletteSeparator` — Subtle horizontal divider (`role="separator"`) reserved for unlabelled sections (not paired with `CommandPaletteGroupLabel`).
 
@@ -148,7 +149,8 @@
 - `negative?: boolean` — `@default false`. Marks destructive commands (`data-negative`), matching `DropdownItem` and `naming.md`.
 - `disabled?: boolean` — `@default false`.
 - `closeOnSelect?: boolean` — `@default true`. Closes the palette after `onSelect` unless `false`, `event.preventDefault()` was called, or `onSelect` pushed/popped a page during execution! (Auto-detecting `pushPage()` inside `onSelect` avoids forcing `closeOnSelect={false}` boilerplate on every sub-page drill-down item.)
-- `onSelect?: (event: MouseEvent | KeyboardEvent) => void`
+- `checked?: boolean` — `@default undefined`. Sets `aria-checked`/`data-checked` and renders an accent check mark.
+- `onSelect?: (event: MouseEvent | KeyboardEvent, palette: CommandPaletteContext) => void`
 - `children?: Snippet`
 
 #### `CommandPaletteItemIcon`, `CommandPaletteItemText`, `CommandPaletteItemDescription`, `CommandPaletteItemShortcut`

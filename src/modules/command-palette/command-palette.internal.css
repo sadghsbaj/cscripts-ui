@@ -71,6 +71,8 @@
         --cs-command-palette-item-description-fg: var(--cs-color-text-weak);
         --cs-command-palette-item-icon-fg: var(--cs-color-text-weak);
         --cs-command-palette-shortcut-fg: var(--cs-color-text-weaker);
+        /* --cs-command-palette-trailing-fg is intentionally unset here so its fallback to --cs-command-palette-shortcut-fg tracks hover/highlight/disabled states. */
+        --cs-command-palette-item-check-fg: var(--cs-color-accent-solid);
         --cs-command-palette-item-negative-fg: var(--cs-color-negative-soft-fg);
         --cs-command-palette-widget-bg: var(--cs-color-base-soft);
         --cs-command-palette-preview-width: 44%;
@@ -783,11 +785,27 @@
 
         &[data-disabled] {
             --cs-command-palette-shortcut-fg: var(--cs-color-disabled-fg);
+            --cs-command-palette-trailing-fg: var(--cs-color-disabled-fg);
+            --cs-command-palette-item-check-fg: var(--cs-color-disabled-fg);
         }
 
         & .cs-listbox-item-icon,
+        & .cs-command-palette-item-trailing,
         & .cs-command-palette-item-shortcut {
             transition: none;
+        }
+
+        /* Mark only (no box); accent colored, independent of highlight state. */
+        & .cs-command-palette-item-check {
+            --cs-listbox-item-indicator-fg: var(--cs-command-palette-item-check-fg);
+        }
+
+        & .cs-command-palette-item-check-icon {
+            overflow: visible;
+            fill: none;
+            stroke: currentcolor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
     }
 
@@ -795,12 +813,13 @@
         line-height: round(up, calc(var(--cs-text-xs) * var(--cs-leading-snug)), 1px);
     }
 
+    .cs-command-palette-item-trailing,
     .cs-command-palette-item-shortcut {
         display: inline-flex;
         flex-shrink: 0;
         align-items: center;
         padding-inline-start: 12px;
-        color: var(--cs-command-palette-shortcut-fg);
+        color: var(--cs-command-palette-trailing-fg, var(--cs-command-palette-shortcut-fg));
         font-size: var(--cs-text-xs);
         font-variant-numeric: tabular-nums;
         font-weight: 500;
@@ -808,6 +827,52 @@
 
         & .cs-kbd[data-variant="ghost"] {
             --cs-kbd-fg: var(--cs-command-palette-shortcut-fg);
+        }
+    }
+
+    /* Shortcut keeps its own fg; only the trailing text reads the optional override. */
+    .cs-command-palette-item-shortcut {
+        color: var(--cs-command-palette-shortcut-fg);
+    }
+
+    /* Trailing sits before a shortcut; tighter gap between the two. */
+    .cs-command-palette-item-trailing + .cs-command-palette-item-shortcut {
+        padding-inline-start: 8px;
+    }
+
+    /* Separate trailing and shortcut into distinct grid columns when description switches the item to grid layout. */
+    .cs-command-palette-item
+        .cs-listbox-item-content:has(> .cs-listbox-item-description):has(> .cs-command-palette-item-trailing):has(
+            > .cs-command-palette-item-shortcut
+        ) {
+        &:has(> .cs-listbox-item-icon) {
+            grid-template-columns: auto minmax(0, 1fr) auto auto;
+
+            > .cs-command-palette-item-trailing {
+                grid-row: 1;
+                grid-column: 3;
+            }
+
+            > .cs-command-palette-item-shortcut {
+                grid-row: 1;
+                grid-column: 4;
+                padding-inline-start: 0;
+            }
+        }
+
+        &:not(:has(> .cs-listbox-item-icon)) {
+            grid-template-columns: minmax(0, 1fr) auto auto;
+
+            > .cs-command-palette-item-trailing {
+                grid-row: 1;
+                grid-column: 2;
+            }
+
+            > .cs-command-palette-item-shortcut {
+                grid-row: 1;
+                grid-column: 3;
+                padding-inline-start: 0;
+            }
         }
     }
 }

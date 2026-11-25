@@ -23,6 +23,7 @@ exports:
   - CommandPaletteItemIcon
   - CommandPaletteItemText
   - CommandPaletteItemDescription
+  - CommandPaletteItemTrailing
   - CommandPaletteItemShortcut
   - commandPaletteShortcut
   - createCommandPaletteRegistry
@@ -68,6 +69,7 @@ exports:
   - CommandPaletteItemTextProps
   - CommandPaletteItemDescriptionProps
   - CommandPaletteItemShortcutProps
+  - CommandPaletteItemTrailingProps
 ---
 
 # CommandPalette
@@ -178,12 +180,14 @@ Accessible via `bind:this={palette}` on `<CommandPalette>`:
 | `negative` | `boolean` | No | `false` | Marks destructive commands (`data-negative`). |
 | `disabled` | `boolean` | No | `false` | Disables highlight and activation (`aria-disabled="true"`). |
 | `closeOnSelect` | `boolean` | No | `true` | Closes palette after `onSelect` unless `false`, `event.preventDefault()`, or `onSelect` mutated `pages`. |
-| `onSelect` | `(event: MouseEvent \| KeyboardEvent) => void` | No | `undefined` | Activation callback. |
+| `checked` | `boolean` | No | `undefined` | Marks the item as a selected choice. `undefined` renders no check; `true`/`false` set `aria-checked` and show an accent check mark (only when `true`) at the row end. |
+| `onSelect` | `(event: MouseEvent \| KeyboardEvent, palette: CommandPaletteContext) => void` | No | `undefined` | Activation callback. Receives the public palette context (e.g. `palette.pushPage()`, `palette.close()`). |
 | `ref` | `HTMLElement \| null` | No | `null` | `$bindable` reference to the `<div>` or `<a>`. |
 
 - **`CommandPaletteItemIcon`** (`Omit<SVGAttributes<SVGSVGElement>, "children" | "color">`): `icon: Component<CommandPaletteIconComponentProps>` (required), `color?: string`.
 - **`CommandPaletteItemText`** (`HTMLAttributes<HTMLSpanElement>`): `ref = $bindable(null)`. Primary label; contributes to default label extraction.
 - **`CommandPaletteItemDescription`** (`HTMLAttributes<HTMLParagraphElement>`): `ref = $bindable(null)`. Secondary muted subtitle.
+- **`CommandPaletteItemTrailing`** (`HTMLAttributes<HTMLSpanElement>`): `ref = $bindable(null)`. Trailing text slot for a current value (e.g. the active theme), rendered before `CommandPaletteItemShortcut`. Color via `--cs-command-palette-trailing-fg` (falls back to `--cs-command-palette-shortcut-fg`).
 - **`CommandPaletteItemShortcut`** (`HTMLAttributes<HTMLSpanElement>`): `ref = $bindable(null)`. Trailing shortcut slot (`aria-hidden="true"`, `tabular-nums`), designed for `<KbdGroup variant="ghost" size="sm" | "md">` or text.
 
 ### `commandPaletteShortcut(options?)`
@@ -210,7 +214,7 @@ Creates a reactive `CommandPaletteRegistry` backed by `SvelteMap`:
 - `id: string` (required), `label?: string`, `prefix?: string` (activates when `inputValue.startsWith(prefix)` at root), `page?: string` (target page ID, or `"*"` for all pages), `priority?: number`, `filter?: boolean`, `items?: readonly CommandPaletteCommand[] | ((ctx: CommandPaletteQueryContext) => readonly CommandPaletteCommand[])`, `widget?: Snippet<[CommandPalettePluginRenderContext]>`, `pageView?: Snippet<[CommandPalettePluginRenderContext]>`, `onOpen?: (palette: CommandPaletteContext) => void | (() => void)`.
 
 `CommandPaletteCommand`:
-- `value: string` (required), `label: string` (required), `description?: string`, `keywords?: readonly string[]`, `group?: string`, `icon?: Component<CommandPaletteIconComponentProps>`, `shortcut?: readonly string[] | string`, `href?: string`, `target?: string`, `rel?: string`, `negative?: boolean`, `disabled?: boolean`, `closeOnSelect?: boolean`, `onSelect?: (event: MouseEvent | KeyboardEvent) => void`.
+- `value: string` (required), `label: string` (required), `description?: string`, `keywords?: readonly string[]`, `group?: string`, `icon?: Component<CommandPaletteIconComponentProps>`, `trailing?: string`, `shortcut?: readonly string[] | string`, `checked?: boolean`, `href?: string`, `target?: string`, `rel?: string`, `negative?: boolean`, `disabled?: boolean`, `closeOnSelect?: boolean`, `onSelect?: (event: MouseEvent | KeyboardEvent, palette: CommandPaletteContext) => void`.
 
 ### `scoreCommandPaletteMatch(query, candidate)`
 Pure deterministic multi-token matcher (`> 0` match, `0` non-match). Splits `query.trim().toLowerCase()` on whitespace; every token must match at least one of `label`, `keywords`, `groupLabel`, or `value`, weighted by exact (`100` on label) > prefix (`80`) > word-boundary (`65`) > substring (`45`), plus full-phrase label bonuses (`+120` exact, `+60` prefix, `+30` substring).
@@ -225,7 +229,7 @@ Pure deterministic multi-token matcher (`> 0` match, `0` non-match). Splits `que
 - **On `CommandPaletteBar`:** `data-auto-scope` on the auto-rendered `CommandPaletteScope` button.
 - **On `CommandPaletteClear`:** `data-visible=""` when visible, `data-visible="false"` when hidden.
 - **On `CommandPalettePage`:** `data-page={value}`.
-- **On `CommandPaletteItem`:** `data-value={resolvedValue}`, `data-highlighted`, `data-negative`, `data-disabled`, `data-hidden`.
+- **On `CommandPaletteItem`:** `data-value={resolvedValue}`, `data-highlighted`, `data-checked`, `data-negative`, `data-disabled`, `data-hidden`.
 
 ### CSS Custom Properties
 | Variable | Default | Description |
@@ -253,6 +257,8 @@ Pure deterministic multi-token matcher (`> 0` match, `0` non-match). Splits `que
 | `--cs-command-palette-first-group-pt` | `6px` (`sm`/`md`), `8px` (`lg`) | Top padding of the first group label. |
 | `--cs-command-palette-item-bg` / `--cs-command-palette-item-bg-highlighted` / `--cs-command-palette-item-bg-active` | `transparent` / `base-soft` / `base-soft-hover` | Item background states. |
 | `--cs-command-palette-item-fg` / `--cs-command-palette-item-description-fg` / `--cs-command-palette-item-icon-fg` / `--cs-command-palette-shortcut-fg` | `text-strong` / `text-weak` / `text-weak` / `text-weaker` | Item text, description, icon, and shortcut colors. |
+| `--cs-command-palette-item-check-fg` | `var(--cs-color-accent-solid)` (`disabled-fg` when disabled) | Check mark color of `checked` items. |
+| `--cs-command-palette-trailing-fg` | falls back to `--cs-command-palette-shortcut-fg` | Optional override for `CommandPaletteItemTrailing` text. |
 | `--cs-command-palette-item-negative-fg` / `--cs-command-palette-item-negative-bg-highlighted` / `--cs-command-palette-item-negative-bg-active` | `negative-soft-fg` / `negative-soft` / `negative-soft-hover` | Destructive (`data-negative`) item colors. |
 | `--cs-command-palette-widget-bg` / `--cs-command-palette-widget-px` / `--cs-command-palette-widget-py` | `var(--cs-color-base-soft)` / `12/14/16px` / `10/12/14px` | Inline widget surface and padding. |
 | `--cs-command-palette-preview-width` / `--cs-command-palette-preview-px` / `--cs-command-palette-preview-py` | `44%` / `16/18/20px` / `14/16/18px` | Split preview column width and inset padding. |

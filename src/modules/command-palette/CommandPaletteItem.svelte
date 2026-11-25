@@ -1,5 +1,6 @@
 <script lang="ts">
     import { extractListboxItemLabel } from "../../shared/listbox/listbox-utils.ts";
+    import { CheckboxMark } from "../checkbox/index.ts";
     import {
         getCommandPaletteGroupContext,
         getCommandPalettePageContext,
@@ -21,6 +22,7 @@
         negative = false,
         disabled = false,
         closeOnSelect = true,
+        checked,
         onSelect,
         class: className,
         children,
@@ -80,7 +82,7 @@
     function activate(event: MouseEvent | KeyboardEvent): void {
         if (disabled) return;
         const versionBefore = palette.pageMutationVersion;
-        onSelect?.(event);
+        onSelect?.(event, palette.publicContext);
         if (event.defaultPrevented) return;
         // Auto-suppress closing when onSelect navigated the page stack.
         if (palette.pageMutationVersion !== versionBefore) return;
@@ -138,11 +140,13 @@
     role="option"
     tabindex={-1}
     aria-selected={isHighlighted ? "true" : "false"}
+    aria-checked={checked === undefined ? undefined : checked ? "true" : "false"}
     aria-disabled={disabled ? "true" : undefined}
     hidden={!isVisible}
     class={["cs-command-palette-item", "cs-listbox-item", className]}
     data-value={resolvedValue}
     data-highlighted={isHighlighted ? "" : undefined}
+    data-checked={checked ? "" : undefined}
     data-negative={negative ? "" : undefined}
     data-disabled={disabled ? "" : undefined}
     data-hidden={!isVisible ? "" : undefined}
@@ -158,5 +162,11 @@
         <div bind:this={contentEl} class="cs-command-palette-item-content cs-listbox-item-content">
             {@render children?.()}
         </div>
+
+        {#if checked !== undefined}
+            <span class="cs-command-palette-item-check cs-listbox-item-check" aria-hidden="true">
+                <CheckboxMark {checked} class="cs-command-palette-item-check-icon cs-listbox-item-check-icon" stroke-width="3" />
+            </span>
+        {/if}
     </div>
 </svelte:element>

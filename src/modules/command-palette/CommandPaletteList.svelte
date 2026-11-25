@@ -16,6 +16,7 @@
     import CommandPaletteItemDescription from "./CommandPaletteItemDescription.svelte";
     import CommandPaletteItemShortcut from "./CommandPaletteItemShortcut.svelte";
     import CommandPaletteItemText from "./CommandPaletteItemText.svelte";
+    import CommandPaletteItemTrailing from "./CommandPaletteItemTrailing.svelte";
     import CommandPalettePage from "./CommandPalettePage.svelte";
     import CommandPalettePluginScope from "./CommandPalettePluginScope.internal.svelte";
     import CommandPaletteWidget from "./CommandPaletteWidget.svelte";
@@ -207,11 +208,15 @@
                                     negative={cmd.negative}
                                     disabled={cmd.disabled}
                                     closeOnSelect={cmd.closeOnSelect}
+                                    checked={cmd.checked}
                                     onSelect={cmd.onSelect}
                                 >
                                     <CommandPaletteItemText>{cmd.label}</CommandPaletteItemText>
                                     {#if cmd.description}
                                         <CommandPaletteItemDescription>{cmd.description}</CommandPaletteItemDescription>
+                                    {/if}
+                                    {#if cmd.trailing}
+                                        <CommandPaletteItemTrailing>{cmd.trailing}</CommandPaletteItemTrailing>
                                     {/if}
                                     {#if cmd.shortcut}
                                         <CommandPaletteItemShortcut>
