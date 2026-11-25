@@ -18,7 +18,7 @@ function moveDocsBundle(): Plugin {
             root = config.root;
         },
         closeBundle() {
-            const builtHtml = path.resolve(root, TEMP_OUT_DIR, DOCS_ENTRY);
+            const builtHtml = path.resolve(root, TEMP_OUT_DIR, "docs.html");
             const targetHtml = path.resolve(root, DOCS_TARGET);
 
             if (existsSync(builtHtml)) {
@@ -45,7 +45,7 @@ export default defineConfig({
         csLucide({ enabled: true }),
         UnoCSS(),
         svelte(),
-        csSingleFile({ enabled: true }),
+        csSingleFile({ enabled: true, fileName: "docs.html" }),
         moveDocsBundle(),
     ],
 });

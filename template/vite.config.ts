@@ -16,7 +16,7 @@ export default defineConfig({
         csLanguage("de"),
         csFont({ sans: "system" }),
         csDocs(),
-        csSingleFile({ enabled: false }),
+        csSingleFile({ enabled: false, fileName: "app.html" }),
         csLucide({ enabled: true }),
         ...createHtmlPlugin({
             minify: {

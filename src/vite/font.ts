@@ -32,7 +32,7 @@ function buildFontCss(fontUrl: string, display: "block" | "swap"): string {
  * - Clean DevTools in Dev (`vite dev`): Always serves `inter.woff2` as a normal file URL via
  *   Vite's `/@fs/` endpoint with `<link rel="preload">`, avoiding multi-kilobyte Base64 strings in the DOM inspector.
  * - Automatic Single-File Handshake (`vite build`): Emits a hashed `.woff2` asset with `<link rel="preload">`
- *   in normal builds, or automatically inlines `inter.woff2` as a Base64 data URI when `csSingleFile({ enabled: true })` is active.
+ *   in normal builds, or automatically inlines `inter.woff2` as a Base64 data URI when `csSingleFile({ enabled: true, fileName: "..." })` is active.
  */
 export function csFont(options: CSFontOptions): Plugin {
     if (options.sans === "system") {

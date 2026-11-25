@@ -7,9 +7,34 @@ export const CS_SINGLEFILE_PLUGIN_NAME = "vite-plugin-cs-singlefile";
 export interface CSSingleFileOptions {
     /**
      * Whether to bundle the entire application (JS, CSS, fonts, images, SVGs, and public icons)
-     * into a single standalone `dist/index.html` file during `vite build`.
+     * into a single standalone HTML file during `vite build`.
      */
     enabled: boolean;
+
+    /**
+     * Output filename (relative to `build.outDir`) for the emitted single-file HTML bundle,
+     * e.g. `"app.html"` or `"nested/app.html"`. A `.html` extension is appended automatically
+     * if omitted. Validated even when `enabled: false`.
+     */
+    fileName: string;
+}
+
+function normalizeHtmlFileName(rawFileName: string): string {
+    const trimmed = rawFileName.trim();
+    if (!trimmed) {
+        throw new Error("csSingleFile: `fileName` must be a non-empty string.");
+    }
+
+    if (trimmed.startsWith("/") || trimmed.startsWith("\\")) {
+        throw new Error(`csSingleFile: \`fileName\` must be a relative path (received "${rawFileName}").`);
+    }
+
+    const normalized = trimmed.replaceAll("\\", "/");
+    if (normalized.split("/").includes("..")) {
+        throw new Error(`csSingleFile: \`fileName\` must not contain ".." path segments (received "${rawFileName}").`);
+    }
+
+    return normalized.toLowerCase().endsWith(".html") ? normalized : `${normalized}.html`;
 }
 
 const MIME_TYPES: Record<string, string> = {
@@ -94,18 +119,20 @@ function inlinePublicAssets(html: string, publicDir: string, baseUrl: string): s
 }
 
 /**
- * Vite plugin that compiles the entire build output into a single self-contained `index.html`.
+ * Vite plugin that compiles the entire build output into a single self-contained HTML file (`options.fileName`).
  *
  * Architectural Notes:
  * - Zero-Overhead Disabled Mode (`enabled: false`): Returns a no-op plugin so normal multi-asset builds
- *   remain untouched unless explicitly enabled via `csSingleFile({ enabled: true })`.
+ *   remain untouched unless explicitly enabled via `csSingleFile({ enabled: true, fileName: "app.html" })`.
  * - Automatic `csFont` Handshake: When active, `csFont({ sans: "inter" })` detects this plugin
  *   via `CS_SINGLEFILE_PLUGIN_NAME` and automatically switches to Base64 font inlining.
  * - Complete Asset Consolidation: Forces Vite to inline imported module assets (`assetsInlineLimit`),
  *   disables `public/` directory copying while inlining `<link rel="icon">` files as Base64 data URIs,
- *   and embeds all emitted JS and CSS bundles directly into `index.html`.
+ *   and embeds all emitted JS and CSS bundles directly into the configured HTML output file.
  */
 export function csSingleFile(options: CSSingleFileOptions): Plugin {
+    const targetFileName = normalizeHtmlFileName(options.fileName);
+
     if (!options.enabled) {
         return {
             name: "vite-plugin-cs-singlefile-noop",
@@ -215,6 +242,28 @@ export function csSingleFile(options: CSSingleFileOptions): Plugin {
                 result = inlinePublicAssets(result, resolvedConfig.publicDir, baseUrl);
 
                 return result;
+            },
+        },
+
+        generateBundle: {
+            order: "post",
+            handler(_outputOptions, bundle) {
+                const htmlAssets = Object.entries(bundle).filter(
+                    (entry): entry is [string, Rollup.OutputAsset] =>
+                        entry[1].type === "asset" &&
+                        entry[0].toLowerCase().endsWith(".html") &&
+                        entry[0] !== targetFileName
+                );
+
+                for (const [key, item] of htmlAssets) {
+                    delete bundle[key];
+                    // eslint-disable-next-line unicorn/no-this-outside-of-class
+                    this.emitFile({
+                        type: "asset",
+                        fileName: targetFileName,
+                        source: item.source,
+                    });
+                }
             },
         },
     };

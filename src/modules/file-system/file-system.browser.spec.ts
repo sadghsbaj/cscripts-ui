@@ -591,7 +591,7 @@ void run();
                         input: entryHtml,
                     },
                 },
-                plugins: [svelte(), csSingleFile({ enabled: true })],
+                plugins: [svelte(), csSingleFile({ enabled: true, fileName: "smoke.html" })],
             });
 
             const externalRequests: string[] = [];
@@ -611,7 +611,7 @@ void run();
                 workerCreations.push(worker.url());
             });
 
-            const builtHtmlPath = path.join(outDir, "index.html");
+            const builtHtmlPath = path.join(outDir, "smoke.html");
             await page.goto(`file://${builtHtmlPath}`);
             await page.waitForFunction(
                 () =>
