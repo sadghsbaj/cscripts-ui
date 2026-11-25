@@ -462,4 +462,54 @@ describe("command-palette-theme", () => {
             document.documentElement.style.colorScheme = "";
         }
     });
+
+    test("defaults to placement 'end' (after declarative groups) and supports overriding to 'start'", () => {
+        const { manager } = createMockThemeManager("light");
+        const defaultPlugin = createCommandPaletteThemePlugin({ manager });
+        expect(defaultPlugin.placement).toBe("end");
+
+        const hostDefault = mount(CommandPaletteTestHost, {
+            target: container,
+            props: {
+                open: true,
+                plugins: [defaultPlugin],
+                groups: [
+                    {
+                        key: "actions",
+                        label: "Actions",
+                        items: [{ value: "decl-action", label: "Declarative Action" }],
+                    },
+                ],
+                focusTrap: false,
+            },
+        });
+        flushSync();
+
+        const rootValue = `${COMMAND_PALETTE_THEME_PLUGIN_ID}:root`;
+        expect(getVisibleOptionValues(document.body)).toEqual(["decl-action", rootValue]);
+        unmount(hostDefault);
+
+        const startPlugin = createCommandPaletteThemePlugin({ manager, placement: "start" });
+        expect(startPlugin.placement).toBe("start");
+
+        const hostStart = mount(CommandPaletteTestHost, {
+            target: container,
+            props: {
+                open: true,
+                plugins: [startPlugin],
+                groups: [
+                    {
+                        key: "actions",
+                        label: "Actions",
+                        items: [{ value: "decl-action", label: "Declarative Action" }],
+                    },
+                ],
+                focusTrap: false,
+            },
+        });
+        flushSync();
+
+        expect(getVisibleOptionValues(document.body)).toEqual([rootValue, "decl-action"]);
+        unmount(hostStart);
+    });
 });

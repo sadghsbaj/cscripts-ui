@@ -40,6 +40,7 @@ export { scoreCommandPaletteMatch } from "./command-palette-score.ts";
 export { getCommandPaletteContext, hasCommandPaletteContext } from "./command-palette.context.ts";
 
 export const COMMAND_PALETTE_SIZES = ["sm", "md", "lg"] as const;
+export const COMMAND_PALETTE_PLUGIN_PLACEMENTS = ["start", "end"] as const;
 export const COMMAND_PALETTE_CLOSE_REASONS = [
     "escape",
     "outside-click",
@@ -50,6 +51,7 @@ export const COMMAND_PALETTE_CLOSE_REASONS = [
 ] as const;
 
 export type CommandPaletteSize = (typeof COMMAND_PALETTE_SIZES)[number];
+export type CommandPalettePluginPlacement = (typeof COMMAND_PALETTE_PLUGIN_PLACEMENTS)[number];
 export type CommandPaletteCloseReason = (typeof COMMAND_PALETTE_CLOSE_REASONS)[number];
 
 export type CommandPaletteIconComponentProps = Omit<SVGAttributes<SVGSVGElement>, "children" | "color"> &
@@ -126,6 +128,7 @@ export interface CommandPalettePlugin {
     prefix?: string;
     page?: string;
     priority?: number;
+    placement?: CommandPalettePluginPlacement;
     filter?: boolean;
     items?: readonly CommandPaletteCommand[] | ((ctx: CommandPaletteQueryContext) => readonly CommandPaletteCommand[]);
     widget?: Snippet<[CommandPalettePluginRenderContext]>;
@@ -137,6 +140,7 @@ export interface CommandPaletteRegisterCommandsOptions {
     group?: string;
     page?: string;
     priority?: number;
+    placement?: CommandPalettePluginPlacement;
 }
 
 export interface CommandPaletteRegistry {

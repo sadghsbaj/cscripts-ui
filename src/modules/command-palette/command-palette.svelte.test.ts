@@ -1641,4 +1641,243 @@ describe("CommandPalette Svelte 5 Component", () => {
             unmount(host);
         });
     });
+
+    describe("Plugin placement", () => {
+        test("default placement (undefined / 'end') renders plugin items and widgets after declarative groups", () => {
+            const endWidget = createRawSnippet(() => ({
+                render: () => `<div data-testid="end-plugin-widget">End Widget</div>`,
+            }));
+
+            const plugins: CommandPalettePlugin[] = [
+                {
+                    id: "default-plugin",
+                    label: "Default Plugin",
+                    widget: endWidget,
+                    items: [{ value: "plugin-default", label: "Plugin Default" }],
+                },
+                {
+                    id: "explicit-end-plugin",
+                    label: "Explicit End",
+                    placement: "end",
+                    items: [{ value: "plugin-end", label: "Plugin End" }],
+                },
+            ];
+
+            const host = mount(CommandPaletteTestHost, {
+                target: container,
+                props: {
+                    open: true,
+                    plugins,
+                    groups: [
+                        {
+                            key: "declarative",
+                            label: "Declarative",
+                            items: [{ value: "decl-1", label: "Declarative 1" }],
+                        },
+                    ],
+                    focusTrap: false,
+                },
+            });
+            flushSync();
+
+            expect(getVisibleOptionValues(document.body)).toEqual([
+                "decl-1",
+                "plugin-default",
+                "plugin-end",
+            ]);
+
+            const listbox = mustQuery<HTMLElement>(document.body, '[role="listbox"]');
+            const declOption = mustQuery<HTMLElement>(listbox, '[role="option"][data-value="decl-1"]');
+            const widgetEl = mustQuery<HTMLElement>(listbox, '[data-testid="end-plugin-widget"]');
+            expect(
+                Boolean(declOption.compareDocumentPosition(widgetEl) & Node.DOCUMENT_POSITION_FOLLOWING)
+            ).toBe(true);
+
+            unmount(host);
+        });
+
+        test("explicit placement 'start' renders plugin items and widgets before declarative groups", () => {
+            const startWidget = createRawSnippet(() => ({
+                render: () => `<div data-testid="start-plugin-widget">Start Widget</div>`,
+            }));
+
+            const plugins: CommandPalettePlugin[] = [
+                {
+                    id: "start-plugin",
+                    label: "Start Plugin",
+                    placement: "start",
+                    widget: startWidget,
+                    items: [{ value: "plugin-start", label: "Plugin Start" }],
+                },
+            ];
+
+            const host = mount(CommandPaletteTestHost, {
+                target: container,
+                props: {
+                    open: true,
+                    plugins,
+                    groups: [
+                        {
+                            key: "declarative",
+                            label: "Declarative",
+                            items: [{ value: "decl-1", label: "Declarative 1" }],
+                        },
+                    ],
+                    focusTrap: false,
+                },
+            });
+            flushSync();
+
+            expect(getVisibleOptionValues(document.body)).toEqual(["plugin-start", "decl-1"]);
+
+            const listbox = mustQuery<HTMLElement>(document.body, '[role="listbox"]');
+            const widgetEl = mustQuery<HTMLElement>(listbox, '[data-testid="start-plugin-widget"]');
+            const declOption = mustQuery<HTMLElement>(listbox, '[role="option"][data-value="decl-1"]');
+            expect(
+                Boolean(widgetEl.compareDocumentPosition(declOption) & Node.DOCUMENT_POSITION_FOLLOWING)
+            ).toBe(true);
+
+            unmount(host);
+        });
+
+        test("mixed start + declarative + end preserves descending priority sorting within each placement bucket", () => {
+            const registry = createCommandPaletteRegistry();
+            registry.registerCommands([{ value: "start-low", label: "Start Low" }], {
+                group: "Start Low",
+                placement: "start",
+                priority: 5,
+            });
+            registry.registerCommands([{ value: "start-high", label: "Start High" }], {
+                group: "Start High",
+                placement: "start",
+                priority: 50,
+            });
+            registry.registerCommands([{ value: "end-default", label: "End Default" }], {
+                group: "End Default",
+            });
+            registry.registerCommands([{ value: "end-high", label: "End High" }], {
+                group: "End High",
+                placement: "end",
+                priority: 20,
+            });
+
+            const host = mount(CommandPaletteTestHost, {
+                target: container,
+                props: {
+                    open: true,
+                    registry,
+                    groups: [
+                        {
+                            key: "decl-a",
+                            label: "Declarative A",
+                            items: [
+                                { value: "decl-1", label: "Declarative 1" },
+                                { value: "decl-2", label: "Declarative 2" },
+                            ],
+                        },
+                    ],
+                    focusTrap: false,
+                },
+            });
+            flushSync();
+
+            expect(getVisibleOptionValues(document.body)).toEqual([
+                "start-high",
+                "start-low",
+                "decl-1",
+                "decl-2",
+                "end-high",
+                "end-default",
+            ]);
+
+            // Dynamic registration into start bucket respects priority within start only.
+            const disposeMidStart = registry.registerCommands(
+                [{ value: "start-mid", label: "Start Mid" }],
+                { group: "Start Mid", placement: "start", priority: 25 }
+            );
+            flushSync();
+            expect(getVisibleOptionValues(document.body)).toEqual([
+                "start-high",
+                "start-mid",
+                "start-low",
+                "decl-1",
+                "decl-2",
+                "end-high",
+                "end-default",
+            ]);
+
+            disposeMidStart();
+            flushSync();
+            expect(getVisibleOptionValues(document.body)).toEqual([
+                "start-high",
+                "start-low",
+                "decl-1",
+                "decl-2",
+                "end-high",
+                "end-default",
+            ]);
+
+            unmount(host);
+        });
+
+        test("keyboard navigation (initial highlight, ArrowDown, PageDown, PageUp) follows start -> declarative -> end DOM order", () => {
+            const plugins: CommandPalettePlugin[] = [
+                {
+                    id: "start-plugin",
+                    label: "Start",
+                    placement: "start",
+                    items: [{ value: "start-1", label: "Start 1" }],
+                },
+                {
+                    id: "end-plugin",
+                    label: "End",
+                    placement: "end",
+                    items: [
+                        { value: "end-1", label: "End 1" },
+                        { value: "end-2", label: "End 2" },
+                    ],
+                },
+            ];
+
+            const host = mount(CommandPaletteTestHost, {
+                target: container,
+                props: {
+                    open: true,
+                    plugins,
+                    groups: [
+                        {
+                            key: "decl",
+                            label: "Declarative",
+                            items: [{ value: "decl-1", label: "Declarative 1" }],
+                        },
+                    ],
+                    focusTrap: false,
+                },
+            });
+            flushSync();
+
+            const input = mustQuery<HTMLInputElement>(document.body, '[role="combobox"]');
+
+            // Initial highlight picks the first item in DOM order (start plugin).
+            expect(host.getHighlightedValue()).toBe("start-1");
+
+            dispatchKeyDown(input, "ArrowDown");
+            flushSync();
+            expect(host.getHighlightedValue()).toBe("decl-1");
+
+            dispatchKeyDown(input, "ArrowDown");
+            flushSync();
+            expect(host.getHighlightedValue()).toBe("end-1");
+
+            dispatchKeyDown(input, "PageDown");
+            flushSync();
+            expect(host.getHighlightedValue()).toBe("end-2");
+
+            dispatchKeyDown(input, "PageUp");
+            flushSync();
+            expect(host.getHighlightedValue()).toBe("start-1");
+
+            unmount(host);
+        });
+    });
 });

@@ -80,6 +80,31 @@ describe("createCommandPaletteRegistry", () => {
         expect(registry.plugins.size).toBe(0);
     });
 
+    test("registerCommands forwards placement option and leaves it undefined when omitted", () => {
+        const registry = createCommandPaletteRegistry();
+
+        const disposeDefault = registry.registerCommands([{ value: "cmd-default", label: "Default" }], {
+            group: "Default",
+        });
+        const disposeStart = registry.registerCommands([{ value: "cmd-start", label: "Start" }], {
+            group: "Start",
+            placement: "start",
+        });
+        const disposeEnd = registry.registerCommands([{ value: "cmd-end", label: "End" }], {
+            group: "End",
+            placement: "end",
+        });
+
+        const plugins = registry.plugins.values().toArray();
+        expect(plugins[0]?.placement).toBeUndefined();
+        expect(plugins[1]?.placement).toBe("start");
+        expect(plugins[2]?.placement).toBe("end");
+
+        disposeDefault();
+        disposeStart();
+        disposeEnd();
+    });
+
     test("renders plugins in descending priority order and reacts to dynamic register/unregister", () => {
         const registry = createCommandPaletteRegistry();
         registry.registerCommands([{ value: "low", label: "Low Priority" }], { group: "Low", priority: 1 });

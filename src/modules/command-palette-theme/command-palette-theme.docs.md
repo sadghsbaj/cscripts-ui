@@ -24,6 +24,7 @@ Returns a plain `CommandPalettePlugin`. Options are read once when the factory r
 | :--- | :--- | :--- | :--- |
 | `id` | `string` | `COMMAND_PALETTE_THEME_PLUGIN_ID` (`"cs-command-palette-theme"`) | Plugin id. Also used as the pushed page id and as the prefix of item values (`<id>:root`, `<id>:mode:<mode>`). Must be unique per registry. |
 | `priority` | `number` | `0` | Plugin sort priority (higher first). |
+| `placement` | `CommandPalettePluginPlacement` | `"end"` | Whether the plugin renders before (`"start"`) or after (`"end"`) declarative groups. |
 | `group` | `string` | `"Appearance"` / `"Darstellung"` | Group label of the root item. |
 | `closeOnSelect` | `boolean` | `true` | Whether picking a mode closes the palette. |
 | `shortcut` | `readonly string[] \| string` | `undefined` | Display-only shortcut hint on the root item (does not bind a hotkey). |

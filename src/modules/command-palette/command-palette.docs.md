@@ -31,8 +31,10 @@ exports:
   - getCommandPaletteContext
   - hasCommandPaletteContext
   - COMMAND_PALETTE_SIZES
+  - COMMAND_PALETTE_PLUGIN_PLACEMENTS
   - COMMAND_PALETTE_CLOSE_REASONS
   - CommandPaletteSize
+  - CommandPalettePluginPlacement
   - CommandPaletteCloseReason
   - CommandPaletteIconComponentProps
   - CommandPaletteFilterCandidate
@@ -207,11 +209,11 @@ Returns `Attachment<HTMLElement>` attaching a `keydown` listener to `node.ownerD
 Creates a reactive `CommandPaletteRegistry` backed by `SvelteMap`:
 - `plugins: ReadonlyMap<string, CommandPalettePlugin>` — Reactive map of registered plugins.
 - `register(plugin: CommandPalettePlugin): () => void` — Registers a plugin and returns an `unregister` cleanup function (only deletes if the same plugin instance is still registered).
-- `registerCommands(commands: readonly CommandPaletteCommand[], options?: { group?: string; page?: string; priority?: number }): () => void` — Shorthand for registering command arrays.
+- `registerCommands(commands: readonly CommandPaletteCommand[], options?: { group?: string; page?: string; priority?: number; placement?: CommandPalettePluginPlacement }): () => void` — Shorthand for registering command arrays.
 - `unregister(pluginId: string): void` — Removes a plugin by ID.
 
 `CommandPalettePlugin`:
-- `id: string` (required), `label?: string`, `prefix?: string` (activates when `inputValue.startsWith(prefix)` at root), `page?: string` (target page ID, or `"*"` for all pages), `priority?: number`, `filter?: boolean`, `items?: readonly CommandPaletteCommand[] | ((ctx: CommandPaletteQueryContext) => readonly CommandPaletteCommand[])`, `widget?: Snippet<[CommandPalettePluginRenderContext]>`, `pageView?: Snippet<[CommandPalettePluginRenderContext]>`, `onOpen?: (palette: CommandPaletteContext) => void | (() => void)`.
+- `id: string` (required), `label?: string`, `prefix?: string` (activates when `inputValue.startsWith(prefix)` at root), `page?: string` (target page ID, or `"*"` for all pages), `priority?: number`, `placement?: CommandPalettePluginPlacement` (default `"end"` — renders `"start"` plugins before declarative `<CommandPaletteGroup>` children and `"end"` plugins after them, each bucket sorted by `priority` descending), `filter?: boolean`, `items?: readonly CommandPaletteCommand[] | ((ctx: CommandPaletteQueryContext) => readonly CommandPaletteCommand[])`, `widget?: Snippet<[CommandPalettePluginRenderContext]>`, `pageView?: Snippet<[CommandPalettePluginRenderContext]>`, `onOpen?: (palette: CommandPaletteContext) => void | (() => void)`.
 
 `CommandPaletteCommand`:
 - `value: string` (required), `label: string` (required), `description?: string`, `keywords?: readonly string[]`, `group?: string`, `icon?: Component<CommandPaletteIconComponentProps>`, `trailing?: string`, `shortcut?: readonly string[] | string`, `checked?: boolean`, `href?: string`, `target?: string`, `rel?: string`, `negative?: boolean`, `disabled?: boolean`, `closeOnSelect?: boolean`, `onSelect?: (event: MouseEvent | KeyboardEvent, palette: CommandPaletteContext) => void`.
@@ -221,6 +223,7 @@ Pure deterministic multi-token matcher (`> 0` match, `0` non-match). Splits `que
 
 ### Constants & Context Helpers
 - `COMMAND_PALETTE_SIZES = ["sm", "md", "lg"] as const`
+- `COMMAND_PALETTE_PLUGIN_PLACEMENTS = ["start", "end"] as const`
 - `COMMAND_PALETTE_CLOSE_REASONS = ["escape", "outside-click", "close-button", "select", "shortcut", "programmatic"] as const`
 - `getCommandPaletteContext(): CommandPaletteContext`, `hasCommandPaletteContext(): boolean` — Exposes `{ open, size, inputValue, highlightedValue, pages, activePage, activePrefix, visibleItemCount, visibleWidgetCount, setInputValue, setHighlightedValue, pushPage, popPage, resetPages, focusInput, close }`.
 

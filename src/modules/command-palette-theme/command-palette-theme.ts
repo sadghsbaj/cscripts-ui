@@ -1,7 +1,11 @@
 import { tick } from "svelte";
 
 import { t } from "../../shared/lang.internal.ts";
-import type { CommandPaletteCommand, CommandPalettePlugin } from "../command-palette/index.ts";
+import type {
+    CommandPaletteCommand,
+    CommandPalettePlugin,
+    CommandPalettePluginPlacement,
+} from "../command-palette/index.ts";
 import { theme, THEME_ICONS, THEME_LABELS, THEME_MODES, type ThemeManager, type ThemeMode } from "../theme/index.ts";
 
 export const COMMAND_PALETTE_THEME_PLUGIN_ID = "cs-command-palette-theme";
@@ -9,6 +13,7 @@ export const COMMAND_PALETTE_THEME_PLUGIN_ID = "cs-command-palette-theme";
 export interface CommandPaletteThemePluginOptions {
     id?: string;
     priority?: number;
+    placement?: CommandPalettePluginPlacement;
     group?: string;
     closeOnSelect?: boolean;
     shortcut?: readonly string[] | string;
@@ -41,6 +46,7 @@ export function createCommandPaletteThemePlugin(options: CommandPaletteThemePlug
     const {
         id = COMMAND_PALETTE_THEME_PLUGIN_ID,
         priority = 0,
+        placement = "end",
         group = DEFAULT_GROUP_LABEL,
         closeOnSelect = true,
         shortcut,
@@ -58,6 +64,7 @@ export function createCommandPaletteThemePlugin(options: CommandPaletteThemePlug
         id,
         label: group,
         priority,
+        placement,
         // Single plugin serves root and sub-page; the page id equals the plugin id so the scope pill resolves.
         page: "*",
         items(ctx) {

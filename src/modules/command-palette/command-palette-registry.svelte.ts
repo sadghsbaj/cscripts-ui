@@ -32,6 +32,7 @@ export function createCommandPaletteRegistry(): CommandPaletteRegistry {
             label: options?.group,
             page: options?.page,
             priority: options?.priority,
+            placement: options?.placement,
             items: commands,
         });
     }

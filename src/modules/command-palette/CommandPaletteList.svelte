@@ -140,6 +140,13 @@
         return entries;
     });
 
+    const startPluginEntries = $derived(
+        activePluginEntries.filter((entry) => (entry.plugin.placement ?? "end") === "start")
+    );
+    const endPluginEntries = $derived(
+        activePluginEntries.filter((entry) => (entry.plugin.placement ?? "end") === "end")
+    );
+
     function handlePointerDown(event: PointerEvent & { currentTarget: EventTarget & HTMLDivElement }): void {
         onpointerdown?.(event);
         if (event.pointerType === "mouse" && palette.isKeyboardNav) {
@@ -152,6 +159,67 @@
         event.preventDefault();
     }
 </script>
+
+{#snippet renderPluginEntries(entries: readonly ResolvedPluginRenderEntry[])}
+    {#each entries as entry (entry.plugin.id)}
+        {#if entry.plugin.widget}
+            <CommandPaletteWidget>
+                {@render entry.plugin.widget(renderContext)}
+            </CommandPaletteWidget>
+        {/if}
+
+        {#each entry.groups as group (group.key)}
+            <CommandPalettePluginScope
+                pageValue={palette.activePage}
+                filter={entry.plugin.filter}
+                isPrefixPlugin={entry.plugin === palette.activePrefixPlugin}
+            >
+                <CommandPaletteGroup>
+                    {#if group.label}
+                        <CommandPaletteGroupLabel>{group.label}</CommandPaletteGroupLabel>
+                    {/if}
+                    {#each group.commands as cmd (cmd.value)}
+                        <CommandPaletteItem
+                            value={cmd.value}
+                            label={cmd.label}
+                            keywords={cmd.keywords}
+                            icon={cmd.icon}
+                            href={cmd.href}
+                            target={cmd.target}
+                            rel={cmd.rel}
+                            negative={cmd.negative}
+                            disabled={cmd.disabled}
+                            closeOnSelect={cmd.closeOnSelect}
+                            checked={cmd.checked}
+                            onSelect={cmd.onSelect}
+                        >
+                            <CommandPaletteItemText>{cmd.label}</CommandPaletteItemText>
+                            {#if cmd.description}
+                                <CommandPaletteItemDescription>{cmd.description}</CommandPaletteItemDescription>
+                            {/if}
+                            {#if cmd.trailing}
+                                <CommandPaletteItemTrailing>{cmd.trailing}</CommandPaletteItemTrailing>
+                            {/if}
+                            {#if cmd.shortcut}
+                                <CommandPaletteItemShortcut>
+                                    {#if typeof cmd.shortcut === "string"}
+                                        {cmd.shortcut}
+                                    {:else}
+                                        <KbdGroup variant="ghost" size={palette.size === "lg" ? "md" : "sm"}>
+                                            {#each cmd.shortcut as key, keyIndex (`${cmd.value}-kbd-${keyIndex}`)}
+                                                <Kbd>{key}</Kbd>
+                                            {/each}
+                                        </KbdGroup>
+                                    {/if}
+                                </CommandPaletteItemShortcut>
+                            {/if}
+                        </CommandPaletteItem>
+                    {/each}
+                </CommandPaletteGroup>
+            </CommandPalettePluginScope>
+        {/each}
+    {/each}
+{/snippet}
 
 <ScrollArea
     size="sm"
@@ -179,66 +247,9 @@
                 </CommandPaletteWidget>
             </CommandPalettePage>
         {:else}
-            {#each activePluginEntries as entry (entry.plugin.id)}
-                {#if entry.plugin.widget}
-                    <CommandPaletteWidget>
-                        {@render entry.plugin.widget(renderContext)}
-                    </CommandPaletteWidget>
-                {/if}
-
-                {#each entry.groups as group (group.key)}
-                    <CommandPalettePluginScope
-                        pageValue={palette.activePage}
-                        filter={entry.plugin.filter}
-                        isPrefixPlugin={entry.plugin === palette.activePrefixPlugin}
-                    >
-                        <CommandPaletteGroup>
-                            {#if group.label}
-                                <CommandPaletteGroupLabel>{group.label}</CommandPaletteGroupLabel>
-                            {/if}
-                            {#each group.commands as cmd (cmd.value)}
-                                <CommandPaletteItem
-                                    value={cmd.value}
-                                    label={cmd.label}
-                                    keywords={cmd.keywords}
-                                    icon={cmd.icon}
-                                    href={cmd.href}
-                                    target={cmd.target}
-                                    rel={cmd.rel}
-                                    negative={cmd.negative}
-                                    disabled={cmd.disabled}
-                                    closeOnSelect={cmd.closeOnSelect}
-                                    checked={cmd.checked}
-                                    onSelect={cmd.onSelect}
-                                >
-                                    <CommandPaletteItemText>{cmd.label}</CommandPaletteItemText>
-                                    {#if cmd.description}
-                                        <CommandPaletteItemDescription>{cmd.description}</CommandPaletteItemDescription>
-                                    {/if}
-                                    {#if cmd.trailing}
-                                        <CommandPaletteItemTrailing>{cmd.trailing}</CommandPaletteItemTrailing>
-                                    {/if}
-                                    {#if cmd.shortcut}
-                                        <CommandPaletteItemShortcut>
-                                            {#if typeof cmd.shortcut === "string"}
-                                                {cmd.shortcut}
-                                            {:else}
-                                                <KbdGroup variant="ghost" size={palette.size === "lg" ? "md" : "sm"}>
-                                                    {#each cmd.shortcut as key, keyIndex (`${cmd.value}-kbd-${keyIndex}`)}
-                                                        <Kbd>{key}</Kbd>
-                                                    {/each}
-                                                </KbdGroup>
-                                            {/if}
-                                        </CommandPaletteItemShortcut>
-                                    {/if}
-                                </CommandPaletteItem>
-                            {/each}
-                        </CommandPaletteGroup>
-                    </CommandPalettePluginScope>
-                {/each}
-            {/each}
-
+            {@render renderPluginEntries(startPluginEntries)}
             {@render children?.()}
+            {@render renderPluginEntries(endPluginEntries)}
         {/if}
     </ScrollAreaContent>
 </ScrollArea>
