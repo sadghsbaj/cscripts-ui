@@ -209,7 +209,7 @@
                 }
             }
 
-            &:focus-within:not([data-disabled]) {
+            &:has(> :global(:where(.cs-text-input-field)):focus):not([data-disabled]) {
                 --cs-text-input-ring-shadow: inset 0 0 0 2px var(--cs-color-accent-solid);
                 --cs-text-input-ring-shadow-hover: inset 0 0 0 2px var(--cs-color-accent-solid);
             }

@@ -712,4 +712,41 @@ describe("TextInput Svelte 5 Component", () => {
             unmount(shellInstance);
         });
     });
+
+    describe("Focus Ring Selector", () => {
+        test("shell matches :has(> .cs-text-input-field:focus) only when TextInputField is focused, not when TextInputAction is focused", () => {
+            const instance = mount(TextInputTestHost, {
+                target: container,
+                props: {
+                    showAction: true,
+                    actionVisible: true,
+                    actionProps: { "aria-label": "Clear input" },
+                },
+            });
+            flushSync();
+
+            const shell = getShell();
+            const field = getField();
+            const action = getAction();
+
+            expect(shell.matches(":has(> .cs-text-input-field:focus)")).toBe(false);
+            expect(shell.matches(":has(> .cs-text-input-field:focus):not([data-disabled])")).toBe(false);
+
+            field.focus();
+            expect(document.activeElement).toBe(field);
+            expect(shell.matches(":has(> .cs-text-input-field:focus)")).toBe(true);
+            expect(shell.matches(":has(> .cs-text-input-field:focus):not([data-disabled])")).toBe(true);
+
+            action.focus();
+            expect(document.activeElement).toBe(action);
+            expect(shell.matches(":has(> .cs-text-input-field:focus)")).toBe(false);
+            expect(shell.matches(":has(> .cs-text-input-field:focus):not([data-disabled])")).toBe(false);
+
+            field.focus();
+            expect(document.activeElement).toBe(field);
+            expect(shell.matches(":has(> .cs-text-input-field:focus)")).toBe(true);
+
+            unmount(instance);
+        });
+    });
 });

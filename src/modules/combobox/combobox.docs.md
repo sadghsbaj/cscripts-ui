@@ -144,7 +144,7 @@ Extends `Omit<PopoverProps, "id" | "placement" | "width" | "offset">`. Renders `
 | `maxHeight` | `string`                   | No       | `"min(320px, 60dvh)"` | Maximum block size before internal `ScrollArea` scrolls (`--cs-listbox-content-max-height`).   |
 | `scrollbar` | `ScrollAreaScrollbar`      | No       | `"hover"`             | Scrollbar visibility mode forwarded to `ScrollArea`: `"hover" \| "always" \| "never"`.         |
 | `animate`   | `boolean`                  | No       | `true`                | Enables `Popover` directional spring + blur entrance/exit transitions.                         |
-| `popover`   | `"" \| "auto" \| "manual"` | No       | `"auto"`              | Native HTML `popover` attribute inherited from `PopoverProps`.                                 |
+| `popover`   | `"" \| "auto" \| "manual"` | No       | `"manual"`            | Native HTML `popover` attribute inherited from `PopoverProps` (defaults to `"manual"` with `clickOutside` dismissal so `openOnFocus` clicks on `ComboboxInput` are not light-dismissed on `pointerup`). |
 | `ref`       | `HTMLDivElement \| null`   | No       | `null`                | `$bindable` reference to the popover `<div>`.                                                  |
 | `children`  | `Snippet`                  | No       | `undefined`           | `<ComboboxEmpty>`, `<ComboboxItem>`, `<ComboboxGroup>`, and `<ComboboxSeparator>` children.    |
 
@@ -203,7 +203,7 @@ Generic over `T extends string = string`. Extends `Omit<HTMLAttributes<HTMLDivEl
 | `--cs-combobox-indicator-fg`     | `var(--cs-color-text-weak)`                                                            | `ComboboxClear` and `ComboboxTrigger` foreground color (`--cs-color-negative-soft-fg` when invalid).  |
 | `--cs-combobox-shadow`           | `none` (`soft`) / `var(--cs-shadow-elevated)` (`elevated`)                             | Control elevation shadow at rest.                                                                      |
 | `--cs-combobox-shadow-hover`     | `var(--cs-combobox-shadow)` (`soft`) / `var(--cs-shadow-elevated-hover)` (`elevated`)  | Control shadow on hover and `[data-open]`.                                                             |
-| `--cs-combobox-ring-shadow`      | `inset 0 0 0 0px transparent`                                                          | Inset `::after` ring (`2px` `--cs-color-accent-solid` on `:focus-within`; `--cs-color-negative-solid` when invalid). |
+| `--cs-combobox-ring-shadow`      | `inset 0 0 0 0px transparent`                                                          | Inset `::after` ring (`2px` `--cs-color-accent-solid` on `:has(> .cs-combobox-input:focus)`; `--cs-color-negative-solid` when invalid). |
 | `--cs-combobox-ring-shadow-hover` | `var(--cs-combobox-ring-shadow)`                                                      | Inset `::after` ring on hover.                                                                         |
 | `--cs-combobox-height`           | `28px` / `32px` / `36px` / `40px` / `44px`                                             | Control height across `xs`–`xl`.                                                                       |
 | `--cs-combobox-font-size`        | `--cs-text-xs` (`xs`/`sm`), `--cs-text-sm` (`md`/`lg`), `--cs-text-base` (`xl`)        | Input font size.                                                                                       |

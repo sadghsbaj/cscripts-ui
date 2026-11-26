@@ -45,7 +45,7 @@ Unlike `SelectTrigger` (a single `<button>`), `ComboboxControl` is a composite `
 - **`variant="soft"`:** `--cs-color-base-soft` → hover/open `--cs-color-base-soft-hover`, `--cs-shadow: none`.
 - **`variant="elevated"`:** `--cs-color-elevated` → hover/open `--cs-color-elevated-hover`, `--cs-shadow-elevated` → hover/open `--cs-shadow-elevated-hover`.
 - **Focus Ring (`::after` overlay):** Rendered on `.cs-combobox-control::after` (`inset: 0`, `border-radius: inherit`, `corner-shape: inherit`, `pointer-events: none`).
-  - `:focus-within:not([data-disabled])`: `inset 0 0 0 2px var(--cs-color-accent-solid)`.
+  - `:has(> .cs-combobox-input:focus):not([data-disabled])`: `inset 0 0 0 2px var(--cs-color-accent-solid)`.
   - `[data-invalid]:not([data-disabled])`: overrides ring to `inset 0 0 0 2px var(--cs-color-negative-solid)`, caret to `--cs-color-negative-solid`, and leading/chevron icons to `--cs-color-negative-soft-fg`.
   - `[data-disabled]`: `--cs-disabled-opacity: 1`, colorless `--cs-color-disabled-fg` / `--cs-color-disabled-bg`, `--cs-shadow: none` (including `elevated`, borderless), zero focus ring.
 - **Typography & Cursor:**

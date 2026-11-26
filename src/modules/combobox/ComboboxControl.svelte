@@ -221,7 +221,7 @@
                 box-shadow: var(--cs-combobox-shadow-hover);
             }
 
-            &:focus-within:not([data-disabled]) {
+            &:has(> :global(:where(.cs-combobox-input)):focus):not([data-disabled]) {
                 --cs-combobox-ring-shadow: inset 0 0 0 2px var(--cs-color-accent-solid);
                 --cs-combobox-ring-shadow-hover: inset 0 0 0 2px var(--cs-color-accent-solid);
             }
