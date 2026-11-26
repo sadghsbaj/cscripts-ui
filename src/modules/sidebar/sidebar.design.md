@@ -8,7 +8,7 @@ Every visual, spatial, and motion decision in `sidebar` follows five principles:
 1. **Crafted Monochrome Navigation:** Selected items (`[data-current]`) use calibrated neutral contrast—never a large light-blue `--cs-color-accent-soft` slab. `--cs-color-accent-*` is reserved strictly for `:focus-visible` outlines, primary CTA buttons, and explicit opt-in badges.
 2. **Borderless Separation Over Wireframe Chrome:** Surfaces separate through elevation, directional edge light, and generous whitespace—never raw `1px solid` CSS borders or `<hr>` section dividers.
 3. **Single Vertical Axis Invariant:** Brand logos (`SidebarHeader`), leading navigation icons (`SidebarItem`), and footer avatars (`SidebarFooter`) all share the **exact same vertical center axis** (`x = railWidth / 2`) in both expanded and `rail` modes—guaranteeing zero horizontal jump.
-4. **Razor-Sharp Interactive Physics:** Every clickable surface that scales on `:active` declares `will-change: scale;` paired with exact integer `line-height`s, eliminating Chromium's subpixel text-shift and blur on click release.
+4. **Razor-Sharp Interactive Physics:** Every clickable surface that scales on `:active` scopes `will-change: scale;` to `:hover, :active` paired with exact integer `line-height`s, eliminating Chromium's subpixel text-shift and blur on click release without keeping idle items GPU-promoted.
 5. **Choreographed, Zero-Snap Motion:** Rail and hidden collapse animate as one unified physical object—text dissolves inward cleanly before width contracts so labels never get chopped mid-fade, section labels fold vertically without jumping, and `SidebarViews` / `Overlay` retain their crisp directional choreography.
 
 ---
@@ -82,19 +82,19 @@ Large `--cs-color-accent-soft` rows wash a calm workspace in baby-blue tint and 
   - **`[data-current]`:** `background-color: var(--cs-color-elevated); box-shadow: var(--cs-shadow-elevated); color: var(--cs-color-text-strong); font-weight: 500;`.
   - **`[data-current]:hover`:** `background-color: var(--cs-color-elevated-hover); box-shadow: var(--cs-shadow-elevated);`.
 
-### Mandatory `will-change: scale` & Subpixel Stability
+### Scoped `will-change: scale` (`:hover, :active`) & Subpixel Stability
 
-To eliminate Chromium's text-shift and blur artifact at `:active` scale `transitionend` (matching `SegmentedControlItem`, `ToggleButtonGroup`, `Chip`, and `Popover`):
+To eliminate Chromium's text-shift and blur artifact at `:active` scale `transitionend` without keeping idle items on permanent compositor layers:
 
-- **MUST apply `scale: 1; will-change: scale;`** to:
+- **MUST apply `scale: 1;` at rest and scope `will-change: scale;` to `:hover, :active`** on:
   1. `.cs-sidebar-item` (all nav links, buttons, group triggers, and footer profile rows)
   2. `.cs-sidebar-section-label[data-collapsible]` (collapsible section header buttons)
   3. `.cs-sidebar-toggle` (collapse/expand toggle button)
-- Pair with **exact integer `line-height`s** (`16px`, `18px`, `20px`, `22px`) and even integer row heights (`32px`, `36px`, `40px`, `44px`) so GPU-promoted layers always land on whole physical pixels.
+- Pair with **exact integer `line-height`s** (`16px`, `18px`, `20px`, `22px`) and even integer row heights (`32px`, `36px`, `40px`, `44px`) so promoted layers always land on whole physical pixels.
 
 ### Complete `SidebarItem` State Matrix
 
-All item pills use `border-radius: var(--cs-sidebar-item-radius); corner-shape: var(--cs-squircle-smooth); scale: 1; will-change: scale;`.
+All item pills use `border-radius: var(--cs-sidebar-item-radius); corner-shape: var(--cs-squircle-smooth); scale: 1;` (with `will-change: scale;` scoped to `:hover, :active`).
 
 | State | Background (`elevated` / `floating`) | Background (`transparent`) | Foreground & Icon | Physics & Notes |
 | :--- | :--- | :--- | :--- | :--- |
@@ -154,7 +154,7 @@ Previously, `4px` seam padding caused `SidebarHeader` -> `SegmentedControl` (`Si
 5. **`.cs-sidebar-section` & Labels:**
    - **Horizontal Alignment Fix:** Both `.cs-sidebar-section-header` AND standalone `.cs-sidebar-section-label` (when not inside `.cs-sidebar-section-header`) MUST apply `padding-inline: var(--cs-sidebar-item-padding-x);` so section headings align flush with `.cs-sidebar-item` icons below!
    - **Gestalt Proximity:** Section labels apply `padding-block: 2px 6px;` so each label hugs its own items (`6px`) while staying clearly separated from the preceding section (`--cs-sidebar-section-gap`: `18 / 22 / 26px`).
-   - Collapsible `.cs-sidebar-section-label[data-collapsible]` uses `padding-inline: var(--cs-sidebar-item-padding-x); padding-block: 4px;` with `border-radius: var(--cs-radius-md);`, `scale: 1; will-change: scale;`, subtle hover color shift (`text-weak -> text-main`), and `:active { scale: 0.99; }`.
+   - Collapsible `.cs-sidebar-section-label[data-collapsible]` uses `padding-inline: var(--cs-sidebar-item-padding-x); padding-block: 4px;` with `border-radius: var(--cs-radius-md);`, `scale: 1;` (with `will-change: scale;` on `:hover, :active`), subtle hover color shift (`text-weak -> text-main`), and `:active { scale: 0.99; }`.
 6. **`.cs-sidebar-footer`:** `margin-block-start: auto; padding-inline: var(--cs-sidebar-padding-x); padding-block: var(--cs-sidebar-region-gap) var(--cs-sidebar-padding-y);` — anchors the profile row cleanly at the bottom with generous separation from scrollable navigation.
 
 ### Typographic Scale (`sm` | `md` | `lg`)
@@ -205,7 +205,7 @@ Every leading visual element in the sidebar locks to this exact center coordinat
      - Inside `.cs-sidebar-footer .cs-sidebar-item` (or when a `.cs-sidebar-item` directly contains `.cs-avatar` / `[data-sidebar-rail="anchor"]`):
        - **Avatar sizing:** `<Avatar size="sm" />` (`24px`) for `sm`, `<Avatar size="md" />` (`32px`) for `md` and `lg`.
        - **Exact Rail-Centered Padding:** When a `.cs-sidebar-item` starts with an `<Avatar>` (or `[data-sidebar-rail="anchor"]`), set `padding-inline-start: 0;` on the item and wrap the `<Avatar>` inside a `inline-size: var(--cs-sidebar-rail-tile); block-size: var(--cs-sidebar-rail-tile); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;` anchor slot (or set `padding-inline: calc((var(--cs-sidebar-rail-tile) - var(--cs-avatar-size, 32px)) / 2)` = `4px` on `md`!).
-       - **Expanded Geometry (`md`):** `4px` left/right/top/bottom padding around the `32px` Avatar (`40px` square footprint) + `10px` gap + stacked Name (`14px/18px`, `font-weight: 500`, `text-strong`) & Email (`12px/16px`, `text-weak`) wrapped in `data-sidebar-rail="hide"`, yielding a sleek `44px`–`48px` unified hoverable/pressable pill (`will-change: scale`, `scale: 0.985` press, `--cs-color-base-soft` hover).
+       - **Expanded Geometry (`md`):** `4px` left/right/top/bottom padding around the `32px` Avatar (`40px` square footprint) + `10px` gap + stacked Name (`14px/18px`, `font-weight: 500`, `text-strong`) & Email (`12px/16px`, `text-weak`) wrapped in `data-sidebar-rail="hide"`, yielding a sleek `44px`–`48px` unified hoverable/pressable pill (`will-change: scale` on `:hover, :active`, `scale: 0.985` press, `--cs-color-base-soft` hover).
        - **Rail Geometry (`md`):** Text and trailing actions dissolve smoothly away, leaving a **perfectly centered `40×40px` square interactive tile** framing the `32px` Avatar (`4px` concentric margin all around, center at `x = 30px`, matching the Brand Logo and every Nav Icon!).
 
 ### Rail-Mode Square Tiles & `<HitArea />` Pitch
@@ -287,7 +287,7 @@ Previously, `collapseMode="hidden"` removed `overflow: clip` on `"opening"` Fram
 | **`collapseMode="rail"` (Labels / Badges / Chevrons / Hide)** | Text, badges, chevrons, `[data-sidebar-rail="hide"]` | `180ms` `--cs-ease-quart-out` (`70ms` delay) | `100ms` `--cs-ease-cubic-out` (`0ms` delay) | `opacity: 0 ↔ 1`, `translate: -6px 0 ↔ 0`, `filter: blur(2px) ↔ blur(0)`; clipped by `.cs-sidebar-surface` during transition. |
 | **`behavior="overlay"` Drawer** | `.cs-sidebar-surface` (`translate`) | `320ms` (`--cs-dur-320`) `--cs-ease-expo-out` | `180ms` (`--cs-dur-exit-lg`) `--cs-ease-cubic-in` | Preserved; synced 1:1 with `Overlay` backdrop fade-out. |
 | **`SidebarViews` Drill-Down** | `.cs-sidebar-view` (`translate`, `opacity`) | `translate`: `240ms` `--cs-ease-quart-out`<br>`opacity`: `180ms` (`20ms` delay) | `translate`: `160ms` `--cs-ease-cubic-out`<br>`opacity`: `120ms` `--cs-ease-exit` | Preserved (`20px` directional slide + Ghost Back button). |
-| **`SidebarItem` Micro-Press** | `.cs-sidebar-item` (`scale`, `bg`) | `140ms` `--cs-ease-press` (`:active`) | `100ms` `--cs-ease-effect` | `scale: 0.985` (expanded) / `0.96` (rail); `will-change: scale`. |
+| **`SidebarItem` Micro-Press** | `.cs-sidebar-item` (`scale`, `bg`) | `140ms` `--cs-ease-press` (`:active`) | `100ms` `--cs-ease-effect` | `scale: 0.985` (expanded) / `0.96` (rail); `will-change: scale` on `:hover, :active`. |
 
 ---
 

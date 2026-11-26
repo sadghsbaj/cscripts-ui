@@ -276,7 +276,6 @@
             opacity var(--cs-command-palette-dur-fade-in) var(--cs-ease-effect),
             scale var(--cs-command-palette-dur-in) var(--cs-command-palette-ease-in),
             translate var(--cs-command-palette-dur-in) var(--cs-command-palette-ease-in);
-        will-change: opacity, scale, translate;
     }
 
     @starting-style {

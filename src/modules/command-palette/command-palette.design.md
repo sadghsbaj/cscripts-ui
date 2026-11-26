@@ -91,7 +91,7 @@ Most command palettes fail visually in one of two directions: they either look l
 
 ### Hit Areas & Subpixel GPU Crispness
 - **Compact Button Hit Areas:** Both `CommandPaletteClear` (`24px–30px`) and `CommandPaletteScope` (`22px–26px` tall) are `<button type="button">` controls below `1936px²` and render `<HitArea size="sm" />`. `CommandPaletteInput` is a void `<input>` whose full surrounding bar focuses it on `mousedown`—never wrap `<input>` in pseudo/container hit-area helpers.
-- **Whole-Pixel Line-Height Snapping:** Because `.cs-command-palette` promotes `will-change: opacity, scale, translate` while open (`:popover-open`), fractional computed line heights (`14px × 1.25 = 17.5px`, `12px × 1.375 = 16.5px`, `13px × 1.375 = 17.875px`) MUST snap locally via CSS `round()`:
+- **Whole-Pixel Line-Height Snapping:** `.cs-command-palette` omits permanent `will-change` while `:popover-open` so nested text retains subpixel antialiasing, and fractional computed line heights (`14px × 1.25 = 17.5px`, `12px × 1.375 = 16.5px`, `13px × 1.375 = 17.875px`) still snap locally via CSS `round()`:
   - Group labels (`--cs-leading-tight`): `line-height: round(up, calc(var(--cs-listbox-group-label-font-size) * var(--cs-leading-tight)), 1px)`
   - Descriptions & empty state (`--cs-leading-snug`): `line-height: round(up, calc(var(--cs-text-xs) * var(--cs-leading-snug)), 1px)`
   - Footer (`--cs-leading-snug`): `line-height: round(up, calc(var(--cs-command-palette-footer-font-size) * var(--cs-leading-snug)), 1px)`

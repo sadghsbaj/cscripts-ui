@@ -281,8 +281,8 @@
 
 ## 5. Edge Cases & Constraints
 
-- **Subpixel Text Crispness on GPU Layer:**
-  - Because `.cs-command-palette` promotes `will-change: opacity, scale, translate` while open (matching `Modal`), fractional computed `line-height` values inside the shell MUST snap to whole pixels via CSS `round(up, ..., 1px)` and horizontal centering uses flex layout rather than `translate: -50%` (`design-and-tokens.md`).
+- **Subpixel Text Crispness & Compositor Hygiene:**
+  - `.cs-command-palette` omits permanent `will-change` while open so nested text retains subpixel antialiasing; fractional computed `line-height` values inside the shell still snap to whole pixels via CSS `round(up, ..., 1px)` and horizontal centering uses flex layout rather than `translate: -50%` (`design-and-tokens.md`).
 - **Hit Area Compliance:**
   - `CommandPaletteClear` and `CommandPaletteScope` are compact `<button>` controls `< 1936px²` and MUST render `<HitArea size="sm" />`.
   - `CommandPaletteInput` is a void `<input>` inside clickable `CommandPaletteBar`—never wrap it in pseudo/button hit-area helpers.

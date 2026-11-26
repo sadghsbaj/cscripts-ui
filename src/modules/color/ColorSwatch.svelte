@@ -322,9 +322,11 @@
 
         button.cs-color-swatch {
             scale: 1;
-            /* Keep compositor layer active at scale: 1 so swatch/icon doesn't snap at hover/press transitionend. */
-            will-change: scale;
             transition: scale var(--cs-dur-240) var(--cs-spring-snappy);
+
+            &:is(:hover, :active):not(:disabled) {
+                will-change: scale;
+            }
 
             @media (hover: hover) {
                 &:hover:not(:disabled) {

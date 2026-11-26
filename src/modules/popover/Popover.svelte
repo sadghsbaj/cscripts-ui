@@ -389,11 +389,9 @@
 
         .cs-popover[data-animate]:popover-open {
             opacity: 1;
-            filter: blur(0px);
+            filter: none;
             translate: 0 0;
             scale: 1;
-            /* Keep compositor layer active at scale: 1 while open so fractional anchor-center subpixels don't snap at transitionend. */
-            will-change: scale;
         }
 
         /* Hide on the initial top-layer frame until toggle measures resolvedPlacement and sets data-ready. */

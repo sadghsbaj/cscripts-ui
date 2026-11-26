@@ -81,9 +81,11 @@
 
                 & > :global(:is(.cs-toggle-button-icon, .cs-toggle-button-label)) {
                     scale: 1;
-                    /* Keep compositor layer active at scale: 1 so text doesn't snap at press/release transitionend. */
-                    will-change: scale;
                     transition: scale var(--cs-dur-effect) var(--cs-ease-effect);
+                }
+
+                &:is(:hover, :active):not(:disabled) > :global(:is(.cs-toggle-button-icon, .cs-toggle-button-label)) {
+                    will-change: scale;
                 }
 
                 &:active:not(:disabled) > :global(:is(.cs-toggle-button-icon, .cs-toggle-button-label)) {

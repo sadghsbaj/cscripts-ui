@@ -603,10 +603,14 @@
             cursor: default;
             border-radius: var(--cs-radius-md);
             scale: 1;
-            will-change: scale;
             transition:
                 color var(--cs-dur-effect-fast) var(--cs-ease-effect),
                 scale var(--cs-dur-press) var(--cs-ease-press);
+
+            &:hover,
+            &:active {
+                will-change: scale;
+            }
 
             @media (hover: hover) {
                 &:hover {
@@ -789,7 +793,6 @@
         cursor: default;
         user-select: none;
         scale: 1;
-        will-change: scale;
         transition:
             background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
             box-shadow var(--cs-dur-effect-fast) var(--cs-ease-effect),
@@ -811,6 +814,10 @@
 
         &:any-link {
             cursor: pointer;
+        }
+
+        &:is(:hover, :active):not([data-disabled], :disabled) {
+            will-change: scale;
         }
 
         @media (hover: hover) {
@@ -1248,7 +1255,10 @@
         border-radius: var(--cs-sidebar-item-radius, var(--cs-radius-lg));
         corner-shape: var(--cs-squircle-smooth);
         scale: 1;
-        will-change: scale;
+
+        &:is(:hover, :active):not([data-disabled], :disabled) {
+            will-change: scale;
+        }
     }
 
     /* ==========================================================================
