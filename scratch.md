@@ -1,17 +1,36 @@
-Popover wen nFallback kommt iwie transform origin auch anpassen x
-soft danger schöner machen bzw ersetzen x
-Bei Segmented Contrl Chevorn erhscien bug x
-Charts mache ndas man Legende mit filter rendern kan ndasn ur bestimmte legendeinträge scihtbar x
-intro nur bei session speichern aber sonst imer öffnen x
-bei singefile<> gabs iwie nen problem mit buauen x
-Problem dots
-
 ## UI & Polish
+
+- [ ] Previews extrem polishen
+- [ ] Mobile Support optimieren
+
+## Modules
+
+- [ ] Drawer
+- [ ] Pagination
+- [ ] Slider
+- [ ] NLP Parser
+- [ ] Fuzzy Search
+
+## Work
+
+- [ ] KI-Integrationen clean dargestellt
+- [ ] ContentEditable-artiges Element für Platzhalter etc.
+- [ ] EML-Logik: Signaturen
+- [ ] EML-Wizard
+- [ ] Allgemeine EML-Logik (eigene Outlook-E-Mail-Logik für Work)
+- [ ] Diff-Component
+- [ ] PDF Viewer
+- [ ] Filesystem-Module: Polling / Intervallabfragen prüfen für Live-UI-Aktualisierungen
+- [ ] Single-File HTML + JSON-P: Mit Agenten durchsprechen, ob lokal relativ verknüpfte JSON-Dateien ohne Bearbeitungsfähigkeiten und ohne Filesystem-Ordner-Freigabe angezeigt werden können
+- [ ] Work-Apps bündeln (Monolith-App mit Unterviews): Mehrere File-System-Access-API-Apps in einer einzigen HTML-Datei zusammenfassen, sodass nur ein Ordner freigegeben werden muss
+- [ ] Frontend-Only Single-File HTML: Prüfen, ob sich saubere Authentifizierung über Frontend-Verschlüsselung (Crypto-API, asymmetrisches Schlüsselverfahren) umsetzen lässt
+- [ ] Sicherheits- & Backup-Konzept für Monolith-Work-App mit Agenten durchsprechen (Schutz gegen versehentliches Überschreiben aller Dateien / Totalverlust, bestehendes Backup-System weiterdenken)
+- [ ] Excel-Logik: Mit Agenten durchsprechen, ob sich Diagramme programmatisch aus dem Frontend erstellen lassen
+
+## Done
 
 - [x] `ToggleButton`: statt soft blau was anderes?
 - [x] `WorkApp`: View-Animation manchmal noch verbuggt – cleaner machen (nicht mehr nervig buggbar, einfach schnelles, weiches und cleanes Faden statt harter Übergänge)
-- [ ] Previews extrem polishen
-- [ ] Mobile Support optimieren
 - [x] `Collapsible` in Login-Form-Reference nutzen
 - [x] `ToggleButtonGroup`: `elevated` hinzufügen
 - [x] Border bei `Select` disabled entfernen (und bei ähnlichen anderen auch)
@@ -39,16 +58,13 @@ Problem dots
 - [x] Workspace viel cleaner
 - [x] Ordnername muss FS mitgeben
 - [x] Caret color neutral?
-
-## Modules
-
+- [x] `Popover`: Bei Fallback `transform-origin` anpassen
+- [x] `soft` Danger schöner machen bzw. ersetzen
+- [x] `SegmentedControl`: Bug beim Erscheinen des Chevrons
+- [x] Intro nur pro Session speichern, ansonsten immer öffnen
+- [x] Problem Dots
 - [x] Referenz Seiteneinstellung Editor
 - [x] Cleane normale Tabs
-- [ ] Drawer
-- [ ] Pagination
-- [ ] Slider
-- [ ] NLP Parser
-- [ ] Fuzzy Search
 - [x] Command Palette
 - [x] Collapsible
 - [x] Accordion
@@ -79,24 +95,13 @@ Problem dots
 - [x] Zahlen-Animationen
 - [x] Progress
 - [x] UploadArea
-
-## Work
-
-- [ ] KI-Integrationen clean dargestellt
-- [ ] ContentEditable-artiges Element für Platzhalter etc.
-- [ ] EML-Logik: Signaturen
-- [ ] EML-Wizard
-- [ ] Allgemeine EML-Logik (eigene Outlook-E-Mail-Logik für Work)
-- [ ] Diff-Component
-- [ ] PDF Viewer
+- [x] `Charts`: Legende mit Filter rendern, sodass nur bestimmte Legendeneinträge sichtbar sind
 - [x] Animation zwischen MainArea-Switches
 - [x] Excel-Parsing evtl. zentraler/einfacher (Excel zu JSON, JSON zu Excel mit Formatierung etc.)
 - [x] Filesystem-Basis: Testabdeckung nochmal prüfen und ggf. erweitern
 - [x] Filesystem-Chooser / Verwalter-Element
 - [x] Dokumentationsseite: flexible Bausteine (Factory Pattern)
-
-## Done
-
+- [x] Problem beim Bauen mit `singlefile<>` beheben
 - [x] ESLint bei neueren Modulen checken
 - [x] Checkbox-Mark-Animation prüfen (evtl. linear?)
 - [x] Kbd: Meta-Taste???
