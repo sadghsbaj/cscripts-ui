@@ -35,6 +35,7 @@ export interface FileAdapter<TData, TDecodedMeta = unknown> {
 	readonly extensions: readonly string[];
 	decode(ctx: AdapterDecodeContext): Promise<AdapterDecodeResult<TData, TDecodedMeta>>;
 	encode(data: TData, ctx: AdapterEncodeContext): Promise<Uint8Array | string>;
+	validate?(data: TData, ctx?: AdapterEncodeContext): void | Promise<void>;
 	diff?(base: TData, target: TData): JsonDiffResult;
 	merge?(base: TData | undefined, local: TData, remote: TData): JsonMergeResult<TData>;
 }
@@ -613,6 +614,17 @@ export function jsonAdapter<TData = unknown>(
 			}
 			return encoded;
 		},
+		async validate(data, ctx) {
+			const payload: unknown =
+				options.version !== undefined && isPlainObject(data)
+					? { ...data, [versionField]: options.version }
+					: data;
+			await validatePayload<TData>(payload, {
+				schema: options.schema,
+				validate: options.validate,
+				path: ctx?.path,
+			});
+		},
 		diff(base, target) {
 			return diffJson(base, target, options.diffOptions);
 		},
@@ -733,6 +745,22 @@ export function jsonlAdapter<TLine = unknown>(
 		},
 		async encode(data) {
 			return encodeJsonlLines(data);
+		},
+		async validate(data, ctx) {
+			if (!Array.isArray(data)) {
+				throw new FsError(
+					"VALIDATION_FAILED",
+					`JSONL data must be an array${ctx?.path ? ` for "${ctx.path}"` : ""}.`,
+					{ details: { path: ctx?.path } },
+				);
+			}
+			for (const [i, item] of data.entries()) {
+				await validatePayload<TLine>(item, {
+					schema: options.schema,
+					validate: options.validate,
+					path: ctx?.path ? `${ctx.path}:${i + 1}` : undefined,
+				});
+			}
 		},
 	});
 }

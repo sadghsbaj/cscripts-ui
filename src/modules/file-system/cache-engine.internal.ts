@@ -49,6 +49,10 @@ export type {
 	WorkspaceMetaFile,
 } from "./types.ts";
 
+export interface InternalHealOptions extends HealOptions {
+	skipIdleMetaFlush?: boolean;
+}
+
 export interface CacheEngineOptions {
 	backend: FsBackend;
 	writeQueue: WriteQueue;
@@ -522,7 +526,7 @@ export class CacheEngine {
 		return { healed: true, report };
 	}
 
-	async heal(options?: HealOptions): Promise<HealReport> {
+	async heal(options?: InternalHealOptions): Promise<HealReport> {
 		const mode: HealMode = options?.mode ?? "incremental";
 		const yieldEvery = Math.max(1, options?.yieldEvery ?? DEFAULT_HEAL_YIELD_EVERY);
 		const startedAt = performance.now();
@@ -712,17 +716,31 @@ export class CacheEngine {
 				corruptShardSetClear(this.#corruptShards.get(col.name));
 			}
 
+			const failuresChanged = !corruptEntriesEqual(this.#corruptEntries, failures);
 			this.#corruptEntries = failures;
-			this.#meta.lastHealAt = new Date().toISOString();
-			this.#markMetaDirty();
 
-			options?.onProgress?.({
-				phase: "flushing",
-				processed: matchedPrimary.length,
-				total: matchedPrimary.length,
-			});
+			// Idle background polls skip meta/disk flush and info logging so SMB/AV sees zero writes.
+			const skipIdleFlush =
+				options?.skipIdleMetaFlush === true &&
+				mode === "incremental" &&
+				added === 0 &&
+				updated === 0 &&
+				removed === 0 &&
+				!failuresChanged &&
+				!this.#hasDirtyState();
 
-			await this.#flushToDisk(true);
+			if (!skipIdleFlush) {
+				this.#meta.lastHealAt = new Date().toISOString();
+				this.#markMetaDirty();
+
+				options?.onProgress?.({
+					phase: "flushing",
+					processed: matchedPrimary.length,
+					total: matchedPrimary.length,
+				});
+
+				await this.#flushToDisk(true);
+			}
 
 			const durationMs = Math.round(performance.now() - startedAt);
 			const report: HealReport = {
@@ -736,21 +754,23 @@ export class CacheEngine {
 				durationMs,
 			};
 
-			this.#logger?.log({
-				level: failures.length > 0 ? "warn" : "info",
-				event: "heal",
-				durationMs,
-				message: `Heal (${mode}) completed: +${added} ~${updated} -${removed} =${unchanged}, failures=${failures.length}.`,
-				meta: {
-					mode,
-					added,
-					updated,
-					removed,
-					unchanged,
-					failureCount: failures.length,
-					orphanedCompanionCount: orphanedCompanions.length,
-				},
-			});
+			if (!skipIdleFlush) {
+				this.#logger?.log({
+					level: failures.length > 0 ? "warn" : "info",
+					event: "heal",
+					durationMs,
+					message: `Heal (${mode}) completed: +${added} ~${updated} -${removed} =${unchanged}, failures=${failures.length}.`,
+					meta: {
+						mode,
+						added,
+						updated,
+						removed,
+						unchanged,
+						failureCount: failures.length,
+						orphanedCompanionCount: orphanedCompanions.length,
+					},
+				});
+			}
 
 			return report;
 				});
@@ -1331,4 +1351,23 @@ export class CacheEngine {
 
 function corruptShardSetClear(set: Set<string> | undefined): void {
 	set?.clear();
+}
+
+function corruptEntriesEqual(
+	prev: readonly CorruptEntry[],
+	next: readonly CorruptEntry[],
+): boolean {
+	if (prev.length !== next.length) {
+		return false;
+	}
+	return prev.every((a, index) => {
+		const b = next[index];
+		return (
+			b !== undefined &&
+			a.collection === b.collection &&
+			a.path === b.path &&
+			a.code === b.code &&
+			a.message === b.message
+		);
+	});
 }

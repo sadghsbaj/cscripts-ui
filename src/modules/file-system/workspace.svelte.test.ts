@@ -10,6 +10,7 @@ import {
 	type ConflictDetails,
 	type FsErrorCode,
 	type FsLogEntry,
+	type HealReport,
 	type MutationContext,
 	type MutationSettledContext,
 	type StandardSchemaV1,
@@ -79,6 +80,24 @@ const invoiceSchema: StandardSchemaV1<unknown, InvoiceDoc> = {
 
 function encodeJson(value: unknown): Uint8Array {
 	return new TextEncoder().encode(JSON.stringify(value));
+}
+
+async function readTextFromBackend(backend: MemoryFsBackend, path: string): Promise<string> {
+	const result = await backend.readBytes(path);
+	return new TextDecoder().decode(result.bytes);
+}
+
+async function readJsonFromBackend<T>(backend: MemoryFsBackend, path: string): Promise<T> {
+	const text = await readTextFromBackend(backend, path);
+	return JSON.parse(text) as T;
+}
+
+function setDocumentVisibility(state: DocumentVisibilityState): void {
+	Object.defineProperty(document, "visibilityState", {
+		value: state,
+		configurable: true,
+	});
+	document.dispatchEvent(new Event("visibilitychange"));
 }
 
 async function expectFsErrorCode(
@@ -1695,6 +1714,7 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 			const ws = createWorkspace({
 				namespace: "focus-logs-ws",
 				backend,
+				pollInterval: false,
 				revalidateOnFocus: { minIntervalMs: 5000 },
 				singletons: { settings },
 			});
@@ -3365,6 +3385,1058 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 				"CONFLICT",
 			);
 			expect(await backend.exists("invoices/2025/d1.json")).toBe(true);
+		});
+	});
+
+	describe("12. Background Polling (pollInterval, onExternalChange, skipIdleMetaFlush)", () => {
+		it("validates pollInterval config, disables polling for false/0, and defaults to 5000ms", async () => {
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date("2026-11-27T12:00:00Z"));
+
+			for (const invalid of [-1, 500, NaN, 1500.5, Infinity]) {
+				await expectFsErrorCode(
+					() =>
+						createWorkspace({
+							namespace: `invalid-poll-${String(invalid)}`,
+							backend: new MemoryFsBackend(),
+							pollInterval: invalid,
+						}),
+					"INVALID_CONFIG",
+				);
+			}
+
+			// pollInterval: false and 0 disable background polling completely
+			for (const disabledValue of [false, 0] as const) {
+				const backend = new MemoryFsBackend();
+				const walkSpy = vi.spyOn(backend, "walkFiles");
+				const ws = trackWorkspace(
+					createWorkspace({
+						namespace: `disabled-poll-${String(disabledValue)}`,
+						backend,
+						pollInterval: disabledValue,
+					}),
+				);
+				await ws.restore();
+				walkSpy.mockClear();
+
+				await vi.advanceTimersByTimeAsync(60_000);
+				expect(walkSpy).not.toHaveBeenCalled();
+			}
+
+			// Default pollInterval is 5000ms
+			const defaultBackend = new MemoryFsBackend();
+			const defaultWalkSpy = vi.spyOn(defaultBackend, "walkFiles");
+			const defaultWs = trackWorkspace(
+				createWorkspace({
+					namespace: "default-poll-ws",
+					backend: defaultBackend,
+				}),
+			);
+			await defaultWs.restore();
+			defaultWalkSpy.mockClear();
+
+			await vi.advanceTimersByTimeAsync(4999);
+			expect(defaultWalkSpy).not.toHaveBeenCalled();
+
+			await vi.advanceTimersByTimeAsync(1);
+			await vi.waitFor(() => {
+				expect(defaultWalkSpy).toHaveBeenCalledTimes(1);
+			});
+		});
+
+		it("runs a silent idle read-only poll with zero meta.json writes, idle activity/isBusy, and no onExternalChange", async () => {
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date("2026-11-27T12:00:00Z"));
+
+			const backend = new MemoryFsBackend();
+			await backend.writeBytes(
+				"invoices/2026/inv-1.json",
+				encodeJson({ id: "inv-1", year: "2026", title: "Seed", amount: 100 }),
+			);
+
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "2026" },
+			});
+			const onExternalChange = vi.fn();
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "silent-poll-ws",
+					backend,
+					mode: "readwrite",
+					collections: { invoices },
+					onExternalChange,
+				}),
+			);
+			await ws.restore();
+			await ws.flush();
+
+			const writeSpy = vi.spyOn(backend, "writeBytes");
+			const origWalk = backend.walkFiles.bind(backend);
+			const pollStarted = createDeferred<void>();
+			const releasePoll = createDeferred<void>();
+			let activityDuringPoll: string | null = null;
+			let isBusyDuringPoll: boolean | null = null;
+
+			const walkSpy = vi.spyOn(backend, "walkFiles").mockImplementationOnce(async (dir, opts) => {
+				activityDuringPoll = ws.activity;
+				isBusyDuringPoll = ws.isBusy;
+				pollStarted.resolve();
+				await releasePoll.promise;
+				return await origWalk(dir, opts);
+			});
+
+			await vi.advanceTimersByTimeAsync(5000);
+			await pollStarted.promise;
+
+			expect(activityDuringPoll).toBe("idle");
+			expect(isBusyDuringPoll).toBe(false);
+			expect(ws.activity).toBe("idle");
+			expect(ws.isBusy).toBe(false);
+
+			releasePoll.resolve();
+			await vi.waitFor(() => {
+				expect(walkSpy).toHaveBeenCalledTimes(1);
+			});
+			// Flush any post-heal microtasks
+			await Promise.resolve();
+			await Promise.resolve();
+
+			expect(writeSpy).not.toHaveBeenCalled();
+			expect(ws.activity).toBe("idle");
+			expect(ws.isBusy).toBe(false);
+			expect(onExternalChange).not.toHaveBeenCalled();
+		});
+
+		it("detects external add/update/remove, updates collection.entries, and survives throwing onExternalChange", async () => {
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date("2026-11-27T12:00:00Z"));
+
+			const backend = new MemoryFsBackend();
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "2026" },
+			});
+			const reports: HealReport[] = [];
+			let shouldThrow = false;
+			const onExternalChange = vi.fn((report: HealReport) => {
+				reports.push(report);
+				if (shouldThrow) {
+					throw new Error("consumer callback failed");
+				}
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "external-change-poll-ws",
+					backend,
+					pollInterval: 2000,
+					collections: { invoices },
+					onExternalChange,
+				}),
+			);
+			await ws.restore();
+			expect(ws.collections.invoices.entries).toHaveLength(0);
+
+			// 1. External add
+			await backend.writeBytes(
+				"invoices/2026/ext-1.json",
+				encodeJson({ id: "ext-1", year: "2026", title: "External v1", amount: 50 }),
+			);
+			await vi.advanceTimersByTimeAsync(2000);
+			await vi.waitFor(() => {
+				expect(onExternalChange).toHaveBeenCalledTimes(1);
+			});
+			expect(reports[0]?.added).toBe(1);
+			expect((reports[0]?.added ?? 0) + (reports[0]?.updated ?? 0) + (reports[0]?.removed ?? 0)).toBeGreaterThan(0);
+			expect(ws.collections.invoices.entries).toHaveLength(1);
+			expect(ws.collections.invoices.entries[0]?.data.title).toBe("External v1");
+
+			// 2. External update while onExternalChange throws -> polling must continue cleanly
+			shouldThrow = true;
+			await backend.writeBytes(
+				"invoices/2026/ext-1.json",
+				encodeJson({ id: "ext-1", year: "2026", title: "External v2 updated", amount: 75 }),
+			);
+			await vi.advanceTimersByTimeAsync(2000);
+			await vi.waitFor(() => {
+				expect(onExternalChange).toHaveBeenCalledTimes(2);
+			});
+			expect(reports[1]?.updated).toBe(1);
+			expect(ws.collections.invoices.entries[0]?.data.title).toBe("External v2 updated");
+			expect(ws.health).toBe("positive");
+
+			// 3. External remove -> proves polling continued after callback threw
+			shouldThrow = false;
+			await backend.deleteFile("invoices/2026/ext-1.json");
+			await vi.advanceTimersByTimeAsync(2000);
+			await vi.waitFor(() => {
+				expect(onExternalChange).toHaveBeenCalledTimes(3);
+			});
+			expect(reports[2]?.removed).toBe(1);
+			expect(ws.collections.invoices.entries).toHaveLength(0);
+		});
+
+		it("prevents overlapping polls and applies adaptive backoff on slow ticks", async () => {
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date("2026-11-27T12:00:00Z"));
+
+			const backend = new MemoryFsBackend();
+			const origWalk = backend.walkFiles.bind(backend);
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "slow-poll-backoff-ws",
+					backend,
+					pollInterval: 2000,
+				}),
+			);
+			await ws.restore();
+
+			const tick1Started = createDeferred<void>();
+			const releaseTick1 = createDeferred<void>();
+			let callCount = 0;
+
+			vi.spyOn(backend, "walkFiles").mockImplementation(async (dir, opts) => {
+				callCount += 1;
+				if (callCount === 1) {
+					tick1Started.resolve();
+					await releaseTick1.promise;
+				}
+				return await origWalk(dir, opts);
+			});
+
+			// Fire tick 1 at 2000ms
+			await vi.advanceTimersByTimeAsync(2000);
+			await tick1Started.promise;
+			expect(callCount).toBe(1);
+
+			// Advance 1500ms while tick 1 is still in-flight (> pollInterval * 0.5) -> no overlap
+			await vi.advanceTimersByTimeAsync(1500);
+			expect(callCount).toBe(1);
+
+			// Complete tick 1; durationMs (~1500) -> nextDelay = round(1500 * 2) = 3000ms
+			releaseTick1.resolve();
+			await Promise.resolve();
+			await Promise.resolve();
+			await Promise.resolve();
+
+			// At +2000ms (normal interval), tick 2 must NOT have fired yet due to adaptive backoff
+			await vi.advanceTimersByTimeAsync(2000);
+			expect(callCount).toBe(1);
+
+			// At +3000ms total since tick 1 finished, tick 2 fires
+			await vi.advanceTimersByTimeAsync(1000);
+			await vi.waitFor(() => {
+				expect(callCount).toBe(2);
+			});
+		});
+
+		it("backs off on transient IO_FAILED/FILE_LOCKED without marking unhealthy, and stops polling on HANDLE_STALE", async () => {
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date("2026-11-27T12:00:00Z"));
+
+			const backend = new MemoryFsBackend();
+			const origWalk = backend.walkFiles.bind(backend);
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "poll-errors-ws",
+					backend,
+					pollInterval: 2000,
+				}),
+			);
+			await ws.restore();
+
+			let walkAttempts = 0;
+			vi.spyOn(backend, "walkFiles").mockImplementation(async (dir, opts) => {
+				walkAttempts += 1;
+				if (walkAttempts === 1) {
+					throw new FsError("IO_FAILED", "transient SMB hiccup");
+				}
+				if (walkAttempts === 2) {
+					throw new FsError("FILE_LOCKED", "transient AV lock");
+				}
+				if (walkAttempts === 3) {
+					return await origWalk(dir, opts);
+				}
+				if (walkAttempts === 4) {
+					throw new FsError("HANDLE_STALE", "directory handle revoked");
+				}
+				return await origWalk(dir, opts);
+			});
+
+			// Attempt 1 (2000ms): IO_FAILED -> health stays positive, lastError null, backoff = 4000ms
+			await vi.advanceTimersByTimeAsync(2000);
+			await vi.waitFor(() => expect(walkAttempts).toBe(1));
+			expect(ws.health).toBe("positive");
+			expect(ws.lastError).toBeNull();
+			expect(ws.mountStatus).toBe("ready");
+
+			await vi.advanceTimersByTimeAsync(2000);
+			expect(walkAttempts).toBe(1); // still backed off
+
+			// Attempt 2 (+2000ms = 4000ms): FILE_LOCKED -> health stays positive, lastError null, backoff = 8000ms
+			await vi.advanceTimersByTimeAsync(2000);
+			await vi.waitFor(() => expect(walkAttempts).toBe(2));
+			expect(ws.health).toBe("positive");
+			expect(ws.lastError).toBeNull();
+
+			await vi.advanceTimersByTimeAsync(4000);
+			expect(walkAttempts).toBe(2); // still backed off
+
+			// Attempt 3 (+4000ms = 8000ms): succeeds -> resets backoff back to 2000ms
+			await vi.advanceTimersByTimeAsync(4000);
+			await vi.waitFor(() => expect(walkAttempts).toBe(3));
+			expect(ws.health).toBe("positive");
+			expect(ws.lastError).toBeNull();
+
+			// Attempt 4 (+2000ms): HANDLE_STALE -> transitions to stale and stops polling permanently
+			await vi.advanceTimersByTimeAsync(2000);
+			await vi.waitFor(() => expect(walkAttempts).toBe(4));
+			expect(ws.mountStatus).toBe("stale");
+			expect(ws.health).toBe("negative");
+			expect(ws.lastError?.code).toBe("HANDLE_STALE");
+
+			await vi.advanceTimersByTimeAsync(60_000);
+			expect(walkAttempts).toBe(4);
+		});
+
+		it("pauses on hidden visibility, resumes & coalesces with revalidateOnFocus on visible, and stops on forget()/destroy()", async () => {
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date("2026-11-27T12:00:00Z"));
+
+			try {
+				setDocumentVisibility("visible");
+
+				const backend = new MemoryFsBackend();
+				const walkSpy = vi.spyOn(backend, "walkFiles");
+				const ws = trackWorkspace(
+					createWorkspace({
+						namespace: "poll-visibility-ws",
+						backend,
+						pollInterval: 2000,
+						revalidateOnFocus: { minIntervalMs: 5000 },
+					}),
+				);
+				await ws.restore();
+				walkSpy.mockClear();
+
+				// Hide tab -> polling pauses completely
+				setDocumentVisibility("hidden");
+				await vi.advanceTimersByTimeAsync(10_000);
+				expect(walkSpy).not.toHaveBeenCalled();
+
+				// Show tab after > minIntervalMs -> coalesces with revalidateOnFocus (1 heal, no duplicate poll)
+				setDocumentVisibility("visible");
+				await vi.waitFor(() => {
+					expect(walkSpy).toHaveBeenCalledTimes(1);
+				});
+
+				// Next regular background poll runs after pollInterval (2000ms)
+				await vi.advanceTimersByTimeAsync(2000);
+				await vi.waitFor(() => {
+					expect(walkSpy).toHaveBeenCalledTimes(2);
+				});
+
+				// Immediate window focus within 5000ms of background poll is coalesced (throttled)
+				window.dispatchEvent(new Event("focus"));
+				await Promise.resolve();
+				await Promise.resolve();
+				expect(walkSpy).toHaveBeenCalledTimes(2);
+
+				// Hide & show again within minIntervalMs (focus revalidate throttled) -> poll timer still resumes
+				setDocumentVisibility("hidden");
+				await vi.advanceTimersByTimeAsync(1000);
+				setDocumentVisibility("visible");
+				await Promise.resolve();
+				expect(walkSpy).toHaveBeenCalledTimes(2);
+
+				await vi.advanceTimersByTimeAsync(2000);
+				await vi.waitFor(() => {
+					expect(walkSpy).toHaveBeenCalledTimes(3);
+				});
+
+				// forget() stops polling
+				await ws.forget();
+				const callsAfterForget = walkSpy.mock.calls.length;
+				await vi.advanceTimersByTimeAsync(20_000);
+				expect(walkSpy.mock.calls.length).toBe(callsAfterForget);
+
+				// destroy() stops polling
+				const backend2 = new MemoryFsBackend();
+				const walkSpy2 = vi.spyOn(backend2, "walkFiles");
+				const ws2 = trackWorkspace(
+					createWorkspace({
+						namespace: "poll-destroy-ws",
+						backend: backend2,
+						pollInterval: 2000,
+					}),
+				);
+				await ws2.restore();
+				walkSpy2.mockClear();
+
+				ws2.destroy();
+				await vi.advanceTimersByTimeAsync(20_000);
+				expect(walkSpy2).not.toHaveBeenCalled();
+			} finally {
+				setDocumentVisibility("visible");
+			}
+		});
+
+		it("performs zero disk writes in mode: 'read' even when external changes are detected", async () => {
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date("2026-11-27T12:00:00Z"));
+
+			const backend = new MemoryFsBackend();
+			await backend.writeBytes(
+				"invoices/2026/r-1.json",
+				encodeJson({ id: "r-1", year: "2026", title: "Initial", amount: 10 }),
+			);
+
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "2026" },
+			});
+			const onExternalChange = vi.fn();
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "readonly-poll-ws",
+					backend,
+					mode: "read",
+					pollInterval: 2000,
+					collections: { invoices },
+					onExternalChange,
+				}),
+			);
+			await ws.restore();
+			expect(ws.collections.invoices.entries).toHaveLength(1);
+
+			// Add an external file directly, then spy on all subsequent writes
+			await backend.writeBytes(
+				"invoices/2026/r-2.json",
+				encodeJson({ id: "r-2", year: "2026", title: "External ReadOnly", amount: 20 }),
+			);
+			const writeSpy = vi.spyOn(backend, "writeBytes");
+
+			await vi.advanceTimersByTimeAsync(2000);
+			await vi.waitFor(() => {
+				expect(onExternalChange).toHaveBeenCalledTimes(1);
+			});
+
+			expect(ws.collections.invoices.entries).toHaveLength(2);
+			expect(writeSpy).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("13. Custom merge Hook (defineCollection & defineSingleton)", () => {
+		it("validates merge option type on defineSingleton and defineCollection", async () => {
+			await expectFsErrorCode(
+				() =>
+					defineSingleton({
+						path: "settings.json",
+						adapter: jsonAdapter({ schema: settingsSchema }),
+						merge: "not-a-fn" as never,
+					}),
+				"INVALID_CONFIG",
+			);
+
+			await expectFsErrorCode(
+				() =>
+					defineCollection({
+						pattern: "invoices/{year}/{id}.json",
+						adapter: jsonAdapter({ schema: invoiceSchema }),
+						merge: 42 as never,
+					}),
+				"INVALID_CONFIG",
+			);
+		});
+
+		it("auto-merges concurrent edits on collection & singleton (3-way, 2-way base===undefined, defaultMerge) and enforces OCC expectedRevision", async () => {
+			const backend = new MemoryFsBackend();
+			const seenSingletonBases: Array<SettingsDoc | undefined> = [];
+			const seenCollectionBases: Array<InvoiceDoc | undefined> = [];
+
+			const settings = defineSingleton({
+				path: "settings.json",
+				adapter: jsonAdapter({ schema: settingsSchema }),
+				merge(base, local, remote, helpers) {
+					seenSingletonBases.push(base);
+					const baseMerge = helpers.defaultMerge();
+					if (baseMerge.conflicts.length === 0) {
+						return baseMerge;
+					}
+					return {
+						merged: {
+							theme: local.theme,
+							currency: remote.currency,
+						},
+						conflicts: [],
+					};
+				},
+			});
+
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "2026" },
+				merge(base, local, remote, helpers) {
+					seenCollectionBases.push(base);
+					const baseMerge = helpers.defaultMerge();
+					return {
+						merged: {
+							...baseMerge.merged,
+							title: `${local.title} + ${remote.title}`,
+							amount: Math.max(local.amount, remote.amount),
+						},
+						conflicts: [],
+					};
+				},
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "custom-merge-success-ws",
+					backend,
+					pollInterval: false,
+					conflictPolicy: "auto-merge",
+					singletons: { settings },
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			// 1. 3-way merge on singleton
+			await ws.singletons.settings.write({ theme: "light", currency: "USD" });
+			await backend.writeBytes("settings.json", encodeJson({ theme: "solarized", currency: "EUR" }));
+
+			const singletonResult = await ws.singletons.settings.write({
+				theme: "dark",
+				currency: "GBP",
+			});
+			expect(singletonResult.merged).toBe(true);
+			expect(seenSingletonBases[0]).toEqual({ theme: "light", currency: "USD" });
+			const diskSettings = await readJsonFromBackend<SettingsDoc>(backend, "settings.json");
+			expect(diskSettings).toEqual({ theme: "dark", currency: "EUR" });
+
+			// 2. 3-way merge on collection
+			await ws.collections.invoices.write(
+				{ year: "2026", id: "m1" },
+				{ id: "m1", year: "2026", title: "Base", amount: 10 },
+			);
+			await backend.writeBytes(
+				"invoices/2026/m1.json",
+				encodeJson({ id: "m1", year: "2026", title: "Remote", amount: 30 }),
+			);
+
+			const colResult = await ws.collections.invoices.write(
+				{ year: "2026", id: "m1" },
+				{ id: "m1", year: "2026", title: "Local", amount: 20 },
+			);
+			expect(colResult.merged).toBe(true);
+			expect(seenCollectionBases[0]).toEqual({ id: "m1", year: "2026", title: "Base", amount: 10 });
+			const diskM1 = await readJsonFromBackend<InvoiceDoc>(backend, "invoices/2026/m1.json");
+			expect(diskM1).toEqual({ id: "m1", year: "2026", title: "Local + Remote", amount: 30 });
+
+			// 3. 2-way merge (base === undefined) when file exists externally and was never tracked
+			await backend.writeBytes(
+				"invoices/2026/untracked.json",
+				encodeJson({ id: "untracked", year: "2026", title: "DiskOnly", amount: 80 }),
+			);
+			const twoWayResult = await ws.collections.invoices.write(
+				{ year: "2026", id: "untracked" },
+				{ id: "untracked", year: "2026", title: "LocalNew", amount: 40 },
+			);
+			expect(twoWayResult.merged).toBe(true);
+			expect(seenCollectionBases[1]).toBeUndefined();
+			const diskUntracked = await readJsonFromBackend<InvoiceDoc>(
+				backend,
+				"invoices/2026/untracked.json",
+			);
+			expect(diskUntracked).toEqual({
+				id: "untracked",
+				year: "2026",
+				title: "LocalNew + DiskOnly",
+				amount: 80,
+			});
+
+			// 4. OCC expectedRevision verification: racing external write during merge causes CONFLICT
+			let triggerRace = true;
+			const racingInvoices = defineCollection({
+				pattern: "racing/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "2026" },
+				merge(_base, local, remote) {
+					if (triggerRace) {
+						triggerRace = false;
+						// Synchronously mutate backend bytes behind the scenes so stat revision changes before write
+						void backend.writeBytes(
+							"racing/2026/r1.json",
+							encodeJson({ id: "r1", year: "2026", title: "ConcurrentRace", amount: 999 }),
+						);
+					}
+					return { merged: { ...remote, title: local.title }, conflicts: [] };
+				},
+			});
+
+			const wsRace = trackWorkspace(
+				createWorkspace({
+					namespace: "custom-merge-occ-ws",
+					backend,
+					pollInterval: false,
+					conflictPolicy: "auto-merge",
+					collections: { racingInvoices },
+				}),
+			);
+			await wsRace.restore();
+			await wsRace.collections.racingInvoices.write(
+				{ year: "2026", id: "r1" },
+				{ id: "r1", year: "2026", title: "V1", amount: 1 },
+			);
+			await backend.writeBytes(
+				"racing/2026/r1.json",
+				encodeJson({ id: "r1", year: "2026", title: "V2", amount: 2 }),
+			);
+
+			await expectFsErrorCode(
+				() =>
+					wsRace.collections.racingInvoices.write(
+						{ year: "2026", id: "r1" },
+						{ id: "r1", year: "2026", title: "LocalWrite", amount: 3 },
+					),
+				"CONFLICT",
+			);
+			const raceDisk = await readJsonFromBackend<InvoiceDoc>(backend, "racing/2026/r1.json");
+			expect(raceDisk.title).toBe("ConcurrentRace");
+		});
+
+		it("isolates base, local, and remote from in-place mutations inside custom merge hook", async () => {
+			interface NestedDoc {
+				id: string;
+				year: string;
+				meta: { tags: string[] };
+			}
+
+			const backend = new MemoryFsBackend();
+			const observedBases: Array<NestedDoc | undefined> = [];
+			let shouldThrowAfterMutating = true;
+
+			const docs = defineCollection({
+				pattern: "docs/{year}/{id}.json",
+				adapter: jsonAdapter<NestedDoc>(),
+				index: { partitionBy: (p) => p.year ?? "2026" },
+				merge(base, local, remote, helpers) {
+					observedBases.push(structuredClone(base));
+					// Adversarially mutate every input object and nested array in place
+					if (base) {
+						base.meta.tags.push("CORRUPTED_BASE");
+					}
+					local.meta.tags.push("CORRUPTED_LOCAL");
+					remote.meta.tags.push("CORRUPTED_REMOTE");
+					if (shouldThrowAfterMutating) {
+						throw new Error("mutate-then-throw");
+					}
+					const fallback = helpers.defaultMerge();
+					return {
+						merged: fallback.merged,
+						conflicts: fallback.conflicts,
+					};
+				},
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "merge-isolation-ws",
+					backend,
+					pollInterval: false,
+					conflictPolicy: "auto-merge",
+					collections: { docs },
+				}),
+			);
+			await ws.restore();
+
+			await ws.collections.docs.write(
+				{ year: "2026", id: "n1" },
+				{ id: "n1", year: "2026", meta: { tags: ["base"] } },
+			);
+			await backend.writeBytes(
+				"docs/2026/n1.json",
+				encodeJson({ id: "n1", year: "2026", meta: { tags: ["remote"] } }),
+			);
+
+			// 1. Mutate inputs and throw -> trackedDocs still holds original base, uncorrupted
+			const localInput1: NestedDoc = { id: "n1", year: "2026", meta: { tags: ["local-1"] } };
+			await expectFsErrorCode(
+				() => ws.collections.docs.write({ year: "2026", id: "n1" }, localInput1),
+				"VALIDATION_FAILED",
+			);
+			expect(localInput1.meta.tags).toEqual(["local-1"]);
+
+			// 2. Escalate conflict after mutating inputs -> base seen is still uncorrupted ["base"],
+			//    and ConflictDetails receives uncorrupted base/local/remote
+			shouldThrowAfterMutating = false;
+			const localInput2: NestedDoc = { id: "n1", year: "2026", meta: { tags: ["local-2"] } };
+			await expectFsErrorCode(
+				() => ws.collections.docs.write({ year: "2026", id: "n1" }, localInput2),
+				"CONFLICT",
+			);
+			expect(observedBases[1]).toEqual({ id: "n1", year: "2026", meta: { tags: ["base"] } });
+			expect(ws.unresolvedConflicts).toHaveLength(1);
+			const conflict = ws.unresolvedConflicts[0];
+			expect(conflict).toBeDefined();
+			expect(conflict?.base).toEqual({ id: "n1", year: "2026", meta: { tags: ["base"] } });
+			expect(conflict?.local).toEqual({ id: "n1", year: "2026", meta: { tags: ["local-2"] } });
+			expect(conflict?.remote).toEqual({ id: "n1", year: "2026", meta: { tags: ["remote"] } });
+			expect(localInput2.meta.tags).toEqual(["local-2"]);
+
+			// 3. Subsequent external write + conflict -> trackedDocs updated from remote is also uncorrupted ["remote"]
+			await backend.writeBytes(
+				"docs/2026/n1.json",
+				encodeJson({ id: "n1", year: "2026", meta: { tags: ["remote-2"] } }),
+			);
+			await expectFsErrorCode(
+				() =>
+					ws.collections.docs.write(
+						{ year: "2026", id: "n1" },
+						{ id: "n1", year: "2026", meta: { tags: ["local-3"] } },
+					),
+				"CONFLICT",
+			);
+			expect(observedBases[2]).toEqual({ id: "n1", year: "2026", meta: { tags: ["remote"] } });
+		});
+
+		it("throws VALIDATION_FAILED, rolls back pending mutation, and leaves disk untouched when merged output fails schema/validate", async () => {
+			const backend = new MemoryFsBackend();
+
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter<InvoiceDoc>({
+					schema: invoiceSchema,
+					validate(value): value is InvoiceDoc {
+						return (
+							typeof value === "object" &&
+							value !== null &&
+							typeof (value as InvoiceDoc).amount === "number" &&
+							(value as InvoiceDoc).amount >= 0
+						);
+					},
+				}),
+				index: { partitionBy: (p) => p.year ?? "2026" },
+				merge(_base, local) {
+					if (local.title === "schema-invalid") {
+						return {
+							merged: { ...local, amount: "bad-type" as unknown as number },
+							conflicts: [],
+						};
+					}
+					return {
+						merged: { ...local, amount: -50 },
+						conflicts: [],
+					};
+				},
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "merge-validation-fail-ws",
+					backend,
+					pollInterval: false,
+					conflictPolicy: "auto-merge",
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			await ws.collections.invoices.write(
+				{ year: "2026", id: "v1" },
+				{ id: "v1", year: "2026", title: "Base", amount: 10 },
+			);
+			const remoteDoc: InvoiceDoc = { id: "v1", year: "2026", title: "RemoteTruth", amount: 25 };
+			await backend.writeBytes("invoices/2026/v1.json", encodeJson(remoteDoc));
+
+			// 1. Fails StandardSchema validation
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.write(
+						{ year: "2026", id: "v1" },
+						{ id: "v1", year: "2026", title: "schema-invalid", amount: 100 },
+					),
+				"VALIDATION_FAILED",
+			);
+			expect(ws.pendingMutationCount).toBe(0);
+			expect(ws.collections.invoices.entries[0]?.data.title).toBe("Base");
+			expect(await readJsonFromBackend<InvoiceDoc>(backend, "invoices/2026/v1.json")).toEqual(
+				remoteDoc,
+			);
+
+			// 2. Fails custom adapter validate()
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.write(
+						{ year: "2026", id: "v1" },
+						{ id: "v1", year: "2026", title: "validate-invalid", amount: 100 },
+					),
+				"VALIDATION_FAILED",
+			);
+			expect(ws.pendingMutationCount).toBe(0);
+			expect(ws.collections.invoices.entries[0]?.data.title).toBe("Base");
+			expect(await readJsonFromBackend<InvoiceDoc>(backend, "invoices/2026/v1.json")).toEqual(
+				remoteDoc,
+			);
+		});
+
+		it("handles throwing/malformed merge hooks: VALIDATION_FAILED in auto-merge, graceful threeWay=undefined in detect and resolveConflict refresh", async () => {
+			const backend = new MemoryFsBackend();
+			let mode: "throw" | "null" | "missing-merged" | "bad-conflicts" | "ok" = "throw";
+
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				index: { partitionBy: (p) => p.year ?? "2026" },
+				merge(_base, local, _remote, helpers) {
+					if (mode === "throw") {
+						throw new Error("merge exploded");
+					}
+					if (mode === "null") {
+						return null as never;
+					}
+					if (mode === "missing-merged") {
+						return { conflicts: [] } as never;
+					}
+					if (mode === "bad-conflicts") {
+						return { merged: local, conflicts: "nope" as never };
+					}
+					return helpers.defaultMerge();
+				},
+			});
+
+			const conflictEvents: ConflictDetails[] = [];
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "merge-malformed-ws",
+					backend,
+					pollInterval: false,
+					conflictPolicy: "auto-merge",
+					collections: { invoices },
+					onMutationConflict: (c) => {
+						conflictEvents.push(c);
+					},
+				}),
+			);
+			await ws.restore();
+
+			await ws.collections.invoices.write(
+				{ year: "2026", id: "e1" },
+				{ id: "e1", year: "2026", title: "Base", amount: 10 },
+			);
+			const remoteV2: InvoiceDoc = { id: "e1", year: "2026", title: "RemoteV2", amount: 20 };
+			await backend.writeBytes("invoices/2026/e1.json", encodeJson(remoteV2));
+
+			// 1. In auto-merge: throwing & malformed returns all throw VALIDATION_FAILED, rollback pending, disk untouched
+			for (const badMode of ["throw", "null", "missing-merged", "bad-conflicts"] as const) {
+				mode = badMode;
+				await expectFsErrorCode(
+					() =>
+						ws.collections.invoices.write(
+							{ year: "2026", id: "e1" },
+							{ id: "e1", year: "2026", title: `Local-${badMode}`, amount: 99 },
+						),
+					"VALIDATION_FAILED",
+				);
+				expect(ws.pendingMutationCount).toBe(0);
+				expect(ws.collections.invoices.entries[0]?.data.title).toBe("Base");
+				expect(await readJsonFromBackend<InvoiceDoc>(backend, "invoices/2026/e1.json")).toEqual(
+					remoteV2,
+				);
+			}
+
+			// 2. In detect escalation: throwing hook degrades gracefully to threeWay: undefined without dropping ConflictDetails
+			mode = "throw";
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.write(
+						{ year: "2026", id: "e1" },
+						{ id: "e1", year: "2026", title: "LocalDetect", amount: 30 },
+						{ conflictPolicy: "detect" },
+					),
+				"CONFLICT",
+			);
+			expect(ws.unresolvedConflicts).toHaveLength(1);
+			const initialConflict = ws.unresolvedConflicts[0];
+			if (!initialConflict) {
+				throw new Error("Expected initialConflict to be present");
+			}
+			expect(initialConflict.threeWay).toBeUndefined();
+			expect(initialConflict.remote).toEqual(remoteV2);
+			expect(initialConflict.local).toEqual({
+				id: "e1",
+				year: "2026",
+				title: "LocalDetect",
+				amount: 30,
+			});
+			expect(conflictEvents).toHaveLength(1);
+
+			// 3. In resolveConflict() re-conflict refresh: throwing hook degrades to threeWay: undefined without dropping ConflictDetails
+			const remoteV3: InvoiceDoc = { id: "e1", year: "2026", title: "RemoteV3", amount: 40 };
+			await backend.writeBytes("invoices/2026/e1.json", encodeJson(remoteV3));
+			mode = "bad-conflicts";
+
+			await expectFsErrorCode(
+				() => ws.resolveConflict(initialConflict.id, "keep-local"),
+				"CONFLICT",
+			);
+			expect(ws.unresolvedConflicts).toHaveLength(1);
+			const refreshed = ws.unresolvedConflicts[0];
+			expect(refreshed?.id).toBe(initialConflict.id);
+			expect(refreshed?.remote).toEqual(remoteV3);
+			expect(refreshed?.threeWay).toBeUndefined();
+		});
+
+		it("applies custom merge symmetrically in writeWithCompanion (with companion rollback) and resolveConflict() re-conflict refresh", async () => {
+			const backend = new MemoryFsBackend();
+			let mergeBehavior: "merge" | "throw" | "conflict" = "merge";
+			const mergeCalls: string[] = [];
+
+			const invoices = defineCollection({
+				pattern: "invoices/{year}/{id}.json",
+				adapter: jsonAdapter({ schema: invoiceSchema }),
+				companion: { pattern: "invoices/{year}/{id}.pdf" },
+				index: { partitionBy: (p) => p.year ?? "2026" },
+				merge(_base, local, remote, helpers) {
+					mergeCalls.push(`${local.title}|${remote.title}`);
+					if (mergeBehavior === "throw") {
+						throw new Error("companion merge error");
+					}
+					if (mergeBehavior === "conflict") {
+						const fallback = helpers.defaultMerge();
+						return {
+							merged: { ...local, title: `Suggested:${local.title}/${remote.title}` },
+							conflicts: fallback.conflicts,
+						};
+					}
+					return {
+						merged: { ...local, title: `${local.title}+${remote.title}`, amount: remote.amount + local.amount },
+						conflicts: [],
+					};
+				},
+			});
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "merge-companion-symmetry-ws",
+					backend,
+					pollInterval: false,
+					conflictPolicy: "auto-merge",
+					collections: { invoices },
+				}),
+			);
+			await ws.restore();
+
+			// Seed initial primary + companion
+			await ws.collections.invoices.writeWithCompanion(
+				{ year: "2026", id: "c1" },
+				{ id: "c1", year: "2026", title: "Base", amount: 10 },
+				new TextEncoder().encode("PDF-v1"),
+			);
+
+			// 1. writeWithCompanion auto-merge success
+			await backend.writeBytes(
+				"invoices/2026/c1.json",
+				encodeJson({ id: "c1", year: "2026", title: "Remote1", amount: 20 }),
+			);
+			mergeBehavior = "merge";
+			const mergedRes = await ws.collections.invoices.writeWithCompanion(
+				{ year: "2026", id: "c1" },
+				{ id: "c1", year: "2026", title: "Local1", amount: 5 },
+				new TextEncoder().encode("PDF-v2"),
+			);
+			expect(mergedRes.merged).toBe(true);
+			expect(await readJsonFromBackend<InvoiceDoc>(backend, "invoices/2026/c1.json")).toEqual({
+				id: "c1",
+				year: "2026",
+				title: "Local1+Remote1",
+				amount: 25,
+			});
+			expect(await readTextFromBackend(backend, "invoices/2026/c1.pdf")).toBe("PDF-v2");
+
+			// 2. writeWithCompanion failure (throwing merge) -> companion rolled back, primary untouched
+			const remote2: InvoiceDoc = { id: "c1", year: "2026", title: "Remote2", amount: 30 };
+			await backend.writeBytes("invoices/2026/c1.json", encodeJson(remote2));
+			mergeBehavior = "throw";
+
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.writeWithCompanion(
+						{ year: "2026", id: "c1" },
+						{ id: "c1", year: "2026", title: "LocalFail", amount: 1 },
+						new TextEncoder().encode("PDF-SHOULD-ROLLBACK"),
+					),
+				"VALIDATION_FAILED",
+			);
+			expect(ws.pendingMutationCount).toBe(0);
+			expect(await readJsonFromBackend<InvoiceDoc>(backend, "invoices/2026/c1.json")).toEqual(
+				remote2,
+			);
+			expect(await readTextFromBackend(backend, "invoices/2026/c1.pdf")).toBe("PDF-v2");
+
+			// 3. writeWithCompanion conflict escalation -> companion rolled back (new file deleted), conflict has custom threeWay
+			await backend.writeBytes(
+				"invoices/2026/c2.json",
+				encodeJson({ id: "c2", year: "2026", title: "DiskC2", amount: 40 }),
+			);
+			mergeBehavior = "conflict";
+
+			await expectFsErrorCode(
+				() =>
+					ws.collections.invoices.writeWithCompanion(
+						{ year: "2026", id: "c2" },
+						{ id: "c2", year: "2026", title: "LocalC2", amount: 50 },
+						new TextEncoder().encode("PDF-NEW-ROLLBACK"),
+					),
+				"CONFLICT",
+			);
+			expect(await backend.exists("invoices/2026/c2.pdf")).toBe(false);
+			expect(ws.unresolvedConflicts).toHaveLength(1);
+			const c2Conflict = ws.unresolvedConflicts[0];
+			if (!c2Conflict) {
+				throw new Error("Expected c2Conflict to be present");
+			}
+			expect(c2Conflict.threeWay?.merged).toEqual({
+				id: "c2",
+				year: "2026",
+				title: "Suggested:LocalC2/DiskC2",
+				amount: 50,
+			});
+
+			// 4. resolveConflict() re-conflict refresh runs custom merge hook and updates threeWay
+			await backend.writeBytes(
+				"invoices/2026/c2.json",
+				encodeJson({ id: "c2", year: "2026", title: "DiskC2-V2", amount: 60 }),
+			);
+			mergeBehavior = "merge";
+
+			await expectFsErrorCode(
+				() => ws.resolveConflict(c2Conflict.id, "keep-local"),
+				"CONFLICT",
+			);
+			expect(ws.unresolvedConflicts).toHaveLength(1);
+			const refreshed = ws.unresolvedConflicts[0];
+			expect(refreshed?.remote).toEqual({
+				id: "c2",
+				year: "2026",
+				title: "DiskC2-V2",
+				amount: 60,
+			});
+			expect(refreshed?.threeWay?.merged).toEqual({
+				id: "c2",
+				year: "2026",
+				title: "LocalC2+DiskC2-V2",
+				amount: 110,
+			});
+			expect(mergeCalls.at(-1)).toBe("LocalC2|DiskC2-V2");
 		});
 	});
 });

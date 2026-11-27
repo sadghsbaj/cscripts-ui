@@ -1495,4 +1495,112 @@ describe("cache-engine: hardenings (dirty generations, heal/flush serialization,
 		expect(writeSpy).toHaveBeenCalled();
 		engine.destroy();
 	});
+
+	it("skipIdleMetaFlush skips disk flush and heal logging on idle incremental heals, but still flushes on changes, failure changes, or full heals", async () => {
+		const backend = new MemoryFsBackend();
+		const writeQueue = new WriteQueue(backend);
+		const collection = makeInvoiceCollection();
+		const logCalls: Array<Record<string, unknown>> = [];
+		const fakeLogger = {
+			log: vi.fn((entry: Record<string, unknown>) => {
+				logCalls.push(entry);
+			}),
+		};
+
+		const initialDoc: InvoiceDoc = { id: "inv-1", year: "2026", title: "Initial", amount: 100 };
+		await backend.writeBytes("invoices/2026/inv-1.json", encodeJsonBytes(initialDoc));
+
+		const engine = new CacheEngine({
+			backend,
+			writeQueue,
+			collections: [collection],
+			logger: fakeLogger as never,
+		});
+		await engine.boot();
+
+		const writeSpy = vi.spyOn(backend, "writeBytes");
+		logCalls.length = 0;
+
+		// 1. Idle incremental heal with skipIdleMetaFlush: true -> zero writes, no flushing phase, no heal log
+		const idlePhases: SyncProgress["phase"][] = [];
+		const idleReport = await engine.heal({
+			mode: "incremental",
+			skipIdleMetaFlush: true,
+			onProgress: (progress) => {
+				idlePhases.push(progress.phase);
+			},
+		});
+		expect(idleReport.added).toBe(0);
+		expect(idleReport.updated).toBe(0);
+		expect(idleReport.removed).toBe(0);
+		expect(idleReport.unchanged).toBe(1);
+		expect(writeSpy).not.toHaveBeenCalled();
+		expect(idlePhases).not.toContain("flushing");
+		expect(logCalls.filter((entry) => entry.event === "heal")).toHaveLength(0);
+
+		// 2. External change detected -> flushes meta/shard and logs heal
+		const addedDoc: InvoiceDoc = { id: "inv-2", year: "2026", title: "External", amount: 250 };
+		await backend.writeBytes("invoices/2026/inv-2.json", encodeJsonBytes(addedDoc));
+		writeSpy.mockClear();
+		logCalls.length = 0;
+
+		const changePhases: SyncProgress["phase"][] = [];
+		const changeReport = await engine.heal({
+			mode: "incremental",
+			skipIdleMetaFlush: true,
+			onProgress: (progress) => {
+				changePhases.push(progress.phase);
+			},
+		});
+		expect(changeReport.added).toBe(1);
+		expect(writeSpy).toHaveBeenCalledWith(
+			expect.stringContaining("_cs-fs/meta.json"),
+			expect.anything(),
+		);
+		expect(changePhases).toContain("flushing");
+		expect(logCalls.filter((entry) => entry.event === "heal")).toHaveLength(1);
+
+		// 3. Corrupt file introduced (failuresChanged) -> flushes meta and logs warn heal
+		await backend.writeBytes("invoices/2026/broken.json", new TextEncoder().encode("{not-json"));
+		writeSpy.mockClear();
+		logCalls.length = 0;
+
+		const corruptReport = await engine.heal({
+			mode: "incremental",
+			skipIdleMetaFlush: true,
+		});
+		expect(corruptReport.failures).toHaveLength(1);
+		expect(writeSpy).toHaveBeenCalledWith(
+			expect.stringContaining("_cs-fs/meta.json"),
+			expect.anything(),
+		);
+		expect(logCalls.filter((entry) => entry.event === "heal" && entry.level === "warn")).toHaveLength(
+			1,
+		);
+
+		// 4. Subsequent idle heal with same unchanged corrupt failure -> skips flush again
+		writeSpy.mockClear();
+		logCalls.length = 0;
+		const repeatCorruptReport = await engine.heal({
+			mode: "incremental",
+			skipIdleMetaFlush: true,
+		});
+		expect(repeatCorruptReport.failures).toHaveLength(1);
+		expect(writeSpy).not.toHaveBeenCalled();
+		expect(logCalls.filter((entry) => entry.event === "heal")).toHaveLength(0);
+
+		// 5. Full heal with skipIdleMetaFlush: true still flushes
+		const fullReport = await engine.heal({
+			mode: "full",
+			skipIdleMetaFlush: true,
+		});
+		expect(fullReport.mode).toBe("full");
+		expect(writeSpy).toHaveBeenCalledWith(
+			expect.stringContaining("_cs-fs/meta.json"),
+			expect.anything(),
+		);
+		expect(logCalls.filter((entry) => entry.event === "heal")).toHaveLength(1);
+
+		engine.destroy();
+	});
 });

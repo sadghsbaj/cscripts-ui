@@ -24,6 +24,7 @@ import {
 	mergeJson3Way,
 	type JsonDiffOptions,
 	type JsonDiffResult,
+	type JsonFieldConflict,
 	type JsonMergeResult,
 } from "./json-diff.ts";
 import {
@@ -128,10 +129,29 @@ export interface PickDirectoryOptions {
 	startIn?: "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos";
 }
 
+export interface MergeHookHelpers<TData> {
+	defaultMerge: () => JsonMergeResult<TData>;
+}
+
+export type MergeHookResult<TData> =
+	| JsonMergeResult<TData>
+	| {
+			merged: TData;
+			conflicts?: JsonFieldConflict[];
+	  };
+
+export type MergeHook<TData> = (
+	base: TData | undefined,
+	local: TData,
+	remote: TData,
+	helpers: MergeHookHelpers<TData>,
+) => MergeHookResult<TData>;
+
 export interface SingletonConfig<TData> {
 	path: string;
 	adapter: FileAdapter<TData>;
 	pathOptions?: PathValidationOptions;
+	merge?: MergeHook<TData>;
 }
 
 export interface ErasedSingletonDefinition {
@@ -143,6 +163,7 @@ export interface ErasedSingletonDefinition {
 
 export interface SingletonDefinition<TData> extends ErasedSingletonDefinition {
 	readonly adapter: FileAdapter<TData>;
+	readonly merge?: MergeHook<TData>;
 }
 
 export interface CompanionConfig {
@@ -158,6 +179,7 @@ export interface CollectionConfig<TData, TProjected = TData> {
 	pathOptions?: PathValidationOptions;
 	companion?: CompanionConfig;
 	index?: CollectionIndexConfig<TData, TProjected>;
+	merge?: MergeHook<TData>;
 }
 
 export interface ErasedCollectionDefinition {
@@ -179,6 +201,7 @@ export interface CollectionDefinition<
 > extends ErasedCollectionDefinition {
 	readonly adapter: FileAdapter<TData>;
 	readonly index?: CollectionIndexConfig<TData, TProjected>;
+	readonly merge?: MergeHook<TData>;
 	readonly hasIndex: THasIndex;
 	readonly _paramsBrand?: TParams;
 }
@@ -381,6 +404,8 @@ export interface WorkspaceConfig<
 	logRotation?: FsLogRotationOptions;
 	preventCloseWhilePending?: boolean;
 	revalidateOnFocus?: RevalidateOnFocusOption;
+	pollInterval?: number | false;
+	onExternalChange?: (report: HealReport) => void;
 	onMutationError?: (error: FsError, context: MutationContext) => void;
 	onMutationConflict?: (conflict: ConflictDetails) => void;
 	onMutationSettled?: (context: MutationSettledContext) => void;
@@ -496,6 +521,7 @@ type PendingMutation =
 
 interface ConflictTarget {
 	adapter: FileAdapter<unknown>;
+	merge?: MergeHook<unknown>;
 	collection?: string;
 	singleton?: string;
 	params?: Record<string, string>;
@@ -504,8 +530,52 @@ interface ConflictTarget {
 
 const MAX_TRACKED_DOCS = 2000;
 const DEFAULT_REVALIDATE_INTERVAL_MS = 5000;
+const DEFAULT_POLL_INTERVAL_MS = 5000;
+const MIN_POLL_INTERVAL_MS = 1000;
+const MAX_POLL_BACKOFF_MS = 60_000;
+
+function resolvePollInterval(value: number | false | undefined): number | null {
+	if (value === undefined) {
+		return DEFAULT_POLL_INTERVAL_MS;
+	}
+	if (value === false || value === 0) {
+		return null;
+	}
+	if (typeof value !== "number" || !Number.isSafeInteger(value) || value < MIN_POLL_INTERVAL_MS) {
+		throw new FsError(
+			"INVALID_CONFIG",
+			`pollInterval must be false, 0, or a finite integer >= ${MIN_POLL_INTERVAL_MS}, got ${String(value)}.`,
+			{ details: { pollInterval: value } },
+		);
+	}
+	return value;
+}
+
+function corruptEntriesEqual(
+	prev: readonly CorruptEntry[],
+	next: readonly CorruptEntry[],
+): boolean {
+	if (prev.length !== next.length) {
+		return false;
+	}
+	return prev.every((a, index) => {
+		const b = next[index];
+		return (
+			b !== undefined &&
+			a.collection === b.collection &&
+			a.path === b.path &&
+			a.code === b.code &&
+			a.message === b.message
+		);
+	});
+}
 
 export function defineSingleton<TData>(config: SingletonConfig<TData>): SingletonDefinition<TData> {
+	if (config.merge !== undefined && typeof config.merge !== "function") {
+		throw new FsError("INVALID_CONFIG", "Singleton 'merge' must be a function.", {
+			details: { path: config.path },
+		});
+	}
 	const normalized = normalizeRelativePath(config.path);
 	validateRelativePath(normalized, config.pathOptions);
 	const template = createPathTemplate(normalized, {
@@ -515,6 +585,7 @@ export function defineSingleton<TData>(config: SingletonConfig<TData>): Singleto
 		kind: "singleton",
 		path: normalized,
 		adapter: config.adapter,
+		merge: config.merge,
 		template,
 		pathOptions: config.pathOptions,
 	};
@@ -544,6 +615,11 @@ export function defineCollection<
 >(
 	config: CollectionConfig<TData, TProjected>,
 ): CollectionDefinition<TData, TProjected, TParams, boolean> {
+	if (config.merge !== undefined && typeof config.merge !== "function") {
+		throw new FsError("INVALID_CONFIG", "Collection 'merge' must be a function.", {
+			details: { pattern: config.pattern },
+		});
+	}
 	const template = createPathTemplate(config.pattern, {
 		paramPatterns: config.paramPatterns,
 		pathOptions: config.pathOptions,
@@ -573,6 +649,7 @@ export function defineCollection<
 		kind: "collection",
 		pattern: config.pattern,
 		adapter: config.adapter,
+		merge: config.merge,
 		template,
 		companion,
 		index: config.index,
@@ -713,6 +790,7 @@ export function defineWorkspace<
 	const systemDir = normalizeRelativePath(config.systemDir ?? DEFAULT_SYSTEM_DIR);
 	const mode = config.mode ?? "readwrite";
 	const defaultConflictPolicy: ConflictPolicy = config.conflictPolicy ?? "detect";
+	const pollIntervalMs = resolvePollInterval(config.pollInterval);
 	const support = checkFileSystemSupport();
 
 	const singletonDefs = (config.singletons ?? {}) as Record<string, SingletonDefinition<unknown>>;
@@ -815,11 +893,145 @@ export function defineWorkspace<
 	let activeRestorePromise: Promise<MountStatus> | null = null;
 	let activeAbortController: AbortController | null = null;
 	let lastRevalidateAt = 0;
+	let pollTimer: ReturnType<typeof setTimeout> | undefined;
+	let isPolling = false;
+	let consecutivePollErrors = 0;
 	let mutationSeq = 0;
 	let conflictSeq = 0;
 	const inFlightMutations = new SvelteSet<Promise<void>>();
 	const trackedDocs = new SvelteMap<string, TrackedDocEntry>();
 	const conflictTargets = new SvelteMap<string, ConflictTarget>();
+
+	function clearPollTimer(): void {
+		if (pollTimer === undefined) {
+			return;
+		}
+		clearTimeout(pollTimer);
+		pollTimer = undefined;
+	}
+
+	function schedulePoll(delayMs: number | null = pollIntervalMs): void {
+		clearPollTimer();
+		if (delayMs === null || destroyed || mountStatus !== "ready") {
+			return;
+		}
+		if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+			return;
+		}
+		pollTimer = setTimeout(() => {
+			pollTimer = undefined;
+			void runBackgroundPoll();
+		}, delayMs);
+	}
+
+	function resetPollTimer(): void {
+		consecutivePollErrors = 0;
+		if (!isPolling) {
+			schedulePoll(pollIntervalMs);
+		}
+	}
+
+	async function runBackgroundPoll(): Promise<void> {
+		if (pollIntervalMs === null || destroyed || mountStatus !== "ready") {
+			return;
+		}
+		if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+			return;
+		}
+		if (
+			isPolling ||
+			isBusy ||
+			activeHealing > 0 ||
+			activeRestoring > 0 ||
+			activeWriting > 0 ||
+			activeReading > 0 ||
+			pendingMutationCount > 0 ||
+			activeAbortController !== null ||
+			cacheEngine === null
+		) {
+			schedulePoll(pollIntervalMs);
+			return;
+		}
+
+		const epoch = mountEpoch;
+		const activeCache = cacheEngine;
+		isPolling = true;
+		let nextDelay: number | null = pollIntervalMs;
+
+		try {
+			const report = await activeCache.heal({
+				mode: "incremental",
+				skipIdleMetaFlush: true,
+			});
+			if (destroyed || epoch !== mountEpoch) {
+				nextDelay = null;
+				return;
+			}
+
+			consecutivePollErrors = 0;
+			lastRevalidateAt = Date.now();
+
+			const hasChanges = report.added + report.updated + report.removed > 0;
+			const failuresChanged = !corruptEntriesEqual(corruptEntries, report.failures);
+			if (hasChanges || failuresChanged) {
+				refreshConfirmedSnapshot(undefined, epoch);
+			}
+
+			if (hasChanges && config.onExternalChange) {
+				try {
+					config.onExternalChange(report);
+				} catch (callbackError) {
+					logger.log({
+						level: "warn",
+						event: "warn",
+						message:
+							callbackError instanceof Error
+								? `onExternalChange callback threw: ${callbackError.message}`
+								: "onExternalChange callback threw.",
+					});
+				}
+			}
+
+			nextDelay =
+				report.durationMs > pollIntervalMs * 0.5
+					? Math.max(
+							pollIntervalMs,
+							Math.min(pollIntervalMs * 4, Math.round(report.durationMs * 2)),
+						)
+					: pollIntervalMs;
+		} catch (error) {
+			if (destroyed || epoch !== mountEpoch) {
+				nextDelay = null;
+				return;
+			}
+			const fsError = toFsError(error, "Background poll failed.");
+			if (fsError.code === "ABORTED") {
+				nextDelay = pollIntervalMs;
+			} else if (
+				["HANDLE_STALE", "PERMISSION_DENIED", "PERMISSION_REQUIRED"].includes(fsError.code)
+			) {
+				nextDelay = null;
+				handleInfrastructureError(fsError, "Background poll failed.", undefined, epoch);
+			} else {
+				consecutivePollErrors += 1;
+				nextDelay = Math.min(
+					pollIntervalMs * 2 ** consecutivePollErrors,
+					Math.max(pollIntervalMs, MAX_POLL_BACKOFF_MS),
+				);
+				logger.log({
+					level: "warn",
+					event: "heal",
+					code: fsError.code,
+					message: `Background poll failed transiently (attempt ${consecutivePollErrors}): ${fsError.message}`,
+				});
+			}
+		} finally {
+			isPolling = false;
+			if (nextDelay !== null && !destroyed && epoch === mountEpoch && mountStatus === "ready") {
+				schedulePoll(nextDelay);
+			}
+		}
+	}
 
 	async function withActivity<T>(
 		kind: Exclude<WorkspaceActivity, "idle">,
@@ -1033,8 +1245,10 @@ export function defineWorkspace<
 		}
 		if (fsError.code === "HANDLE_STALE") {
 			mountStatus = "stale";
+			clearPollTimer();
 		} else if (fsError.code === "PERMISSION_DENIED" || fsError.code === "PERMISSION_REQUIRED") {
 			mountStatus = "needs-permission";
+			clearPollTimer();
 		}
 
 		if (fsError.code !== "CONFLICT") {
@@ -1163,6 +1377,103 @@ export function defineWorkspace<
 		return withHash(written, encoded);
 	}
 
+	function computeDefaultMerge(
+		adapter: FileAdapter<unknown>,
+		base: unknown,
+		local: unknown,
+		remote: unknown,
+	): JsonMergeResult<unknown> {
+		return adapter.merge
+			? adapter.merge(base, local, remote)
+			: mergeJson3Way(base, local, remote, config.diffOptions);
+	}
+
+	function normalizeMergeHookResult(
+		raw: unknown,
+		base: unknown,
+		path: string,
+	): JsonMergeResult<unknown> {
+		if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+			throw new FsError(
+				"VALIDATION_FAILED",
+				`Custom merge hook for "${path}" must return an object with a "merged" property.`,
+				{ details: { path } },
+			);
+		}
+		const record = raw as Record<string, unknown>;
+		if (!("merged" in record) || record.merged === undefined) {
+			throw new FsError(
+				"VALIDATION_FAILED",
+				`Custom merge hook for "${path}" returned an undefined "merged" value.`,
+				{ details: { path } },
+			);
+		}
+		if (record.conflicts !== undefined && !Array.isArray(record.conflicts)) {
+			throw new FsError(
+				"VALIDATION_FAILED",
+				`Custom merge hook for "${path}" returned a non-array "conflicts" property.`,
+				{ details: { path } },
+			);
+		}
+		const conflicts = (record.conflicts as JsonFieldConflict[] | undefined) ?? [];
+		const mergeMode =
+			record.mode === "two-way" || record.mode === "three-way"
+				? record.mode
+				: base === undefined
+					? "two-way"
+					: "three-way";
+		const hasConflicts =
+			typeof record.hasConflicts === "boolean"
+				? record.hasConflicts || conflicts.length > 0
+				: conflicts.length > 0;
+		return {
+			mode: mergeMode,
+			merged: cloneSnapshot(record.merged),
+			conflicts,
+			hasConflicts,
+		};
+	}
+
+	function executeMerge(params: {
+		path: string;
+		adapter: FileAdapter<unknown>;
+		mergeHook?: MergeHook<unknown>;
+		base: unknown;
+		local: unknown;
+		remote: unknown;
+	}): JsonMergeResult<unknown> {
+		const { path, adapter, mergeHook, base, local, remote } = params;
+		if (!mergeHook) {
+			return computeDefaultMerge(adapter, base, local, remote);
+		}
+		// Isolate inputs so consumer mutations never corrupt trackedDocs or ConflictDetails.
+		const isolatedBase = cloneSnapshot(base);
+		const isolatedLocal = cloneSnapshot(local);
+		const isolatedRemote = cloneSnapshot(remote);
+		const helpers: MergeHookHelpers<unknown> = {
+			defaultMerge: () =>
+				computeDefaultMerge(
+					adapter,
+					cloneSnapshot(base),
+					cloneSnapshot(local),
+					cloneSnapshot(remote),
+				),
+		};
+		let rawResult: unknown;
+		try {
+			rawResult = mergeHook(isolatedBase, isolatedLocal, isolatedRemote, helpers);
+		} catch (error) {
+			if (isFsError(error) && error.code === "VALIDATION_FAILED") {
+				throw error;
+			}
+			throw new FsError("VALIDATION_FAILED", `Custom merge hook threw for "${path}".`, {
+				details: { path },
+				cause: error,
+			});
+		}
+		return normalizeMergeHookResult(rawResult, base, path);
+	}
+
 	async function performConflictAwareWrite(params: {
 		activeBackend: FsBackend;
 		activeQueue: WriteQueue;
@@ -1228,11 +1539,30 @@ export function defineWorkspace<
 		const baseDoc = tracked?.data;
 
 		if (policy === "auto-merge" && remoteDecoded !== null) {
-			const mergeResult = adapter.merge
-				? adapter.merge(baseDoc, data, remoteDecoded.data)
-				: mergeJson3Way(baseDoc, data, remoteDecoded.data, config.diffOptions);
+			const mergeResult = executeMerge({
+				path,
+				adapter,
+				mergeHook: target.merge,
+				base: baseDoc,
+				local: data,
+				remote: remoteDecoded.data,
+			});
 
-			if (mergeResult.conflicts.length === 0) {
+			if (mergeResult.conflicts.length === 0 && !mergeResult.hasConflicts) {
+				if (adapter.validate) {
+					try {
+						await adapter.validate(mergeResult.merged, { path });
+					} catch (validationError) {
+						if (isFsError(validationError) && validationError.code === "VALIDATION_FAILED") {
+							throw validationError;
+						}
+						throw new FsError(
+							"VALIDATION_FAILED",
+							`Merged document failed validation for "${path}".`,
+							{ details: { path }, cause: validationError },
+						);
+					}
+				}
 				const mergedEncoded = toUint8Array(await adapter.encode(mergeResult.merged, { path }));
 				const rawRevision = await activeQueue.write(path, mergedEncoded, {
 					expectedRevision: remoteDecoded.revision,
@@ -1269,12 +1599,30 @@ export function defineWorkspace<
 					: diffJson(data, remoteDecoded.data, config.diffOptions)
 				: null;
 
-		const threeWay =
-			remoteDecoded !== null
-				? adapter.merge
-					? adapter.merge(baseDoc, data, remoteDecoded.data)
-					: mergeJson3Way(baseDoc, data, remoteDecoded.data, config.diffOptions)
-				: undefined;
+		let threeWay: JsonMergeResult<unknown> | undefined;
+		if (remoteDecoded !== null) {
+			try {
+				threeWay = executeMerge({
+					path,
+					adapter,
+					mergeHook: target.merge,
+					base: baseDoc,
+					local: data,
+					remote: remoteDecoded.data,
+				});
+			} catch (mergeError) {
+				logger.log({
+					level: "warn",
+					event: "conflict",
+					path,
+					message:
+						mergeError instanceof Error
+							? `Custom merge hook failed during conflict escalation: ${mergeError.message}`
+							: "Custom merge hook failed during conflict escalation.",
+				});
+				threeWay = undefined;
+			}
+		}
 
 		return await escalateConflict({
 			path,
@@ -1361,6 +1709,7 @@ export function defineWorkspace<
 		if (epoch !== mountEpoch) {
 			return;
 		}
+		clearPollTimer();
 		activeAbortController?.abort();
 		const controller = new AbortController();
 		activeAbortController = controller;
@@ -1412,6 +1761,9 @@ export function defineWorkspace<
 						handleInfrastructureError(error, "Workspace boot check failed.", undefined, epoch);
 					}
 				});
+			}
+			if (!destroyed && epoch === mountEpoch && mountStatus === "ready") {
+				resetPollTimer();
 			}
 			return mountStatus;
 		}
@@ -1470,6 +1822,9 @@ export function defineWorkspace<
 				await runBootCheck(epoch, cacheEngine as CacheEngine);
 				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
+				}
+				if (mountStatus === "ready") {
+					resetPollTimer();
 				}
 				return mountStatus;
 			} catch (error) {
@@ -1541,6 +1896,7 @@ export function defineWorkspace<
 
 				mountEpoch += 1;
 				activeEpoch = mountEpoch;
+				clearPollTimer();
 				activeRestorePromise = null;
 				activeRestoreEpoch = -1;
 				activeAbortController?.abort();
@@ -1574,6 +1930,9 @@ export function defineWorkspace<
 				await runBootCheck(activeEpoch, nextCache);
 				if (destroyed || activeEpoch !== mountEpoch) {
 					return mountStatus;
+				}
+				if (mountStatus === "ready") {
+					resetPollTimer();
 				}
 				return mountStatus;
 			} catch (error) {
@@ -1654,6 +2013,9 @@ export function defineWorkspace<
 				if (destroyed || epoch !== mountEpoch) {
 					return mountStatus;
 				}
+				if (mountStatus === "ready") {
+					resetPollTimer();
+				}
 				return mountStatus;
 			} catch (error) {
 				if (destroyed || epoch !== mountEpoch) {
@@ -1668,6 +2030,7 @@ export function defineWorkspace<
 	async function forget(): Promise<void> {
 		mountEpoch += 1;
 		const epoch = mountEpoch;
+		clearPollTimer();
 		activeRestorePromise = null;
 		activeRestoreEpoch = -1;
 		activeAbortController?.abort();
@@ -1714,6 +2077,7 @@ export function defineWorkspace<
 	async function heal(options?: HealOptions): Promise<HealReport> {
 		const { cacheEngine: activeCache } = assertMounted();
 		const epoch = mountEpoch;
+		clearPollTimer();
 		activeAbortController?.abort();
 		const controller = new AbortController();
 		activeAbortController = controller;
@@ -1746,6 +2110,7 @@ export function defineWorkspace<
 				refreshConfirmedSnapshot(undefined, epoch);
 				if (epoch === mountEpoch) {
 					lastError = null;
+					lastRevalidateAt = Date.now();
 				}
 				return report;
 			} catch (error) {
@@ -1760,6 +2125,9 @@ export function defineWorkspace<
 				}
 				if (activeAbortController === controller) {
 					activeAbortController = null;
+				}
+				if (!destroyed && epoch === mountEpoch && mountStatus === "ready") {
+					resetPollTimer();
 				}
 			}
 		});
@@ -1813,6 +2181,7 @@ export function defineWorkspace<
 
 			if (epoch === mountEpoch) {
 				lastError = null;
+				resetPollTimer();
 			}
 			return undefined;
 		}
@@ -1857,6 +2226,7 @@ export function defineWorkspace<
 
 				if (epoch === mountEpoch) {
 					lastError = null;
+					resetPollTimer();
 				}
 				logger.log({
 					level: "info",
@@ -1887,17 +2257,30 @@ export function defineWorkspace<
 									? target.adapter.diff(docToWrite, remoteDecoded.data)
 									: diffJson(docToWrite, remoteDecoded.data, config.diffOptions)
 								: null;
-						const nextThreeWay =
-							remoteDecoded !== null
-								? target.adapter.merge
-									? target.adapter.merge(conflict.base, docToWrite, remoteDecoded.data)
-									: mergeJson3Way(
-											conflict.base,
-											docToWrite,
-											remoteDecoded.data,
-											config.diffOptions,
-										)
-								: undefined;
+						let nextThreeWay: JsonMergeResult<unknown> | undefined;
+						if (remoteDecoded !== null) {
+							try {
+								nextThreeWay = executeMerge({
+									path: conflict.path,
+									adapter: target.adapter,
+									mergeHook: target.merge,
+									base: conflict.base,
+									local: docToWrite,
+									remote: remoteDecoded.data,
+								});
+							} catch (mergeError) {
+								logger.log({
+									level: "warn",
+									event: "conflict",
+									path: conflict.path,
+									message:
+										mergeError instanceof Error
+											? `Custom merge hook failed during conflict refresh: ${mergeError.message}`
+											: "Custom merge hook failed during conflict refresh.",
+								});
+								nextThreeWay = undefined;
+							}
+						}
 						const refreshedConflict: ConflictDetails = {
 							...conflict,
 							local: docToWrite,
@@ -1957,6 +2340,7 @@ export function defineWorkspace<
 					return result;
 				}
 				lastError = null;
+				resetPollTimer();
 				config.onMutationSettled?.({
 					...context,
 					status: "committed",
@@ -2075,7 +2459,7 @@ export function defineWorkspace<
 							policy: options?.conflictPolicy ?? defaultConflictPolicy,
 							backup: options?.backup,
 							signal: options?.signal,
-							target: { adapter: def.adapter, singleton: name },
+							target: { adapter: def.adapter, merge: def.merge, singleton: name },
 							epoch,
 						});
 						if (destroyed || epoch !== mountEpoch) {
@@ -2145,7 +2529,7 @@ export function defineWorkspace<
 							policy: options?.conflictPolicy ?? defaultConflictPolicy,
 							backup: options?.backup,
 							signal: options?.signal,
-							target: { adapter: def.adapter, singleton: name },
+							target: { adapter: def.adapter, merge: def.merge, singleton: name },
 							epoch,
 						});
 						return { result, revision: result.revision };
@@ -2368,6 +2752,7 @@ export function defineWorkspace<
 							signal: options?.signal,
 							target: {
 								adapter: def.adapter,
+								merge: def.merge,
 								collection: name,
 								params,
 								companionStatus: existingCompanionStatus,
@@ -2579,6 +2964,7 @@ export function defineWorkspace<
 								signal: options?.signal,
 								target: {
 									adapter: def.adapter,
+									merge: def.merge,
 									collection: name,
 									params,
 									companionStatus: "present",
@@ -2646,6 +3032,7 @@ export function defineWorkspace<
 									signal: options?.signal,
 									target: {
 										adapter: def.adapter,
+										merge: def.merge,
 										collection: name,
 										params,
 										companionStatus: "present",
@@ -2807,6 +3194,7 @@ export function defineWorkspace<
 							signal: options?.signal,
 							target: {
 								adapter: def.adapter,
+								merge: def.merge,
 								collection: name,
 								params,
 								companionStatus: existingCompanionStatus,
@@ -3191,21 +3579,27 @@ export function defineWorkspace<
 				? (config.revalidateOnFocus.minIntervalMs ?? DEFAULT_REVALIDATE_INTERVAL_MS)
 				: null;
 
-	const triggerFocusRevalidate = (): void => {
+	const triggerFocusRevalidate = (): boolean => {
 		if (destroyed || revalidateMinInterval === null) {
-			return;
+			return false;
 		}
-		if (mountStatus !== "ready" || isBusy) {
-			return;
+		if (mountStatus !== "ready" || isBusy || isPolling) {
+			return false;
 		}
 		const now = Date.now();
 		if (now - lastRevalidateAt < revalidateMinInterval) {
-			return;
+			return false;
 		}
 		lastRevalidateAt = now;
+		clearPollTimer();
 		void heal({ mode: "incremental" }).catch(() => {
 			// Errors are already captured on `lastError` and `onMutationError`.
 		});
+		return true;
+	};
+
+	const onWindowFocus = (): void => {
+		triggerFocusRevalidate();
 	};
 
 	const onVisibilityChange = (): void => {
@@ -3213,11 +3607,15 @@ export function defineWorkspace<
 			return;
 		}
 		if (document.visibilityState === "hidden") {
+			clearPollTimer();
 			void flushBufferedCachesAndLogs().catch(() => {
 				// Best-effort flush when tab is hidden.
 			});
 		} else if (document.visibilityState === "visible") {
-			triggerFocusRevalidate();
+			const revalidated = triggerFocusRevalidate();
+			if (!revalidated && !isPolling && pollTimer === undefined) {
+				schedulePoll();
+			}
 		}
 	};
 
@@ -3230,7 +3628,7 @@ export function defineWorkspace<
 			document.addEventListener("visibilitychange", onVisibilityChange);
 		}
 		if (revalidateMinInterval !== null) {
-			window.addEventListener("focus", triggerFocusRevalidate);
+			window.addEventListener("focus", onWindowFocus);
 		}
 	}
 
@@ -3240,6 +3638,7 @@ export function defineWorkspace<
 		}
 		destroyed = true;
 		mountEpoch += 1;
+		clearPollTimer();
 		activeRestorePromise = null;
 		activeRestoreEpoch = -1;
 		activeAbortController?.abort();
@@ -3253,14 +3652,16 @@ export function defineWorkspace<
 		if (typeof window !== "undefined") {
 			window.removeEventListener("beforeunload", onBeforeUnload);
 			window.removeEventListener("pagehide", onPageHide);
-			window.removeEventListener("focus", triggerFocusRevalidate);
+			window.removeEventListener("focus", onWindowFocus);
 			if (typeof document !== "undefined") {
 				document.removeEventListener("visibilitychange", onVisibilityChange);
 			}
 		}
 	}
 
-	if (config.autoRestore && !config.backend && support.supported) {
+	if (config.backend) {
+		schedulePoll();
+	} else if (config.autoRestore && !config.backend && support.supported) {
 		void restore();
 	}
 

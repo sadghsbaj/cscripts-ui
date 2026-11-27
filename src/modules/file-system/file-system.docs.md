@@ -43,6 +43,9 @@ exports:
   - ConflictPolicy
   - ConflictResolution
   - PickDirectoryOptions
+  - MergeHookHelpers
+  - MergeHookResult
+  - MergeHook
   - SingletonConfig
   - ErasedSingletonDefinition
   - SingletonDefinition
@@ -412,12 +415,18 @@ Workspace reactive status properties:
 - `lastError` & `clearError()`: Captures the most recent `FsError`. Call `workspace.clearError()` after the user acknowledges an error banner to return `health` from `"negative"` to `"positive"`/`"caution"`.
 - `preventCloseWhilePending` (default `true`): Registers a `beforeunload` handler that calls `event.preventDefault()` while `pendingMutationCount > 0`.
 - **Background cache & log flush:** Registers `pagehide` and `visibilitychange` (`"hidden"`) listeners that trigger a best-effort flush of buffered `_cs-fs/` index shards and JSONL logs while `mountStatus === "ready"`.
-- `revalidateOnFocus` (default `false`): When `true` or `{ minIntervalMs }` (default `5000`), runs `heal({ mode: "incremental" })` when the window regains focus or becomes visible.
+- `revalidateOnFocus` (default `false`): When `true` or `{ minIntervalMs }` (default `5000`), runs `heal({ mode: "incremental" })` when the window regains focus or becomes visible. Coalesces with background polling via shared `lastRevalidateAt` so returning to a tab never double-scans.
+- **Background polling (`pollInterval` & `onExternalChange`):**
+  - `pollInterval?: number | false` (default `5000` ms): Runs silent, non-overlapping incremental scans (`setTimeout` scheduled after each scan settles) while `mountStatus === "ready"`, the tab is visible, and the workspace is idle. Set to `false` or `0` to disable; otherwise must be a finite integer `>= 1000` (throws `FsError("INVALID_CONFIG")` if invalid).
+  - Idle polls perform zero disk writes (skipping `_cs-fs/meta.json` and log flushes when nothing changed) and do not flip `activity` to `"healing"` or `isBusy` to `true`.
+  - Automatically pauses when the tab is hidden (`visibilitychange`), on `forget()` / `destroy()`, or when `mountStatus` leaves `"ready"`, and resets after own committed writes/deletes/moves, manual `heal()`, and focus revalidation. Applies adaptive backoff on slow scans (`durationMs > pollInterval * 0.5`) and exponential backoff (up to `60_000` ms) on transient errors (`FILE_LOCKED` / `IO_FAILED`) without flipping `health` to `"negative"` (fatal `HANDLE_STALE` / `PERMISSION_DENIED` errors still surface normally and stop polling).
+  - `onExternalChange?: (report: HealReport) => void`: Optional callback invoked only when a background poll detects actual disk changes (`added + updated + removed > 0`). Consumer exceptions are caught and logged without breaking polling.
 
 ### Key `WorkspaceConfig` Options & Callbacks
-- **Boot & cache tuning:** `bootCheck` (`"none" | "cache-only" | "metadata-scan"`, default `"metadata-scan"`), `bootConcurrency` (default `6`), `indexFlushMs` (default `250`), `maxFlushWaitMs` (default `2000`).
+- **Boot & cache tuning:** `bootCheck` (`"none" | "cache-only" | "metadata-scan"`, default `"metadata-scan"`), `bootConcurrency` (default `6`), `indexFlushMs` (default `250`), `maxFlushWaitMs` (default `2000`), `pollInterval` (default `5000` ms, `false` / `0` to disable).
 - **Write safety:** `useWebLocks` (default `true`), `verifyAfterWrite` (default `false` — re-reads and compares SHA-256 after writes), `backup` (`BackupOptions`: `{ enabled?, maxBackupsPerFile?, maxBackupAgeDays? }`, defaults `5` backups / `30` days).
 - **Lifecycle callbacks:**
+  - `onExternalChange?: (report: HealReport) => void`
   - `onMutationError?: (error: FsError, context: MutationContext) => void`
   - `onMutationSettled?: (context: MutationSettledContext) => void` (`status`: `"committed" | "rolled-back" | "conflict"`)
   - `onSyncProgress?: (progress: SyncProgress) => void`
@@ -441,8 +450,31 @@ Concurrent external edits (e.g., another user or another tab editing the same fi
 
 Configure `conflictPolicy` at the workspace level (default `"detect"`) or per operation:
 - `"detect"`: Aborts the write on revision mismatch, records a `ConflictDetails` entry in `workspace.unresolvedConflicts`, fires `onMutationConflict`, and rejects with `FsError("CONFLICT")`.
-- `"auto-merge"`: Attempts `adapter.merge(base, local, remote)` (built into `jsonAdapter` via `mergeJson3Way`). If clean, writes the merged document and returns `{ merged: true }`; if any field conflicts remain, falls back to `"detect"`.
+- `"auto-merge"`: Attempts `def.merge ?? adapter.merge ?? mergeJson3Way` (built into `jsonAdapter` via `mergeJson3Way`). If clean, validates the merged document via `adapter.validate?.(merged)` before writing and returns `{ merged: true }`; if any field conflicts remain, falls back to `"detect"`.
 - `"last-write-wins"`: Overwrites the remote file with local data.
+
+### Custom `merge` Hook on `defineCollection` & `defineSingleton`
+Provide `merge?: MergeHook<TData>` on `defineCollection()` or `defineSingleton()` to customize domain-specific conflict merging (precedence: `def.merge ?? adapter.merge ?? mergeJson3Way`):
+
+```ts
+const orders = defineCollection({
+	pattern: "orders/{id}.json",
+	adapter: jsonAdapter<Order>({ validate: isOrder }),
+	merge(base, local, remote, { defaultMerge }) {
+		const res = defaultMerge();
+		// Example: take the higher counter automatically and clear its conflict
+		return {
+			merged: { ...res.merged, updatedAt: Math.max(local.updatedAt, remote.updatedAt) },
+			conflicts: res.conflicts.filter((c) => c.pointer !== "/updatedAt"),
+		};
+	},
+});
+```
+
+- Inputs (`base`, `local`, `remote`) are deep-cloned before invoking `merge`, and `merged` is cloned before storing in tracked state.
+- Shorthand returns (`{ merged, conflicts? }`) are normalized into a full `JsonMergeResult<TData>`.
+- In `"auto-merge"`, the merged result is validated via `adapter.validate?.(merged)` (implemented by `jsonAdapter` and `jsonlAdapter` using their `schema` & `validate` options) **before** writing to disk; hook throws, malformed returns, or schema validation failures reject with `FsError("VALIDATION_FAILED")` and leave disk/cache untouched.
+- In `"detect"` escalation and `resolveConflict()` re-conflict refresh, hook errors are logged as warnings and degrade gracefully to `threeWay: undefined` so `ConflictDetails` is never dropped.
 
 ### Interactive Diff & 3-Way Merge UI Wiring
 Pure helpers from `cs/svelte/file-system`:
