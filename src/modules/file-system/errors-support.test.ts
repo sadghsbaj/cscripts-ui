@@ -127,4 +127,46 @@ describe("checkFileSystemSupport", () => {
 			},
 		});
 	});
+
+	it("reports unc-file-origin when window.location is a UNC file:// URL", () => {
+		vi.stubGlobal("window", {
+			isSecureContext: true,
+			showDirectoryPicker: vi.fn(),
+			location: { protocol: "file:", host: "pfleiderer.loc" },
+		});
+		vi.stubGlobal("indexedDB", {});
+
+		const report = checkFileSystemSupport();
+		expect(report).toEqual({
+			supported: false,
+			status: "unc-file-origin",
+			features: {
+				directoryPicker: true,
+				nativeMove: false,
+				indexedDb: true,
+				webLocks: false,
+			},
+		});
+	});
+
+	it("reports supported when window.location is a mapped-drive file:// URL with empty host", () => {
+		vi.stubGlobal("window", {
+			isSecureContext: true,
+			showDirectoryPicker: vi.fn(),
+			location: { protocol: "file:", host: "" },
+		});
+		vi.stubGlobal("indexedDB", {});
+
+		const report = checkFileSystemSupport();
+		expect(report).toEqual({
+			supported: true,
+			status: "supported",
+			features: {
+				directoryPicker: true,
+				nativeMove: false,
+				indexedDb: true,
+				webLocks: false,
+			},
+		});
+	});
 });

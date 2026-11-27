@@ -111,7 +111,7 @@ Shown in `needs-permission` and `stale` states to ground the user in *which* fol
 | `unlinked` | `Arbeitsordner wählen` | `Wähle einen lokalen Ordner, in dem deine Daten sicher gespeichert werden.` | **Primary:** `Ordner wählen` *(no icon — keeps width compact)* |
 | `needs-permission` | `Ordner freigeben` | `Bestätige den Zugriff für diesen Ordner, um weiterzuarbeiten.` | **Primary:** `Freigeben` *(no icon)* + **Secondary:** `Wechseln` |
 | `stale` | `Ordner nicht gefunden` | `Der zuletzt verwendete Ordner ist nicht mehr verfügbar.` | **Primary:** `Neu wählen` *(no icon)* |
-| `unsupported` | `Browser nicht unterstützt` | `Dieser Browser unterstützt keinen direkten Ordnerzugriff. Bitte nutze Chrome oder Edge.` | *None* |
+| `unsupported` | `Browser nicht unterstützt` *(UNC `file://`: `Netzwerkpfad nicht unterstützt`)* | `Dieser Browser unterstützt keinen direkten Ordnerzugriff. Bitte nutze Chrome oder Edge.` *(UNC `file://`: Hinweis auf verbundenes Laufwerk statt `\\server\…`)* | *None* |
 
 - **Action Row:** `display: flex; align-items: center; justify-content: center; gap: 10px;`.
 - **No-icon primary CTA:** Keeping icons out of `"Ordner wählen"`, `"Freigeben"`, and `"Neu wählen"` maintains crisp typographic balance and compact button proportions.
@@ -171,7 +171,7 @@ Status dot color inside the menu header mirrors `WorkAppStatusDot`'s `status` pr
 | `unlinked` | `var(--cs-color-base-400)` (`base`) | `Kein Ordner` | Short 1-line hint (`--cs-text-xs`, `--cs-color-text-weak`): `"Bitte wähle einen Arbeitsordner."` | Full-width **Primary:** `Ordner wählen` |
 | `needs-permission` | `var(--cs-color-caution-solid)` (`caution`) | `Freigabe nötig` | Recessed folder box with known folder name | **Primary:** `Freigeben` (`flex: 1`) + **Secondary:** `Wechseln` |
 | `stale` | `var(--cs-color-negative-solid)` (`negative`) | `Ordner fehlt` | Recessed folder box (muted `--cs-color-text-weak` + negative folder icon) | Full-width **Primary:** `Neu wählen` |
-| `unsupported` | `var(--cs-color-negative-solid)` (`negative`) | `Nicht unterstützt` | Short 1-line hint (`--cs-text-xs`, `--cs-color-text-weak`): `"Bitte Chrome oder Edge nutzen."` | *None* |
+| `unsupported` | `var(--cs-color-negative-solid)` (`negative`) | `Nicht unterstützt` | Short 1-line hint (`--cs-text-xs`, `--cs-color-text-weak`): `"Bitte Chrome oder Edge nutzen."` *(UNC `file://`: `"Bitte über Laufwerksbuchstaben öffnen."`)* | *None* |
 
 ---
 

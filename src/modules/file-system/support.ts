@@ -1,4 +1,9 @@
-export type FileSystemSupportStatus = "supported" | "unsupported-api" | "insecure-context" | "ssr";
+export type FileSystemSupportStatus =
+	| "supported"
+	| "unsupported-api"
+	| "insecure-context"
+	| "unc-file-origin"
+	| "ssr";
 
 export interface FileSystemSupportFeatures {
 	directoryPicker: boolean;
@@ -50,6 +55,14 @@ export function checkFileSystemSupport(): FileSystemSupportReport {
 		indexedDb,
 		webLocks,
 	};
+
+	if (window.location?.protocol === "file:" && (window.location?.host ?? "") !== "") {
+		return {
+			supported: false,
+			status: "unc-file-origin",
+			features,
+		};
+	}
 
 	if (!window.isSecureContext) {
 		return {

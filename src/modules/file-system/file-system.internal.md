@@ -19,7 +19,7 @@
 
 `mountStatus` transitions across `"unlinked" | "restoring" | "needs-permission" | "ready" | "stale" | "unsupported"` (orthogonal to `activity` / `isBusy` and `health`, where `health` stays `"positive"` during normal `reading`/`writing`/`healing` and `"base"` during `"unlinked"`/`"restoring"`). `directoryName` is `$derived<string | null>(directoryHandle?.name ?? null)` from `$state.raw<PermissionAwareDirectoryHandle | null>(null)` `directoryHandle`:
 
-1. **Initial state:** `"ready"` if an injected `config.backend` is provided (e.g., `MemoryFsBackend` in tests); `"unsupported"` if `checkFileSystemSupport().supported` is `false` (SSR, insecure context, missing `showDirectoryPicker` or `indexedDB`); `"restoring"` if `config.autoRestore` is `true` (which immediately triggers `void restore()`); otherwise `"unlinked"`.
+1. **Initial state:** `"ready"` if an injected `config.backend` is provided (e.g., `MemoryFsBackend` in tests); `"unsupported"` if `checkFileSystemSupport().supported` is `false` (SSR, UNC `file://` origin, insecure context, missing `showDirectoryPicker` or `indexedDB`); `"restoring"` if `config.autoRestore` is `true` (which immediately triggers `void restore()`); otherwise `"unlinked"`.
 2. **`restore()`**: Sets `mountStatus = "restoring"` synchronously before the first `await` (deduplicated within the same `mountEpoch` via `activeRestorePromise`) and reads the persisted `FileSystemDirectoryHandle` from `IdbHandleStore`.
    - Missing handle -> clears `directoryHandle = null` and transitions to `"unlinked"`.
    - `queryPermission({ mode }) === "granted"` -> initializes `BrowserFsBackend`, `WriteQueue`, `CacheEngine`, boots cache, transitions to `"ready"`.

@@ -175,10 +175,18 @@ function createDeferred<T = void>(): {
 
 describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 	const workspacesToDestroy: Array<{ destroy: () => void }> = [];
+	const originalLocationDescriptor = Object.getOwnPropertyDescriptor(window, "location");
 
 	function trackWorkspace<T extends { destroy: () => void }>(ws: T): T {
 		workspacesToDestroy.push(ws);
 		return ws;
+	}
+
+	function stubWindowLocation(location: Pick<Location, "protocol" | "host">): void {
+		Object.defineProperty(window, "location", {
+			value: location,
+			configurable: true,
+		});
 	}
 
 	beforeEach(() => {
@@ -194,6 +202,11 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 		vi.restoreAllMocks();
 		vi.useRealTimers();
 		delete (window as unknown as { showDirectoryPicker?: unknown }).showDirectoryPicker;
+		if (originalLocationDescriptor) {
+			Object.defineProperty(window, "location", originalLocationDescriptor);
+		} else {
+			delete (window as unknown as { location?: unknown }).location;
+		}
 	});
 
 	describe("1. Config, Prefix & Barrel Isolation", () => {
@@ -337,6 +350,31 @@ describe("Workspace (workspace.svelte.ts & index.ts)", () => {
 	});
 
 	describe("2. Mount & Permission Lifecycle", () => {
+		it("treats UNC file:// origin as unsupported even when browser APIs are present", async () => {
+			stubSupportedEnvironment();
+			stubWindowLocation({ protocol: "file:", host: "pfleiderer.loc" });
+
+			const idbStore = createMockIdbStore(makeFakeDirHandle("vault"));
+			const loadSpy = vi.spyOn(idbStore, "loadHandle");
+			const saveSpy = vi.spyOn(idbStore, "saveHandle");
+			const clearSpy = vi.spyOn(idbStore, "clearHandle");
+
+			const ws = trackWorkspace(
+				createWorkspace({
+					namespace: "unc-ws",
+					autoRestore: true,
+					idbStore,
+				}),
+			);
+
+			expect(ws.mountStatus).toBe("unsupported");
+			expect(await ws.restore()).toBe("unsupported");
+			expect(loadSpy).not.toHaveBeenCalled();
+			expect(saveSpy).not.toHaveBeenCalled();
+			expect(clearSpy).not.toHaveBeenCalled();
+			await expectFsErrorCode(() => ws.pick(), "UNSUPPORTED_ENV");
+		});
+
 		it("restore() handles unsupported, unlinked, needs-permission, ready, and stale", async () => {
 			// Unsupported when window.showDirectoryPicker / indexedDB are absent
 			const unsupportedWs = trackWorkspace(createWorkspace({ namespace: "unsupported-ws" }));

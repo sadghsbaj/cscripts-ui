@@ -285,7 +285,7 @@ import { checkFileSystemSupport } from "cs/svelte/file-system";
 
 const report = checkFileSystemSupport();
 if (!report.supported) {
-	// report.status: "supported" | "unsupported-api" | "insecure-context" | "ssr"
+	// report.status: "supported" | "unsupported-api" | "insecure-context" | "unc-file-origin" | "ssr"
 	// report.features: { directoryPicker, nativeMove, indexedDb, webLocks }
 	console.warn("File System Access unavailable:", report.status, report.features);
 }

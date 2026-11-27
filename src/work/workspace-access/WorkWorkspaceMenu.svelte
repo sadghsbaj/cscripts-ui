@@ -7,6 +7,7 @@
     import { t } from "../../shared/lang.internal.ts";
     import { createPointerDragRelease } from "../../shared/listbox/pointer-drag-release.ts";
     import type { WorkWorkspaceMenuProps } from "./index.ts";
+    import { isUncFileOrigin } from "./unc-file-origin.internal.ts";
 
     let {
         ref = $bindable(null),
@@ -68,10 +69,17 @@
                 });
             }
             case "unsupported": {
-                return t({
-                    de: "Bitte Chrome oder Edge nutzen.",
-                    en: "Please use Chrome or Edge.",
-                });
+                return t(
+                    isUncFileOrigin()
+                        ? {
+                              de: "Bitte über Laufwerksbuchstaben öffnen.",
+                              en: "Please open via a mapped drive letter.",
+                          }
+                        : {
+                              de: "Bitte Chrome oder Edge nutzen.",
+                              en: "Please use Chrome or Edge.",
+                          },
+                );
             }
             default: {
                 return "";

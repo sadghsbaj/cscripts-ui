@@ -9,6 +9,7 @@
     import { t } from "../../shared/lang.internal.ts";
     import { getWorkAppIdentity } from "../app-intro/index.ts";
     import type { WorkWorkspaceGateProps } from "./index.ts";
+    import { isUncFileOrigin } from "./unc-file-origin.internal.ts";
 
     function readWorkAppIdentity(): { toolName: string } | undefined {
         try {
@@ -110,7 +111,11 @@
                 return t({ de: "Ordner nicht gefunden", en: "Folder unavailable" });
             }
             case "unsupported": {
-                return t({ de: "Browser nicht unterstützt", en: "Browser not supported" });
+                return t(
+                    isUncFileOrigin()
+                        ? { de: "Netzwerkpfad nicht unterstützt", en: "Network path not supported" }
+                        : { de: "Browser nicht unterstützt", en: "Browser not supported" },
+                );
             }
             case "restoring": {
                 return t({ de: "Arbeitsbereich wird geladen...", en: "Restoring workspace..." });
@@ -149,10 +154,17 @@
                 });
             }
             case "unsupported": {
-                return t({
-                    de: "Dieser Browser unterstützt keinen direkten Ordnerzugriff. Bitte nutze Chrome oder Edge.",
-                    en: "This browser does not support direct folder access. Please use Chrome or Edge.",
-                });
+                return t(
+                    isUncFileOrigin()
+                        ? {
+                              de: String.raw`Diese Datei wurde über einen UNC-Netzwerkpfad geöffnet. Bitte öffne sie über ein verbundenes Laufwerk (z. B. G:\…) statt über \\server\…`,
+                              en: String.raw`This file was opened via a UNC network path. Please open it from a mapped drive (e.g. G:\…) instead of \\server\…`,
+                          }
+                        : {
+                              de: "Dieser Browser unterstützt keinen direkten Ordnerzugriff. Bitte nutze Chrome oder Edge.",
+                              en: "This browser does not support direct folder access. Please use Chrome or Edge.",
+                          },
+                );
             }
             case "restoring": {
                 return t({

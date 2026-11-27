@@ -105,6 +105,14 @@ function mountReactive<
 describe("workspace-access", () => {
     let container: HTMLDivElement;
     const instances: Array<Record<string, unknown>> = [];
+    const originalLocationDescriptor = Object.getOwnPropertyDescriptor(window, "location");
+
+    function stubWindowLocation(location: Pick<Location, "protocol" | "host">): void {
+        Object.defineProperty(window, "location", {
+            value: location,
+            configurable: true,
+        });
+    }
 
     beforeEach(() => {
         vi.useFakeTimers();
@@ -130,6 +138,11 @@ describe("workspace-access", () => {
         vi.clearAllTimers();
 
         container.remove();
+        if (originalLocationDescriptor) {
+            Object.defineProperty(window, "location", originalLocationDescriptor);
+        } else {
+            delete (window as unknown as { location?: unknown }).location;
+        }
         vi.restoreAllMocks();
         vi.useRealTimers();
     });
@@ -337,6 +350,23 @@ describe("workspace-access", () => {
                 "Restoring workspace...",
             );
             expect(container.querySelector(".cs-work-workspace-gate-spinner")).not.toBeNull();
+            expect(container.querySelector(".cs-work-workspace-gate-actions")).toBeNull();
+        });
+
+        test("renders UNC network-path copy when status === 'unsupported' under UNC file:// origin", () => {
+            stubWindowLocation({ protocol: "file:", host: "pfleiderer.loc" });
+            mountReactive(WorkWorkspaceGate, container, instances, { status: "unsupported" });
+
+            const dialog = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-gate");
+            expect(dialog.dataset.status).toBe("unsupported");
+            expect(
+                container.querySelector(".cs-work-workspace-gate-title")?.textContent?.trim(),
+            ).toBe("Network path not supported");
+            expect(
+                container.querySelector(".cs-work-workspace-gate-description")?.textContent?.trim(),
+            ).toBe(
+                String.raw`This file was opened via a UNC network path. Please open it from a mapped drive (e.g. G:\…) instead of \\server\…`,
+            );
             expect(container.querySelector(".cs-work-workspace-gate-actions")).toBeNull();
         });
 
@@ -629,6 +659,22 @@ describe("workspace-access", () => {
             expect(menu.querySelector(".cs-work-workspace-menu-folder")).toBeNull();
             expect(menu.querySelector(".cs-work-workspace-menu-hint")?.textContent?.trim()).toBe(
                 "Please use Chrome or Edge.",
+            );
+            expect(menu.querySelector(".cs-work-workspace-menu-actions")).toBeNull();
+        });
+
+        test("renders UNC network-path hint when status === 'unsupported' under UNC file:// origin", () => {
+            stubWindowLocation({ protocol: "file:", host: "pfleiderer.loc" });
+            mountReactive(WorkWorkspaceMenu, container, instances, {
+                id: "ws-menu-unc",
+                status: "unsupported",
+            });
+
+            const menu = mustQuery<HTMLDivElement>(container, ".cs-work-workspace-menu");
+            expect(menu.dataset.status).toBe("unsupported");
+            expect(menu.querySelector(".cs-work-workspace-menu-folder")).toBeNull();
+            expect(menu.querySelector(".cs-work-workspace-menu-hint")?.textContent?.trim()).toBe(
+                "Please open via a mapped drive letter.",
             );
             expect(menu.querySelector(".cs-work-workspace-menu-actions")).toBeNull();
         });
