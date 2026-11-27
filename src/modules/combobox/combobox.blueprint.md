@@ -6,7 +6,7 @@
 - **Purpose:** An accessible, filterable single-select autocomplete/combobox built on top of `Popover`, `ScrollArea`, `scrollFade`, and `HitArea`, pairing `TextInput`-aligned input chrome with `Select`-aligned floating listbox ergonomics.
 - **Boundaries:**
   - Owns input-to-listbox state synchronization (`value`, `inputValue`, `open`, `highlightedValue`), client-side filtering (plus opt-out for consumer/async filtering), and ARIA 1.2 combobox focus management.
-  - Delegates floating positioning and top-layer light-dismiss to `Popover`, overflow scrolling to `ScrollArea` / `scrollFade`, and compact button hit-area expansion to `HitArea`.
+  - Delegates floating positioning to `Popover` (`popover="manual"` + `clickOutside`), overflow scrolling to `ScrollArea` / `scrollFade`, and compact button hit-area expansion to `HitArea`.
   - **Does not** implement multi-select tag/chip editing (`value: T[]`), virtualized list windowing, or async fetching/debouncing primitives.
 
 ---
@@ -193,7 +193,7 @@
 ## 4. Visual & Motion Contract
 
 - **Control Chrome Parity (`TextInput`):**
-  - `ComboboxControl` matches `TextInput` 1:1 across `xs..xl` heights (`28px`, `32px`, `36px`, `40px`, `44px`), radii (`9px..14px`), `--cs-squircle-soft`, `soft` (`--cs-color-base-soft`) and `elevated` (`--cs-color-elevated` + `--cs-shadow-elevated`) surfaces, `:focus-within` 2px `--cs-color-accent-solid` inset ring, `data-invalid` negative ring, and colorless `--cs-color-disabled-*` tokens.
+  - `ComboboxControl` matches `TextInput` 1:1 across `xs..xl` heights (`28px`, `32px`, `36px`, `40px`, `44px`), radii (`9px..14px`), `--cs-squircle-soft`, `soft` (`--cs-color-base-soft`) and `elevated` (`--cs-color-elevated` + `--cs-shadow-elevated`) surfaces, `:has(> .cs-combobox-input:focus)` 2px `--cs-color-accent-solid` inset ring, `data-invalid` negative ring, and colorless `--cs-color-disabled-*` tokens.
 - **Floating Listbox Parity (`Select`):**
   - `ComboboxContent` uses `--cs-color-elevated`, `--cs-shadow-floating`, `--cs-squircle-soft`, concentric panel/item radii (`xs..xl`), and `Popover` directional spring animation (`animate = true`).
   - `ComboboxItem` highlights both `:hover:not([data-disabled])` (when `data-nav="keyboard"` is absent) and `[data-highlighted]` with `--cs-combobox-item-bg-hover` (`--cs-color-base-soft`), and `:active` with `--cs-combobox-item-bg-active` + subtle `scale` press feedback (`--cs-dur-press`, `--cs-ease-press`).
@@ -210,7 +210,7 @@
 - **IME Composition:**
   - Ignore `Enter` / `Escape` handling while `event.isComposing` is `true` so IME candidate selection is never interrupted.
 - **Popover + Top-Layer Light Dismiss:**
-  - When `ComboboxContent` (`popover="auto"`) light-dismisses via outside click, `ontoggle` reconciles `open = false` and runs the blur/revert-or-commit rule.
+  - `ComboboxContent` uses `popover="manual"` paired with `clickOutside` (ignoring `controlRef`) and a window-level `Escape` fallback so clicking `ComboboxInput` with `openOnFocus={true}` (or to move the caret while open) never triggers native `popover="auto"` light-dismiss on `pointerup`, while outside clicks and `Escape` still close `open = false` and run the blur/revert-or-commit rule.
 - **Explicit Non-Goals (v1):**
   - Multi-select (`value: T[]`) with inline tag/chip tokens.
   - Virtualized rendering for 10,000+ items.

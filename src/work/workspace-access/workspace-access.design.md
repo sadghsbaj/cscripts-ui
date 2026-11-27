@@ -47,7 +47,7 @@
 - **Entry & Exit Physics:** Matches `Modal.svelte` so all blocking dialogs share identical weight:
   - **Enter:** `opacity: 0 → 1` (`--cs-dur-effect` `160ms` `--cs-ease-effect`), `scale: 0.94 → 1` and `translate: 0 8px → 0` (`--cs-dur-enter-md` `380ms` `--cs-ease-enter` via `--cs-spring-snappy`), initialized in `@starting-style`.
   - **Exit:** `opacity: 1 → 0`, `scale: 1 → 0.96`, `translate: 0 → 4px` (`--cs-dur-exit-md` `120ms` `--cs-ease-exit`).
-  - **GPU layer stability:** `will-change: opacity, translate` while `:popover-open` prevents subpixel text snapping on transition end.
+  - **Compositor layer hygiene:** `:popover-open` omits permanent `will-change` so centered dialog text retains subpixel antialiasing without compositor-layer blurring.
 - **Backdrop Click Attention (`[data-blocked]`):** Clicking the `<Overlay>` backdrop (`event.target === event.currentTarget`) does not dismiss the Gate. Instead, it sets `data-blocked` for `280ms` (using a `requestAnimationFrame` reset guard on rapid clicks, matching `Modal.nudge()`):
   - Keyframe `cs-work-workspace-gate-blocked` (`var(--cs-dur-280)` `var(--cs-ease-quad-out)`):
     - Subtle horizontal micro-shake (`translateX(0 → -5px → 5px → -3px → 2px → 0)`) paired with a gentle `scale(1 → 1.008 → 1)` lift.

@@ -1274,4 +1274,445 @@ describe("Combobox Svelte 5 Component", () => {
             unmount(instance);
         });
     });
+
+    describe("openOnFocus, clickOutside & Escape Window Fallback", () => {
+        test("openOnFocus={true} opens on input click sequence (pointerdown -> focus -> pointerup -> click) and stays open", () => {
+            const onOpenChange = vi.fn();
+            const state = $state({ open: false });
+
+            const instance = mount(ComboboxTestHost, {
+                target: container,
+                props: {
+                    openOnFocus: true,
+                    get open() {
+                        return state.open;
+                    },
+                    set open(next) {
+                        state.open = next;
+                    },
+                    onOpenChange,
+                    items: DEFAULT_ITEMS,
+                },
+            });
+            flushSync();
+
+            const input = requireInput(container);
+            const content = requireContent(container);
+            expect(content.getAttribute("popover")).toBe("manual");
+            expect(state.open).toBe(false);
+            expect(content.matches(":popover-open")).toBe(false);
+
+            // Simulate real mouse click into ComboboxInput: pointerdown -> focus -> pointerup -> click
+            dispatchPointerEvent(input, "pointerdown");
+            input.dispatchEvent(new FocusEvent("focus", { bubbles: false }));
+            flushSync();
+            expect(state.open).toBe(true);
+            expect(content.matches(":popover-open")).toBe(true);
+
+            dispatchPointerEvent(input, "pointerup");
+            dispatchClick(input);
+            flushSync();
+
+            expect(state.open).toBe(true);
+            expect(content.matches(":popover-open")).toBe(true);
+            expect(onOpenChange).toHaveBeenCalledTimes(1);
+            expect(onOpenChange).toHaveBeenLastCalledWith(true);
+
+            // Clicking ComboboxInput again while already open keeps it open without extra open transitions
+            dispatchPointerEvent(input, "pointerdown");
+            input.dispatchEvent(new FocusEvent("focus", { bubbles: false }));
+            dispatchPointerEvent(input, "pointerup");
+            dispatchClick(input);
+            flushSync();
+
+            expect(state.open).toBe(true);
+            expect(content.matches(":popover-open")).toBe(true);
+            expect(onOpenChange).toHaveBeenCalledTimes(1);
+
+            unmount(instance);
+        });
+
+        test("openOnFocus={false} (default) does not open on focus/click, while typing and trigger still open", () => {
+            const state = $state({ open: false, inputValue: "" });
+
+            const instance = mount(ComboboxTestHost, {
+                target: container,
+                props: {
+                    get open() {
+                        return state.open;
+                    },
+                    set open(next) {
+                        state.open = next;
+                    },
+                    get inputValue() {
+                        return state.inputValue;
+                    },
+                    set inputValue(next) {
+                        state.inputValue = next;
+                    },
+                    items: DEFAULT_ITEMS,
+                },
+            });
+            flushSync();
+
+            const input = requireInput(container);
+            const trigger = requireTrigger(container);
+            const content = requireContent(container);
+
+            // Focusing/clicking input does not open
+            dispatchPointerEvent(input, "pointerdown");
+            input.dispatchEvent(new FocusEvent("focus", { bubbles: false }));
+            dispatchPointerEvent(input, "pointerup");
+            dispatchClick(input);
+            flushSync();
+
+            expect(state.open).toBe(false);
+            expect(content.matches(":popover-open")).toBe(false);
+
+            // Typing into input opens
+            typeIntoInput(input, "fra");
+            expect(state.open).toBe(true);
+            expect(content.matches(":popover-open")).toBe(true);
+
+            // Close via trigger, then reopen via trigger
+            dispatchPointerEvent(trigger, "pointerdown");
+            flushSync();
+            expect(state.open).toBe(false);
+
+            dispatchPointerEvent(trigger, "pointerdown");
+            flushSync();
+            expect(state.open).toBe(true);
+            expect(content.matches(":popover-open")).toBe(true);
+
+            unmount(instance);
+        });
+
+        test("clicking outside control and content closes popover via clickOutside and runs input blur/revert rules", async () => {
+            const outsideButton = document.createElement("button");
+            outsideButton.type = "button";
+            outsideButton.textContent = "Outside";
+            document.body.append(outsideButton);
+
+            try {
+                const state = $state<{ open: boolean; value: string | undefined; inputValue: string }>({
+                    open: false,
+                    value: "de",
+                    inputValue: "Germany",
+                });
+
+                const instance = mount(ComboboxTestHost, {
+                    target: container,
+                    props: {
+                        openOnFocus: true,
+                        allowCustomValue: false,
+                        get open() {
+                            return state.open;
+                        },
+                        set open(next) {
+                            state.open = next;
+                        },
+                        get value() {
+                            return state.value;
+                        },
+                        set value(next) {
+                            state.value = next;
+                        },
+                        get inputValue() {
+                            return state.inputValue;
+                        },
+                        set inputValue(next) {
+                            state.inputValue = next;
+                        },
+                        items: DEFAULT_ITEMS,
+                    },
+                });
+                flushSync();
+
+                const input = requireInput(container);
+                const content = requireContent(container);
+
+                // Open via focus and flush microtask so clickOutside registers document listeners
+                input.dispatchEvent(new FocusEvent("focus", { bubbles: false }));
+                flushSync();
+                await Promise.resolve();
+                expect(state.open).toBe(true);
+
+                typeIntoInput(input, "Ger-dirty");
+                expect(state.inputValue).toBe("Ger-dirty");
+
+                // Clicking inside content does NOT trigger clickOutside
+                dispatchPointerEvent(content, "pointerdown");
+                dispatchPointerEvent(content, "pointerup");
+                dispatchClick(content);
+                flushSync();
+                vi.advanceTimersByTime(0);
+                expect(state.open).toBe(true);
+                expect(state.inputValue).toBe("Ger-dirty");
+
+                // Clicking outside both control and content closes and reverts dirty inputValue
+                dispatchPointerEvent(outsideButton, "pointerdown");
+                dispatchPointerEvent(outsideButton, "pointerup");
+                dispatchClick(outsideButton);
+                flushSync();
+                vi.advanceTimersByTime(0);
+
+                expect(state.open).toBe(false);
+                expect(content.matches(":popover-open")).toBe(false);
+                expect(state.inputValue).toBe("Germany");
+                expect(state.value).toBe("de");
+
+                unmount(instance);
+            } finally {
+                outsideButton.remove();
+            }
+        });
+
+        test("Escape closes popover via window fallback when focus is not on input, and does not double-fire when focus is on input", () => {
+            const onOpenChange = vi.fn();
+            const state = $state<{ open: boolean; value: string | undefined; inputValue: string }>({
+                open: false,
+                value: "de",
+                inputValue: "Germany",
+            });
+
+            const instance = mount(ComboboxTestHost, {
+                target: container,
+                props: {
+                    allowCustomValue: false,
+                    get open() {
+                        return state.open;
+                    },
+                    set open(next) {
+                        state.open = next;
+                    },
+                    onOpenChange,
+                    get value() {
+                        return state.value;
+                    },
+                    set value(next) {
+                        state.value = next;
+                    },
+                    get inputValue() {
+                        return state.inputValue;
+                    },
+                    set inputValue(next) {
+                        state.inputValue = next;
+                    },
+                    items: DEFAULT_ITEMS,
+                },
+            });
+            flushSync();
+
+            const input = requireInput(container);
+            const trigger = requireTrigger(container);
+            const content = requireContent(container);
+
+            // 1. Open via trigger (focus is NOT on input) and dirty inputValue
+            dispatchPointerEvent(trigger, "pointerdown");
+            flushSync();
+            expect(state.open).toBe(true);
+            expect(onOpenChange).toHaveBeenCalledTimes(1);
+
+            typeIntoInput(input, "dirty-query");
+            expect(state.inputValue).toBe("dirty-query");
+
+            // Dispatch Escape on window (not on input) -> window fallback closes and reverts
+            const windowEscape = dispatchKeyDown(window, "Escape");
+            flushSync();
+            expect(windowEscape.defaultPrevented).toBe(true);
+            expect(onOpenChange).toHaveBeenCalledTimes(2);
+            expect(onOpenChange).toHaveBeenLastCalledWith(false);
+            expect(state.open).toBe(false);
+            expect(content.matches(":popover-open")).toBe(false);
+            expect(state.inputValue).toBe("Germany");
+
+            // 2. Open again and press Escape directly on input -> closes once without double-firing
+            dispatchPointerEvent(trigger, "pointerdown");
+            flushSync();
+            expect(state.open).toBe(true);
+            expect(onOpenChange).toHaveBeenCalledTimes(3);
+
+            typeIntoInput(input, "another-dirty");
+            const inputEscape = dispatchKeyDown(input, "Escape");
+            flushSync();
+
+            expect(inputEscape.defaultPrevented).toBe(true);
+            expect(state.open).toBe(false);
+            expect(content.matches(":popover-open")).toBe(false);
+            expect(state.inputValue).toBe("Germany");
+            expect(onOpenChange).toHaveBeenCalledTimes(4);
+            expect(onOpenChange).toHaveBeenLastCalledWith(false);
+
+            unmount(instance);
+        });
+
+        test("clicking outside with allowCustomValue={true} when focus is not on input commits typed custom value via handleInputBlur", async () => {
+            const outsideButton = document.createElement("button");
+            outsideButton.type = "button";
+            outsideButton.textContent = "Outside";
+            document.body.append(outsideButton);
+
+            try {
+                const onValueChange = vi.fn();
+                const state = $state<{ open: boolean; value: string | undefined; inputValue: string }>({
+                    open: false,
+                    value: "de",
+                    inputValue: "Germany",
+                });
+
+                const instance = mount(ComboboxTestHost, {
+                    target: container,
+                    props: {
+                        allowCustomValue: true,
+                        onValueChange,
+                        get open() {
+                            return state.open;
+                        },
+                        set open(next) {
+                            state.open = next;
+                        },
+                        get value() {
+                            return state.value;
+                        },
+                        set value(next) {
+                            state.value = next;
+                        },
+                        get inputValue() {
+                            return state.inputValue;
+                        },
+                        set inputValue(next) {
+                            state.inputValue = next;
+                        },
+                        items: DEFAULT_ITEMS,
+                    },
+                });
+                flushSync();
+
+                const input = requireInput(container);
+                const content = requireContent(container);
+
+                // Open programmatically so focus is NOT on ComboboxInput, then flush microtask for clickOutside listeners
+                state.open = true;
+                flushSync();
+                await Promise.resolve();
+                expect(state.open).toBe(true);
+                expect(document.activeElement).not.toBe(input);
+
+                typeIntoInput(input, "Custom Tag");
+                expect(state.inputValue).toBe("Custom Tag");
+                expect(state.value).toBe("de");
+                expect(document.activeElement).not.toBe(input);
+
+                // Outside click closes popover and invokes handleInputBlur() to commit custom value
+                dispatchPointerEvent(outsideButton, "pointerdown");
+                dispatchPointerEvent(outsideButton, "pointerup");
+                dispatchClick(outsideButton);
+                flushSync();
+                vi.advanceTimersByTime(0);
+
+                expect(state.open).toBe(false);
+                expect(content.matches(":popover-open")).toBe(false);
+                expect(state.value).toBe("Custom Tag");
+                expect(state.inputValue).toBe("Custom Tag");
+                expect(onValueChange).toHaveBeenCalledTimes(1);
+                expect(onValueChange).toHaveBeenLastCalledWith("Custom Tag");
+
+                unmount(instance);
+            } finally {
+                outsideButton.remove();
+            }
+        });
+
+        test("window Escape capture listener respects allowCustomValue, composing/defaultPrevented guards, and preempts document capture listeners", () => {
+            const docCaptureListener = vi.fn();
+            document.addEventListener("keydown", docCaptureListener, { capture: true });
+
+            try {
+                const state = $state<{ open: boolean; value: string | undefined; inputValue: string }>({
+                    open: false,
+                    value: "de",
+                    inputValue: "Germany",
+                });
+
+                const instance = mount(ComboboxTestHost, {
+                    target: container,
+                    props: {
+                        allowCustomValue: true,
+                        get open() {
+                            return state.open;
+                        },
+                        set open(next) {
+                            state.open = next;
+                        },
+                        get value() {
+                            return state.value;
+                        },
+                        set value(next) {
+                            state.value = next;
+                        },
+                        get inputValue() {
+                            return state.inputValue;
+                        },
+                        set inputValue(next) {
+                            state.inputValue = next;
+                        },
+                        items: DEFAULT_ITEMS,
+                    },
+                });
+                flushSync();
+
+                const input = requireInput(container);
+                const content = requireContent(container);
+
+                // Open programmatically (focus is NOT on ComboboxInput) and enter uncommitted custom text
+                state.open = true;
+                flushSync();
+                expect(state.open).toBe(true);
+                expect(document.activeElement).not.toBe(input);
+
+                typeIntoInput(input, "Uncommitted Custom");
+                expect(state.inputValue).toBe("Uncommitted Custom");
+                expect(state.value).toBe("de");
+
+                // 1. Guard: isComposing: true does NOT close popover or stop propagation
+                const composingEscape = dispatchKeyDown(document.body, "Escape", { isComposing: true });
+                flushSync();
+                expect(state.open).toBe(true);
+                expect(composingEscape.defaultPrevented).toBe(false);
+                expect(docCaptureListener).toHaveBeenCalledTimes(1);
+
+                // 2. Guard: defaultPrevented: true does NOT close popover
+                const prePreventedEscape = new KeyboardEvent("keydown", {
+                    key: "Escape",
+                    bubbles: true,
+                    cancelable: true,
+                });
+                prePreventedEscape.preventDefault();
+                document.body.dispatchEvent(prePreventedEscape);
+                flushSync();
+                expect(state.open).toBe(true);
+                expect(docCaptureListener).toHaveBeenCalledTimes(2);
+
+                // 3. Normal Escape on document.body: window capture fires first, stops propagation before document capture,
+                //    closes popover, and preserves custom inputValue without committing or reverting it.
+                const escapeEvent = dispatchKeyDown(document.body, "Escape");
+                flushSync();
+                expect(escapeEvent.defaultPrevented).toBe(true);
+                expect(state.open).toBe(false);
+                expect(content.matches(":popover-open")).toBe(false);
+                expect(state.inputValue).toBe("Uncommitted Custom");
+                expect(state.value).toBe("de");
+                expect(docCaptureListener).toHaveBeenCalledTimes(2);
+
+                // 4. Once closed, Escape propagates normally to document capture listener
+                dispatchKeyDown(document.body, "Escape");
+                flushSync();
+                expect(docCaptureListener).toHaveBeenCalledTimes(3);
+
+                unmount(instance);
+            } finally {
+                document.removeEventListener("keydown", docCaptureListener, { capture: true });
+            }
+        });
+    });
 });

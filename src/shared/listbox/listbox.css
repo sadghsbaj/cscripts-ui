@@ -146,14 +146,16 @@
         border-radius: var(--cs-listbox-item-radius);
         corner-shape: var(--cs-squircle-soft);
         user-select: none;
-        /* Keep compositor layer active at scale: 1 so text doesn't snap on press/release transitionend. */
         scale: 1;
-        will-change: scale;
         transition:
             background-color var(--cs-dur-effect-fast) var(--cs-ease-effect),
             color var(--cs-dur-effect-fast) var(--cs-ease-effect),
             scale var(--cs-dur-press) var(--cs-ease-press);
         cursor: default;
+
+        &:is(:hover, :active):not([data-disabled]) {
+            will-change: scale;
+        }
 
         /* Optical edge inset for Lucide 2px internal SVG viewBox padding */
         &:has(.cs-listbox-item-icon, .cs-listbox-item-indicator) {

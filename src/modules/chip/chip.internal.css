@@ -296,7 +296,6 @@
         max-inline-size: 100%;
         block-size: 100%;
         scale: 1;
-        will-change: scale;
     }
 
     /* Full-pill trigger behavior */
@@ -460,6 +459,10 @@
             transition: scale var(--cs-dur-effect) var(--cs-ease-effect);
         }
 
+        &:is(:hover, :active):not(:disabled, [aria-disabled="true"], [data-disabled]) > .cs-chip-trigger-content {
+            will-change: scale;
+        }
+
         @media (hover: hover) {
             &:hover::before {
                 background-color: var(--cs-chip-trigger-bg-hover);
@@ -542,9 +545,12 @@
             inline-size: var(--cs-chip-remove-icon-size, calc(100% / 3 * 2));
             block-size: var(--cs-chip-remove-icon-size, calc(100% / 3 * 2));
             stroke-width: 2.5;
-            will-change: scale;
             transition: scale var(--cs-dur-squash) var(--cs-ease-squash);
             pointer-events: none;
+        }
+
+        &:is(:hover, :active):not(:disabled, [aria-disabled="true"], [data-disabled]) > .cs-chip-remove-icon {
+            will-change: scale;
         }
 
         @media (hover: hover) {

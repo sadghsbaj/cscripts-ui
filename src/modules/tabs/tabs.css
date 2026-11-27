@@ -435,7 +435,6 @@
         gap: var(--cs-tabs-item-gap);
         min-width: 0;
         scale: 1;
-        will-change: scale;
         transition: scale var(--cs-dur-press) var(--cs-ease-press);
     }
 
@@ -446,6 +445,15 @@
         > .cs-tabs-trigger
         > .cs-tabs-trigger-content {
         justify-content: flex-start;
+    }
+
+    .cs-tabs
+        > .cs-tabs-list-shell
+        > .cs-tabs-viewport
+        > .cs-tabs-list
+        > .cs-tabs-trigger:not([data-selected], :disabled, [aria-disabled="true"], [data-disabled]):is(:hover, :active)
+        > .cs-tabs-trigger-content {
+        will-change: scale;
     }
 
     .cs-tabs
